@@ -1,0 +1,27 @@
+name = "lsda-hubbard"
+version = "0.1.0"
+license = "MIT"
+author = "Guilherme Canella <guycanella@gmail.com>"
+maintainer = "Guilherme Canella <guycanella@gmail.com>"
+copyright = "2025 Guilherme Canella"
+
+[build]
+auto-executables = true
+auto-tests = true
+auto-examples = true
+
+[dependencies]
+# Adicionar Fortuno depois
+
+[library]
+source-dir = "src"
+
+[install]
+library = true
+
+[[executable]]
+name = "lsdaks"
+source-dir = "app"
+main = "main.f90"
+
+[dev-dependencies]
