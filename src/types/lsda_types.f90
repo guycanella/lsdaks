@@ -1,3 +1,4 @@
+!> Derived types for LSDA-Hubbard calculations
 module lsda_types
     use lsda_constants, only: dp
     implicit none
