@@ -1,0 +1,7 @@
+build/
+*.mod
+*.o
+*.smod
+/gfortran*/
+.DS_Store
+*.dat
