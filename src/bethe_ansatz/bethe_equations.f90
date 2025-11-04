@@ -1,5 +1,5 @@
 module bethe_equations
-    use lsda_constants, only: dp, PI, TWOPI, SMALL
+    use lsda_constants, only: dp, PI, TWOPI, U_SMALL
     implicit none
     private
 
@@ -24,7 +24,7 @@ contains
         real(dp), intent(in) :: x, U
         real(dp) :: res
 
-        if (abs(U) < SMALL) then
+        if (abs(U) < U_SMALL) then
             res = PI * sign(1.0_dp, x)
         else
             res = 2.0_dp * atan( (2.0_dp * x) / U )
@@ -44,7 +44,7 @@ contains
         real(dp), intent(in) :: x, U
         real(dp) :: res
 
-        if (abs(U) < SMALL) then
+        if (abs(U) < U_SMALL) then
             res = PI * sign(1.0_dp, x)
         else
             res = 2.0_dp * atan2( x, U )
@@ -66,7 +66,7 @@ contains
 
         denom = U**2 + 4.0_dp * x**2
 
-        if (abs(U) < SMALL) then
+        if (abs(U) < U_SMALL) then
             res = 0.0_dp
         else
             res = (4.0_dp * U) / denom
@@ -88,7 +88,7 @@ contains
 
         denom = U**2 + x**2
 
-        if (abs(U) < SMALL) then
+        if (abs(U) < U_SMALL) then
             res = 0.0_dp
         else
             res = (2.0_dp * U) / denom
