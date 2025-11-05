@@ -31,6 +31,7 @@
    - Gerenciamento manual de memória (`new[]`/`delete[]`)
    - Arquitetura monolítica
    - Falta de testes
+   - Bethe Ansatz não implementado (apenas leitura de tabelas)
 
 ---
 
@@ -48,26 +49,26 @@ lsda-hubbard/
 ├── src/                        # Código-fonte principal
 │   ├── lsda_main.f90          # Programa principal
 │   │
-│   ├── types/                  # Tipos derivados e estruturas de dados
+│   ├── types/                  # ✅ COMPLETO
 │   │   ├── lsda_types.f90     # Tipos principais (SystemParams, State, etc)
 │   │   └── lsda_constants.f90 # Constantes físicas e numéricas
 │   │
-│   ├── io/                     # Entrada/Saída
+│   ├── io/                     # 🔜 TODO
 │   │   ├── input_parser.f90   # Parse de argumentos e arquivos
 │   │   ├── output_writer.f90  # Escrita de resultados
 │   │   └── logger.f90         # Sistema de logging
 │   │
-│   ├── bethe_ansatz/          # Solução das equações de Lieb-Wu
-│   │   ├── bethe_equations.f90      # Definição de F(x)=0 e Jacobiano
-│   │   ├── nonlinear_solvers.f90    # Newton, Broyden, híbridos
-│   │   ├── continuation.f90         # Sweep em U com preditor-corretor
-│   │   └── bethe_tables.f90         # Geração/cache de tabelas
+│   ├── bethe_ansatz/          # 🔄 EM PROGRESSO (50%)
+│   │   ├── bethe_equations.f90      # ✅ COMPLETO - Equações de Lieb-Wu
+│   │   ├── nonlinear_solvers.f90    # 🔜 TODO - Newton + Broyden
+│   │   ├── continuation.f90         # 🔜 TODO - Sweep em U
+│   │   └── bethe_tables.f90         # 🔜 TODO - Geração/cache
 │   │
-│   ├── xc_functional/         # Funcional de troca-correlação
+│   ├── xc_functional/         # 🔜 TODO
 │   │   ├── spline2d.f90       # Interpolação bicúbica 2D
 │   │   └── xc_lsda.f90        # Interface exc, Vxc_up, Vxc_dn
 │   │
-│   ├── potentials/            # Potenciais externos
+│   ├── potentials/            # 🔜 TODO
 │   │   ├── potential_base.f90      # Classe abstrata base
 │   │   ├── potential_uniform.f90   # Potencial uniforme
 │   │   ├── potential_harmonic.f90  # Armadilha harmônica
@@ -76,27 +77,30 @@ lsda-hubbard/
 │   │   ├── potential_barrier.f90   # Barreiras periódicas/duplas
 │   │   └── potential_factory.f90   # Factory pattern
 │   │
-│   ├── hamiltonian/           # Construção de Hamiltoniano
+│   ├── hamiltonian/           # 🔜 TODO
 │   │   ├── hamiltonian_builder.f90 # Tight-binding com Veff
 │   │   ├── boundary_conditions.f90 # Open, periodic, twisted
 │   │   └── symmetry.f90            # Exploração de simetria de paridade
 │   │
-│   ├── diagonalization/       # Solvers de autovalores
+│   ├── diagonalization/       # 🔜 TODO
 │   │   ├── lapack_wrapper.f90      # Interface para DSYEV/DSYEVD
 │   │   └── degeneracy_handler.f90  # Tratamento de níveis degenerados
 │   │
-│   ├── density/               # Cálculo de densidades eletrônicas
+│   ├── density/               # 🔜 TODO
 │   │   ├── density_calculator.f90  # Ocupação de níveis
 │   │   └── fermi_distribution.f90  # Distribuição de Fermi
 │   │
-│   ├── convergence/           # Gerenciamento de convergência
+│   ├── convergence/           # 🔜 TODO
 │   │   ├── convergence_monitor.f90 # Critérios de parada
 │   │   └── mixing_schemes.f90      # Mixing linear, Broyden, etc
 │   │
-│   └── kohn_sham/             # Ciclo auto-consistente principal
+│   └── kohn_sham/             # 🔜 TODO
 │       └── ks_cycle.f90       # Loop SCF completo
 │
-├── test/                       # Testes unitários (Fortuno)
+├── app/                        # ✅ COMPLETO (placeholder)
+│   └── main.f90               # Ponto de entrada
+│
+├── test/                       # 🔜 TODO
 │   ├── test_types.f90
 │   ├── test_bethe_ansatz.f90
 │   ├── test_splines.f90
@@ -104,12 +108,12 @@ lsda-hubbard/
 │   ├── test_hamiltonian.f90
 │   └── test_ks_cycle.f90
 │
-├── examples/                   # Exemplos de uso
+├── examples/                   # 🔜 TODO
 │   ├── harmonic_trap.f90
 │   ├── double_barrier.f90
 │   └── half_filling.f90
 │
-└── data/                       # Dados auxiliares
+└── data/                       # 🔜 TODO
     ├── potential_params/       # Parâmetros de potenciais
     └── reference_results/      # Resultados de referência (validação)
 ```
@@ -121,53 +125,59 @@ lsda-hubbard/
 ### Modelo de Hubbard 1D
 
 Hamiltoniano:
-```
-H = -t Σᵢⱼσ (cᵢσ† cⱼσ + h.c.) + U Σᵢ nᵢ↑ nᵢ↓ + Σᵢσ Vᵢˢᵗ nᵢσ
-```
+$$
+H = -t \sum_{i,j,\sigma} (c_{i\sigma}^\dagger c_{j\sigma} + \text{h.c.}) + U \sum_i n_{i\uparrow} n_{i\downarrow} + \sum_{i,\sigma} V_i^{\text{ext}} n_{i\sigma}
+$$
 
 - **t = 1**: Hopping (unidade de energia)
 - **U**: Interação on-site (Hubbard U)
-- **Vᵢˢᵗ**: Potencial externo (armadilha, impurezas, etc)
+- **$V_i^{\text{ext}}$**: Potencial externo (armadilha, impurezas, etc)
 
 ### Teoria do Funcional da Densidade (DFT)
 
 Kohn-Sham equations:
-```
-[-∇² + Vₑₓₜ(r) + VH(r) + Vxc(r)] ψᵢ(r) = εᵢ ψᵢ(r)
-```
+$$
+\left[-\nabla^2 + V_{\text{ext}}(r) + V_H(r) + V_{\text{xc}}(r)\right] \psi_i(r) = \varepsilon_i \psi_i(r)
+$$
 
 Para o Hubbard 1D:
-```
-Hₖₛ = H₀ + Vₑₓₜ + U·n₋σ + Vxc
-```
+$$
+H_{\text{KS}} = H_0 + V_{\text{ext}} + U \cdot n_{-\sigma} + V_{\text{xc}}
+$$
 
 ### Bethe Ansatz de Lieb-Wu
 
-Solução exata para o estado fundamental via Ansatz de Bethe:
+Solução exata para o estado fundamental via Ansatz de Bethe.
 
-**Equações integrais:**
-```
-k_j = (2π/L)·Iⱼ + (1/L) Σ_α θ(k_j - Λ_α)
-(2π/L)·Jα = Σⱼ θ(Λα - k_j) - Σ_β Θ(Λα - Λ_β)
-```
+**Equações para rapidities de carga** ($j = 1, 2, \ldots, N_{\uparrow}$):
+$$
+F_j^k = k_j - \frac{2\pi}{L} I_j - \frac{1}{L} \sum_{\alpha=1}^{M} \theta(k_j - \Lambda_\alpha, U) = 0
+$$
+
+**Equações para rapidities de spin** ($\alpha = 1, 2, \ldots, M$ onde $M = N_{\downarrow}$):
+$$
+F_\alpha^\Lambda = \frac{2\pi}{L} J_\alpha - \sum_{j=1}^{N_{\uparrow}} \theta(\Lambda_\alpha - k_j, U) + \sum_{\substack{\beta=1 \\ \beta \neq \alpha}}^{M} \Theta(\Lambda_\alpha - \Lambda_\beta, U) = 0
+$$
 
 Onde:
-- `θ(x) = 2·atan(2x/U)` (espalhamento carga-spin)
-- `Θ(x) = 2·atan(x/U)` (espalhamento spin-spin)
-- `{Iⱼ}`: números quânticos de carga (N↑ inteiros/semi-inteiros)
-- `{Jα}`: números quânticos de spin (N↓-1 inteiros/semi-inteiros)
+- $\theta(x, U) = 2\arctan(2x/U)$ (espalhamento carga-spin)
+- $\Theta(x, U) = 2\arctan(x/U)$ (espalhamento spin-spin)
+- $\{I_j\}$: números quânticos de carga (inteiros/semi-inteiros)
+- $\{J_\alpha\}$: números quânticos de spin (inteiros/semi-inteiros)
 
 **Energia:**
-```
-E = -2 Σⱼ cos(k_j)
-```
+$$
+E = -2 \sum_j \cos(k_j)
+$$
 
 **Funcional XC:**
-```
-Exc = E_BA[n↑, n↓] - E₀[n↑, n↓]
-Vxc↑ = ∂Exc/∂n↑
-Vxc↓ = ∂Exc/∂n↓
-```
+$$
+\begin{align}
+E_{\text{xc}} &= E_{\text{BA}}[n_\uparrow, n_\downarrow] - E_0[n_\uparrow, n_\downarrow] \\
+V_{\text{xc}}^\uparrow &= \frac{\partial E_{\text{xc}}}{\partial n_\uparrow} \\
+V_{\text{xc}}^\downarrow &= \frac{\partial E_{\text{xc}}}{\partial n_\downarrow}
+\end{align}
+$$
 
 ---
 
@@ -186,8 +196,8 @@ Vxc↓ = ∂Exc/∂n↓
 name = "lsda-hubbard"
 version = "0.1.0"
 license = "MIT"
-author = "Your Name"
-maintainer = "your.email@example.com"
+author = "Guilherme Canella"
+maintainer = "guycanella@gmail.com"
 
 [build]
 auto-executables = true
@@ -195,17 +205,17 @@ auto-tests = true
 auto-examples = true
 
 [dependencies]
-fortuno = "*"
 
 [dev-dependencies]
+fortuno-serial = { git = "https://github.com/fortuno-repos/fortuno.git" }
 
 [library]
 source-dir = "src"
 
-[executable]
+[[executable]]
 name = "lsda"
-source-dir = "src"
-main = "lsda_main.f90"
+source-dir = "app"
+main = "main.f90"
 ```
 
 ### 2. Diagonalização: LAPACK
@@ -239,15 +249,15 @@ end subroutine
 **Método:** Bicúbica separável (spline 1D em cada direção)
 
 **Estratégia:**
-1. Para (n_up, n_down) → calcular (n=n↑+n↓, m=n↑-n↓)
-2. Para cada `n_i` fixo: interpolação spline 1D em `m`
-3. Com valores interpolados: segunda interpolação spline 1D em `n`
+1. Para $(n_{\uparrow}, n_{\downarrow})$ → calcular $(n=n_\uparrow+n_\downarrow, m=n_\uparrow-n_\downarrow)$
+2. Para cada $n_i$ fixo: interpolação spline 1D em $m$
+3. Com valores interpolados: segunda interpolação spline 1D em $n$
 
 **Vantagens:**
 - Código limpo e moderno (sem dependências pesadas)
 - Facilmente testável
 - Totalmente controlado
-- C² contínuo
+- $C^2$ contínuo
 
 **Estrutura:**
 ```fortran
@@ -296,13 +306,14 @@ end module
 ### 5. Convenções de Código
 
 **Indexação:**
-- Arrays 0-indexed quando possível (padrão Fortran moderno)
-- 1-indexed apenas quando fisicamente motivado (sítios da rede)
+- Arrays 1-indexed para sítios físicos (convenção natural do problema)
+- 0-indexed quando apropriado (ex: índices auxiliares)
 
 **Precisão:**
 ```fortran
 use, intrinsic :: iso_fortran_env, only: real64
-real(real64) :: variable  ! Float64 (double precision)
+integer, parameter :: dp = real64
+real(dp) :: variable  ! Float64 (double precision)
 ```
 
 **Nomes:**
@@ -311,7 +322,7 @@ real(real64) :: variable  ! Float64 (double precision)
 - Funções/subrotinas: `snake_case` (ex: `solve_newton`)
 - Constantes: `UPPER_SNAKE_CASE` (ex: `MAX_ITER`)
 
-**Documentação:**
+**Documentação (FORD-compliant):**
 ```fortran
 !> Resolve as equações de Lieb-Wu para o estado fundamental
 !! do modelo de Hubbard 1D usando o método de Newton-Raphson.
@@ -334,27 +345,30 @@ subroutine solve_lieb_wu(n_up, n_dn, L, U, k, Lambda, energy)
 
 #### 1. Formulação do Problema
 
-**Variáveis:** `x = [k₁, k₂, ..., k_N↑, Λ₁, Λ₂, ..., Λ_M]` onde M = N↓
+**Variáveis:** $\mathbf{x} = [k_1, k_2, \ldots, k_{N_\uparrow}, \Lambda_1, \Lambda_2, \ldots, \Lambda_M]$ onde $M = N_\downarrow$
 
-**Sistema não-linear:** `F(x) = 0`
+**Sistema não-linear:** $\mathbf{F}(\mathbf{x}) = 0$
 
-```fortran
-F_j^k = k_j - (2π/L)·I_j - (1/L) Σ_α θ(k_j - Λ_α)
+$$
+F_j^k = k_j - \frac{2\pi}{L} I_j - \frac{1}{L} \sum_{\alpha=1}^{M} \theta(k_j - \Lambda_\alpha, U)
+$$
 
-F_α^Λ = (2π/L)·J_α - Σ_j θ(Λ_α - k_j) + Σ_β Θ(Λ_α - Λ_β)
-```
+$$
+F_\alpha^\Lambda = \frac{2\pi}{L} J_\alpha - \sum_{j=1}^{N_\uparrow} \theta(\Lambda_\alpha - k_j, U) + \sum_{\substack{\beta=1 \\ \beta \neq \alpha}}^{M} \Theta(\Lambda_\alpha - \Lambda_\beta, U)
+$$
 
 **Jacobiano analítico:**
-```
-J = [ ∂F^k/∂k    ∂F^k/∂Λ  ]
-    [ ∂F^Λ/∂k    ∂F^Λ/∂Λ  ]
-```
+$$
+\mathbf{J} = \begin{bmatrix}
+\frac{\partial F^k}{\partial k} & \frac{\partial F^k}{\partial \Lambda} \\[1em]
+\frac{\partial F^\Lambda}{\partial k} & \frac{\partial F^\Lambda}{\partial \Lambda}
+\end{bmatrix}
+$$
 
 Com derivadas:
-```fortran
-θ'(x) = 4U / (U² + 4x²)
-Θ'(x) = 2U / (U² + x²)
-```
+$$
+\frac{d\theta}{dx} = \frac{4U}{U^2 + 4x^2}, \quad \frac{d\Theta}{dx} = \frac{2U}{U^2 + x^2}
+$$
 
 #### 2. Escolha do Método
 
@@ -414,18 +428,18 @@ end subroutine
 
 #### 4. Broyden (Quasi-Newton)
 
-**Ideia:** Aproximar J⁻¹ iterativamente sem recalcular Jacobiano
+**Ideia:** Aproximar $\mathbf{J}^{-1}$ iterativamente sem recalcular Jacobiano
 
 **Atualização de Broyden:**
-```
-B_{k+1} = B_k + (Δx - B_k·ΔF) ⊗ ΔF^T / (ΔF^T·ΔF)
-```
+$$
+\mathbf{B}_{k+1} = \mathbf{B}_k + \frac{(\Delta\mathbf{x} - \mathbf{B}_k \cdot \Delta\mathbf{F}) \otimes \Delta\mathbf{F}^T}{\Delta\mathbf{F}^T \cdot \Delta\mathbf{F}}
+$$
 
-Onde `B ≈ J⁻¹` (inversa aproximada).
+Onde $\mathbf{B} \approx \mathbf{J}^{-1}$ (inversa aproximada).
 
 **Vantagens:**
-- Não precisa calcular J a cada iteração
-- Custo O(n²) por iteração (vs O(n³) do Newton)
+- Não precisa calcular $\mathbf{J}$ a cada iteração
+- Custo $O(n^2)$ por iteração (vs $O(n^3)$ do Newton)
 
 **Desvantagens:**
 - Convergência superlinear (vs quadrática do Newton)
@@ -461,7 +475,7 @@ Backward: U = 10 → 8 → 6 → ... → 0  (refinamento)
 
 #### 6. Normalização e Escalonamento
 
-**Problema:** k ∈ [-π,π], Λ ~ O(U) → mal-condicionado para U grande
+**Problema:** $k \in [-\pi,\pi]$, $\Lambda \sim O(U)$ → mal-condicionado para U grande
 
 **Solução:**
 ```fortran
@@ -515,8 +529,8 @@ do alpha = 1, M
 end do
 ```
 
-Para N↑=5: I = [-2, -1, 0, 1, 2]  
-Para N↓=3: J = [-1, 0, 1]
+Para $N_\uparrow=5$: $I = [-2, -1, 0, 1, 2]$  
+Para $N_\downarrow=3$: $J = [-1, 0, 1]$
 
 #### 9. Validação
 
@@ -538,7 +552,7 @@ E_exact = -2·cos(πn/2) - U·n²/4
 
 #### 10. Paralelização
 
-Grid (n, m, U) é **embaraçosamente paralelo**:
+Grid $(n, m, U)$ é **embaraçosamente paralelo**:
 
 ```fortran
 !$omp parallel do schedule(dynamic) private(solution)
@@ -560,38 +574,68 @@ end do
 
 ## 📅 Roadmap de Desenvolvimento
 
-### Fase 0: Infraestrutura (1-2 dias) ✅
+### Fase 0: Infraestrutura ✅ 100% COMPLETO
+
 - [x] Criar estrutura fpm
 - [x] Módulo de tipos (`lsda_types.f90`)
 - [x] Módulo de constantes (`lsda_constants.f90`)
-- [x] Configurar Fortuno
+- [x] Configurar Fortuno (dependência instalada)
+- [x] Programa principal placeholder (`app/main.f90`)
 
-### Fase 1: Bethe Ansatz (1-2 semanas) 🔄
-- [ ] `bethe_equations.f90`: F(x)=0 e Jacobiano analítico
-- [ ] `nonlinear_solvers.f90`: Newton + line search
+**Duração:** 1 dia  
+**Status:** ✅ Concluído em 2025-01-03
+
+---
+
+### Fase 1: Bethe Ansatz 🔄 50% EM PROGRESSO
+
+#### ✅ Completo:
+- [x] `bethe_equations.f90`: 
+  - [x] Funções θ e Θ (espalhamento)
+  - [x] Derivadas dθ/dx e dΘ/dx
+  - [x] `initialize_quantum_numbers()` - Estado fundamental
+  - [x] `compute_residual()` - Vetor F(x)
+  - [x] `compute_jacobian()` - Matriz Jacobiana analítica
+
+**Arquivo:** `src/bethe_ansatz/bethe_equations.f90` (202 linhas, completo)
+
+#### 🔜 Próximos:
+- [ ] `nonlinear_solvers.f90`: Newton-Raphson + line search
 - [ ] `nonlinear_solvers.f90`: Broyden (quasi-Newton)
 - [ ] `continuation.f90`: Sweep em U com preditor-corretor
-- [ ] Testes unitários extensivos
+- [ ] Testes unitários extensivos:
   - [ ] U=0 (Fermi gas)
   - [ ] U→∞ (forte acoplamento)
   - [ ] Half-filling
   - [ ] Comparação com literatura (Essler, Lieb-Wu)
 - [ ] Geração de tabelas de teste (n, m, U)
 
-### Fase 2: Splines 2D (3-4 dias)
+**Duração estimada restante:** 1-2 semanas  
+**Próximo arquivo:** `src/bethe_ansatz/nonlinear_solvers.f90`
+
+---
+
+### Fase 2: Splines 2D (3-4 dias) 🔜 TODO
+
 - [ ] `spline2d.f90`: Interpolação bicúbica
 - [ ] `xc_lsda.f90`: Interface exc, Vxc_up, Vxc_dn
 - [ ] Testes de interpolação vs valores exatos
 - [ ] Benchmark de performance
 
-### Fase 3: Hamiltoniano Básico (2-3 dias)
+---
+
+### Fase 3: Hamiltoniano Básico (2-3 dias) 🔜 TODO
+
 - [ ] `potential_uniform.f90`, `potential_harmonic.f90`
 - [ ] `hamiltonian_builder.f90`: Tight-binding + Veff
 - [ ] `lapack_wrapper.f90`: Interface DSYEVD
 - [ ] `boundary_conditions.f90`: Open, periodic
 - [ ] Teste end-to-end simples (1 iteração KS)
 
-### Fase 4: Ciclo Auto-Consistente (3-4 dias)
+---
+
+### Fase 4: Ciclo Auto-Consistente (3-4 dias) 🔜 TODO
+
 - [ ] `density_calculator.f90`: Ocupação de níveis
 - [ ] `convergence_monitor.f90`: Critérios de parada
 - [ ] `mixing_schemes.f90`: Linear mixing
@@ -602,18 +646,24 @@ end do
 
 **🎉 MILESTONE:** Código funcional end-to-end!
 
-### Fase 5: Features Avançadas (1 semana)
+---
+
+### Fase 5: Features Avançadas (1 semana) 🔜 TODO
+
 - [ ] `degeneracy_handler.f90`: Tratamento de níveis degenerados
 - [ ] `symmetry.f90`: Exploração de paridade
 - [ ] `twisted_bc.f90`: Boundary conditions torcidas
 - [ ] Potenciais avançados (impurity, barrier, random, etc)
 - [ ] Testes para cada feature
 
-### Fase 6: Otimização (ongoing)
+---
+
+### Fase 6: Otimização (ongoing) 🔜 TODO
+
 - [ ] Paralelização OpenMP (Bethe Ansatz + KS loop)
 - [ ] Profiling e otimização de hotspots
 - [ ] I/O melhorado (HDF5?)
-- [ ] Documentação completa (Doxygen/FORD)
+- [ ] Documentação completa (FORD)
 - [ ] Benchmarks vs código C++ original
 
 ---
@@ -681,7 +731,7 @@ end do
 ```bash
 # Usando gfortran + gcov
 fpm test --flag "-fprofile-arcs -ftest-coverage"
-gcov src/*.f90
+gcov src/**/*.f90
 lcov --capture --directory . --output-file coverage.info
 genhtml coverage.info --output-directory coverage_html
 ```
@@ -723,12 +773,55 @@ Output: Estados localizados no poço
 
 ### Benchmarks de Performance
 
-| Caso                  | C++ (original) | Fortran (meta) |
-|-----------------------|----------------|----------------|
-| Bethe (N=100)         | ~1.0s          | < 0.5s         |
-| Spline interpolation  | ~10μs          | < 5μs          |
-| Diagonalização (N=100)| ~50ms (Givens) | < 5ms (LAPACK) |
-| Ciclo KS (10 iter)    | ~5s            | < 2s           |
+| Caso                  | C++ (original) | Fortran (meta) | Status |
+|-----------------------|----------------|----------------|--------|
+| Bethe (N=100)         | N/A (tabelas)  | < 1s           | 🔜     |
+| Spline interpolation  | ~10μs          | < 5μs          | 🔜     |
+| Diagonalização (N=100)| ~50ms (Givens) | < 5ms (LAPACK) | 🔜     |
+| Ciclo KS (10 iter)    | ~5s            | < 2s           | 🔜     |
+
+---
+
+## 📋 Parâmetros Técnicos Definidos
+
+### Intervalo de U
+- **Range:** 0 ≤ U/t ≤ 100
+- **Unidades:** U em unidades de hopping t
+- **Casos especiais:**
+  - U = 0: Fermi gas livre
+  - U → ∞: Limite de forte acoplamento
+
+### Tamanhos de Sistema
+- **Sítios (L):** Até 200 sites
+- **Elétrons (N):** 0 ≤ N ≤ 2L
+- **Densidades:** 0 ≤ n = N/L ≤ 2
+  - n = 1: Half-filling (caso especial)
+  - n < 1: Dopagem tipo-n
+  - n > 1: Dopagem tipo-p
+
+### Precisão Numérica
+- **Padrão:** `real64` (double precision, ~16 dígitos)
+- **Futuro:** Possível upgrade para `real128` se necessário
+- **Tolerância:** TOL = 1.0e-16 (padrão do código original)
+- **Threshold para U=0:** SMALL = 1.0e-9
+
+### Build e Compilação
+```bash
+# Build padrão
+fpm build
+
+# Build otimizado
+fpm build --profile release --flag "-O3 -march=native"
+
+# Com OpenMP (futuro)
+fpm build --flag "-fopenmp"
+
+# Rodar
+fpm run
+
+# Testes
+fpm test
+```
 
 ---
 
@@ -758,10 +851,11 @@ Output: Estados localizados no poço
 - **Fortran 2018 Standard**: https://j3-fortran.org/
 - **fpm Documentation**: https://fpm.fortran-lang.org/
 - **Fortuno**: https://github.com/fortuno-repos/fortuno
+- **FORD (Fortran Documenter)**: https://github.com/Fortran-FOSS-Programmers/ford
 
 ### Código de Referência
 
-- Código C++ original (este projeto)
+- Código C++ original (neste repositório)
 - DMFT solvers (TRIQS, w2dynamics)
 - Exact diagonalization codes (ALPS, ITensor)
 
@@ -804,6 +898,15 @@ chore:    Tarefas de manutenção
 
 ## 📝 Notas de Implementação
 
+### Decisões Tomadas
+
+1. **Números Quânticos**: São `real(dp)` (não `integer`) porque podem ser semi-inteiros quando N é par
+2. **Índices**: Arrays 1-indexed para sítios físicos (convenção do problema)
+3. **Precisão**: `real64` (double) é suficiente para U ∈ [0, 100]
+4. **U → 0**: Tratamento especial em θ e Θ para evitar divisão por zero
+5. **Jacobiano**: Implementação analítica (não diferenças finitas) para máxima precisão
+6. **Documentação**: Padrão FORD para geração automática de docs
+
 ### TODOs e Decisões Pendentes
 
 - [ ] **Grid de tabelas:** Quantos pontos (n,m,U)? Espaçamento uniforme ou adaptativo?
@@ -811,47 +914,64 @@ chore:    Tarefas de manutenção
 - [ ] **Paralelização:** OpenMP apenas ou também MPI para grids grandes?
 - [ ] **Precisão:** Float64 suficiente ou Float128 em alguns casos?
 - [ ] **Estados excitados:** Implementar? (mudando {I_j}, {J_α})
+- [ ] **Broyden:** Implementar método quasi-Newton ou apenas Newton?
+- [ ] **Checkpointing:** Salvar soluções intermediárias em continuation?
 
 ### Perguntas em Aberto
 
 1. Como tratar U < 0 (interação atrativa)? Usar simetria ou resolver separadamente?
 2. Implementar TBA (Thermodynamic Bethe Ansatz) para L → ∞?
 3. Adicionar temperatura T > 0 (Yang-Yang)?
+4. Implementar funcionais GGA além do LDA?
 
 ---
 
 ## 📊 Status do Projeto
 
 **Versão:** 0.1.0-dev  
-**Status:** 🔄 Em desenvolvimento (Fase 0)  
-**Última atualização:** 2025-01-XX
+**Status:** 🔄 Fase 1 - Bethe Ansatz (50% completo)  
+**Última atualização:** 2025-01-03
+
+### Progresso Geral
+
+```
+[████████████████░░░░░░░░░░░░░░░░] 50% Fase 1: Bethe Ansatz
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 2: Splines 2D
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 3: Hamiltoniano
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 4: Ciclo KS
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 5: Features
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 6: Otimização
+```
 
 ### Checklist de Progresso
 
-#### Infraestrutura
-- [ ] Estrutura fpm
-- [ ] Tipos básicos
-- [ ] Sistema de testes
+#### Infraestrutura ✅
+- [x] Estrutura fpm
+- [x] Tipos básicos (`lsda_types.f90`)
+- [x] Constantes (`lsda_constants.f90`)
+- [x] Sistema de testes (Fortuno configurado)
 - [ ] CI/CD
 
-#### Core Physics
-- [ ] Bethe Ansatz solver
+#### Core Physics 🔄
+- [x] Bethe Ansatz - Equações (`bethe_equations.f90`) ✅
+- [ ] Bethe Ansatz - Solvers (Newton, Broyden)
+- [ ] Bethe Ansatz - Continuação em U
 - [ ] Splines 2D
 - [ ] XC functional
 - [ ] Hamiltoniano
 - [ ] Ciclo KS
 
-#### Features
+#### Features 🔜
 - [ ] Potenciais
 - [ ] Simetria
 - [ ] Twisted BC
 - [ ] Degenerescências
 
-#### Qualidade
+#### Qualidade 🔜
 - [ ] Testes unitários (>80% coverage)
 - [ ] Testes de integração
 - [ ] Testes E2E
-- [ ] Documentação completa
+- [ ] Documentação completa (FORD)
 - [ ] Benchmarks
 
 ---
@@ -862,31 +982,32 @@ chore:    Tarefas de manutenção
 
 ```bash
 # Clonar repositório
-git clone https://github.com/seu-usuario/lsda-hubbard-fortran.git
+git clone https://github.com/guycanella/lsda-hubbard-fortran.git
 cd lsda-hubbard-fortran
 
 # Build
 fpm build
 
-# Rodar testes
+# Rodar testes (quando implementados)
 fpm test
 
-# Exemplo simples
+# Exemplo simples (quando implementado)
 fpm run --example harmonic_trap
 ```
 
 ### Onde Começar?
 
 1. **Leia:** `README.md` (uso básico) e este `PROJECT_CONTEXT.md` (contexto técnico)
-2. **Entenda:** Leia `src/types/lsda_types.f90` para ver estruturas de dados
-3. **Explore:** Rode exemplos em `examples/`
-4. **Contribua:** Escolha uma issue com label `good-first-issue`
+2. **Entenda:** Leia `src/types/lsda_types.f90` e `lsda_constants.f90` para ver estruturas de dados
+3. **Estude:** Revise `src/bethe_ansatz/bethe_equations.f90` (único módulo completo até agora)
+4. **Contribua:** Próximo arquivo: `src/bethe_ansatz/nonlinear_solvers.f90`
 
 ### Recursos de Aprendizado
 
 - **Fortran moderno:** https://fortran-lang.org/learn/
 - **Bethe Ansatz:** Essler et al., "The One-Dimensional Hubbard Model"
 - **DFT:** Capelle & Campo, "Density functionals and model Hamiltonians"
+- **Newton-Raphson:** Numerical Recipes (Press et al.)
 
 ---
 
@@ -896,6 +1017,30 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 
 ---
 
-**Última atualização:** 2025-11-03
-**Mantenedores:** Guilherme Canella
-**Contato:** guycanella@gmail.com
+## 👨‍💻 Informações de Desenvolvimento
+
+**Mantido por:** Guilherme Canella  
+**Contato:** guycanella@gmail.com  
+**Repositório:** https://github.com/guycanella/lsda-hubbard-fortran  
+**Última atualização:** 2025-01-03  
+**Status:** Fase 1 - Bethe Ansatz (50%)
+
+---
+
+## 📅 Histórico de Mudanças
+
+### 2025-01-03 - Fase 0 + Início Fase 1
+- ✅ Criada estrutura completa do projeto com fpm
+- ✅ Implementados módulos base (`lsda_types`, `lsda_constants`)
+- ✅ Configurado Fortuno para testes
+- ✅ **COMPLETO:** `bethe_equations.f90` (202 linhas)
+  - Funções de espalhamento θ e Θ
+  - Derivadas analíticas
+  - Inicialização de números quânticos
+  - Cálculo de resíduo F(x)
+  - Jacobiano analítico completo
+- 🔜 **PRÓXIMO:** `nonlinear_solvers.f90` (Newton + Broyden)
+
+---
+
+**Este documento é vivo e deve ser atualizado conforme o projeto evolui!** 🚀
