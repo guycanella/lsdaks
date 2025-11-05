@@ -1,0 +1,16 @@
+{
+    "fortran.linter.compiler": "gfortran",
+    "fortran.linter.compilerPath": "gfortran",
+    "fortran.linter.includePaths": [
+        "build/modules",
+        "build/dependencies/fortuno/include",
+        "src",
+        "test"
+    ],
+    "fortran.linter.modOutput": "build/modules",
+    "fortran.experimental.levenshteinDistance": 20,
+    "fortran.linter.extraArgs": [
+        "-I", "build/modules",
+        "-I", "build/dependencies/fortuno/include"
+    ]
+}

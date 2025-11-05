@@ -1,8 +1,8 @@
 name = "lsda-hubbard"
 version = "0.1.0"
 license = "MIT"
-author = "Guilherme Canella <guycanella@gmail.com>"
-maintainer = "Guilherme Canella <guycanella@gmail.com>"
+author = "Guilherme Canella"
+maintainer = "guycanella@gmail.com"
 copyright = "2025 Guilherme Canella"
 
 [build]
@@ -11,7 +11,6 @@ auto-tests = true
 auto-examples = true
 
 [dependencies]
-# Adicionar Fortuno depois
 
 [library]
 source-dir = "src"
@@ -19,9 +18,15 @@ source-dir = "src"
 [install]
 library = true
 
+[[test]]
+name = "test_bethe_equations"
+source-dir = "test"
+main = "test_bethe_equations.f90"
+
 [[executable]]
 name = "lsdaks"
 source-dir = "app"
 main = "main.f90"
 
 [dev-dependencies]
+fortuno = { git = "https://github.com/fortuno-repos/fortuno-fpm-serial.git" }
