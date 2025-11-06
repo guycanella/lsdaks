@@ -1,16 +1,16 @@
 {
-    "fortran.linter.compiler": "gfortran",
-    "fortran.linter.compilerPath": "gfortran",
-    "fortran.linter.includePaths": [
-        "build/modules",
-        "build/dependencies/fortuno/include",
-        "src",
-        "test"
-    ],
-    "fortran.linter.modOutput": "build/modules",
-    "fortran.experimental.levenshteinDistance": 20,
-    "fortran.linter.extraArgs": [
-        "-I", "build/modules",
-        "-I", "build/dependencies/fortuno/include"
-    ]
+  "fortran.linter.compiler": "gfortran",
+  "fortran.linter.modOutput": "${workspaceFolder}/build/gfortran_C754CEFD329B47DD",
+  "fortran.linter.includePaths": [
+    "${workspaceFolder}/build/gfortran_C754CEFD329B47DD",
+    "${workspaceFolder}/build/dependencies/fortuno/include",
+    "${workspaceFolder}/src"
+  ],
+  "fortran.linter.extraArgs": [
+    "-I${workspaceFolder}/build/gfortran_C754CEFD329B47DD",
+    "-J${workspaceFolder}/build/gfortran_C754CEFD329B47DD"
+  ],
+  "fortran.provide.symbols": true,
+  "fortran.provide.hover": true,
+  "fortran.provide.completions": true
 }

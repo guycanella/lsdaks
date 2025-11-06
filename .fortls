@@ -1,15 +1,15 @@
 {
   "source_dirs": [
-    "src/**",
-    "test/**", 
-    "app/**",
-    "build/dependencies/fortuno/src/**"
+    "src"
   ],
 
   "include_dirs": [
-    "build/modules",
+    "build/gfortran_C754CEFD329B47DD",
     "build/dependencies/fortuno/include"
   ],
 
-  "incremental_sync": true
+  "incremental_sync": true,
+  "lowercase_intrinsics": false,
+  "use_signature_help": true,
+  "disable_diagnostics": false
 }
