@@ -587,30 +587,43 @@ end do
 
 ---
 
-### Fase 1: Bethe Ansatz 🔄 50% EM PROGRESSO
+### Fase 1: Bethe Ansatz 🔄 65% EM PROGRESSO
 
 #### ✅ Completo:
-- [x] `bethe_equations.f90`: 
+- [x] **`bethe_equations.f90`** (267 linhas, 100% testado):
   - [x] Funções θ e Θ (espalhamento)
   - [x] Derivadas dθ/dx e dΘ/dx
   - [x] `initialize_quantum_numbers()` - Estado fundamental
   - [x] `compute_residual()` - Vetor F(x)
   - [x] `compute_jacobian()` - Matriz Jacobiana analítica
+  
+- [x] **`test/test_bethe_equations.f90`** (11 testes, todos passando ✅):
+  - [x] `theta_at_zero` - θ(0) = 0
+  - [x] `theta_antisymmetry` - θ(-x) = -θ(x)
+  - [x] `Theta_at_zero` - Θ(0) = 0
+  - [x] `Theta_antisymmetry` - Θ(-x) = -Θ(x)
+  - [x] `dtheta_dx_numerical` - Derivada analítica vs numérica
+  - [x] `dTheta_dx_numerical` - Derivada analítica vs numérica
+  - [x] `quantum_numbers_odd` - N ímpar (inteiros)
+  - [x] `quantum_numbers_even` - N par (semi-inteiros)
+  - [x] `residual_dimensions` - Dimensões do vetor F
+  - [x] `jacobian_dimensions` - Dimensões da matriz J
+  - [x] `jacobian_diagonal` - Estrutura do bloco A
 
-**Arquivo:** `src/bethe_ansatz/bethe_equations.f90` (202 linhas, completo)
+- [x] **Fortuno instalado e configurado** (`fortuno-fpm-serial`)
 
 #### 🔜 Próximos:
 - [ ] `nonlinear_solvers.f90`: Newton-Raphson + line search
 - [ ] `nonlinear_solvers.f90`: Broyden (quasi-Newton)
 - [ ] `continuation.f90`: Sweep em U com preditor-corretor
-- [ ] Testes unitários extensivos:
+- [ ] Testes de integração:
   - [ ] U=0 (Fermi gas)
   - [ ] U→∞ (forte acoplamento)
   - [ ] Half-filling
   - [ ] Comparação com literatura (Essler, Lieb-Wu)
 - [ ] Geração de tabelas de teste (n, m, U)
 
-**Duração estimada restante:** 1-2 semanas  
+**Duração estimada restante:** 1 semana  
 **Próximo arquivo:** `src/bethe_ansatz/nonlinear_solvers.f90`
 
 ---
@@ -929,13 +942,13 @@ chore:    Tarefas de manutenção
 ## 📊 Status do Projeto
 
 **Versão:** 0.1.0-dev  
-**Status:** 🔄 Fase 1 - Bethe Ansatz (50% completo)  
+**Status:** 🔄 Fase 1 - Bethe Ansatz (65% completo)  
 **Última atualização:** 2025-01-03
 
 ### Progresso Geral
 
 ```
-[████████████████░░░░░░░░░░░░░░░░] 50% Fase 1: Bethe Ansatz
+[████████████████████░░░░░░░░░░░░] 65% Fase 1: Bethe Ansatz (testes ✅)
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 2: Splines 2D
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 3: Hamiltoniano
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 4: Ciclo KS
@@ -954,6 +967,7 @@ chore:    Tarefas de manutenção
 
 #### Core Physics 🔄
 - [x] Bethe Ansatz - Equações (`bethe_equations.f90`) ✅
+- [x] Bethe Ansatz - Testes unitários (11 testes) ✅
 - [ ] Bethe Ansatz - Solvers (Newton, Broyden)
 - [ ] Bethe Ansatz - Continuação em U
 - [ ] Splines 2D
@@ -967,8 +981,9 @@ chore:    Tarefas de manutenção
 - [ ] Twisted BC
 - [ ] Degenerescências
 
-#### Qualidade 🔜
-- [ ] Testes unitários (>80% coverage)
+#### Qualidade 🔄
+- [x] Testes unitários bethe_equations (11/11 ✅)
+- [ ] Testes unitários demais módulos
 - [ ] Testes de integração
 - [ ] Testes E2E
 - [ ] Documentação completa (FORD)
@@ -1029,11 +1044,20 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 
 ## 📅 Histórico de Mudanças
 
+### 2025-01-03 - Fase 1: Testes Completos ✅
+- ✅ **COMPLETO:** Todos os testes unitários de `bethe_equations.f90`
+  - 11 testes implementados usando Fortuno
+  - Cobertura: funções θ, Θ, derivadas, números quânticos, resíduo, Jacobiano
+  - 100% de testes passando
+- ✅ Fortuno instalado (`fortuno-fpm-serial`)
+- ✅ Sistema de testes funcionando com `fpm test`
+- 🔜 **PRÓXIMO:** `nonlinear_solvers.f90` (Newton-Raphson)
+
 ### 2025-01-03 - Fase 0 + Início Fase 1
 - ✅ Criada estrutura completa do projeto com fpm
 - ✅ Implementados módulos base (`lsda_types`, `lsda_constants`)
 - ✅ Configurado Fortuno para testes
-- ✅ **COMPLETO:** `bethe_equations.f90` (202 linhas)
+- ✅ **COMPLETO:** `bethe_equations.f90` (267 linhas)
   - Funções de espalhamento θ e Θ
   - Derivadas analíticas
   - Inicialização de números quânticos
