@@ -582,53 +582,66 @@ end do
 - [x] Configurar Fortuno (dependência instalada)
 - [x] Programa principal placeholder (`app/main.f90`)
 
-**Duração:** 1 dia  
-**Status:** ✅ Concluído em 2025-01-03
+**Status:** ✅ 
 
 ---
 
-### Fase 1: Bethe Ansatz 🔄 65% EM PROGRESSO
+### Fase 1: Bethe Ansatz ✅ 100% COMPLETO
 
 #### ✅ Completo:
-- [x] **`bethe_equations.f90`** (267 linhas, 100% testado):
-  - [x] Funções θ e Θ (espalhamento)
-  - [x] Derivadas dθ/dx e dΘ/dx
-  - [x] `initialize_quantum_numbers()` - Estado fundamental
-  - [x] `compute_residual()` - Vetor F(x)
-  - [x] `compute_jacobian()` - Matriz Jacobiana analítica
+- [x] **`bethe_equations.f90`** (338 linhas, 100% testado):
+- [x] Funções θ e Θ (espalhamento carga-spin e spin-spin)
+- [x] Derivadas dθ/dx e dΘ/dx (analíticas)
+- [x] `initialize_quantum_numbers()` - Estado fundamental (distribuição de Fermi)
+- [x] `compute_residual()` - Vetor F(x) das equações de Lieb-Wu
+- [x] `compute_jacobian()` - Matriz Jacobiana analítica (4 blocos)
+- [x] Tratamento especial para U=0 (Fermi gas livre)
   
-- [x] **`test/test_bethe_equations.f90`** (11 testes, todos passando ✅):
-  - [x] `theta_at_zero` - θ(0) = 0
-  - [x] `theta_antisymmetry` - θ(-x) = -θ(x)
-  - [x] `Theta_at_zero` - Θ(0) = 0
-  - [x] `Theta_antisymmetry` - Θ(-x) = -Θ(x)
-  - [x] `dtheta_dx_numerical` - Derivada analítica vs numérica
-  - [x] `dTheta_dx_numerical` - Derivada analítica vs numérica
-  - [x] `quantum_numbers_odd` - N ímpar (inteiros)
-  - [x] `quantum_numbers_even` - N par (semi-inteiros)
-  - [x] `residual_dimensions` - Dimensões do vetor F
-  - [x] `jacobian_dimensions` - Dimensões da matriz J
-  - [x] `jacobian_diagonal` - Estrutura do bloco A
+- [x] **`nonlinear_solvers.f90`** (156 linhas, 100% testado):
+- [x] `solve_linear_system()` - Wrapper LAPACK DGESV
+- [x] `line_search()` - Backtracking com condição de Armijo
+- [x] `solve_newton()` - Newton-Raphson com line search
+- [x] Tratamento especial para U=0 (solução analítica)
+- [x] Detecção de estagnação e convergência
+  
+- [x] **`test/test_bethe_equations.f90`** (11 testes ✅):
+- [x] `theta_at_zero`, `theta_antisymmetry`
+- [x] `Theta_at_zero`, `Theta_antisymmetry`
+- [x] `dtheta_dx_numerical`, `dTheta_dx_numerical` (vs analítico)
+- [x] `quantum_numbers_odd`, `quantum_numbers_even`
+- [x] `residual_dimensions`, `jacobian_dimensions`, `jacobian_diagonal`
+- [x] **`test_jacobian_numerical`** - (diferença < 1e-10)
 
-- [x] **Fortuno instalado e configurado** (`fortuno-fpm-serial`)
+- [x] **`test/test_nonlinear_solvers.f90`** (9 testes ✅):
+- [x] `solve_2x2`, `solve_identity`, `solve_inputs_not_modified`
+- [x] `test_jacobian_numerical` - Jacobiano analítico vs numérico
+- [x] `newton_fermi_gas` (U=0), `newton_small_system` (U=4)
+- [x] `newton_convergence_flag`, `newton_residual_reduction`
 
-#### 🔜 Próximos:
-- [ ] `nonlinear_solvers.f90`: Newton-Raphson + line search
-- [ ] `nonlinear_solvers.f90`: Broyden (quasi-Newton)
-- [ ] `continuation.f90`: Sweep em U com preditor-corretor
-- [ ] Testes de integração:
-  - [ ] U=0 (Fermi gas)
-  - [ ] U→∞ (forte acoplamento)
-  - [ ] Half-filling
-  - [ ] Comparação com literatura (Essler, Lieb-Wu)
-- [ ] Geração de tabelas de teste (n, m, U)
+#### 🏆 Conquistas da Fase 1:
+- ✅ **20 testes unitários** passando (100% de sucesso)
+- ✅ **Jacobiano validado numericamente** (erro < 1e-10)
+- ✅ **Bug crítico corrigido**: Sinal invertido no bloco D diagonal
+- ✅ **Casos especiais tratados**: U=0 (Fermi gas livre)
+- ✅ **Newton robusto**: Line search + detecção de estagnação
+- ✅ **Código documentado**: Comentários FORD-compliant
 
-**Duração estimada restante:** 1 semana  
-**Próximo arquivo:** `src/bethe_ansatz/nonlinear_solvers.f90`
+**Duração:** 2 dias
+**Linhas de código:** ~500 (produção) + ~350 (testes)  
+**Status:** ✅ **FASE 1 COMPLETA!**
 
 ---
 
-### Fase 2: Splines 2D (3-4 dias) 🔜 TODO
+#### 🔜 Próxima Fase (Fase 2):
+- [ ] `continuation.f90`: Sweep em U com preditor-corretor
+- [ ] `bethe_tables.f90`: Geração de tabelas (n, m, U) → (E, Vxc)
+- [ ] Paralelização OpenMP do grid
+- [ ] Testes de integração end-to-end
+
+
+---
+
+### Fase 3: Splines 2D (3-4 dias) 🔜 TODO
 
 - [ ] `spline2d.f90`: Interpolação bicúbica
 - [ ] `xc_lsda.f90`: Interface exc, Vxc_up, Vxc_dn
@@ -637,7 +650,7 @@ end do
 
 ---
 
-### Fase 3: Hamiltoniano Básico (2-3 dias) 🔜 TODO
+### Fase 4: Hamiltoniano Básico (2-3 dias) 🔜 TODO
 
 - [ ] `potential_uniform.f90`, `potential_harmonic.f90`
 - [ ] `hamiltonian_builder.f90`: Tight-binding + Veff
@@ -647,21 +660,21 @@ end do
 
 ---
 
-### Fase 4: Ciclo Auto-Consistente (3-4 dias) 🔜 TODO
+### Fase 5: Ciclo Auto-Consistente (3-4 dias) 🔜 TODO
 
 - [ ] `density_calculator.f90`: Ocupação de níveis
 - [ ] `convergence_monitor.f90`: Critérios de parada
 - [ ] `mixing_schemes.f90`: Linear mixing
 - [ ] `ks_cycle.f90`: Loop SCF completo
 - [ ] Testes:
-  - [ ] U=0, BC periódica → Fermi gas
-  - [ ] Half-filling, U>0 → comparar literatura
+- [ ] U=0, BC periódica → Fermi gas
+- [ ] Half-filling, U>0 → comparar literatura
 
 **🎉 MILESTONE:** Código funcional end-to-end!
 
 ---
 
-### Fase 5: Features Avançadas (1 semana) 🔜 TODO
+### Fase 6: Features Avançadas (1 semana) 🔜 TODO
 
 - [ ] `degeneracy_handler.f90`: Tratamento de níveis degenerados
 - [ ] `symmetry.f90`: Exploração de paridade
@@ -671,7 +684,7 @@ end do
 
 ---
 
-### Fase 6: Otimização (ongoing) 🔜 TODO
+### Fase 7: Otimização (ongoing) 🔜 TODO
 
 - [ ] Paralelização OpenMP (Bethe Ansatz + KS loop)
 - [ ] Profiling e otimização de hotspots
@@ -686,12 +699,13 @@ end do
 ### Pirâmide de Testes
 
 ```
-        /\
-       /E2E\        (End-to-End: ciclo completo, casos físicos)
+         /\
+        /  \
+       /E2E \       (End-to-End: ciclo completo, casos físicos)
       /------\
-     /Integr.\     (Integração: módulos combinados)
+     /Integr. \     (Integração: módulos combinados)
     /----------\
-   /Unit Tests \   (Unitários: funções individuais)
+   /Unit Tests  \   (Unitários: funções individuais)
   /--------------\
 ```
 
@@ -868,44 +882,9 @@ fpm test
 
 ### Código de Referência
 
-- Código C++ original (neste repositório)
+- Código C++ original (Vivaldo Campo Jr)
 - DMFT solvers (TRIQS, w2dynamics)
 - Exact diagonalization codes (ALPS, ITensor)
-
----
-
-## 🤝 Contribuindo
-
-### Workflow
-
-1. **Branch por feature**
-   ```bash
-   git checkout -b feature/bethe-ansatz-solver
-   ```
-
-2. **Commits atômicos**
-   ```bash
-   git commit -m "feat: add Newton solver with line search"
-   git commit -m "test: validate against Lieb-Wu U=0 limit"
-   ```
-
-3. **Pull Request**
-   - Descrição clara da mudança
-   - Testes passando
-   - Cobertura mantida/aumentada
-
-### Convenções de Commit
-
-```
-feat:     Nova funcionalidade
-fix:      Correção de bug
-test:     Adiciona/modifica testes
-docs:     Documentação
-perf:     Otimização de performance
-refactor: Refatoração (sem mudança de comportamento)
-style:    Formatação, lint
-chore:    Tarefas de manutenção
-```
 
 ---
 
@@ -942,18 +921,19 @@ chore:    Tarefas de manutenção
 ## 📊 Status do Projeto
 
 **Versão:** 0.1.0-dev  
-**Status:** 🔄 Fase 1 - Bethe Ansatz (65% completo)  
-**Última atualização:** 2025-01-03
+**Status:** 🔄 Fase 2 - Tabelas (0% completo)  
+**Última atualização:** 2025-11-07
 
 ### Progresso Geral
 
 ```
-[████████████████████░░░░░░░░░░░░] 65% Fase 1: Bethe Ansatz (testes ✅)
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 2: Splines 2D
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 3: Hamiltoniano
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 4: Ciclo KS
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 5: Features
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0% Fase 6: Otimização
+[████████████████████████████████] 100% Fase 1: Bethe Ansatz (testes ✅)
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 2: Tabelas
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 3: Splines 2D
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 4: Hamiltoniano
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 5: Ciclo KS
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 6: Features
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 7: Otimização
 ```
 
 ### Checklist de Progresso
@@ -967,9 +947,10 @@ chore:    Tarefas de manutenção
 
 #### Core Physics 🔄
 - [x] Bethe Ansatz - Equações (`bethe_equations.f90`) ✅
-- [x] Bethe Ansatz - Testes unitários (11 testes) ✅
-- [ ] Bethe Ansatz - Solvers (Newton, Broyden)
+- [x] Bethe Ansatz - Testes unitários (20 testes) ✅
+- [x] Bethe Ansatz - Solvers (Newton) ✅
 - [ ] Bethe Ansatz - Continuação em U
+- [ ] Bethe Ansatz - Geração das tabelas
 - [ ] Splines 2D
 - [ ] XC functional
 - [ ] Hamiltoniano
@@ -982,8 +963,7 @@ chore:    Tarefas de manutenção
 - [ ] Degenerescências
 
 #### Qualidade 🔄
-- [x] Testes unitários bethe_equations (11/11 ✅)
-- [ ] Testes unitários demais módulos
+- [ ] Testes unitários
 - [ ] Testes de integração
 - [ ] Testes E2E
 - [ ] Documentação completa (FORD)
@@ -1036,9 +1016,9 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 
 **Mantido por:** Guilherme Canella  
 **Contato:** guycanella@gmail.com  
-**Repositório:** https://github.com/guycanella/lsda-hubbard-fortran  
-**Última atualização:** 2025-01-03  
-**Status:** Fase 1 - Bethe Ansatz (50%)
+**Repositório:** https://github.com/guycanella/lsdaks 
+**Última atualização:** 2025-11-07
+**Status:** Fase 2 - Tabelas (0%)
 
 ---
 
