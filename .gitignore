@@ -5,3 +5,4 @@ build/
 /gfortran*/
 .DS_Store
 *.dat
+CLAUDE.md
