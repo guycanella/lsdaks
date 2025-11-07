@@ -17,12 +17,17 @@ contains
             test("Theta_antisymmetry", test_Theta_antisymmetry), &
             test("dtheta_dx_numerical", test_dtheta_dx_numerical), &
             test("dTheta_capital_dx_numerical", test_dTheta_dx_numerical), &
+            test("dtheta_dU_numerical", test_dtheta_dU_numerical), &
+            test("dTheta_capital_dU_numerical", test_dTheta_capital_dU_numerical), &
             test("quantum_numbers_odd", test_quantum_numbers_odd), &
             test("quantum_numbers_even", test_quantum_numbers_even), &
             test("residual_dimensions", test_residual_dimensions), &
             test("jacobian_dimensions", test_jacobian_dimensions), &
             test("jacobian_diagonal", test_jacobian_diagonal), &
-            test("jacobian_numerical", test_jacobian_numerical) &
+            test("jacobian_numerical", test_jacobian_numerical), &
+            test("compute_dFdU_numerical", test_compute_dFdU_numerical), &
+            test("compute_energy_U0", test_compute_energy_U0), &
+            test("compute_energy_dimensions", test_compute_energy_dimensions) &
         ])
     end function
 
@@ -118,6 +123,49 @@ contains
         numerical = (Theta_capital(x + h, U) - Theta_capital(x - h, U)) / (2.0_dp * h)
         
         call check(abs(analytical - numerical) < 1.0e-8_dp)
+    end subroutine
+
+    subroutine test_dtheta_dU_numerical()
+        use fortuno_serial, only: check => serial_check
+        use bethe_equations, only: theta, dtheta_dU
+        use lsda_constants, only: dp
+        
+        real(dp) :: x, U, h, analytical, numerical
+        
+        x = 1.5_dp
+        U = 4.0_dp
+        h = 1.0e-6_dp
+
+        ! Analytical derivative
+        analytical = dtheta_dU(x, U)
+
+        ! Numerical derivative
+        numerical = (theta(x, U + h) - theta(x, U - h)) / (2.0_dp * h)
+        
+        call check(abs(analytical - numerical) < 1.0e-8_dp, &
+                "dtheta_dU should match numerical derivative")
+    end subroutine
+
+
+    subroutine test_dTheta_capital_dU_numerical()
+        use fortuno_serial, only: check => serial_check
+        use bethe_equations, only: Theta_capital, dTheta_capital_dU
+        use lsda_constants, only: dp
+        
+        real(dp) :: x, U, h, analytical, numerical
+        
+        x = 1.5_dp
+        U = 4.0_dp
+        h = 1.0e-6_dp
+
+        ! Analytical derivative
+        analytical = dTheta_capital_dU(x, U)
+
+        ! Numerical derivative: ∂Θ/∂U ≈ [Θ(x,U+h) - Θ(x,U-h)] / (2h)
+        numerical = (Theta_capital(x, U + h) - Theta_capital(x, U - h)) / (2.0_dp * h)
+        
+        call check(abs(analytical - numerical) < 1.0e-8_dp, &
+                "dTheta_dU should match numerical derivative")
     end subroutine
 
     subroutine test_quantum_numbers_odd()
@@ -305,6 +353,95 @@ contains
         deallocate(k, Lambda, I_qn, J_qn, J_analytical, J_numerical)
         deallocate(F_plus, F_minus, x, x_pert)
         
+    end subroutine
+
+    subroutine test_compute_dFdU_numerical()
+        use fortuno_serial, only: check => serial_check
+        use bethe_equations
+        use lsda_constants, only: dp, TWOPI
+        
+        integer :: Nup, M, L, i
+        real(dp) :: U, h
+        real(dp), allocatable :: k(:), Lambda(:), I_qn(:), J_qn(:)
+        real(dp), allocatable :: dFdU_analytical(:), dFdU_numerical(:)
+        real(dp), allocatable :: F_plus(:), F_minus(:)
+        
+        Nup = 2
+        M = 1
+        L = 10
+        U = 4.0_dp
+        h = 1.0e-6_dp
+        
+        allocate(k(Nup), Lambda(M), I_qn(Nup), J_qn(M))
+        allocate(dFdU_analytical(Nup+M), dFdU_numerical(Nup+M))
+        allocate(F_plus(Nup+M), F_minus(Nup+M))
+        
+        call initialize_quantum_numbers(Nup, M, I_qn, J_qn)
+        
+        k = TWOPI * I_qn / real(L, dp)
+        Lambda = 0.0_dp
+        
+        dFdU_analytical = compute_dFdU(k, Lambda, I_qn, J_qn, L, U)
+        
+        F_plus = compute_residual(k, Lambda, I_qn, J_qn, L, U + h)
+        F_minus = compute_residual(k, Lambda, I_qn, J_qn, L, U - h)
+        dFdU_numerical = (F_plus - F_minus) / (2.0_dp * h)
+        
+        do i = 1, Nup+M
+            call check(abs(dFdU_analytical(i) - dFdU_numerical(i)) < 1.0e-8_dp, &
+                    "dF/dU component should match numerical derivative")
+        end do
+        
+        deallocate(k, Lambda, I_qn, J_qn, dFdU_analytical, dFdU_numerical)
+        deallocate(F_plus, F_minus)
+    end subroutine
+
+
+    subroutine test_compute_energy_U0()
+        use fortuno_serial, only: check => serial_check
+        use bethe_equations, only: initialize_quantum_numbers, compute_energy
+        use lsda_constants, only: dp, TWOPI, PI
+        
+        integer :: Nup, L
+        real(dp), allocatable :: I(:), J_dummy(:), k(:)
+        real(dp) :: E, E_per_site, E_expected
+        
+        Nup = 9
+        L = 10
+        
+        allocate(I(Nup), J_dummy(0), k(Nup))
+        
+        call initialize_quantum_numbers(Nup, 0, I, J_dummy)
+        
+        k = TWOPI * I / real(L, dp)
+        
+        E = compute_energy(k)
+        E_per_site = E / real(L, dp)
+
+        call check(E < 0.0_dp, "Energy should be negative")
+        call check(abs(E) < 20.0_dp, "Energy should be reasonable")
+        
+        deallocate(I, J_dummy, k)
+    end subroutine
+
+
+    subroutine test_compute_energy_dimensions()
+        use fortuno_serial, only: check => serial_check
+        use bethe_equations, only: compute_energy
+        use lsda_constants, only: dp
+        
+        real(dp), allocatable :: k(:)
+        real(dp) :: E
+        
+        allocate(k(5))
+        k = [0.5_dp, 1.0_dp, -0.5_dp, 0.2_dp, -0.3_dp]
+        
+        E = compute_energy(k)
+        
+        call check(abs(E) < 20.0_dp, "Energy should be reasonable")
+        call check(E < 0.0_dp, "Energy should be negative (bound state)")
+        
+        deallocate(k)
     end subroutine
 
 end program
