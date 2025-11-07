@@ -11,6 +11,11 @@ auto-tests = true
 auto-examples = true
 link = ["lapack", "blas"]
 
+[[executable]]
+name = "convert_tables"
+source-dir = "app"
+main = "convert_tables.f90"
+
 [dependencies]
 
 [library]
