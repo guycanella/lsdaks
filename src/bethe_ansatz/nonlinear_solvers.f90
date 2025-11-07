@@ -4,7 +4,7 @@ module nonlinear_solvers
     implicit none
     private
 
-    public :: solve_newton
+    ! public :: solve_newton
     public :: solve_linear_system
 
     real(dp), parameter :: ARMIJO_C = 1.0e-4_dp
@@ -71,5 +71,40 @@ contains
 
         deallocate(A_copy, b_copy, IPIV)
     end subroutine
+
+    function line_search(x, dx, F_old, I, J, L, U) result(alpha)
+        real(dp) :: alpha, norm_F_old, norm_F_trial, x_trial(size(x)), F_trial(:)
+        real(dp), allocatable :: k(:), Lambda(:)
+        integer :: Nup, M, step
+        real(dp), intent(in) :: x(:), dx(:), F_old(:), I(:), J(:)
+        real(dp), intent(in) :: U
+        integer, intent(in) :: L
+
+        alpha = 1.0_dp
+        norm_F_old = NORM2(F_old)
+        Nup = size(I)
+        M = size(J)
+
+        allocate(k(Nup), Lambda(M))
+
+        do step = 1, MAX_LS_ITER
+            x_trial = x + alpha * dx
+
+            k = x_trial(1:Nup)
+            Lambda = x_trial(Nup+1:)
+            
+            F_trial = compute_residual(k, Lambda, I, J, L, U)
+            norm_F_trial = NORM2(F_trial)
+
+            if (norm_F_trial < (1.0_dp - ARMIJO_C * alpha) * norm_F_old) then
+                deallocate(k, Lambda)
+                return
+            end if
+
+            alpha = alpha / 2.0_dp
+        end do
+
+        deallocate(k, Lambda)
+    end function
 
 end module nonlinear_solvers
