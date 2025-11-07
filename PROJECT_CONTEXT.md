@@ -60,9 +60,11 @@ lsda-hubbard/
 │   │
 │   ├── bethe_ansatz/          # 🔄 EM PROGRESSO (50%)
 │   │   ├── bethe_equations.f90      # ✅ COMPLETO - Equações de Lieb-Wu
-│   │   ├── nonlinear_solvers.f90    # 🔜 TODO - Newton + Broyden
+│   │   ├── nonlinear_solvers.f90    # ✅ COMPLETO - Newton
 │   │   ├── continuation.f90         # 🔜 TODO - Sweep em U
-│   │   └── bethe_tables.f90         # 🔜 TODO - Geração/cache
+│   │   ├── bethe_tables.f90         # 🔜 TODO - Geração
+│   │   ├── table_io.f90.            # 🔜 TODO - I/O tabelas
+│   │   └── table_manager.f90        # 🔜 TODO - Cache híbrido
 │   │
 │   ├── xc_functional/         # 🔜 TODO
 │   │   ├── spline2d.f90       # Interpolação bicúbica 2D
@@ -115,7 +117,9 @@ lsda-hubbard/
 │
 └── data/                       # 🔜 TODO
     ├── potential_params/       # Parâmetros de potenciais
-    └── reference_results/      # Resultados de referência (validação)
+    ├── reference_results/      # Resultados de referência (validação)
+    └── tables/                 # Diretório de cache
+        └── lsda_hub_u4.00      # Tabelas
 ```
 
 ---
