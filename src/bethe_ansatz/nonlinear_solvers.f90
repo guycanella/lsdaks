@@ -1,3 +1,14 @@
+!> Nonlinear solvers for the Bethe Ansatz equations
+!!
+!! This module provides robust numerical methods to solve the nonlinear system
+!! F(x) = 0 arising from the Lieb-Wu equations of the 1D Hubbard model.
+!!
+!! Main components:
+!! - Newton-Raphson method with analytical Jacobian
+!! - Armijo line search for global convergence
+!! - LAPACK interface for linear systems
+!!
+!! @note All solvers use double precision (real64) arithmetic
 module nonlinear_solvers
     use lsda_constants, only: dp, TWOPI, U_SMALL, NEWTON_TOL, NEWTON_MAX_ITER
     use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
@@ -9,9 +20,14 @@ module nonlinear_solvers
     public :: solve_linear_system
     public :: line_search
 
+    !> Armijo condition parameter (c ∈ (0,1))
+    !! Smaller values = more aggressive line search
     real(dp), parameter :: ARMIJO_C = 1.0e-4_dp
+    !> Maximum iterations for line search backtracking
     integer, parameter :: MAX_LS_ITER = 20
 
+    !> LAPACK interface for solving linear systems A·x = b
+    !! Uses LU decomposition with partial pivoting (DGESV)
     interface
         subroutine DGESV(N, NRHS, A, LDA, IPIV, B, LDB, INFO)
             import :: dp
@@ -25,6 +41,25 @@ module nonlinear_solvers
 
 contains
 
+    !> Solves linear system A·x = b using LAPACK DGESV
+    !!
+    !! Wrapper for LAPACK's DGESV routine (LU decomposition with partial pivoting).
+    !! Preserves input arrays by creating internal copies.
+    !!
+    !! @param[in]  A  Coefficient matrix (N×N, must be square and non-singular)
+    !! @param[out] x  Solution vector (N)
+    !! @param[in]  b  Right-hand side vector (N)
+    !!
+    !! @note A and b are not modified (copies are used internally)
+    !! @note Stops execution if matrix is singular or dimensions are incompatible
+    !!
+    !! Algorithm:
+    !! 1. Validate dimensions (A square, b and x compatible)
+    !! 2. Create working copies (DGESV destroys input)
+    !! 3. Call DGESV: A = P·L·U, solve L·U·x = P·b
+    !! 4. Check INFO flag (0=success, >0=singular, <0=invalid argument)
+    !!
+    !! @see LAPACK DGESV documentation: https://netlib.org/lapack/explore-html/
     subroutine solve_linear_system(A, x, b)
         real(dp), intent(in) :: A(:,:), b(:)
         real(dp), intent(out) :: x(:)
@@ -44,9 +79,10 @@ contains
             error stop "solve_linear_system: incompatible dimensions!"
         end if
 
-        NRHS = 1
-        LDA = N
-        LDB = N
+        ! LAPACK parameters
+        NRHS = 1    ! Number of right-hand sides (solving A·x = b, not A·X = B)
+        LDA = N     ! Leading dimension of A
+        LDB = N     ! Leading dimension of b
         
         allocate(A_copy(N, N))
         allocate(b_copy(N))
@@ -74,6 +110,34 @@ contains
         deallocate(A_copy, b_copy, IPIV)
     end subroutine
 
+    !> Armijo backtracking line search for Newton-Raphson
+    !!
+    !! Finds step size α ∈ (0,1] that satisfies the Armijo condition:
+    !! ||F(x + α·dx)|| < (1 - c·α)·||F(x)||
+    !!
+    !! This ensures sufficient decrease in the residual norm, providing
+    !! global convergence guarantees for Newton's method.
+    !!
+    !! @param[in] x      Current iterate [k, Λ] (size N↑+M)
+    !! @param[in] dx     Search direction (Newton step)
+    !! @param[in] F_old  Residual at current point
+    !! @param[in] I      Charge quantum numbers
+    !! @param[in] J      Spin quantum numbers
+    !! @param[in] L      Number of lattice sites
+    !! @param[in] U      Hubbard interaction strength
+    !! @return    alpha  Step size (1.0 if full step works, smaller if backtracking)
+    !!
+    !! Algorithm:
+    !! 1. Try full step (α = 1)
+    !! 2. Compute trial point: x_trial = x + α·dx
+    !! 3. Evaluate residual: F_trial = F(x_trial)
+    !! 4. Check Armijo condition: ||F_trial|| < (1 - c·α)·||F_old||
+    !! 5. If satisfied: return α
+    !! 6. If not: reduce α ← α/2 and repeat (max 20 iterations)
+    !! 7. Fallback: return best α found (even if Armijo fails)
+    !!
+    !! @note If Armijo condition never satisfied, returns α that gives smallest residual
+    !! @note Prints warning if line search fails completely
     function line_search(x, dx, F_old, I, J, L, U) result(alpha)
         real(dp), intent(in) :: x(:), dx(:), F_old(:), I(:), J(:)
         real(dp), intent(in) :: U
@@ -82,9 +146,9 @@ contains
         real(dp), allocatable :: k(:), Lambda(:), x_trial(:), F_trial(:)
         integer :: Nup, M, step
 
-        alpha = 1.0_dp
+        alpha = 1.0_dp              ! Start with full Newton step
         best_alpha = alpha
-        best_norm = HUGE(1.0_dp)
+        best_norm = HUGE(1.0_dp)    ! Worst possible norm (infinity)
 
         norm_F_old = NORM2(F_old)
         Nup = size(I)
@@ -126,6 +190,44 @@ contains
         deallocate(x_trial, k, Lambda)
     end function
 
+    !> Newton-Raphson solver for Bethe Ansatz equations
+    !!
+    !! Solves the nonlinear system F(x) = 0 where x = [k, Λ] are the
+    !! charge and spin rapidities of the Lieb-Wu equations.
+    !!
+    !! Uses Newton-Raphson iteration with:
+    !! - Analytical Jacobian (quadratic convergence)
+    !! - Armijo line search (global convergence)
+    !! - Special handling for U=0 (analytical solution)
+    !!
+    !! @param[inout] x         Solution vector [k₁,...,k_{N↑}, Λ₁,...,Λ_M]
+    !!                         Input: initial guess | Output: solution (if converged)
+    !! @param[in]    I         Charge quantum numbers (N↑)
+    !! @param[in]    J         Spin quantum numbers (M = N↓)
+    !! @param[in]    L         Number of lattice sites
+    !! @param[in]    U         Hubbard interaction strength
+    !! @param[out]   converged .true. if converged, .false. otherwise
+    !!
+    !! Algorithm:
+    !! 1. Special case U≈0: return analytical solution k_j = 2π·I_j/L, Λ=0
+    !! 2. Newton iteration (max 50 iterations):
+    !!    a) Compute residual F(x)
+    !!    b) Check convergence: ||F|| < TOL
+    !!    c) Compute Jacobian J(x)
+    !!    d) Solve linear system: J·dx = -F
+    !!    e) Line search: find α such that ||F(x+α·dx)|| < ||F(x)||
+    !!    f) Update: x ← x + α·dx
+    !!    g) Check stagnation: ||dx||/||x|| < TOL
+    !! 3. Return converged flag
+    !!
+    !! Convergence criteria:
+    !! - ||F(x)|| < 1e-10 (residual tolerance)
+    !! - ||dx||/||x|| < 1e-10 (relative step size)
+    !!
+    !! @note For U=0, returns exact solution immediately (no iteration needed)
+    !! @note Prints warnings if stagnation or non-convergence detected
+    !!
+    !! @see compute_residual, compute_jacobian, solve_linear_system, line_search
     subroutine solve_newton(x, I, J, L, U, converged)
         real(dp), intent(inout) :: x(:)
         real(dp), intent(in) :: I(:), J(:)
