@@ -5,9 +5,12 @@ module bethe_equations
 
     public :: theta, Theta_capital
     public :: dtheta_dx, dTheta_capital_dx
+    public :: dtheta_dU, dTheta_capital_dU
     public :: initialize_quantum_numbers
     public :: compute_residual
     public :: compute_jacobian
+    public :: compute_dFdU
+    public :: compute_energy
 
 contains
 
@@ -94,6 +97,60 @@ contains
             res = (2.0_dp * U) / denom
         end if
     end function dTheta_capital_dx
+
+    !> Derivative of the charge-spin scattering function θ with respect to U
+    !!
+    !! Calculates ∂θ/∂U = -4x / (U² + 4x²)
+    !!
+    !! This derivative is needed for continuation methods (preditor-corretor)
+    !! to estimate how rapidities change with U.
+    !!
+    !! @param[in] x   Difference in rapidities (k - Λ)
+    !! @param[in] U   Hubbard interaction
+    !! @return        Value of ∂θ/∂U
+    !!
+    !! @note For U → 0, ∂θ/∂U → 0 (θ becomes constant: π·sign(x))
+    !! @note This is NOT the same as dθ/dx (different partial derivative)
+    !!
+    !! @see dtheta_dx, theta
+    function dtheta_dU(x, U) result(res)
+        real(dp), intent(in) :: x, U
+        real(dp) :: res, denom
+
+        if (abs(U) < U_SMALL) then
+            res = 0.0_dp
+        else
+            denom = U**2 + 4.0_dp * x**2
+            res = - (4.0_dp * x) / denom
+        end if
+    end function dtheta_dU
+
+    !> Derivative of the spin-spin scattering function Θ with respect to U
+    !!
+    !! Calculates ∂Θ/∂U = -2x / (U² + x²)
+    !!
+    !! This derivative is needed for continuation methods to estimate
+    !! how spin rapidities change with the Hubbard interaction strength.
+    !!
+    !! @param[in] x   Difference in rapidities (Λ - Λ')
+    !! @param[in] U   Hubbard interaction
+    !! @return        Value of ∂Θ/∂U
+    !!
+    !! @note For U → 0, ∂Θ/∂U → 0 (Θ becomes constant: π·sign(x))
+    !! @note This is NOT the same as dΘ/dx (different partial derivative)
+    !!
+    !! @see dTheta_capital_dx, Theta_capital
+    function dTheta_capital_dU(x, U) result(res)
+        real(dp), intent(in) :: x, U
+        real(dp) :: res, denom
+
+        if (abs(U) < U_SMALL) then
+            res = 0.0_dp
+        else
+            denom = U**2 + x**2
+            res = - (2.0_dp * x) / denom
+        end if
+    end function dTheta_capital_dU
 
     !> Initialize quantum numbers for the ground state
     !!
@@ -324,4 +381,108 @@ contains
         end do
 
     end function
+
+    !> Computes the derivative of the residual vector with respect to U: ∂F/∂U
+    !!
+    !! This function calculates how the Lieb-Wu equations change when the
+    !! Hubbard interaction U is varied. It is essential for continuation methods
+    !! (preditor-corretor) to efficiently solve for multiple U values.
+    !!
+    !! The derivative is computed using the chain rule on the Bethe equations:
+    !!
+    !! **Charge equations:**
+    !! \[ \frac{\partial F_j^k}{\partial U} = -\frac{1}{L} \sum_{\alpha=1}^{M} \frac{\partial \theta}{\partial U}(k_j - \Lambda_\alpha, U) \]
+    !!
+    !! **Spin equations:**
+    !! \[ \frac{\partial F_\alpha^\Lambda}{\partial U} = -\sum_{j=1}^{N_\uparrow} \frac{\partial \theta}{\partial U}(\Lambda_\alpha - k_j, U) 
+    !!    + \sum_{\beta \neq \alpha} \frac{\partial \Theta}{\partial U}(\Lambda_\alpha - \Lambda_\beta, U) \]
+    !!
+    !! @param[in] k         Charge rapidities (size N↑)
+    !! @param[in] Lambda    Spin rapidities (size M = N↓)
+    !! @param[in] I         Charge quantum numbers (not used, but kept for consistency)
+    !! @param[in] J_capital Spin quantum numbers (not used, but kept for consistency)
+    !! @param[in] L         Number of lattice sites
+    !! @param[in] U         Hubbard interaction strength
+    !! @return dFdU         Derivative vector ∂F/∂U (size N↑ + M)
+    !!
+    !! @note For U=0, ∂F/∂U = 0 (equations become independent of U)
+    !! @note This is used in implicit derivative: dx/dU = -J⁻¹·(∂F/∂U)
+    !!
+    !! @see compute_residual, dtheta_dU, dTheta_capital_dU
+    function compute_dFdU(k, Lambda, I, J_capital, L, U) result(dFdU)
+        real(dp), intent(in) :: k(:), Lambda(:), I(:), J_capital(:), U
+        integer, intent(in) :: L
+        integer :: j, alpha, beta, Nup, M
+        real(dp) :: summ, summ1, summ2
+        real(dp) :: dFdU(size(k) + size(Lambda))
+
+        Nup = size(k)
+        M = size(Lambda)
+
+        ! Special case: U ≈ 0
+        if (abs(U) < U_SMALL) then
+            ! For U=0, F does not depend on U → dF/dU = 0
+            dFdU = 0.0_dp
+            return
+        end if
+        
+        ! General case: U > 0
+        ! Charge equations: dF^k/dU
+        do j = 1, Nup
+            summ = 0.0_dp
+            do alpha = 1, M
+                summ = summ + dtheta_dU(k(j) - Lambda(alpha), U)
+            end do
+            
+            dFdU(j) = -(1.0_dp / L) * summ
+        end do
+
+        ! Spin equations: dF^Lambda/dU
+        do alpha = 1, M
+            summ1 = 0.0_dp
+            summ2 = 0.0_dp
+
+            do j = 1, Nup
+                summ1 = summ1 + dtheta_dU(Lambda(alpha) - k(j), U)
+            end do
+
+            do beta = 1, M
+                if (beta /= alpha) then
+                    summ2 = summ2 + dTheta_capital_dU(Lambda(alpha) - Lambda(beta), U)
+                end if
+            end do
+
+            dFdU(Nup + alpha) = -summ1 + summ2
+        end do
+        
+    end function compute_dFdU
+
+    !> Computes the ground state energy from Bethe Ansatz rapidities
+    !!
+    !! Calculates the total energy of the system using the Bethe Ansatz solution:
+    !!
+    !! \[ E = -2 \sum_{j=1}^{N_\uparrow} \cos(k_j) \]
+    !!
+    !! where k_j are the charge rapidities (momenta) of the electrons.
+    !!
+    !! @param[in] k  Charge rapidities (size N↑)
+    !! @return    E  Total ground state energy
+    !!
+    !! @note Energy is in units of hopping t (t=1 in our convention)
+    !! @note For free Fermi gas (U=0) with symmetric filling, E may be zero due to cancellation
+    !! @note Energy per site: E/L is typically O(1) for moderate densities
+    !!
+    !! Physical interpretation:
+    !! - E < 0: Bound state (electrons gain kinetic energy from hopping)
+    !! - |E| increases with particle number N
+    !! - For U=0, E = kinetic energy only
+    !! - For U>0, this is the total energy (kinetic + interaction via BA)
+    !!
+    !! @see compute_residual, solve_newton
+    function compute_energy(k) result(E)
+        real(dp), intent(in) :: k(:)
+        real(dp) :: E
+
+        E = -2.0_dp * SUM(COS(k))
+    end function compute_energy
 end module bethe_equations
