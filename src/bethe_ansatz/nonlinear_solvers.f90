@@ -6,6 +6,7 @@ module nonlinear_solvers
 
     ! public :: solve_newton
     public :: solve_linear_system
+    public :: line_search
 
     real(dp), parameter :: ARMIJO_C = 1.0e-4_dp
     integer, parameter :: MAX_LS_ITER = 20
@@ -73,18 +74,19 @@ contains
     end subroutine
 
     function line_search(x, dx, F_old, I, J, L, U) result(alpha)
-        real(dp) :: alpha, norm_F_old, norm_F_trial, x_trial(size(x)), F_trial(:)
-        real(dp), allocatable :: k(:), Lambda(:)
-        integer :: Nup, M, step
         real(dp), intent(in) :: x(:), dx(:), F_old(:), I(:), J(:)
         real(dp), intent(in) :: U
         integer, intent(in) :: L
+        real(dp) :: alpha, norm_F_old, norm_F_trial
+        real(dp), allocatable :: k(:), Lambda(:), x_trial(:), F_trial(:)
+        integer :: Nup, M, step
 
         alpha = 1.0_dp
         norm_F_old = NORM2(F_old)
         Nup = size(I)
         M = size(J)
 
+        allocate(x_trial(Nup+M))
         allocate(k(Nup), Lambda(M))
 
         do step = 1, MAX_LS_ITER
@@ -92,19 +94,19 @@ contains
 
             k = x_trial(1:Nup)
             Lambda = x_trial(Nup+1:)
-            
+
             F_trial = compute_residual(k, Lambda, I, J, L, U)
             norm_F_trial = NORM2(F_trial)
 
             if (norm_F_trial < (1.0_dp - ARMIJO_C * alpha) * norm_F_old) then
-                deallocate(k, Lambda)
+                deallocate(x_trial, k, Lambda)
                 return
             end if
 
             alpha = alpha / 2.0_dp
         end do
 
-        deallocate(k, Lambda)
+        deallocate(x_trial, k, Lambda)
     end function
 
 end module nonlinear_solvers
