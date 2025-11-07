@@ -9,6 +9,7 @@ copyright = "2025 Guilherme Canella"
 auto-executables = true
 auto-tests = true
 auto-examples = true
+link = ["lapack", "blas"]
 
 [dependencies]
 
