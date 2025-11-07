@@ -166,7 +166,17 @@ contains
 
         Nup = size(k)
         M = size(Lambda)
+
+        ! Special case: U ≈ 0
+        if (abs(U) < U_SMALL) then
+            ! For U=0, the exact solution is k_j = 2π·I_j/L
+            ! Residual must be exactly zero
+            F(1:Nup) = k - TWOPI * I / real(L, dp)
+            F(Nup+1:Nup+M) = 0.0_dp  ! Lambda is arbitrary
+            return
+        end if
         
+        ! General case: U > 0
         ! Charge equations: F^k
         do j = 1, Nup
             summ = 0.0_dp
@@ -244,12 +254,23 @@ contains
         Nup = size(k)
         M = size(Lambda)
 
-        !! Jacobian
         !!
         !!            | Block A  Block B |
         !! Jacobian = |                  |
         !!            | Block C  Block D |
+        !!
+
+        ! Special case: U ≈ 0 (free Fermi gas)
+        if (abs(U) < U_SMALL) then
+            ! Para U=0, o Jacobiano é identidade (equações desacoplam)
+            Jacobian = 0.0_dp
+            do i = 1, Nup + M
+                Jacobian(i, i) = 1.0_dp
+            end do
+            return
+        end if
         
+        ! General case: U > 0
         !! Block A: dF^k_j/dk_i
         do j = 1, Nup
             do i = 1, Nup
@@ -295,7 +316,7 @@ contains
                         end if
                     end do
 
-                    Jacobian(Nup + alpha, Nup + gamma) = summ1 + summ2
+                    Jacobian(Nup + alpha, Nup + gamma) = -(summ1 - summ2)
                 else
                     Jacobian(Nup + alpha, Nup + gamma) = - (2.0_dp * U) / (U**2 + (Lambda(alpha) - Lambda(gamma))**2)
                 end if
