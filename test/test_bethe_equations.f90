@@ -21,7 +21,8 @@ contains
             test("quantum_numbers_even", test_quantum_numbers_even), &
             test("residual_dimensions", test_residual_dimensions), &
             test("jacobian_dimensions", test_jacobian_dimensions), &
-            test("jacobian_diagonal", test_jacobian_diagonal) &
+            test("jacobian_diagonal", test_jacobian_diagonal), &
+            test("jacobian_numerical", test_jacobian_numerical) &
         ])
     end function
 
@@ -253,6 +254,57 @@ contains
         end do
         
         deallocate(k, Lambda)
+    end subroutine
+
+    subroutine test_jacobian_numerical()
+        use lsda_constants, only: dp, TWOPI
+        use bethe_equations
+        implicit none
+        
+        integer :: Nup, M, L, i, j
+        real(dp) :: U, h
+        real(dp), allocatable :: k(:), Lambda(:), I_qn(:), J_qn(:)
+        real(dp), allocatable :: J_analytical(:,:), J_numerical(:,:)
+        real(dp), allocatable :: F_plus(:), F_minus(:), x(:), x_pert(:)
+        
+        Nup = 2
+        M = 1
+        L = 10
+        U = 4.0_dp
+        h = 1.0e-6_dp  ! Passo para diferenças finitas
+        
+        allocate(k(Nup), Lambda(M), I_qn(Nup), J_qn(M))
+        allocate(J_analytical(Nup+M, Nup+M), J_numerical(Nup+M, Nup+M))
+        allocate(F_plus(Nup+M), F_minus(Nup+M))
+        allocate(x(Nup+M), x_pert(Nup+M))
+        
+        call initialize_quantum_numbers(Nup, M, I_qn, J_qn)
+        
+        ! Ponto de teste
+        k = TWOPI * I_qn / real(L, dp)
+        Lambda = 0.0_dp
+        
+        x(1:Nup) = k
+        x(Nup+1:) = Lambda
+        
+        ! Jacobiano analítico
+        J_analytical = compute_jacobian(k, Lambda, L, U)
+        
+        ! Jacobiano numérico (diferenças finitas centrais)
+        do j = 1, Nup+M
+            x_pert = x
+            x_pert(j) = x(j) + h
+            F_plus = compute_residual(x_pert(1:Nup), x_pert(Nup+1:), I_qn, J_qn, L, U)
+            
+            x_pert(j) = x(j) - h
+            F_minus = compute_residual(x_pert(1:Nup), x_pert(Nup+1:), I_qn, J_qn, L, U)
+            
+            J_numerical(:, j) = (F_plus - F_minus) / (2.0_dp * h)
+        end do
+        
+        deallocate(k, Lambda, I_qn, J_qn, J_analytical, J_numerical)
+        deallocate(F_plus, F_minus, x, x_pert)
+        
     end subroutine
 
 end program

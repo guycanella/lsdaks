@@ -15,7 +15,11 @@ contains
             test("solve_identity", test_solve_identity), &
             test("solve_inputs_not_modified", test_inputs_not_modified), &
             test("line_search_full_step", test_line_search_full_step), &
-            test("line_search_positive_alpha", test_line_search_positive_alpha) &
+            test("line_search_positive_alpha", test_line_search_positive_alpha), &
+            test("newton_fermi_gas", test_newton_fermi_gas), &
+            test("newton_small_system", test_newton_small_system), &
+            test("newton_convergence_flag", test_newton_convergence_flag), &
+            test("newton_residual_reduction", test_newton_residual_reduction) &
         ])
     end function
 
@@ -30,7 +34,7 @@ contains
         b = [5.0_dp, 7.0_dp]
         x_expected = [1.6_dp, 1.8_dp]
         
-        call solve_linear_system(A, b, x)
+        call solve_linear_system(A, x, b)
         
         call check(abs(x(1) - x_expected(1)) < 1.0e-12_dp)
         call check(abs(x(2) - x_expected(2)) < 1.0e-12_dp)
@@ -47,7 +51,7 @@ contains
         A = reshape([1.0_dp, 0.0_dp, 0.0_dp, 1.0_dp], [2, 2])
         b = [3.0_dp, 7.0_dp]
         
-        call solve_linear_system(A, b, x)
+        call solve_linear_system(A, x, b)
         
         call check(abs(x(1) - b(1)) < 1.0e-14_dp)
         call check(abs(x(2) - b(2)) < 1.0e-14_dp)
@@ -68,7 +72,7 @@ contains
         A_original = A
         b_original = b
         
-        call solve_linear_system(A, b, x)
+        call solve_linear_system(A, x, b)
 
         ! Check that A and b have not changed
         call check(all(abs(A - A_original) < 1.0e-14_dp))
@@ -141,6 +145,159 @@ contains
         call check(alpha <= 1.0_dp)
         
         deallocate(x, dx, I, J)
+    end subroutine
+
+    !> Test 1: U=0 (free Fermi gas)
+    !! Analytical solution: k_j = 2π·I_j/L, arbitrary Lambda (does not appear)
+    subroutine test_newton_fermi_gas()
+        use fortuno_serial, only: check => serial_check
+        use lsda_constants, only: dp, TWOPI
+        use bethe_equations, only: initialize_quantum_numbers, compute_residual
+        use nonlinear_solvers, only: solve_newton
+        
+        integer :: Nup, M, L
+        real(dp) :: U
+        real(dp), allocatable :: I(:), J(:), x(:), k(:), Lambda(:), F(:)
+        logical :: converged
+        
+        ! System: 3 up, 2 down, L=10, U=0
+        Nup = 3
+        M = 2
+        L = 10
+        U = 0.0_dp
+        
+        allocate(I(Nup), J(M), x(Nup+M))
+        allocate(k(Nup), Lambda(M), F(Nup+M))
+
+        call initialize_quantum_numbers(Nup, M, I, J)
+
+        ! Initial guess: k = 2π·I/L (exact solution!), Lambda = 0
+        x(1:Nup) = TWOPI * I / real(L, dp)
+        x(Nup+1:) = 0.0_dp
+        
+        call solve_newton(x, I, J, L, U, converged)
+        call check(converged, "Newton should converge for U=0")
+        
+        k = x(1:Nup)
+        Lambda = x(Nup+1:)
+        F = compute_residual(k, Lambda, I, J, L, U)
+        call check(norm2(F) < 1.0e-9_dp, "Residual should be near zero")
+        
+        call check(all(abs(k - TWOPI*I/real(L,dp)) < 1.0e-8_dp), &
+                   "k should match analytical solution for U=0")
+        
+        deallocate(I, J, x, k, Lambda, F)
+    end subroutine
+
+    !> Test 2: Small system (N=2, M=1, U=4)
+    subroutine test_newton_small_system()
+        use fortuno_serial, only: check => serial_check
+        use lsda_constants, only: dp, TWOPI
+        use bethe_equations, only: initialize_quantum_numbers, compute_residual
+        use nonlinear_solvers, only: solve_newton
+        
+        integer :: Nup, M, L
+        real(dp) :: U
+        real(dp), allocatable :: I(:), J(:), x(:), F(:), k(:), Lambda(:)
+        logical :: converged
+        
+        Nup = 2
+        M = 1
+        L = 10
+        U = 4.0_dp
+        
+        allocate(I(Nup), J(M), x(Nup+M))
+        allocate(k(Nup), Lambda(M), F(Nup+M))
+        
+        call initialize_quantum_numbers(Nup, M, I, J)
+        
+        x(1:Nup) = TWOPI * I / real(L, dp)
+        x(Nup+1:) = 0.0_dp
+        
+        call solve_newton(x, I, J, L, U, converged)
+        call check(converged, "Newton should converge for small system")
+        
+        k = x(1:Nup)
+        Lambda = x(Nup+1:)
+        F = compute_residual(k, Lambda, I, J, L, U)
+        call check(norm2(F) < 1.0e-9_dp, "Final residual should be small")
+        
+        deallocate(I, J, x, k, Lambda, F)
+    end subroutine
+
+    !> Test 3: Check convergence flag
+    subroutine test_newton_convergence_flag()
+        use fortuno_serial, only: check => serial_check
+        use lsda_constants, only: dp, TWOPI
+        use bethe_equations, only: initialize_quantum_numbers
+        use nonlinear_solvers, only: solve_newton
+        
+        integer :: Nup, M, L
+        real(dp) :: U
+        real(dp), allocatable :: I(:), J(:), x(:)
+        logical :: converged
+        
+        Nup = 3
+        M = 2
+        L = 10
+        U = 2.0_dp
+        
+        allocate(I(Nup), J(M), x(Nup+M))
+        
+        call initialize_quantum_numbers(Nup, M, I, J)
+        
+        x(1:Nup) = TWOPI * I / real(L, dp)
+        x(Nup+1:) = 0.0_dp
+        
+        call solve_newton(x, I, J, L, U, converged)
+        call check(converged .eqv. .true., "Converged flag should be true")
+        
+        deallocate(I, J, x)
+    end subroutine
+
+    !> Test 4: Check residual reduction
+    subroutine test_newton_residual_reduction()
+        use fortuno_serial, only: check => serial_check
+        use lsda_constants, only: dp, TWOPI
+        use bethe_equations, only: initialize_quantum_numbers, compute_residual
+        use nonlinear_solvers, only: solve_newton
+        
+        integer :: Nup, M, L
+        real(dp) :: U
+        real(dp), allocatable :: I(:), J(:), x(:), k(:), Lambda(:), F_initial(:), F_final(:)
+        real(dp) :: norm_initial, norm_final
+        logical :: converged
+        
+        Nup = 3
+        M = 2
+        L = 10
+        U = 4.0_dp
+        
+        allocate(I(Nup), J(M), x(Nup+M))
+        allocate(k(Nup), Lambda(M))
+        allocate(F_initial(Nup+M), F_final(Nup+M))
+        
+        call initialize_quantum_numbers(Nup, M, I, J)
+
+        x(1:Nup) = TWOPI * I / real(L, dp)
+        x(Nup+1:) = 0.0_dp
+        
+        k = x(1:Nup)
+        Lambda = x(Nup+1:)
+        F_initial = compute_residual(k, Lambda, I, J, L, U)
+        norm_initial = norm2(F_initial)
+        
+        call solve_newton(x, I, J, L, U, converged)
+        
+        k = x(1:Nup)
+        Lambda = x(Nup+1:)
+        F_final = compute_residual(k, Lambda, I, J, L, U)
+        norm_final = norm2(F_final)
+        
+        call check(norm_final < 0.01_dp * norm_initial, &
+                   "Final residual should be much smaller than initial")
+        
+        deallocate(I, J, x, k, Lambda, F_initial, F_final)
     end subroutine
 
 end program
