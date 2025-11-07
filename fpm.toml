@@ -24,6 +24,16 @@ name = "test_bethe_equations"
 source-dir = "test"
 main = "test_bethe_equations.f90"
 
+[[test]]
+name = "test_nonlinear_solvers"
+source-dir = "test"
+main = "test_nonlinear_solvers.f90"
+
+[[test]]
+name = "test_continuation"
+source-dir = "test"
+main = "test_continuation.f90"
+
 [[executable]]
 name = "lsdaks"
 source-dir = "app"
