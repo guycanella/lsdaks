@@ -39,6 +39,11 @@ name = "test_continuation"
 source-dir = "test"
 main = "test_continuation.f90"
 
+[[test]]
+name = "test_table_io"
+source-dir = "test"
+main = "test_table_io.f90"
+
 [[executable]]
 name = "lsdaks"
 source-dir = "app"
