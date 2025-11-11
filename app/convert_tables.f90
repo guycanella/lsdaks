@@ -23,7 +23,7 @@ program convert_tables
 
     ! List of all available U values
     real(dp), parameter :: U_VALUES(*) = [ &
-        0.90_dp, 1.00_dp, 1.10_dp, 2.00_dp, 3.00_dp, 4.00_dp, 4.10_dp, &
+        1.00_dp, 1.10_dp, 2.00_dp, 3.00_dp, 4.00_dp, 4.10_dp, &
         5.00_dp, 5.90_dp, 6.00_dp, 6.10_dp, 6.90_dp, 7.00_dp, 7.10_dp, &
         7.90_dp, 8.00_dp, 8.10_dp, 8.90_dp, 9.00_dp, 9.10_dp, 10.00_dp, &
         12.00_dp, 14.00_dp, 16.00_dp, 18.00_dp, 20.00_dp ]
