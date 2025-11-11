@@ -8,6 +8,7 @@ module table_io
     public :: xc_table_t
     public :: read_cpp_table, write_fortran_table, read_fortran_table
     public :: deallocate_table, print_table_info
+    public :: extract_U_from_filename
 
     integer, parameter :: MAX_LINE_LEN = 256
 
@@ -70,7 +71,7 @@ contains
                 end if
                 table%n_grid(i_block) = n_val
 
-                read(unit, '(A)', iostat=io_stat) line
+                read(unit, '(A)', iostat=io_stat) line  ! Skip header
                 if (io_stat /= 0) then
                     status = -4
                     close(unit)
@@ -78,7 +79,25 @@ contains
                 end if
 
                 do i_mag = 1, n_mag_points
-                    read(unit, *, iostat=io_stat) m_val, exc_val, vxc_up_val, vxc_dn_val
+                    read(unit, '(A)', iostat=io_stat) line
+                    
+                    if (io_stat /= 0 .or. line(1:2) == 'n:') then
+                        if (i_mag > 1) then
+                            table%m_grid(i_mag:n_mag_points, i_block) = &
+                                table%m_grid(i_mag-1, i_block)
+                            table%exc(i_mag:n_mag_points, i_block) = &
+                                table%exc(i_mag-1, i_block)
+                            table%vxc_up(i_mag:n_mag_points, i_block) = &
+                                table%vxc_up(i_mag-1, i_block)
+                            table%vxc_dn(i_mag:n_mag_points, i_block) = &
+                                table%vxc_dn(i_mag-1, i_block)
+                        end if
+                        
+                        if (line(1:2) == 'n:') backspace(unit)
+                        exit
+                    end if
+                    
+                    read(line, *, iostat=io_stat) m_val, exc_val, vxc_up_val, vxc_dn_val
                     if (io_stat /= 0) then
                         status = -5
                         close(unit)
@@ -97,13 +116,12 @@ contains
         status = 0
     end subroutine read_cpp_table
 
-
     subroutine count_blocks_and_points(filename, n_blocks, n_mag_points, status)
         character(len=*), intent(in) :: filename
         integer, intent(out) :: n_blocks, n_mag_points, status
         integer :: unit, io_stat
         character(len=MAX_LINE_LEN) :: line
-        integer :: points_in_block
+        integer :: points_in_block, max_points
         logical :: in_data_section
 
         open(newunit=unit, file=filename, status='old', action='read', iostat=io_stat)
@@ -113,7 +131,7 @@ contains
         end if
 
         n_blocks = 0
-        n_mag_points = 0
+        max_points = 0
         points_in_block = 0
         in_data_section = .false.
 
@@ -122,34 +140,44 @@ contains
             if (io_stat /= 0) exit
 
             if (line(1:2) == 'n:') then
-                if (n_blocks > 0 .and. n_mag_points == 0) n_mag_points = points_in_block
+                if (n_blocks > 0) then
+                    max_points = max(max_points, points_in_block)
+                end if
+                
                 n_blocks = n_blocks + 1
                 points_in_block = 0
                 in_data_section = .false.
+                
             else if (line(1:4) == '#mag') then
                 in_data_section = .true.
+                
             else if (in_data_section .and. len_trim(line) > 0) then
                 points_in_block = points_in_block + 1
             end if
         end do
 
-        if (n_mag_points == 0) n_mag_points = points_in_block
+        if (points_in_block > 0) then
+            max_points = max(max_points, points_in_block)
+        end if
+        
+        n_mag_points = max_points
         close(unit)
 
         if (n_blocks == 0 .or. n_mag_points == 0) then
             status = -2
             return
         end if
+        
         status = 0
     end subroutine count_blocks_and_points
-
 
     subroutine extract_U_from_filename(filename, U, status)
         character(len=*), intent(in) :: filename
         real(dp), intent(out) :: U
         integer, intent(out) :: status
-        integer :: pos_u, io_stat
+        integer :: pos_u, pos_end, i, io_stat
         character(len=32) :: u_string
+        logical :: found_dot
 
         pos_u = index(filename, '_u')
         if (pos_u == 0) then
@@ -158,15 +186,39 @@ contains
         end if
 
         u_string = filename(pos_u+2:)
-        read(u_string, *, iostat=io_stat) U
+        
+        pos_end = 0
+        found_dot = .false.
+        
+        do i = 1, len_trim(u_string)
+            if (u_string(i:i) == '.') then
+                if (found_dot) then
+                    pos_end = i - 1
+                    exit
+                else
+                    found_dot = .true.
+                end if
+            else if (.not. ((u_string(i:i) >= '0' .and. u_string(i:i) <= '9') .or. &
+                            u_string(i:i) == '-' .or. u_string(i:i) == '+' .or. &
+                            u_string(i:i) == 'e' .or. u_string(i:i) == 'E')) then
+                pos_end = i - 1
+                exit
+            end if
+        end do
+        
+        if (pos_end == 0) pos_end = len_trim(u_string)
+        
+        read(u_string(1:pos_end), *, iostat=io_stat) U
+        
         if (io_stat /= 0) then
             status = -2
             return
         end if
+        
         status = 0
+
     end subroutine extract_U_from_filename
-
-
+    
     subroutine write_fortran_table(filename, table, status)
         character(len=*), intent(in) :: filename
         type(xc_table_t), intent(in) :: table
