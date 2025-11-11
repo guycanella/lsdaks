@@ -20,7 +20,7 @@ module table_io
         real(dp), allocatable :: m_grid(:,:)
         real(dp), allocatable :: exc(:,:)
         real(dp), allocatable :: vxc_up(:,:)
-        real(dp), allocatable :: vxc_dn(:,:)
+        real(dp), allocatable :: vxc_dw(:,:)
     end type xc_table_t
 
 contains
@@ -33,7 +33,7 @@ contains
         character(len=MAX_LINE_LEN) :: line
         integer :: n_blocks, n_mag_points
         integer :: i_block, i_mag
-        real(dp) :: n_val, m_val, exc_val, vxc_up_val, vxc_dn_val
+        real(dp) :: n_val, m_val, exc_val, vxc_up_val, vxc_dw_val
 
         call extract_U_from_filename(filename, table%U, status)
         if (status /= 0) return
@@ -48,7 +48,7 @@ contains
         allocate(table%m_grid(n_mag_points, n_blocks))
         allocate(table%exc(n_mag_points, n_blocks))
         allocate(table%vxc_up(n_mag_points, n_blocks))
-        allocate(table%vxc_dn(n_mag_points, n_blocks))
+        allocate(table%vxc_dw(n_mag_points, n_blocks))
 
         open(newunit=unit, file=filename, status='old', action='read', iostat=io_stat)
         if (io_stat /= 0) then
@@ -89,15 +89,15 @@ contains
                                 table%exc(i_mag-1, i_block)
                             table%vxc_up(i_mag:n_mag_points, i_block) = &
                                 table%vxc_up(i_mag-1, i_block)
-                            table%vxc_dn(i_mag:n_mag_points, i_block) = &
-                                table%vxc_dn(i_mag-1, i_block)
+                            table%vxc_dw(i_mag:n_mag_points, i_block) = &
+                                table%vxc_dw(i_mag-1, i_block)
                         end if
                         
                         if (line(1:2) == 'n:') backspace(unit)
                         exit
                     end if
                     
-                    read(line, *, iostat=io_stat) m_val, exc_val, vxc_up_val, vxc_dn_val
+                    read(line, *, iostat=io_stat) m_val, exc_val, vxc_up_val, vxc_dw_val
                     if (io_stat /= 0) then
                         status = -5
                         close(unit)
@@ -107,7 +107,7 @@ contains
                     table%m_grid(i_mag, i_block) = m_val
                     table%exc(i_mag, i_block) = exc_val
                     table%vxc_up(i_mag, i_block) = vxc_up_val
-                    table%vxc_dn(i_mag, i_block) = vxc_dn_val
+                    table%vxc_dw(i_mag, i_block) = vxc_dw_val
                 end do
             end if
         end do
@@ -249,7 +249,7 @@ contains
         if (io_stat /= 0) goto 100
         write(unit, iostat=io_stat) table%vxc_up
         if (io_stat /= 0) goto 100
-        write(unit, iostat=io_stat) table%vxc_dn
+        write(unit, iostat=io_stat) table%vxc_dw
         if (io_stat /= 0) goto 100
 
         close(unit)
@@ -291,7 +291,7 @@ contains
         allocate(table%m_grid(table%n_points_m, table%n_points_n))
         allocate(table%exc(table%n_points_m, table%n_points_n))
         allocate(table%vxc_up(table%n_points_m, table%n_points_n))
-        allocate(table%vxc_dn(table%n_points_m, table%n_points_n))
+        allocate(table%vxc_dw(table%n_points_m, table%n_points_n))
 
         read(unit, iostat=io_stat) table%n_grid
         if (io_stat /= 0) goto 200
@@ -301,7 +301,7 @@ contains
         if (io_stat /= 0) goto 200
         read(unit, iostat=io_stat) table%vxc_up
         if (io_stat /= 0) goto 200
-        read(unit, iostat=io_stat) table%vxc_dn
+        read(unit, iostat=io_stat) table%vxc_dw
         if (io_stat /= 0) goto 200
 
         close(unit)
@@ -320,7 +320,7 @@ contains
         if (allocated(table%m_grid)) deallocate(table%m_grid)
         if (allocated(table%exc)) deallocate(table%exc)
         if (allocated(table%vxc_up)) deallocate(table%vxc_up)
-        if (allocated(table%vxc_dn)) deallocate(table%vxc_dn)
+        if (allocated(table%vxc_dw)) deallocate(table%vxc_dw)
     end subroutine deallocate_table
 
 
@@ -344,8 +344,8 @@ contains
         m_max = maxval(table%m_grid)
         exc_min = minval(table%exc)
         exc_max = maxval(table%exc)
-        vxc_min = min(minval(table%vxc_up), minval(table%vxc_dn))
-        vxc_max = max(maxval(table%vxc_up), maxval(table%vxc_dn))
+        vxc_min = min(minval(table%vxc_up), minval(table%vxc_dw))
+        vxc_max = max(maxval(table%vxc_up), maxval(table%vxc_dw))
 
         write(out_unit, '(A)') "========================================="
         write(out_unit, '(A)') "XC Table Summary"

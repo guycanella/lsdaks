@@ -44,7 +44,7 @@ contains
         call check(allocated(table%m_grid), "m_grid should be allocated")
         call check(allocated(table%exc), "exc should be allocated")
         call check(allocated(table%vxc_up), "vxc_up should be allocated")
-        call check(allocated(table%vxc_dn), "vxc_dn should be allocated")
+        call check(allocated(table%vxc_dw), "vxc_dw should be allocated")
 
         call deallocate_table(table)
     end subroutine test_read_cpp_u4
@@ -192,8 +192,8 @@ contains
         call check(maxval(table%exc) <= 0.0_dp + 1.0e-10_dp, &
                    "XC energy should be negative or zero")
 
-        call check(abs(table%vxc_up(1,1) - table%vxc_dn(1,1)) < 1.0e-10_dp, &
-                   "At m=0, vxc_up should equal vxc_dn")
+        call check(abs(table%vxc_up(1,1) - table%vxc_dw(1,1)) < 1.0e-10_dp, &
+                   "At m=0, vxc_up should equal vxc_dw")
 
         call deallocate_table(table)
     end subroutine test_table_ranges
@@ -232,7 +232,7 @@ contains
         call check(.not. allocated(table%m_grid), "m_grid should be deallocated")
         call check(.not. allocated(table%exc), "exc should be deallocated")
         call check(.not. allocated(table%vxc_up), "vxc_up should be deallocated")
-        call check(.not. allocated(table%vxc_dn), "vxc_dn should be deallocated")
+        call check(.not. allocated(table%vxc_dw), "vxc_dw should be deallocated")
 
         call deallocate_table(table)
     end subroutine test_deallocate_table
