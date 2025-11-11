@@ -1,0 +1,334 @@
+!> Module for LSDA exchange-correlation functional evaluation
+!!
+!! This module provides a high-level interface for evaluating the XC functional
+!! of the 1D Hubbard model at arbitrary points (n_up, n_dn) using:
+!! 1. Pre-computed Bethe Ansatz tables
+!! 2. 2D bicubic spline interpolation
+!! 3. Physical symmetries to cover the full domain
+!!
+!! Physical symmetries (4 regions):
+!!   Region I   (m ≥ 0, n ≤ 1): Direct table lookup
+!!   Region II  (m < 0, n ≤ 1): Spin exchange symmetry
+!!   Region III (m < 0, n > 1): Particle-hole symmetry
+!!   Region IV  (m ≥ 0, n > 1): Combined symmetry
+module xc_lsda
+    use lsda_constants, only: dp, U_SMALL
+    use spline2d, only: spline2d_t, spline2d_init, spline2d_eval, spline2d_destroy
+    use table_io, only: xc_table_t, read_fortran_table, deallocate_table
+    implicit none
+    private
+
+    !> LSDA XC functional type containing splines for exc, vxc_up, vxc_dn
+    type, public :: xc_lsda_t
+        real(dp) :: U = 0.0_dp                  !< Hubbard U parameter
+        type(spline2d_t) :: spl_exc             !< Spline for e_xc(n, m)
+        type(spline2d_t) :: spl_vxc_up          !< Spline for V_xc^up(n, m)
+        type(spline2d_t) :: spl_vxc_dn          !< Spline for V_xc^dn(n, m)
+        logical :: initialized = .false.        !< Initialization flag
+    end type xc_lsda_t
+
+    public :: xc_lsda_init
+    public :: get_exc
+    public :: get_vxc
+    public :: xc_lsda_destroy
+
+    private :: determine_region
+    private :: convert_to_nm
+    private :: apply_symmetry_transform
+
+contains
+
+    !> Initialize XC functional from table file
+    !!
+    !! Loads table and constructs 2D splines for exc, vxc_up, vxc_dn.
+    !!
+    !! @param[out] xc         XC functional object
+    !! @param[in]  table_file Path to table file (Fortran binary format)
+    !! @param[out] status     0 on success, -1 on error
+    subroutine xc_lsda_init(xc, table_file, status)
+        type(xc_lsda_t), intent(out) :: xc
+        character(len=*), intent(in) :: table_file
+        integer, intent(out) :: status
+
+        type(xc_table_t) :: table
+        integer :: io_stat
+        integer, allocatable :: n_y_pts(:)
+        integer :: i
+
+        status = 0
+
+        call read_fortran_table(table_file, table, io_stat)
+        if (io_stat /= 0) then
+            print *, "ERROR: Failed to read table file: ", trim(table_file)
+            status = -1
+            return
+        end if
+
+        xc%U = table%U
+
+        ! Create n_y_pts array (same for all n_grid points in current implementation)
+        allocate(n_y_pts(table%n_points_n))
+        do i = 1, table%n_points_n
+            n_y_pts(i) = table%n_points_m
+        end do
+
+        call spline2d_init(xc%spl_exc, table%n_grid, table%m_grid, &
+                           table%exc, n_y_pts)
+
+        call spline2d_init(xc%spl_vxc_up, table%n_grid, table%m_grid, &
+                           table%vxc_up, n_y_pts)
+
+        call spline2d_init(xc%spl_vxc_dn, table%n_grid, table%m_grid, &
+                           table%vxc_dw, n_y_pts)
+
+        deallocate(n_y_pts)
+
+        if (.not. xc%spl_exc%initialized .or. &
+            .not. xc%spl_vxc_up%initialized .or. &
+            .not. xc%spl_vxc_dn%initialized) then
+            print *, "ERROR: Spline initialization failed"
+            status = -1
+            call deallocate_table(table)
+            return
+        end if
+
+        xc%initialized = .true.
+
+        call deallocate_table(table)
+    end subroutine xc_lsda_init
+
+    !> Get exchange-correlation energy per particle at (n_up, n_dn)
+    !!
+    !! Uses symmetries to map any (n_up, n_dn) to Region I and interpolates.
+    !!
+    !! @param[in] xc   Initialized XC functional
+    !! @param[in] n_up Spin-up density (0 ≤ n_up ≤ 1)
+    !! @param[in] n_dn Spin-down density (0 ≤ n_dn ≤ 1)
+    !! @return         Exchange-correlation energy e_xc
+    function get_exc(xc, n_up, n_dn) result(exc)
+        type(xc_lsda_t), intent(in) :: xc
+        real(dp), intent(in) :: n_up, n_dn
+        real(dp) :: exc
+
+        integer :: region
+        real(dp) :: n_up_map, n_dn_map, n, m
+
+        if (.not. xc%initialized) then
+            print *, "ERROR: XC functional not initialized!"
+            exc = 0.0_dp
+            return
+        end if
+
+        ! Special case: U = 0 (free Fermi gas)
+        if (abs(xc%U) < U_SMALL) then
+            exc = 0.0_dp
+            return
+        end if
+
+        if (n_up < 0.0_dp .or. n_up > 1.0_dp .or. &
+            n_dn < 0.0_dp .or. n_dn > 1.0_dp) then
+            print *, "WARNING: Densities out of physical range!"
+            print *, "  n_up =", n_up, ", n_dn =", n_dn
+            exc = 0.0_dp
+            return
+        end if
+
+        if (n_up < 1.0e-12_dp .and. n_dn < 1.0e-12_dp) then
+            exc = 0.0_dp
+            return
+        end if
+
+        region = determine_region(n_up, n_dn)
+
+        call apply_symmetry_transform(region, n_up, n_dn, n_up_map, n_dn_map)
+        call convert_to_nm(n_up_map, n_dn_map, n, m)
+
+        exc = spline2d_eval(xc%spl_exc, n, m)
+    end function get_exc
+
+    !> Get exchange-correlation potentials at (n_up, n_dn)
+    !!
+    !! Returns V_xc^up and V_xc^dn using symmetries.
+    !!
+    !! @param[in]  xc      Initialized XC functional
+    !! @param[in]  n_up    Spin-up density (0 ≤ n_up ≤ 1)
+    !! @param[in]  n_dn    Spin-down density (0 ≤ n_dn ≤ 1)
+    !! @param[out] v_xc_up XC potential for spin-up
+    !! @param[out] v_xc_dn XC potential for spin-down
+    subroutine get_vxc(xc, n_up, n_dn, v_xc_up, v_xc_dn)
+        type(xc_lsda_t), intent(in) :: xc
+        real(dp), intent(in) :: n_up, n_dn
+        real(dp), intent(out) :: v_xc_up, v_xc_dn
+
+        integer :: region
+        real(dp) :: n_up_map, n_dn_map, n, m
+        real(dp) :: v_up_base, v_dn_base
+
+        if (.not. xc%initialized) then
+            print *, "ERROR: XC functional not initialized!"
+            v_xc_up = 0.0_dp
+            v_xc_dn = 0.0_dp
+            return
+        end if
+
+        ! Special case: U = 0
+        if (abs(xc%U) < U_SMALL) then
+            v_xc_up = 0.0_dp
+            v_xc_dn = 0.0_dp
+            return
+        end if
+
+        if (n_up < 0.0_dp .or. n_up > 1.0_dp .or. &
+            n_dn < 0.0_dp .or. n_dn > 1.0_dp) then
+            print *, "WARNING: Densities out of physical range!"
+            v_xc_up = 0.0_dp
+            v_xc_dn = 0.0_dp
+            return
+        end if
+
+        ! Special case: both densities zero
+        if (n_up < 1.0e-12_dp .and. n_dn < 1.0e-12_dp) then
+            v_xc_up = 0.0_dp
+            v_xc_dn = 0.0_dp
+            return
+        end if
+
+        region = determine_region(n_up, n_dn)
+
+        call apply_symmetry_transform(region, n_up, n_dn, n_up_map, n_dn_map)
+        call convert_to_nm(n_up_map, n_dn_map, n, m)
+
+        v_up_base = spline2d_eval(xc%spl_vxc_up, n, m)
+        v_dn_base = spline2d_eval(xc%spl_vxc_dn, n, m)
+
+        select case (region)
+        case (1)
+            ! Region I (m ≥ 0, n ≤ 1): Direct
+            v_xc_up = v_up_base
+            v_xc_dn = v_dn_base
+
+        case (2)
+            ! Region II (m < 0, n ≤ 1): Spin exchange
+            v_xc_up = v_dn_base
+            v_xc_dn = v_up_base
+
+        case (3)
+            ! Region III (m < 0, n > 1): Particle-hole symmetry
+            v_xc_up = -v_up_base
+            v_xc_dn = -v_dn_base
+
+        case (4)
+            ! Region IV (m ≥ 0, n > 1): Combined
+            v_xc_up = -v_dn_base
+            v_xc_dn = -v_up_base
+        end select
+    end subroutine get_vxc
+
+    !> Destroy XC functional and free memory
+    !!
+    !! @param[inout] xc XC functional object
+    subroutine xc_lsda_destroy(xc)
+        type(xc_lsda_t), intent(inout) :: xc
+
+        call spline2d_destroy(xc%spl_exc)
+        call spline2d_destroy(xc%spl_vxc_up)
+        call spline2d_destroy(xc%spl_vxc_dn)
+
+        xc%initialized = .false.
+        xc%U = 0.0_dp
+    end subroutine xc_lsda_destroy
+
+    !> Determine symmetry region for (n_up, n_dn)
+    !!
+    !! Region I:   m ≥ 0 and n ≤ 1
+    !! Region II:  m < 0 and n ≤ 1
+    !! Region III: m < 0 and n > 1
+    !! Region IV:  m ≥ 0 and n > 1
+    !!
+    !! @param[in] n_up Spin-up density
+    !! @param[in] n_dn Spin-down density
+    !! @return         Region number (1-4)
+    function determine_region(n_up, n_dn) result(region)
+        real(dp), intent(in) :: n_up, n_dn
+        integer :: region
+
+        real(dp) :: n, m
+
+        n = n_up + n_dn
+        m = n_up - n_dn
+
+        if (m >= 0.0_dp .and. n <= 1.0_dp) then
+            region = 1
+        else if (m < 0.0_dp .and. n <= 1.0_dp) then
+            region = 2
+        else if (m < 0.0_dp .and. n > 1.0_dp) then
+            region = 3
+        else
+            region = 4  ! m ≥ 0 and n > 1
+        end if
+    end function determine_region
+
+    !> Convert (n_up, n_dn) to (n, m) coordinates
+    !!
+    !! n = n_up + n_dn (total density)
+    !! m = n_up - n_dn (magnetization)
+    !!
+    !! @param[in]  n_up Spin-up density
+    !! @param[in]  n_dn Spin-down density
+    !! @param[out] n    Total density
+    !! @param[out] m    Magnetization
+    subroutine convert_to_nm(n_up, n_dn, n, m)
+        real(dp), intent(in) :: n_up, n_dn
+        real(dp), intent(out) :: n, m
+
+        n = n_up + n_dn
+        m = n_up - n_dn
+    end subroutine convert_to_nm
+
+    !> Apply symmetry transformation to map any region to Region I
+    !!
+    !! Transformations:
+    !! Region I:   (n_up, n_dn) → (n_up, n_dn)
+    !! Region II:  (n_up, n_dn) → (n_dn, n_up)     [spin exchange]
+    !! Region III: (n_up, n_dn) → (1-n_up, 1-n_dn) [particle-hole]
+    !! Region IV:  (n_up, n_dn) → (1-n_dn, 1-n_up) [combined]
+    !!
+    !! @param[in]  region   Symmetry region (1-4)
+    !! @param[in]  n_up     Original spin-up density
+    !! @param[in]  n_dn     Original spin-down density
+    !! @param[out] n_up_map Mapped spin-up density
+    !! @param[out] n_dn_map Mapped spin-down density
+    subroutine apply_symmetry_transform(region, n_up, n_dn, n_up_map, n_dn_map)
+        integer, intent(in) :: region
+        real(dp), intent(in) :: n_up, n_dn
+        real(dp), intent(out) :: n_up_map, n_dn_map
+
+        select case (region)
+        case (1)
+            ! Region I: Direct (no transformation)
+            n_up_map = n_up
+            n_dn_map = n_dn
+
+        case (2)
+            ! Region II: Spin exchange
+            n_up_map = n_dn
+            n_dn_map = n_up
+
+        case (3)
+            ! Region III: Particle-hole symmetry
+            n_up_map = 1.0_dp - n_up
+            n_dn_map = 1.0_dp - n_dn
+
+        case (4)
+            ! Region IV: Combined (particle-hole + spin exchange)
+            n_up_map = 1.0_dp - n_dn
+            n_dn_map = 1.0_dp - n_up
+
+        case default
+            ! Should never happen
+            print *, "ERROR: Invalid region:", region
+            n_up_map = n_up
+            n_dn_map = n_dn
+        end select
+    end subroutine apply_symmetry_transform
+end module xc_lsda
