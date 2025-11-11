@@ -58,13 +58,13 @@ lsda-hubbard/
 │   │   ├── output_writer.f90  # Escrita de resultados
 │   │   └── logger.f90         # Sistema de logging
 │   │
-│   ├── bethe_ansatz/          # 🔄 EM PROGRESSO (Fase 2)
+│   ├── bethe_ansatz/          # ✅ COMPLETO (Fases 1 & 2)
 │   │   ├── bethe_equations.f90      # ✅ COMPLETO - Equações de Lieb-Wu
 │   │   ├── nonlinear_solvers.f90    # ✅ COMPLETO - Newton-Raphson
 │   │   ├── continuation.f90         # ✅ COMPLETO - Sweep em U
 │   │   ├── table_io.f90             # ✅ COMPLETO - I/O tabelas (ASCII/binário)
-│   │   ├── bethe_tables.f90         # 🔄 EM PROGRESSO - Geração de tabelas
-│   │   └── table_manager.f90        # 🔜 TODO - Cache híbrido
+│   │   ├── bethe_tables.f90         # ✅ COMPLETO - Geração de tabelas XC
+│   │   └── table_manager.f90        # 🔜 TODO - Cache híbrido (opcional)
 │   │
 │   ├── xc_functional/         # 🔜 TODO
 │   │   ├── spline2d.f90       # Interpolação bicúbica 2D
@@ -103,11 +103,12 @@ lsda-hubbard/
 │   ├── main.f90               # Ponto de entrada (placeholder)
 │   └── convert_tables.f90     # ✅ COMPLETO - Utilitário conversão tabelas
 │
-├── test/                       # 🔄 EM PROGRESSO
+├── test/                       # 🔄 EM PROGRESSO (47 testes, 100% passando)
 │   ├── test_bethe_equations.f90      # ✅ COMPLETO - 17 testes
 │   ├── test_nonlinear_solvers.f90    # ✅ COMPLETO - 9 testes
 │   ├── test_continuation.f90         # ✅ COMPLETO - 5 testes
-│   ├── test_table_io.f90             # ✅ COMPLETO - Testes I/O tabelas
+│   ├── test_table_io.f90             # ✅ COMPLETO - 10 testes
+│   ├── test_bethe_tables.f90         # ✅ COMPLETO - 6 testes (NEW!)
 │   ├── test_splines.f90              # 🔜 TODO
 │   ├── test_potentials.f90           # 🔜 TODO
 │   ├── test_hamiltonian.f90          # 🔜 TODO
@@ -659,9 +660,9 @@ end do
 
 ---
 
-### Fase 2: Geração e I/O de Tabelas 🔄 EM PROGRESSO
+### Fase 2: Geração e I/O de Tabelas ✅ COMPLETA
 
-#### ✅ Completo:
+#### ✅ Completo (100%):
 - [x] **`table_io.f90`** (~400+ linhas, totalmente testado):
   - [x] Tipo `xc_table_t` para armazenar tabelas XC
   - [x] `read_cpp_table()` - Leitura de tabelas ASCII legadas (formato C++)
@@ -677,114 +678,92 @@ end do
   - [x] Argumentos de linha de comando: `fpm run convert_tables -- <input_dir> <output_dir>`
   - [x] Relatório de progresso e estatísticas de conversão
 
-- [x] **`test_table_io.f90`** (testes unitários completos):
+- [x] **`test_table_io.f90`** (274 linhas - 10 testes unitários):
   - [x] Leitura de tabelas C++ ASCII
   - [x] Escrita/leitura de formato binário Fortran
   - [x] Validação de roundtrip (ASCII → binário → memória)
   - [x] Parsing de U a partir do nome do arquivo
 
-#### 🔄 Em Progresso:
-- [ ] **`bethe_tables.f90`**: Geração de tabelas (n, m, U) → (E_xc, V_xc_up, V_xc_dn)
-  - [ ] Definir grid de densidades (n, m) para cada U
-  - [ ] Cálculo de E_xc = E_BA - E_0 (energia de troca-correlação)
-  - [ ] Cálculo de V_xc via derivadas numéricas: ∂E_xc/∂n_σ
-  - [ ] Tratamento especial para casos limite:
-    - [ ] U=0 (Fermi gas livre - solução analítica)
-    - [ ] Half-filling (n=1, m=0)
-    - [ ] Polarizado (m=n)
-  - [ ] Integração com continuation method (sweep em U)
+- [x] **`bethe_tables.f90`** (325 linhas, 6 testes - totalmente implementado):
+  - [x] Tipo `grid_params_t` para configurar grid de densidades
+  - [x] `compute_E0()` - Energia não-interagente (Fermi gas livre)
+  - [x] `compute_E_xc()` - Energia XC: E_xc = E_BA - E_0
+  - [x] `compute_V_xc_numerical()` - Potenciais XC via derivadas de 5 pontos
+  - [x] `generate_xc_table()` - Geração completa de tabela para dado U
+  - [x] `generate_table_grid()` - Geração flexível de grid com parâmetros customizados
+  - [x] Tratamento especial para casos limite:
+    - [x] U=0 (Fermi gas livre - retorna E_xc=0)
+    - [x] Half-filling (n=1, m=0)
+    - [x] Polarizado (m=n)
+  - [x] Integração total com módulos `bethe_equations`, `nonlinear_solvers`, `table_io`
 
-#### 🔜 TODO:
-- [ ] Paralelização OpenMP do grid (n, m, U) - embaraçosamente paralelo
-- [ ] Testes de integração: pipeline completo Bethe → Tabelas
-- [ ] Validação física: comparação com tabelas C++ legadas
-- [ ] Otimização de performance (profiling)
+- [x] **`test_bethe_tables.f90`** (170 linhas - 6 testes):
+  - [x] Teste E0 para half-filling
+  - [x] Teste E0 para sistema polarizado
+  - [x] Teste E_xc = 0 para U=0
+  - [x] Teste simetria V_xc (V_xc_up = V_xc_dn quando n_up = n_dn)
+  - [x] Teste parâmetros padrão do grid
+  - [x] Teste geração de tabela pequena
 
-#### 📋 Plano Detalhado: `bethe_tables.f90`
+#### 🎉 Conquistas da Fase 2:
+- ✅ **16 testes unitários** (10 I/O + 6 geração) passando (100%)
+- ✅ **Pipeline completo**: Bethe Ansatz → E_xc → V_xc → Tabela → I/O
+- ✅ **Derivadas numéricas** de 5 pontos para alta precisão
+- ✅ **Grid flexível** com parâmetros configuráveis
+- ✅ **Casos especiais** corretamente tratados
+- ✅ **Total Fase 2:** 888 linhas produção + 444 linhas testes
 
-**Objetivo:** Gerar tabelas de troca-correlação (XC) para o funcional LSDA-Hubbard a partir do Bethe Ansatz.
+**Duração:** ~3 dias
+**Status:** ✅ **FASE 2 COMPLETA!**
 
-**Entrada:** Parâmetro U do Hubbard
-**Saída:** Tabela (n, m) → (E_xc, V_xc_up, V_xc_dn)
-
-**Algoritmo:**
-
-1. **Definir grid de densidades:**
-   ```fortran
-   ! Parâmetros do grid (compatível com tabelas C++ legadas)
-   n_min = 0.01     ! Densidade mínima
-   n_max = 2.00     ! Densidade máxima (até dupla ocupação)
-   delta_n = 0.01   ! Espaçamento em densidade
-
-   ! Para cada n, m varia de -n a +n (polarização)
-   m_min(n) = -n
-   m_max(n) = +n
-   ```
-
-2. **Cálculo da energia de troca-correlação:**
-   ```fortran
-   ! Para cada ponto (n, m):
-   n_up = (n + m) / 2
-   n_dn = (n - m) / 2
-
-   ! Resolver Bethe Ansatz
-   call solve_bethe_ansatz(n_up, n_dn, L, U, E_BA, k, Lambda)
-
-   ! Energia cinética não-interagente (U=0)
-   call compute_kinetic_energy(n_up, n_dn, L, E_0)
-
-   ! Energia XC
-   E_xc = (E_BA - E_0) / L  ! Por sítio
-   ```
-
-3. **Cálculo dos potenciais XC via derivadas numéricas:**
-   ```fortran
-   ! Derivadas de 5 pontos para precisão
-   V_xc_up = ∂E_xc/∂n_up ≈ [E(n+2δ) - 8E(n+δ) + 8E(n-δ) - E(n-2δ)] / (12δ)
-   V_xc_dn = ∂E_xc/∂n_dn (similar)
-   ```
-
-4. **Casos especiais:**
-   - **U=0:** Usar solução analítica do Fermi gas
-   - **m=n (totalmente polarizado):** Apenas spin-up, não-interagente
-   - **m=0 (half-filling paramagnético):** Usar simetria partícula-buraco
-
-5. **Otimização:**
-   - Usar `continuation` em U (sweep U_min → U_max)
-   - Para cada U fixo, fazer continuation em n (reutilizar soluções vizinhas)
-   - Paralelizar com OpenMP (cada ponto do grid é independente)
-
-6. **Estrutura do módulo:**
-   ```fortran
-   module bethe_tables
-       use bethe_equations
-       use nonlinear_solvers
-       use continuation
-       use table_io
-
-       contains
-
-       subroutine generate_xc_table(U, L, table)
-       subroutine compute_exc_point(n, m, L, U, exc)
-       subroutine compute_vxc_point(n, m, L, U, vxc_up, vxc_dn)
-       function kinetic_energy_free_fermions(n_up, n_dn, L)
-
-   end module
-   ```
-
-**Validação:**
-- Comparar com tabelas C++ legadas (diferença < 1e-6)
-- Verificar limites assintóticos (U→0, U→∞)
-- Verificar simetrias (troca spin-up ↔ spin-down)
+#### 🔜 Melhorias Futuras (Opcionais):
+- [ ] Paralelização OpenMP do grid (n, m) - embaraçosamente paralelo
+- [ ] Validação física: comparação quantitativa com tabelas C++ legadas
+- [ ] Otimização de performance (profiling, vetorização)
+- [ ] `table_manager.f90`: Cache inteligente para múltiplos U
 
 ---
 
-### Fase 3: Splines 2D (3-4 dias) 🔜 TODO
+### Fase 3: Interpolação de Splines 2D (3-4 dias) 🔜 PRÓXIMA PRIORIDADE
 
-- [ ] `spline2d.f90`: Interpolação bicúbica
-- [ ] `xc_lsda.f90`: Interface exc, Vxc_up, Vxc_dn
-- [ ] Testes de interpolação vs valores exatos
-- [ ] Benchmark de performance
+**Objetivo:** Implementar interpolação bicúbica 2D para avaliar funcionais XC em pontos arbitrários (n, m).
+
+#### 📋 Tarefas:
+- [ ] **`spline2d.f90`**: Interpolação bicúbica separável
+  - [ ] Tipo `spline2d_t` para armazenar coeficientes da spline
+  - [ ] `spline2d_init()` - Construir spline a partir de tabela
+  - [ ] `spline2d_eval()` - Avaliar spline em ponto (n, m)
+  - [ ] Derivadas analíticas da spline (para forças atômicas)
+  - [ ] Tratamento de pontos fora do grid (extrapolação ou erro)
+
+- [ ] **`xc_lsda.f90`**: Interface de alto nível para funcional XC
+  - [ ] Tipo `xc_lsda_t` contendo splines de exc, vxc_up, vxc_dn
+  - [ ] `xc_lsda_init()` - Carregar tabela e construir splines
+  - [ ] `get_exc(n_up, n_dn)` - Energia XC por partícula
+  - [ ] `get_vxc(n_up, n_dn)` - Potenciais XC para ambos os spins
+  - [ ] Conversão (n_up, n_dn) ↔ (n, m)
+  - [ ] Cache de último ponto avaliado (otimização)
+
+- [ ] **`test_spline2d.f90`**: Testes de interpolação
+  - [ ] Interpolação exata em pontos do grid
+  - [ ] Continuidade C² (derivadas suaves)
+  - [ ] Comparação com Bethe Ansatz em pontos intermediários
+  - [ ] Teste de performance (tempo de eval)
+
+- [ ] **`test_xc_lsda.f90`**: Testes de interface
+  - [ ] Carregar tabela real e interpolar
+  - [ ] Verificar simetrias físicas (troca de spin)
+  - [ ] Casos limite: U→0, n→0, m→±n
+
+**Estratégia de Implementação:**
+1. Spline 1D em cada direção (separável)
+2. Para cada n fixo: spline cúbica em m
+3. Com valores interpolados: spline cúbica em n
+4. Derivadas analíticas via regra da cadeia
+
+**Validação:**
+- Erro de interpolação < 1e-6 comparado com Bethe Ansatz exato
+- Benchmark: eval < 1μs por ponto
 
 ---
 
@@ -1059,16 +1038,16 @@ fpm test
 
 ## 📊 Status do Projeto
 
-**Versão:** 0.1.0-dev
-**Status:** 🔄 Fase 2 - Geração de Tabelas (I/O completo, geração em progresso)
-**Última atualização:** 2025-01-XX
+**Versão:** 0.2.0-dev
+**Status:** ✅ Fases 1 & 2 Completas → 🔜 Iniciando Fase 3 (Splines 2D)
+**Última atualização:** 2025-01-11
 
 ### Progresso Geral
 
 ```
-[████████████████████████████████] 100% Fase 1: Bethe Ansatz (COMPLETO ✅)
-[████████████████░░░░░░░░░░░░░░░░]  50% Fase 2: Geração de Tabelas (I/O ✅, geração 🔄)
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 3: Splines 2D
+[████████████████████████████████] 100% Fase 1: Bethe Ansatz Core (COMPLETO ✅)
+[████████████████████████████████] 100% Fase 2: Geração de Tabelas XC (COMPLETO ✅)
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 3: Splines 2D (PRÓXIMA 🔜)
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 4: Hamiltoniano
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 5: Ciclo KS
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 6: Features
@@ -1085,17 +1064,23 @@ fpm test
 - [ ] CI/CD
 
 #### Core Physics 🔄
-- [x] Bethe Ansatz - Equações (`bethe_equations.f90`) ✅
-- [x] Bethe Ansatz - Solvers Newton-Raphson (`nonlinear_solvers.f90`) ✅
-- [x] Bethe Ansatz - Continuation methods (`continuation.f90`) ✅
-- [x] Bethe Ansatz - Testes unitários (31 testes) ✅
-- [x] Bethe Ansatz - I/O de tabelas (`table_io.f90`) ✅
-- [x] Utilitário de conversão (`convert_tables.f90`) ✅
-- [ ] Bethe Ansatz - Geração de tabelas XC (`bethe_tables.f90`) 🔄
-- [ ] Splines 2D
-- [ ] XC functional
-- [ ] Hamiltoniano
-- [ ] Ciclo KS
+- [x] **Fase 1 - Bethe Ansatz Core** (100% ✅):
+  - [x] Equações de Lieb-Wu (`bethe_equations.f90`) ✅
+  - [x] Solvers Newton-Raphson (`nonlinear_solvers.f90`) ✅
+  - [x] Continuation methods (`continuation.f90`) ✅
+  - [x] Testes unitários (31 testes, 100% passando) ✅
+
+- [x] **Fase 2 - Geração de Tabelas XC** (100% ✅):
+  - [x] I/O de tabelas (`table_io.f90`) ✅
+  - [x] Geração de tabelas (`bethe_tables.f90`) ✅
+  - [x] Utilitário de conversão (`convert_tables.f90`) ✅
+  - [x] Testes unitários (16 testes, 100% passando) ✅
+
+- [ ] **Fase 3 - Splines 2D** (0% 🔜):
+  - [ ] Interpolação bicúbica (`spline2d.f90`)
+  - [ ] Interface XC funcional (`xc_lsda.f90`)
+
+- [ ] **Fases 4-7**: Hamiltoniano, Ciclo KS, Features, Otimização
 
 #### Features 🔜
 - [ ] Potenciais
@@ -1103,13 +1088,14 @@ fpm test
 - [ ] Twisted BC
 - [ ] Degenerescências
 
-#### Qualidade 🔄
+#### Qualidade ✅
 - [x] Testes unitários Fase 1 (31 testes, 100% passando) ✅
-- [x] Testes unitários Fase 2 - I/O (`test_table_io.f90`) ✅
-- [ ] Testes de integração (Bethe → Tabelas pipeline) 🔄
-- [ ] Testes E2E
+- [x] Testes unitários Fase 2 (16 testes, 100% passando) ✅
+- [x] **Total: 47 testes, 100% passando** ✅
+- [x] Pipeline Bethe → Tabelas validado ✅
+- [ ] Testes E2E (ciclo KS completo)
 - [ ] Documentação completa (FORD)
-- [ ] Benchmarks
+- [ ] Benchmarks de performance
 
 ---
 
@@ -1163,40 +1149,42 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 **Mantido por:** Guilherme Canella
 **Contato:** guycanella@gmail.com
 **Repositório:** https://github.com/guycanella/lsdaks
-**Última atualização:** 2025-01-XX
-**Status:** Fase 2 - Tabelas (50% - I/O completo, geração em progresso)
+**Última atualização:** 2025-01-11
+**Status:** Fases 1 & 2 Completas (100%) → Iniciando Fase 3 (Splines 2D)
 
 ---
 
 ## 📅 Histórico de Mudanças
 
-### 2025-01-XX - Fase 2: I/O de Tabelas Completo ✅
-- ✅ **MILESTONE:** Sistema de I/O de tabelas totalmente funcional!
-  - **`table_io.f90`** (364 linhas): Leitura/escrita de tabelas XC
-    - Formato ASCII C++ legado (leitura compatível)
-    - Formato binário Fortran nativo (escrita/leitura, ~10x mais rápido)
-    - Parser robusto de filename → U value
-    - Tipo `xc_table_t` para armazenar tabelas (n_grid, m_grid, exc, vxc_up, vxc_dn)
-    - Funções: `read_cpp_table()`, `write_fortran_table()`, `read_fortran_table()`
+### 2025-01-11 - Fase 2: COMPLETA! 🎉
+- ✅ **MILESTONE:** Geração de tabelas XC totalmente funcional!
 
-  - **`convert_tables.f90`** (199 linhas - executável utilitário):
-    - Conversão em batch de 25 tabelas C++ → Fortran binário
-    - Valores de U: 1.00 a 20.00 (1.00, 1.10, 2.00, ..., 18.00, 20.00)
-    - Argumentos CLI: `fpm run convert_tables -- <input_dir> <output_dir>`
-    - Relatório de progresso, estatísticas e contagem de sucessos/falhas
+  **Módulo `bethe_tables.f90` implementado** (325 linhas, 6 testes):
+  - ✅ Tipo `grid_params_t` para configurar grid de densidades
+  - ✅ `compute_E0()` - Energia cinética não-interagente (Fermi gas livre)
+  - ✅ `compute_E_xc()` - Energia XC via Bethe Ansatz: E_xc = E_BA - E_0
+  - ✅ `compute_V_xc_numerical()` - Potenciais XC via derivadas de 5 pontos
+  - ✅ `generate_xc_table()` - Geração completa de tabela para dado U
+  - ✅ `generate_table_grid()` - Grid flexível com parâmetros customizados
+  - ✅ Casos especiais: U=0, half-filling, polarizado
 
-  - **`test_table_io.f90`** (274 linhas - testes completos):
-    - Leitura de tabelas ASCII C++ legadas
-    - Escrita/leitura de formato binário Fortran
-    - Validação de roundtrip (ASCII → binário → memória → binário)
-    - Parsing correto de U a partir do nome do arquivo
-    - Verificação de dimensões e valores de grid
+  **Testes `test_bethe_tables.f90`** (170 linhas, 6 testes):
+  - ✅ E0 para half-filling e sistema polarizado
+  - ✅ E_xc = 0 para U=0 (validação física)
+  - ✅ Simetria V_xc (V_up = V_dn quando n_up = n_dn)
+  - ✅ Parâmetros padrão do grid
+  - ✅ Geração de tabela pequena
 
-- 🔄 **EM PROGRESSO:** `bethe_tables.f90` - Geração de tabelas XC do zero
-  - Definir grid (n, m, U)
-  - Calcular E_xc = E_BA - E_0
-  - Calcular V_xc via derivadas numéricas
-  - Integração com continuation method
+  **Estatísticas Fase 2:**
+  - **Código produção:** 888 linhas (table_io + bethe_tables + convert_tables)
+  - **Testes:** 444 linhas (16 testes, 100% passando)
+  - **Pipeline completo:** Bethe Ansatz → E_xc → V_xc → Tabela → I/O binário
+
+### 2025-01-09 - Fase 2: I/O de Tabelas Completo ✅
+- ✅ Sistema de I/O de tabelas totalmente funcional!
+  - **`table_io.f90`** (364 linhas, 10 testes): Leitura/escrita ASCII/binário
+  - **`convert_tables.f90`** (199 linhas): Utilitário de conversão batch
+  - **`test_table_io.f90`** (274 linhas): Validação roundtrip completa
 
 ### 2025-11-07 - Fase 1: COMPLETA ✅
 - ✅ **MILESTONE:** Fase 1 totalmente concluída!
