@@ -24,7 +24,6 @@ contains
         ])
     end function get_xc_lsda_tests
 
-    !> Test initialization and destruction
     subroutine test_xc_lsda_init_destroy()
         use fortuno_serial, only: check => serial_check
         use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
@@ -34,16 +33,13 @@ contains
         integer :: status
         character(len=256) :: test_file
 
-        ! Use existing table file
         test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
 
-        ! Initialize XC functional
         call xc_lsda_init(xc, test_file, status)
         call check(status == 0, "XC initialization should succeed")
         call check(xc%initialized, "XC should be initialized")
         call check(abs(xc%U - 4.0_dp) < TOL, "U should match table")
 
-        ! Destroy
         call xc_lsda_destroy(xc)
         call check(.not. xc%initialized, "XC should be deinitialized")
 
@@ -57,28 +53,25 @@ contains
 
         type(xc_lsda_t) :: xc
         integer :: status
-        real(dp) :: exc, n_up, n_dn
+        real(dp) :: exc, n_up, n_dw
         character(len=256) :: test_file
 
         test_file = "data/tables/fortran_native/xc_table_u2.00.dat"
         call xc_lsda_init(xc, test_file, status)
 
         n_up = 0.4_dp
-        n_dn = 0.3_dp
+        n_dw = 0.3_dp
 
-        exc = get_exc(xc, n_up, n_dn)
+        exc = get_exc(xc, n_up, n_dw)
 
-        ! Should return a valid number (not NaN)
         call check(exc == exc, "exc should be a valid number")
-
-        ! For U > 0, exc should be non-zero for typical densities
         call check(abs(exc) > 1.0e-10_dp, "exc should be non-zero for U > 0")
 
         call xc_lsda_destroy(xc)
 
     end subroutine test_get_exc_evaluation
 
-    !> Test spin exchange symmetry: exc(n_up, n_dn) = exc(n_dn, n_up)
+    !> Test spin exchange symmetry: exc(n_up, n_dw) = exc(n_dw, n_up)
     subroutine test_get_exc_spin_symmetry()
         use fortuno_serial, only: check => serial_check
         use xc_lsda, only: xc_lsda_t, xc_lsda_init, get_exc, xc_lsda_destroy
@@ -86,19 +79,18 @@ contains
 
         type(xc_lsda_t) :: xc
         integer :: status
-        real(dp) :: exc1, exc2, n_up, n_dn
+        real(dp) :: exc1, exc2, n_up, n_dw
         character(len=256) :: test_file
 
         test_file = "data/tables/fortran_native/xc_table_u2.00.dat"
         call xc_lsda_init(xc, test_file, status)
 
         n_up = 0.45_dp
-        n_dn = 0.30_dp
+        n_dw = 0.30_dp
 
-        exc1 = get_exc(xc, n_up, n_dn)
-        exc2 = get_exc(xc, n_dn, n_up)
+        exc1 = get_exc(xc, n_up, n_dw)
+        exc2 = get_exc(xc, n_dw, n_up)
 
-        ! Spin symmetry: exc(n_up, n_dn) = exc(n_dn, n_up)
         call check(abs(exc1 - exc2) < 1.0e-6_dp, &
                    "exc should be symmetric under spin exchange")
 
@@ -106,7 +98,7 @@ contains
 
     end subroutine test_get_exc_spin_symmetry
 
-    !> Test V_xc spin exchange: V_up(n_up, n_dn) = V_dn(n_dn, n_up)
+    !> Test V_xc spin exchange: V_up(n_up, n_dw) = V_dn(n_dw, n_up)
     subroutine test_get_vxc_spin_symmetry()
         use fortuno_serial, only: check => serial_check
         use xc_lsda, only: xc_lsda_t, xc_lsda_init, get_vxc, xc_lsda_destroy
@@ -114,23 +106,22 @@ contains
 
         type(xc_lsda_t) :: xc
         integer :: status
-        real(dp) :: v_up1, v_dn1, v_up2, v_dn2, n_up, n_dn
+        real(dp) :: v_up1, v_dw1, v_up2, v_dw2, n_up, n_dw
         character(len=256) :: test_file
 
         test_file = "data/tables/fortran_native/xc_table_u2.00.dat"
         call xc_lsda_init(xc, test_file, status)
 
         n_up = 0.45_dp
-        n_dn = 0.30_dp
+        n_dw = 0.30_dp
 
-        call get_vxc(xc, n_up, n_dn, v_up1, v_dn1)
-        call get_vxc(xc, n_dn, n_up, v_up2, v_dn2)
+        call get_vxc(xc, n_up, n_dw, v_up1, v_dw1)
+        call get_vxc(xc, n_dw, n_up, v_up2, v_dw2)
 
-        ! Spin symmetry: V_up(n_up, n_dn) = V_dn(n_dn, n_up)
-        call check(abs(v_up1 - v_dn2) < 1.0e-6_dp, &
-                   "V_up(n_up,n_dn) should equal V_dn(n_dn,n_up)")
-        call check(abs(v_dn1 - v_up2) < 1.0e-6_dp, &
-                   "V_dn(n_up,n_dn) should equal V_up(n_dn,n_up)")
+        call check(abs(v_up1 - v_dw2) < 1.0e-6_dp, &
+                   "V_up(n_up,n_dw) should equal V_dn(n_dw,n_up)")
+        call check(abs(v_dw1 - v_up2) < 1.0e-6_dp, &
+                   "V_dn(n_up,n_dw) should equal V_up(n_dw,n_up)")
 
         call xc_lsda_destroy(xc)
 
@@ -170,40 +161,39 @@ contains
         use fortuno_serial, only: check => serial_check
         use lsda_constants, only: dp
 
-        real(dp) :: n_up, n_dn, n_up_map, n_dn_map
+        real(dp) :: n_up, n_dw, n_up_map, n_dw_map
 
         ! Region I: Identity
         n_up = 0.4_dp
-        n_dn = 0.2_dp
+        n_dw = 0.2_dp
         n_up_map = n_up
-        n_dn_map = n_dn
-        call check(abs(n_up_map - 0.4_dp) < TOL .and. abs(n_dn_map - 0.2_dp) < TOL, &
+        n_dw_map = n_dw
+        call check(abs(n_up_map - 0.4_dp) < TOL .and. abs(n_dw_map - 0.2_dp) < TOL, &
                    "Region I should be identity")
 
         ! Region II: Spin exchange
         n_up = 0.2_dp
-        n_dn = 0.4_dp
-        n_up_map = n_dn
-        n_dn_map = n_up
-        call check(abs(n_up_map - 0.4_dp) < TOL .and. abs(n_dn_map - 0.2_dp) < TOL, &
+        n_dw = 0.4_dp
+        n_up_map = n_dw
+        n_dw_map = n_up
+        call check(abs(n_up_map - 0.4_dp) < TOL .and. abs(n_dw_map - 0.2_dp) < TOL, &
                    "Region II should exchange spins")
 
         ! Region III: Particle-hole
         n_up = 0.3_dp
-        n_dn = 0.8_dp
+        n_dw = 0.8_dp
         n_up_map = 1.0_dp - n_up
-        n_dn_map = 1.0_dp - n_dn
-        call check(abs(n_up_map - 0.7_dp) < TOL .and. abs(n_dn_map - 0.2_dp) < TOL, &
+        n_dw_map = 1.0_dp - n_dw
+        call check(abs(n_up_map - 0.7_dp) < TOL .and. abs(n_dw_map - 0.2_dp) < TOL, &
                    "Region III should apply particle-hole symmetry")
 
         ! Region IV: Combined
         n_up = 0.8_dp
-        n_dn = 0.3_dp
-        n_up_map = 1.0_dp - n_dn
-        n_dn_map = 1.0_dp - n_up
-        call check(abs(n_up_map - 0.7_dp) < TOL .and. abs(n_dn_map - 0.2_dp) < TOL, &
+        n_dw = 0.3_dp
+        n_up_map = 1.0_dp - n_dw
+        n_dw_map = 1.0_dp - n_up
+        call check(abs(n_up_map - 0.7_dp) < TOL .and. abs(n_dw_map - 0.2_dp) < TOL, &
                    "Region IV should apply combined symmetry")
 
     end subroutine test_symmetry_transformations
-
 end program test_xc_lsda
