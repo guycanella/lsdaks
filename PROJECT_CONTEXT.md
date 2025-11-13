@@ -51,7 +51,8 @@ lsda-hubbard/
 │   │
 │   ├── types/                  # ✅ COMPLETO
 │   │   ├── lsda_types.f90     # Tipos principais (SystemParams, State, etc)
-│   │   └── lsda_constants.f90 # Constantes físicas e numéricas
+│   │   ├── lsda_constants.f90 # Constantes físicas e numéricas
+│   │   └── lsda_errors.f90    # ✅ COMPLETO - Sistema de erros centralizado
 │   │
 │   ├── io/                     # 🔜 TODO
 │   │   ├── input_parser.f90   # Parse de argumentos e arquivos
@@ -70,14 +71,13 @@ lsda-hubbard/
 │   │   ├── spline2d.f90       # ✅ COMPLETO - Interpolação bicúbica 2D
 │   │   └── xc_lsda.f90        # ✅ COMPLETO - Interface exc, Vxc_up, Vxc_dw
 │   │
-│   ├── potentials/            # 🔜 TODO
-│   │   ├── potential_base.f90      # Classe abstrata base
-│   │   ├── potential_uniform.f90   # Potencial uniforme
-│   │   ├── potential_harmonic.f90  # Armadilha harmônica
-│   │   ├── potential_impurity.f90  # Impurezas
-│   │   ├── potential_random.f90    # Aleatório
-│   │   ├── potential_barrier.f90   # Barreiras periódicas/duplas
-│   │   └── potential_factory.f90   # Factory pattern
+│   ├── potentials/            # ✅ COMPLETO (Fase 4)
+│   │   ├── potential_uniform.f90   # ✅ COMPLETO - Potencial uniforme V(i) = V₀
+│   │   ├── potential_harmonic.f90  # ✅ COMPLETO - Armadilha harmônica
+│   │   ├── potential_impurity.f90  # ✅ COMPLETO - Impurezas (single/multiple/random)
+│   │   ├── potential_random.f90    # ✅ COMPLETO - Desordem (uniform/Gaussian)
+│   │   ├── potential_barrier.f90   # ✅ COMPLETO - Barreiras (single/double)
+│   │   └── potential_factory.f90   # ✅ COMPLETO - Factory pattern
 │   │
 │   ├── hamiltonian/           # 🔜 TODO
 │   │   ├── hamiltonian_builder.f90 # Tight-binding com Veff
@@ -103,15 +103,16 @@ lsda-hubbard/
 │   ├── main.f90               # Ponto de entrada (placeholder)
 │   └── convert_tables.f90     # ✅ COMPLETO - Utilitário conversão tabelas
 │
-├── test/                       # 🔄 EM PROGRESSO (58 testes, 100% passando)
+├── test/                       # 🔄 EM PROGRESSO (88 testes, 100% passando)
 │   ├── test_bethe_equations.f90      # ✅ COMPLETO - 17 testes
 │   ├── test_nonlinear_solvers.f90    # ✅ COMPLETO - 9 testes
 │   ├── test_continuation.f90         # ✅ COMPLETO - 5 testes
 │   ├── test_table_io.f90             # ✅ COMPLETO - 10 testes
 │   ├── test_bethe_tables.f90         # ✅ COMPLETO - 6 testes
-│   ├── test_spline2d.f90             # ✅ COMPLETO - 5 testes (NEW!)
-│   ├── test_xc_lsda.f90              # ✅ COMPLETO - 6 testes (NEW!)
-│   ├── test_potentials.f90           # 🔜 TODO
+│   ├── test_spline2d.f90             # ✅ COMPLETO - 5 testes
+│   ├── test_xc_lsda.f90              # ✅ COMPLETO - 6 testes
+│   ├── test_potentials.f90           # ✅ COMPLETO - 17 testes (NEW!)
+│   ├── test_lsda_errors.f90          # ✅ COMPLETO - 13 testes (NEW!)
 │   ├── test_hamiltonian.f90          # 🔜 TODO
 │   └── test_ks_cycle.f90             # 🔜 TODO
 │
@@ -787,41 +788,76 @@ end do
 
 ---
 
-### Fase 4: Hamiltoniano & Potenciais (3-4 dias) 🔜 PRÓXIMA PRIORIDADE
+### Fase 4: Potenciais & Sistema de Erros ✅ COMPLETA
 
-**Objetivo:** Implementar construção do Hamiltoniano tight-binding com potenciais externos para Kohn-Sham.
+**Objetivo:** Implementar sistema de potenciais externos e tratamento centralizado de erros.
 
-#### 📋 Tarefas:
-- [ ] **`potentials/`**: Sistema de potenciais externos
-  - [ ] `potential_base.f90` - Tipo abstrato base para potenciais
-  - [ ] `potential_uniform.f90` - Potencial uniforme (V = constante)
-  - [ ] `potential_harmonic.f90` - Armadilha harmônica (V = k·x²)
-  - [ ] `potential_impurity.f90` - Impurezas pontuais
-  - [ ] `potential_barrier.f90` - Barreiras simples/duplas/periódicas
-  - [ ] `potential_factory.f90` - Factory pattern para criar potenciais
+#### ✅ Completo (100%):
+- [x] **`lsda_errors.f90`** (224 linhas, 13 testes):
+  - [x] Códigos de erro organizados por categoria (input 1-99, numerical 100-199, I/O 200-299, memory 300-399)
+  - [x] `get_error_message()` - Mensagens legíveis para cada código de erro
+  - [x] `error_handler()` - Handler centralizado com opção fatal
+  - [x] `check_bounds()`, `check_positive()`, `check_range()` - Utilitários de validação
 
-- [ ] **`hamiltonian/`**: Construção do Hamiltoniano
-  - [ ] `hamiltonian_builder.f90` - Matriz tight-binding + V_ext + V_xc
-  - [ ] `boundary_conditions.f90` - Open, periodic, twisted BC
-  - [ ] Integração com `xc_lsda` para V_xc(n_up, n_dw)
+- [x] **`potential_uniform.f90`** (34 linhas): V(i) = V₀
+  - [x] Potencial constante (shift global de energia)
 
-- [ ] **`diagonalization/`**: Wrapper LAPACK
-  - [ ] `lapack_wrapper.f90` - Interface para DSYEV/DSYEVD
-  - [ ] Escolha automática (DSYEV para N<100, DSYEVD para N≥100)
+- [x] **`potential_harmonic.f90`** (46 linhas): V(i) = 0.5·k·(i-center)²
+  - [x] Armadilha harmônica parabólica
+  - [x] Simetria de paridade V(i) = V(L+1-i)
+  - [x] Modela optical traps, cria shell structure
 
-- [ ] **Testes:**
-  - [ ] `test_potentials.f90` - Validação de cada tipo de potencial
-  - [ ] `test_hamiltonian.f90` - Matriz tight-binding, autovalores U=0
-  - [ ] Teste end-to-end simples: 1 iteração KS com V_ext + V_xc
+- [x] **`potential_impurity.f90`** (191 linhas):
+  - [x] `potential_impurity_single()` - Impureza pontual única
+  - [x] `potential_impurity_multiple()` - Múltiplas impurezas (com soma se sobrepõem)
+  - [x] `potential_impurity_random()` - Impurezas aleatórias com concentração fixa
 
-**Validação Física:**
-- U=0, BC periódica → autovalores = -2·cos(k) (Fermi gas livre)
-- Armadilha harmônica → estrutura de camadas (shell structure)
-- Half-filling, U>0 → gap de energia
+- [x] **`potential_random.f90`** (152 linhas):
+  - [x] `potential_random_uniform()` - Desordem uniforme V(i) ~ U[-W/2, W/2]
+  - [x] `potential_random_gaussian()` - Desordem gaussiana V(i) ~ N(0, σ²)
+  - [x] Box-Muller transform para geração de normais
+  - [x] Modela localização de Anderson
 
-**Próximos passos após Fase 4:**
-- Fase 5: Ciclo auto-consistente (SCF)
-- Fase 6: Features avançadas e otimização
+- [x] **`potential_barrier.f90`** (157 linhas):
+  - [x] `potential_barrier_single()` - Barreira retangular única
+  - [x] `potential_barrier_double()` - Dupla barreira (poço quântico)
+  - [x] Tunelamento quântico, ressonâncias Fabry-Pérot
+
+- [x] **`potential_factory.f90`** (173 linhas):
+  - [x] `create_potential()` - Factory para criar potenciais via string
+  - [x] `get_potential_info()` - Informações sobre cada tipo
+  - [x] Suporte: uniform, harmonic, impurity_single, random_uniform, random_gaussian, barrier_single, barrier_double
+
+- [x] **`test_potentials.f90`** (502 linhas, 17 testes):
+  - [x] Testes com explicações físicas detalhadas nos comentários
+  - [x] Uniform: constância, Harmonic: simetria/mínimo central
+  - [x] Impurity: posição/bounds/overlap/concentração
+  - [x] Random: média zero, distribuições corretas
+  - [x] Barrier: largura/bounds/poço quântico/não-sobreposição
+  - [x] Factory: criação/comparação/tipo inválido
+
+- [x] **`test_lsda_errors.f90`** (284 linhas, 13 testes):
+  - [x] Verificação de códigos em intervalos corretos
+  - [x] Mensagens para todos os tipos de erro
+  - [x] Utilitários de validação (bounds, positive, range)
+
+#### 🏆 Conquistas da Fase 4:
+- ✅ **30 testes unitários** passando (100% de sucesso)
+- ✅ **6 tipos de potenciais** implementados com física completa
+- ✅ **Sistema de erros robusto** para todo o projeto
+- ✅ **Factory pattern** para criação dinâmica de potenciais
+- ✅ **Documentação física detalhada** em todos os testes
+- ✅ **Total Fase 4:** 977 linhas produção + 786 linhas testes
+
+**Física Implementada:**
+- ✅ Armadilha harmônica (optical traps, cold atoms)
+- ✅ Localização de Anderson (random disorder)
+- ✅ Tunelamento quântico (barriers)
+- ✅ Ressonâncias Fabry-Pérot (double barriers)
+- ✅ Impurezas magnéticas (random impurities)
+
+**Duração:** ~1 dia
+**Status:** ✅ **FASE 4 COMPLETA!**
 
 ---
 
@@ -1086,9 +1122,9 @@ fpm test
 
 ## 📊 Status do Projeto
 
-**Versão:** 0.3.0-dev
-**Status:** ✅ Fases 1, 2 & 3 Completas → 🔜 Iniciando Fase 4 (Hamiltoniano & Potenciais)
-**Última atualização:** 2025-01-12
+**Versão:** 0.4.0-dev
+**Status:** ✅ Fases 1, 2, 3 & 4 Completas → 🔜 Iniciando Fase 5 (Hamiltoniano & Diagonalização)
+**Última atualização:** 2025-01-13
 
 ### Progresso Geral
 
@@ -1096,9 +1132,9 @@ fpm test
 [████████████████████████████████] 100% Fase 1: Bethe Ansatz Core (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 2: Geração de Tabelas XC (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 3: Splines 2D (COMPLETO ✅)
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 4: Hamiltoniano & Potenciais (PRÓXIMA 🔜)
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 5: Ciclo KS
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 6: Features
+[████████████████████████████████] 100% Fase 4: Potenciais & Erros (COMPLETO ✅)
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 5: Hamiltoniano & Diagonalização (PRÓXIMA 🔜)
+[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 6: Ciclo KS & Features
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 7: Otimização
 ```
 
@@ -1108,6 +1144,7 @@ fpm test
 - [x] Estrutura fpm
 - [x] Tipos básicos (`lsda_types.f90`)
 - [x] Constantes (`lsda_constants.f90`)
+- [x] Sistema de erros (`lsda_errors.f90`) ✅
 - [x] Sistema de testes (Fortuno configurado)
 - [ ] CI/CD
 
@@ -1129,15 +1166,21 @@ fpm test
   - [x] Interface XC funcional (`xc_lsda.f90`) ✅
   - [x] Testes unitários (11 testes, 100% passando) ✅
 
-- [ ] **Fase 4 - Hamiltoniano & Potenciais** (0% 🔜):
-  - [ ] Sistema de potenciais externos
+- [x] **Fase 4 - Potenciais & Erros** (100% ✅):
+  - [x] Sistema de erros centralizado (`lsda_errors.f90`) ✅
+  - [x] 6 tipos de potenciais implementados ✅
+  - [x] Factory pattern para potenciais ✅
+  - [x] Testes unitários (30 testes, 100% passando) ✅
+
+- [ ] **Fase 5 - Hamiltoniano & Diagonalização** (0% 🔜):
   - [ ] Construção do Hamiltoniano tight-binding
   - [ ] Wrapper LAPACK para diagonalização
+  - [ ] Boundary conditions
 
-- [ ] **Fases 5-7**: Ciclo KS, Features, Otimização
+- [ ] **Fases 6-7**: Ciclo KS, Features, Otimização
 
-#### Features 🔜
-- [ ] Potenciais
+#### Features 🔄
+- [x] Potenciais (6 tipos completos) ✅
 - [ ] Simetria
 - [ ] Twisted BC
 - [ ] Degenerescências
@@ -1146,8 +1189,9 @@ fpm test
 - [x] Testes unitários Fase 1 (31 testes, 100% passando) ✅
 - [x] Testes unitários Fase 2 (16 testes, 100% passando) ✅
 - [x] Testes unitários Fase 3 (11 testes, 100% passando) ✅
-- [x] **Total: 58 testes, 100% passando** ✅
-- [x] Pipeline Bethe → Tabelas → Splines validado ✅
+- [x] Testes unitários Fase 4 (30 testes, 100% passando) ✅
+- [x] **Total: 88 testes, 100% passando** ✅
+- [x] Pipeline Bethe → Tabelas → Splines → Potenciais validado ✅
 - [ ] Testes E2E (ciclo KS completo)
 - [ ] Documentação completa (FORD)
 - [ ] Benchmarks de performance
@@ -1204,12 +1248,66 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 **Mantido por:** Guilherme Canella
 **Contato:** guycanella@gmail.com
 **Repositório:** https://github.com/guycanella/lsdaks
-**Última atualização:** 2025-01-12
-**Status:** Fases 1, 2 & 3 Completas (100%) → Iniciando Fase 4 (Hamiltoniano & Potenciais)
+**Última atualização:** 2025-01-13
+**Status:** Fases 1, 2, 3 & 4 Completas (100%) → Iniciando Fase 5 (Hamiltoniano & Diagonalização)
 
 ---
 
 ## 📅 Histórico de Mudanças
+
+### 2025-01-13 - Fase 4: COMPLETA! 🎉
+- ✅ **MILESTONE:** Sistema de potenciais e erros totalmente funcional!
+
+  **Módulo `lsda_errors.f90` implementado** (224 linhas, 13 testes):
+  - ✅ Códigos de erro organizados: input (1-99), numerical (100-199), I/O (200-299), memory (300-399)
+  - ✅ `get_error_message()` - Mensagens legíveis para cada código
+  - ✅ `error_handler()` - Handler centralizado com opção fatal
+  - ✅ `check_bounds()`, `check_positive()`, `check_range()` - Utilitários de validação
+  - ✅ Integração com todos os módulos de potenciais
+
+  **6 Módulos de potenciais implementados** (753 linhas produção):
+  - ✅ **`potential_uniform.f90`** (34 linhas): V(i) = V₀
+  - ✅ **`potential_harmonic.f90`** (46 linhas): V(i) = 0.5·k·(i-center)² (optical traps)
+  - ✅ **`potential_impurity.f90`** (191 linhas): single/multiple/random impurities
+  - ✅ **`potential_random.f90`** (152 linhas): uniform/Gaussian disorder (Anderson localization)
+  - ✅ **`potential_barrier.f90`** (157 linhas): single/double barriers (quantum tunneling)
+  - ✅ **`potential_factory.f90`** (173 linhas): Factory pattern para criação dinâmica
+
+  **Testes implementados** (786 linhas, 30 testes):
+  - ✅ **`test_potentials.f90`** (502 linhas, 17 testes):
+    - Uniform: constância em todos os sites
+    - Harmonic: simetria de paridade, mínimo central
+    - Impurity: posicionamento, bounds, overlap, concentração aleatória
+    - Random: média zero, distribuições corretas (uniform/Gaussian)
+    - Barrier: largura, bounds, separação do poço quântico, não-sobreposição
+    - Factory: criação via string, comparação com chamadas diretas
+  - ✅ **`test_lsda_errors.f90`** (284 linhas, 13 testes):
+    - Códigos em intervalos corretos
+    - Mensagens para todos os tipos
+    - Utilitários de validação
+
+  **Física Implementada:**
+  - ✅ Armadilhas harmônicas (cold atoms, optical traps)
+  - ✅ Localização de Anderson (random disorder, W/t regime)
+  - ✅ Tunelamento quântico (barriers, T ~ exp(-2κw))
+  - ✅ Ressonâncias Fabry-Pérot (double barriers, quasi-bound states)
+  - ✅ Impurezas magnéticas diluídas
+
+  **Correções Técnicas:**
+  - ✅ Renomeados `potential_uniform()` → `apply_potential_uniform()` para evitar conflito de nomes
+  - ✅ Renomeados `potential_harmonic()` → `apply_potential_harmonic()` para evitar conflito de nomes
+  - ✅ Adicionado parâmetro `ierr` em uniform e harmonic para consistência
+
+  **Estatísticas Fase 4:**
+  - **Código produção:** 977 linhas (7 módulos)
+  - **Testes:** 786 linhas (30 testes, 100% passando)
+  - **Física:** 6 tipos de potenciais com explicações detalhadas nos testes
+
+  **🎉 GRAND TOTAL (Fases 1+2+3+4):**
+  - **14 módulos produção:** 3522 linhas
+  - **2 executáveis:** 208 linhas (main.f90 + convert_tables.f90)
+  - **9 suítes de testes:** 2582 linhas, 88 testes (100% passando)
+  - **Total geral:** ~6312 linhas de código
 
 ### 2025-01-12 - Fase 3: COMPLETA! 🎉
 - ✅ **MILESTONE:** Pipeline XC totalmente funcional de ponta a ponta!
