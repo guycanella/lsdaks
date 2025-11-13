@@ -20,8 +20,8 @@
 module potential_factory
     use lsda_constants, only: dp
     use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
-    use potential_uniform, only: potential_uniform
-    use potential_harmonic, only: potential_harmonic
+    use potential_uniform, only: apply_potential_uniform
+    use potential_harmonic, only: apply_potential_harmonic
     use potential_impurity, only: potential_impurity_single, &
                                    potential_impurity_multiple, &
                                    potential_impurity_random
@@ -80,15 +80,15 @@ contains
                 ierr = ERROR_INVALID_INPUT
                 return
             end if
-            call potential_uniform(params(1), L, V, ierr)
-            
+            call apply_potential_uniform(params(1), L, V, ierr)
+
         case ("harmonic")
             ! Harmonic trap: params(1) = k
             if (size(params) < 1) then
                 ierr = ERROR_INVALID_INPUT
                 return
             end if
-            call potential_harmonic(params(1), L, V, ierr)
+            call apply_potential_harmonic(params(1), L, V, ierr)
             
         case ("impurity_single")
             ! Single impurity: params(1) = V_imp, params(2) = i_imp

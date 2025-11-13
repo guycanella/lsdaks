@@ -8,7 +8,7 @@ module potential_uniform
     implicit none
     private
 
-    public :: potential_uniform
+    public :: apply_potential_uniform
 
 contains
 
@@ -19,12 +19,16 @@ contains
     !!
     !! @param[in]  V0    Potential amplitude (constant value)
     !! @param[in]  L     Number of lattice sites
-    !! @return     V     Potential array V(i) = V0 for i = 1..L
-    subroutine potential_uniform(V0, L, V)
+    !! @param[out] V     Potential array V(i) = V0 for i = 1..L
+    !! @param[out] ierr  Error flag (always ERROR_SUCCESS for this potential)
+    subroutine apply_potential_uniform(V0, L, V, ierr)
+        use lsda_errors, only: ERROR_SUCCESS
         real(dp), intent(in) :: V0
         integer, intent(in) :: L
         real(dp), dimension(L), intent(out) :: V
+        integer, intent(out) :: ierr
 
         V = V0
-    end subroutine potential_uniform
+        ierr = ERROR_SUCCESS
+    end subroutine apply_potential_uniform
 end module potential_uniform

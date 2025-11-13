@@ -7,7 +7,7 @@ module potential_harmonic
     implicit none
     private
 
-    public :: potential_harmonic
+    public :: apply_potential_harmonic
 
 contains
 
@@ -24,19 +24,23 @@ contains
     !!
     !! @param[in]  k    Spring constant (trap strength), k > 0
     !! @param[in]  L    Number of lattice sites
-    !! @return     V    Potential array V(i) for i = 1..L
+    !! @param[out] V    Potential array V(i) for i = 1..L
+    !! @param[out] ierr Error flag (always ERROR_SUCCESS for this potential)
     !!
     !! @note For k → 0, reduces to uniform potential V = 0
     !! @note For k >> 1, creates strong confinement (Landau regime)
-    subroutine potential_harmonic(k, L, V)
+    subroutine apply_potential_harmonic(k, L, V, ierr)
+        use lsda_errors, only: ERROR_SUCCESS
         real(dp), intent(in) :: k
         integer, intent(in) :: L
         real(dp), dimension(L), intent(out) :: V
+        integer, intent(out) :: ierr
         real(dp) :: i_center
         integer :: i
 
         i_center = real(L + 1, dp) / 2.0_dp
 
         V = [(0.5_dp * k * (real(i, dp) - i_center)**2, i = 1, L)]
-    end subroutine potential_harmonic
+        ierr = ERROR_SUCCESS
+    end subroutine apply_potential_harmonic
 end module potential_harmonic
