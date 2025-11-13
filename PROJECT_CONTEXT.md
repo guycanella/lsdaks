@@ -72,12 +72,13 @@ lsda-hubbard/
 │   │   └── xc_lsda.f90        # ✅ COMPLETO - Interface exc, Vxc_up, Vxc_dw
 │   │
 │   ├── potentials/            # ✅ COMPLETO (Fase 4)
-│   │   ├── potential_uniform.f90   # ✅ COMPLETO - Potencial uniforme V(i) = V₀
-│   │   ├── potential_harmonic.f90  # ✅ COMPLETO - Armadilha harmônica
-│   │   ├── potential_impurity.f90  # ✅ COMPLETO - Impurezas (single/multiple/random)
-│   │   ├── potential_random.f90    # ✅ COMPLETO - Desordem (uniform/Gaussian)
-│   │   ├── potential_barrier.f90   # ✅ COMPLETO - Barreiras (single/double)
-│   │   └── potential_factory.f90   # ✅ COMPLETO - Factory pattern
+│   │   ├── potential_uniform.f90      # ✅ COMPLETO - Potencial uniforme V(i) = V₀
+│   │   ├── potential_harmonic.f90     # ✅ COMPLETO - Armadilha harmônica
+│   │   ├── potential_impurity.f90     # ✅ COMPLETO - Impurezas (single/multiple/random)
+│   │   ├── potential_random.f90       # ✅ COMPLETO - Desordem (uniform/Gaussian)
+│   │   ├── potential_barrier.f90      # ✅ COMPLETO - Barreiras (single/double)
+│   │   ├── potential_quasiperiodic.f90 # ✅ COMPLETO - Aubry-André-Harper (AAH)
+│   │   └── potential_factory.f90      # ✅ COMPLETO - Factory pattern (7 tipos)
 │   │
 │   ├── hamiltonian/           # 🔜 TODO
 │   │   ├── hamiltonian_builder.f90 # Tight-binding com Veff
@@ -103,7 +104,7 @@ lsda-hubbard/
 │   ├── main.f90               # Ponto de entrada (placeholder)
 │   └── convert_tables.f90     # ✅ COMPLETO - Utilitário conversão tabelas
 │
-├── test/                       # 🔄 EM PROGRESSO (88 testes, 100% passando)
+├── test/                       # 🔄 EM PROGRESSO (92 testes, 100% passando)
 │   ├── test_bethe_equations.f90      # ✅ COMPLETO - 17 testes
 │   ├── test_nonlinear_solvers.f90    # ✅ COMPLETO - 9 testes
 │   ├── test_continuation.f90         # ✅ COMPLETO - 5 testes
@@ -111,8 +112,8 @@ lsda-hubbard/
 │   ├── test_bethe_tables.f90         # ✅ COMPLETO - 6 testes
 │   ├── test_spline2d.f90             # ✅ COMPLETO - 5 testes
 │   ├── test_xc_lsda.f90              # ✅ COMPLETO - 6 testes
-│   ├── test_potentials.f90           # ✅ COMPLETO - 17 testes (NEW!)
-│   ├── test_lsda_errors.f90          # ✅ COMPLETO - 13 testes (NEW!)
+│   ├── test_potentials.f90           # ✅ COMPLETO - 21 testes (17 + 4 quasiperiódicos)
+│   ├── test_lsda_errors.f90          # ✅ COMPLETO - 13 testes
 │   ├── test_hamiltonian.f90          # 🔜 TODO
 │   └── test_ks_cycle.f90             # 🔜 TODO
 │
@@ -823,17 +824,25 @@ end do
   - [x] `potential_barrier_double()` - Dupla barreira (poço quântico)
   - [x] Tunelamento quântico, ressonâncias Fabry-Pérot
 
-- [x] **`potential_factory.f90`** (173 linhas):
+- [x] **`potential_quasiperiodic.f90`** (100 linhas): V(i) = λ·cos(2πβi + φ)
+  - [x] Aubry-André-Harper (AAH) model
+  - [x] Extended phase (λ < 2): estados deslocalizados
+  - [x] Critical phase (λ = 2): funções de onda multifractais
+  - [x] Localized phase (λ > 2): estados exponencialmente localizados
+  - [x] Modela localização de Anderson sem desordem
+
+- [x] **`potential_factory.f90`** (186 linhas):
   - [x] `create_potential()` - Factory para criar potenciais via string
   - [x] `get_potential_info()` - Informações sobre cada tipo
-  - [x] Suporte: uniform, harmonic, impurity_single, random_uniform, random_gaussian, barrier_single, barrier_double
+  - [x] Suporte para 7 tipos: uniform, harmonic, impurity_single, random_uniform, random_gaussian, barrier_single, barrier_double, quasiperiodic
 
-- [x] **`test_potentials.f90`** (502 linhas, 17 testes):
+- [x] **`test_potentials.f90`** (585 linhas, 21 testes):
   - [x] Testes com explicações físicas detalhadas nos comentários
   - [x] Uniform: constância, Harmonic: simetria/mínimo central
   - [x] Impurity: posição/bounds/overlap/concentração
   - [x] Random: média zero, distribuições corretas
   - [x] Barrier: largura/bounds/poço quântico/não-sobreposição
+  - [x] Quasiperiodic: golden ratio, phase shift, critical point, localization
   - [x] Factory: criação/comparação/tipo inválido
 
 - [x] **`test_lsda_errors.f90`** (284 linhas, 13 testes):
@@ -842,21 +851,22 @@ end do
   - [x] Utilitários de validação (bounds, positive, range)
 
 #### 🏆 Conquistas da Fase 4:
-- ✅ **30 testes unitários** passando (100% de sucesso)
-- ✅ **6 tipos de potenciais** implementados com física completa
+- ✅ **34 testes unitários** passando (100% de sucesso)
+- ✅ **7 tipos de potenciais** implementados com física completa
 - ✅ **Sistema de erros robusto** para todo o projeto
 - ✅ **Factory pattern** para criação dinâmica de potenciais
 - ✅ **Documentação física detalhada** em todos os testes
-- ✅ **Total Fase 4:** 977 linhas produção + 786 linhas testes
+- ✅ **Total Fase 4:** 1090 linhas produção + 869 linhas testes
 
 **Física Implementada:**
 - ✅ Armadilha harmônica (optical traps, cold atoms)
-- ✅ Localização de Anderson (random disorder)
+- ✅ Localização de Anderson (random disorder & quasiperiodic AAH)
+- ✅ Transição metal-isolante (AAH model, λ = 2 critical point)
 - ✅ Tunelamento quântico (barriers)
 - ✅ Ressonâncias Fabry-Pérot (double barriers)
 - ✅ Impurezas magnéticas (random impurities)
 
-**Duração:** ~1 dia
+**Duração:** ~1-2 dias
 **Status:** ✅ **FASE 4 COMPLETA!**
 
 ---
@@ -1168,9 +1178,9 @@ fpm test
 
 - [x] **Fase 4 - Potenciais & Erros** (100% ✅):
   - [x] Sistema de erros centralizado (`lsda_errors.f90`) ✅
-  - [x] 6 tipos de potenciais implementados ✅
+  - [x] 7 tipos de potenciais implementados (incl. quasiperiodic AAH) ✅
   - [x] Factory pattern para potenciais ✅
-  - [x] Testes unitários (30 testes, 100% passando) ✅
+  - [x] Testes unitários (34 testes, 100% passando) ✅
 
 - [ ] **Fase 5 - Hamiltoniano & Diagonalização** (0% 🔜):
   - [ ] Construção do Hamiltoniano tight-binding
@@ -1180,7 +1190,7 @@ fpm test
 - [ ] **Fases 6-7**: Ciclo KS, Features, Otimização
 
 #### Features 🔄
-- [x] Potenciais (6 tipos completos) ✅
+- [x] Potenciais (7 tipos completos: uniform, harmonic, impurity, random, barrier, quasiperiodic) ✅
 - [ ] Simetria
 - [ ] Twisted BC
 - [ ] Degenerescências
@@ -1189,8 +1199,8 @@ fpm test
 - [x] Testes unitários Fase 1 (31 testes, 100% passando) ✅
 - [x] Testes unitários Fase 2 (16 testes, 100% passando) ✅
 - [x] Testes unitários Fase 3 (11 testes, 100% passando) ✅
-- [x] Testes unitários Fase 4 (30 testes, 100% passando) ✅
-- [x] **Total: 88 testes, 100% passando** ✅
+- [x] Testes unitários Fase 4 (34 testes, 100% passando) ✅
+- [x] **Total: 92 testes, 100% passando** ✅
 - [x] Pipeline Bethe → Tabelas → Splines → Potenciais validado ✅
 - [ ] Testes E2E (ciclo KS completo)
 - [ ] Documentação completa (FORD)
@@ -1255,7 +1265,41 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 
 ## 📅 Histórico de Mudanças
 
-### 2025-01-13 - Fase 4: COMPLETA! 🎉
+### 2025-01-13 (Parte 2) - Potencial Quasiperiódico Adicionado! 🎉
+- ✅ **Correção e implementação do potencial quasiperiódico (AAH model)**
+
+  **`potential_quasiperiodic.f90` reescrito** (100 linhas):
+  - ✅ Corrigido padrão de erro: substituído tipo customizado `ErrorHandler` por `integer :: ierr`
+  - ✅ Unificado em uma única subroutine: `apply_potential_quasiperiodic(lambda, beta, phi, L, V, ierr)`
+  - ✅ Validação de parâmetros seguindo padrão do projeto
+  - ✅ Uso de constantes corretas: `TWOPI` de `lsda_constants.f90`
+  - ✅ Fórmula: V(i) = λ·cos(2πβi + φ) com i-1 para indexação física começar em 0
+
+  **Física do Aubry-André-Harper (AAH):**
+  - ✅ Extended phase (λ < 2): Estados deslocalizados
+  - ✅ Critical phase (λ = 2): Funções de onda multifractais (transição metal-isolante)
+  - ✅ Localized phase (λ > 2): Estados exponencialmente localizados
+  - ✅ Golden ratio β = (√5-1)/2 para máxima incomensurabilidade
+  - ✅ Modela localização de Anderson sem desordem
+
+  **4 Testes quasiperiódicos adicionados** (83 linhas):
+  - ✅ `test_quasiperiodic_golden_ratio`: Testa bounds [-λ, λ] e variação do potencial
+  - ✅ `test_quasiperiodic_phase_shift`: Verifica que φ = π inverte o potencial
+  - ✅ `test_quasiperiodic_critical_point`: Testa λ = 2 (ponto crítico)
+  - ✅ `test_quasiperiodic_localization`: Testa λ = 5 (regime localizado)
+
+  **`potential_factory.f90` atualizado** (186 linhas):
+  - ✅ Adicionado suporte para "quasiperiodic" com 3 parâmetros: [lambda, beta, phi]
+  - ✅ Documentação e info string completas
+  - ✅ Factory agora suporta 7 tipos de potenciais
+
+  **Estatísticas da atualização:**
+  - **Código produção:** +100 linhas (potential_quasiperiodic) + 13 linhas (factory)
+  - **Testes:** +83 linhas (4 novos testes)
+  - **Total Fase 4 atualizado:** 1090 linhas produção + 869 linhas testes
+  - **Total de testes:** 92 (antes 88 + 4 novos)
+
+### 2025-01-13 (Parte 1) - Fase 4: COMPLETA! 🎉
 - ✅ **MILESTONE:** Sistema de potenciais e erros totalmente funcional!
 
   **Módulo `lsda_errors.f90` implementado** (224 linhas, 13 testes):
@@ -1265,7 +1309,7 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
   - ✅ `check_bounds()`, `check_positive()`, `check_range()` - Utilitários de validação
   - ✅ Integração com todos os módulos de potenciais
 
-  **6 Módulos de potenciais implementados** (753 linhas produção):
+  **6 Módulos de potenciais base implementados** (753 linhas produção):
   - ✅ **`potential_uniform.f90`** (34 linhas): V(i) = V₀
   - ✅ **`potential_harmonic.f90`** (46 linhas): V(i) = 0.5·k·(i-center)² (optical traps)
   - ✅ **`potential_impurity.f90`** (191 linhas): single/multiple/random impurities
@@ -1298,16 +1342,16 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
   - ✅ Renomeados `potential_harmonic()` → `apply_potential_harmonic()` para evitar conflito de nomes
   - ✅ Adicionado parâmetro `ierr` em uniform e harmonic para consistência
 
-  **Estatísticas Fase 4:**
-  - **Código produção:** 977 linhas (7 módulos)
+  **Estatísticas Fase 4 (inicial):**
+  - **Código produção:** 977 linhas (7 módulos base)
   - **Testes:** 786 linhas (30 testes, 100% passando)
   - **Física:** 6 tipos de potenciais com explicações detalhadas nos testes
 
-  **🎉 GRAND TOTAL (Fases 1+2+3+4):**
-  - **14 módulos produção:** 3522 linhas
+  **🎉 GRAND TOTAL (Fases 1+2+3+4 - após quasiperiodic):**
+  - **15 módulos produção:** 3635 linhas
   - **2 executáveis:** 208 linhas (main.f90 + convert_tables.f90)
-  - **9 suítes de testes:** 2582 linhas, 88 testes (100% passando)
-  - **Total geral:** ~6312 linhas de código
+  - **9 suítes de testes:** 2665 linhas, 92 testes (100% passando)
+  - **Total geral:** ~6508 linhas de código
 
 ### 2025-01-12 - Fase 3: COMPLETA! 🎉
 - ✅ **MILESTONE:** Pipeline XC totalmente funcional de ponta a ponta!
