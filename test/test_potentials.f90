@@ -29,6 +29,10 @@ contains
             test("barrier_single_bounds", test_barrier_single_bounds), &
             test("barrier_double_well_separation", test_barrier_double_well_separation), &
             test("barrier_double_no_overlap", test_barrier_double_no_overlap), &
+            test("quasiperiodic_golden_ratio", test_quasiperiodic_golden_ratio), &
+            test("quasiperiodic_phase_shift", test_quasiperiodic_phase_shift), &
+            test("quasiperiodic_critical_point", test_quasiperiodic_critical_point), &
+            test("quasiperiodic_localization", test_quasiperiodic_localization), &
             test("factory_uniform", test_factory_uniform), &
             test("factory_harmonic", test_factory_harmonic), &
             test("factory_invalid_type", test_factory_invalid_type) &
@@ -442,6 +446,143 @@ contains
         call potential_barrier_double(1.0_dp, 5, 10, 8, 15, L, V, ierr)
         call check(ierr == ERROR_OUT_OF_BOUNDS, "Overlapping barriers should fail")
     end subroutine test_barrier_double_no_overlap
+
+    !> Test quasiperiodic potential with golden ratio
+    !!
+    !! Physics: The Aubry-André-Harper (AAH) model with β = golden ratio exhibits
+    !! maximum incommensurability, preventing periodic repetition. For λ < 2, all
+    !! states are extended (delocalized). This test verifies that the potential
+    !! is continuous and bounded by [-λ, λ], characteristic of the cosine modulation.
+    subroutine test_quasiperiodic_golden_ratio()
+        use fortuno_serial, only: check => serial_check
+        use potential_quasiperiodic, only: apply_potential_quasiperiodic
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 100
+        real(dp) :: V(L)
+        real(dp), parameter :: lambda = 1.5_dp
+        real(dp), parameter :: beta = 0.5_dp * (sqrt(5.0_dp) - 1.0_dp)  ! Golden ratio
+        real(dp), parameter :: phi = 0.0_dp
+        integer :: ierr
+        real(dp) :: v_min, v_max
+
+        call apply_potential_quasiperiodic(lambda, beta, phi, L, V, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "Should succeed")
+
+        v_min = minval(V)
+        v_max = maxval(V)
+        call check(v_min >= -lambda - TOL, "V_min should be >= -lambda")
+        call check(v_max <= lambda + TOL, "V_max should be <= lambda")
+
+        call check(abs(v_max - v_min) > 0.1_dp, "Potential should vary")
+    end subroutine test_quasiperiodic_golden_ratio
+
+    !> Test quasiperiodic potential with phase shift
+    !!
+    !! Physics: The phase φ in V(i) = λcos(2πβi + φ) shifts the potential pattern
+    !! along the lattice without changing the physics (gauge freedom). A phase shift
+    !! of π inverts the potential: V_new(i) = -V_old(i). This test verifies that
+    !! φ = 0 and φ = π produce opposite potentials, as expected.
+    subroutine test_quasiperiodic_phase_shift()
+        use fortuno_serial, only: check => serial_check
+        use potential_quasiperiodic, only: apply_potential_quasiperiodic
+        use lsda_constants, only: dp, PI
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 50
+        real(dp) :: V_phi0(L), V_phi_pi(L)
+        real(dp), parameter :: lambda = 2.0_dp
+        real(dp), parameter :: beta = 0.5_dp * (sqrt(5.0_dp) - 1.0_dp)
+        integer :: ierr, i
+
+        ! Calculate with phi = 0
+        call apply_potential_quasiperiodic(lambda, beta, 0.0_dp, L, V_phi0, ierr)
+        call check(ierr == ERROR_SUCCESS, "phi=0 should succeed")
+
+        ! Calculate with phi = π
+        call apply_potential_quasiperiodic(lambda, beta, PI, L, V_phi_pi, ierr)
+        call check(ierr == ERROR_SUCCESS, "phi=π should succeed")
+
+        ! Check that V(φ=π) ≈ -V(φ=0)
+        do i = 1, L
+            call check(abs(V_phi_pi(i) + V_phi0(i)) < TOL, &
+                       "Phase shift of π should invert potential")
+        end do
+    end subroutine test_quasiperiodic_phase_shift
+
+    !> Test quasiperiodic potential at critical point
+    !!
+    !! Physics: The AAH model undergoes a localization transition at λ_c = 2
+    !! (for β = golden ratio). At this critical point, the system exhibits:
+    !! - Critical wavefunctions (multifractal, neither extended nor exponentially localized)
+    !! - Subdiffusive transport with anomalous diffusion exponent
+    !! - Self-similar fractal structure in the density of states
+    !! This test verifies that λ = 2 produces a potential with correct amplitude.
+    subroutine test_quasiperiodic_critical_point()
+        use fortuno_serial, only: check => serial_check
+        use potential_quasiperiodic, only: apply_potential_quasiperiodic
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 200
+        real(dp) :: V(L)
+        real(dp), parameter :: lambda_c = 2.0_dp
+        real(dp), parameter :: beta = 0.5_dp * (sqrt(5.0_dp) - 1.0_dp)
+        real(dp), parameter :: phi = 0.0_dp
+        integer :: ierr
+        real(dp) :: v_min, v_max
+
+        call apply_potential_quasiperiodic(lambda_c, beta, phi, L, V, ierr)
+        call check(ierr == ERROR_SUCCESS, "Should succeed at critical point")
+
+        v_min = minval(V)
+        v_max = maxval(V)
+
+        call check(v_min < -1.8_dp, "Min should be close to -2")
+        call check(v_max > 1.8_dp, "Max should be close to 2")
+        call check(abs(v_max + v_min) < 0.1_dp, "Potential should be symmetric around 0")
+    end subroutine test_quasiperiodic_critical_point
+
+    !> Test quasiperiodic potential in localized regime
+    !!
+    !! Physics: For λ > 2 (with β = golden ratio), the AAH model is in the localized
+    !! phase where all eigenstates are exponentially localized. The localization length
+    !! ξ decreases as λ increases beyond 2. In this regime:
+    !! - Transport is suppressed (DC conductivity → 0)
+    !! - Density of states shows pure point spectrum
+    !! - All wavefunctions decay exponentially: |ψ(x)| ~ exp(-|x|/ξ)
+    !! This test verifies that strong potentials (λ >> 2) are correctly calculated.
+    subroutine test_quasiperiodic_localization()
+        use fortuno_serial, only: check => serial_check
+        use potential_quasiperiodic, only: apply_potential_quasiperiodic
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 150
+        real(dp) :: V(L)
+        real(dp), parameter :: lambda = 5.0_dp
+        real(dp), parameter :: beta = 0.5_dp * (sqrt(5.0_dp) - 1.0_dp)
+        real(dp), parameter :: phi = 0.0_dp
+        integer :: ierr
+        real(dp) :: v_min, v_max, v_range
+
+        call apply_potential_quasiperiodic(lambda, beta, phi, L, V, ierr)
+        call check(ierr == ERROR_SUCCESS, "Should succeed in localized regime")
+
+        v_min = minval(V)
+        v_max = maxval(V)
+        v_range = v_max - v_min
+
+        call check(v_range > 8.0_dp, "Potential range should be large for strong λ")
+        call check(v_min >= -lambda - TOL, "V_min should be >= -lambda")
+        call check(v_max <= lambda + TOL, "V_max should be <= lambda")
+
+        ! Verify approximate bounds are reached (within 90%)
+        call check(v_min < -0.9_dp * lambda, "Should reach close to -lambda")
+        call check(v_max > 0.9_dp * lambda, "Should reach close to +lambda")
+    end subroutine test_quasiperiodic_localization
 
     !> Test factory creates uniform potential
     !!
