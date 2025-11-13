@@ -46,6 +46,7 @@ module lsda_errors
     integer, parameter :: ERROR_INVALID_CONCENTRATION = 4
     integer, parameter :: ERROR_NEGATIVE_VALUE = 5
     integer, parameter :: ERROR_INVALID_RANGE = 6
+    integer, parameter :: ERROR_NOT_A_NUMBER = 7
 
     ! Error codes - Numerical (100-199)
     integer, parameter :: ERROR_CONVERGENCE_FAILED = 100
