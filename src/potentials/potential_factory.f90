@@ -14,6 +14,7 @@
 !! - "random_gaussian": Random disorder (Gaussian distribution)
 !! - "barrier_single": Single rectangular barrier
 !! - "barrier_double": Double barrier (quantum well)
+!! - "quasiperiodic": Aubry-André-Harper quasiperiodic potential
 !!
 !! Usage:
 !!   call create_potential("harmonic", params, L, seed, V, ierr)
@@ -29,6 +30,7 @@ module potential_factory
                                 potential_random_gaussian
     use potential_barrier, only: potential_barrier_single, &
                                  potential_barrier_double
+    use potential_quasiperiodic, only: apply_potential_quasiperiodic
     implicit none
     private
     
@@ -50,6 +52,7 @@ contains
     !! - "random_gaussian": params(1) = sigma
     !! - "barrier_single": params(1) = V_bar, params(2) = i_start, params(3) = i_end
     !! - "barrier_double": params(1) = V_bar, params(2:5) = i1_start, i1_end, i2_start, i2_end
+    !! - "quasiperiodic": params(1) = lambda, params(2) = beta, params(3) = phi
     !!
     !! @param[in]  potential_type  String identifying potential type
     !! @param[in]  params          Parameter array (size depends on potential type)
@@ -130,7 +133,15 @@ contains
             end if
             call potential_barrier_double(params(1), int(params(2)), int(params(3)), &
                                          int(params(4)), int(params(5)), L, V, ierr)
-            
+
+        case ("quasiperiodic")
+            ! Quasiperiodic: params(1) = lambda, params(2) = beta, params(3) = phi
+            if (size(params) < 3) then
+                ierr = ERROR_INVALID_INPUT
+                return
+            end if
+            call apply_potential_quasiperiodic(params(1), params(2), params(3), L, V, ierr)
+
         case default
             ierr = ERROR_INVALID_INPUT
         end select
@@ -165,6 +176,8 @@ contains
             info = "Single barrier: V(i) = V_bar in [i_start, i_end]. Parameters: [V_bar, i_start, i_end]"
         case ("barrier_double")
             info = "Double barrier: Two barriers. Parameters: [V_bar, i1_start, i1_end, i2_start, i2_end]"
+        case ("quasiperiodic")
+            info = "Quasiperiodic AAH: V(i) = lambda*cos(2*pi*beta*i + phi). Parameters: [lambda, beta, phi]"
         case default
             info = "Unknown potential type"
         end select
