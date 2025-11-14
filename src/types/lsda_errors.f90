@@ -33,6 +33,8 @@ module lsda_errors
     public :: ERROR_CONVERGENCE_FAILED
     public :: ERROR_SINGULAR_MATRIX
     public :: ERROR_LAPACK_FAILED
+    public :: ERROR_LAPACK_INVALID_ARG
+    public :: ERROR_LINEAR_DEPENDENCE
     public :: ERROR_FILE_NOT_FOUND
     public :: ERROR_FILE_READ
     public :: ERROR_FILE_WRITE
@@ -53,6 +55,8 @@ module lsda_errors
     integer, parameter :: ERROR_CONVERGENCE_FAILED = 100
     integer, parameter :: ERROR_SINGULAR_MATRIX = 101
     integer, parameter :: ERROR_LAPACK_FAILED = 102
+    integer, parameter :: ERROR_LAPACK_INVALID_ARG = 103
+    integer, parameter :: ERROR_LINEAR_DEPENDENCE = 104
 
     ! Error codes - I/O (200-299)
     integer, parameter :: ERROR_FILE_NOT_FOUND = 200
@@ -101,6 +105,10 @@ contains
             msg = "Matrix is singular or ill-conditioned"
         case (ERROR_LAPACK_FAILED)
             msg = "LAPACK routine failed"
+        case (ERROR_LAPACK_INVALID_ARG)
+            msg = "Invalid argument passed to LAPACK routine"
+        case (ERROR_LINEAR_DEPENDENCE)
+            msg = "Linear dependence detected in vector set"
 
         ! I/O errors (200-299)
         case (ERROR_FILE_NOT_FOUND)
