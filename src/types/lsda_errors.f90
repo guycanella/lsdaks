@@ -29,6 +29,7 @@ module lsda_errors
     public :: ERROR_INVALID_CONCENTRATION
     public :: ERROR_NEGATIVE_VALUE
     public :: ERROR_INVALID_RANGE
+    public :: ERROR_NOT_A_NUMBER
     public :: ERROR_CONVERGENCE_FAILED
     public :: ERROR_SINGULAR_MATRIX
     public :: ERROR_LAPACK_FAILED
@@ -90,6 +91,8 @@ contains
             msg = "Value must be non-negative"
         case (ERROR_INVALID_RANGE)
             msg = "Value outside valid range"
+        case (ERROR_NOT_A_NUMBER)
+            msg = "Array contains NaN or Inf values"
 
         ! Numerical errors (100-199)
         case (ERROR_CONVERGENCE_FAILED)
