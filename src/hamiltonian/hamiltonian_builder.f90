@@ -1,6 +1,8 @@
 module hamiltonian_builder
     use lsda_constants, only: dp
-    use lsda_errors, only: ERROR_INVALID_INPUT, ERROR_SIZE_MISMATCH, ERROR_NOT_A_NUMBER
+    use lsda_errors, only: ERROR_INVALID_INPUT, &
+                            ERROR_SIZE_MISMATCH, ERROR_NOT_A_NUMBER
+                            
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     use boundary_conditions, only: apply_boundary_conditions, &
                                     apply_boundary_conditions_complex
