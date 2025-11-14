@@ -80,14 +80,14 @@ lsda-hubbard/
 │   │   ├── potential_quasiperiodic.f90 # ✅ COMPLETO - Aubry-André-Harper (AAH)
 │   │   └── potential_factory.f90      # ✅ COMPLETO - Factory pattern (7 tipos)
 │   │
-│   ├── hamiltonian/           # 🔜 TODO
-│   │   ├── hamiltonian_builder.f90 # Tight-binding com Veff
-│   │   ├── boundary_conditions.f90 # Open, periodic, twisted
-│   │   └── symmetry.f90            # Exploração de simetria de paridade
+│   ├── hamiltonian/           # 🔄 EM PROGRESSO (67% completo)
+│   │   ├── hamiltonian_builder.f90 # ✅ COMPLETO - Tight-binding com Veff
+│   │   ├── boundary_conditions.f90 # ✅ COMPLETO - Open, periodic, twisted
+│   │   └── symmetry.f90            # 🔜 TODO - Exploração de simetria de paridade
 │   │
-│   ├── diagonalization/       # 🔜 TODO
-│   │   ├── lapack_wrapper.f90      # Interface para DSYEV/DSYEVD
-│   │   └── degeneracy_handler.f90  # Tratamento de níveis degenerados
+│   ├── diagonalization/       # ✅ COMPLETO (Fase 5)
+│   │   ├── lapack_wrapper.f90      # ✅ COMPLETO - Wrappers DSYEVD/ZHEEVD
+│   │   └── degeneracy_handler.f90  # ✅ COMPLETO - QR/Gram-Schmidt
 │   │
 │   ├── density/               # 🔜 TODO
 │   │   ├── density_calculator.f90  # Ocupação de níveis
@@ -1133,8 +1133,8 @@ fpm test
 ## 📊 Status do Projeto
 
 **Versão:** 0.5.0-dev
-**Status:** ✅ Fases 1, 2, 3 & 4 Completas → 🔄 Fase 5 em Progresso (Hamiltoniano & Condições de Contorno - 2/3 completo)
-**Última atualização:** 2025-01-14
+**Status:** ✅ Fases 1, 2, 3 & 4 Completas → 🔄 Fase 5 em Progresso (Hamiltoniano & Diagonalização - 80% completo)
+**Última atualização:** 2025-01-15
 
 ### Progresso Geral
 
@@ -1143,7 +1143,7 @@ fpm test
 [████████████████████████████████] 100% Fase 2: Geração de Tabelas XC (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 3: Splines 2D (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 4: Potenciais & Erros (COMPLETO ✅)
-[█████████████████████░░░░░░░░░░░]  67% Fase 5: Hamiltoniano & Diagonalização (EM PROGRESSO 🔄)
+[█████████████████████████░░░░░░░]  80% Fase 5: Hamiltoniano & Diagonalização (EM PROGRESSO 🔄)
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 6: Ciclo KS & Features
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 7: Otimização
 ```
@@ -1182,7 +1182,7 @@ fpm test
   - [x] Factory pattern para potenciais ✅
   - [x] Testes unitários (34 testes, 100% passando) ✅
 
-- [~] **Fase 5 - Hamiltoniano & Diagonalização** (67% 🔄):
+- [~] **Fase 5 - Hamiltoniano & Diagonalização** (80% 🔄):
   - [x] Boundary conditions (`boundary_conditions.f90`) ✅
     - [x] Implementação: BC_OPEN, BC_PERIODIC, BC_TWISTED ✅
     - [x] Validação de parâmetros ✅
@@ -1196,29 +1196,47 @@ fpm test
     - [x] `compute_effective_potential()`: V_eff = V_ext + V_xc ✅
     - [x] Bug fix: loop de hopping corrigido ✅
     - [x] Testes unitários (18 testes, 100% passando) ✅
+  - [x] Wrapper LAPACK para diagonalização (`lapack_wrapper.f90`) ✅
+    - [x] `validate_diagonalization_inputs()`: validação de dimensões ✅
+    - [x] `diagonalize_symmetric_real()`: DSYEVD para matrizes reais simétricas ✅
+    - [x] `diagonalize_symmetric_real_values_only()`: eigenvalues only (mais rápido) ✅
+    - [x] `diagonalize_hermitian_complex()`: ZHEEVD para matrizes complexas Hermitianas ✅
+    - [x] `diagonalize_hermitian_complex_values_only()`: eigenvalues only ✅
+    - [x] Workspace query em duas fases (lwork=-1 → allocate) ✅
+    - [x] Interface LAPACK sem bind(C) (convenção Fortran nativa) ✅
+    - [x] Testes unitários (18 testes, 100% passando) ✅
+  - [x] Tratamento de degenerescências (`degeneracy_handler.f90`) ✅
+    - [x] `find_degenerate_subspaces()`: detectar grupos onde |λᵢ - λⱼ| < tol ✅
+    - [x] `orthonormalize_degenerate_subspace()`: QR (DGEQRF/DORGQR) para vetores reais ✅
+    - [x] `orthonormalize_degenerate_subspace_complex()`: Gram-Schmidt modificado ✅
+    - [x] `compute_degeneracy_count()`: contar degenerescências ✅
+    - [x] `verify_orthonormality()`: verificar ||V^T V - I|| < tol ✅
+    - [x] Bug fix: removido double conjugation (DOT_PRODUCT já conjuga) ✅
+    - [x] Bug fix: workspace query separada para DORGQR ✅
+    - [x] Testes unitários (13 testes, 100% passando) ✅
   - [ ] Simetria de paridade (`symmetry.f90`) 🔜
     - [ ] `check_parity_symmetry()`: detectar V(i) = V(L+1-i)
     - [ ] `block_diagonalize_hamiltonian()`: split H → H_even, H_odd
     - [ ] `reconstruct_eigenstates()`: merge eigenvectors
     - [ ] Speedup 4x para potenciais simétricos
-  - [ ] Wrapper LAPACK para diagonalização
 
 - [ ] **Fases 6-7**: Ciclo KS, Features, Otimização
 
 #### Features 🔄
 - [x] Potenciais (7 tipos completos: uniform, harmonic, impurity, random, barrier, quasiperiodic) ✅
 - [x] Boundary Conditions (Open, Periodic, Twisted) ✅
+- [x] Diagonalização LAPACK (real simétrico & complexo Hermitiano) ✅
+- [x] Tratamento de degenerescências (QR/Gram-Schmidt) ✅
 - [ ] Simetria de paridade (próximo 🔜)
-- [ ] Degenerescências
 
 #### Qualidade ✅
 - [x] Testes unitários Fase 1 (31 testes, 100% passando) ✅
 - [x] Testes unitários Fase 2 (16 testes, 100% passando) ✅
 - [x] Testes unitários Fase 3 (11 testes, 100% passando) ✅
 - [x] Testes unitários Fase 4 (34 testes, 100% passando) ✅
-- [x] Testes unitários Fase 5 (35 testes, 100% passando) ✅
-- [x] **Total: 110 testes, 100% passando** ✅
-- [x] Pipeline Bethe → Tabelas → Splines → Potenciais → Hamiltoniano validado ✅
+- [x] Testes unitários Fase 5 (66 testes, 100% passando) ✅
+- [x] **Total: 158 testes, 100% passando** ✅
+- [x] Pipeline Bethe → Tabelas → Splines → Potenciais → Hamiltoniano → Diagonalização validado ✅
 - [ ] Testes E2E (ciclo KS completo)
 - [ ] Documentação completa (FORD)
 - [ ] Benchmarks de performance
@@ -1281,6 +1299,81 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 ---
 
 ## 📅 Histórico de Mudanças
+
+### 2025-01-15 - Fase 5: Diagonalização LAPACK & Degenerescências! 🎉
+- ✅ **MILESTONE:** Diagonalização de matrizes simétricas/Hermitianas completa!
+
+  **`lapack_wrapper.f90` implementado** (347 linhas, 18 testes):
+  - ✅ `validate_diagonalization_inputs()`: Validação de dimensões
+    - L > 0, size(H) == (L,L), size(eigvals) == L, size(eigvecs) == (L,L)
+  - ✅ `diagonalize_symmetric_real()`: Wrapper DSYEVD para matrizes reais simétricas
+    - Calcula eigenvalues E eigenvectors
+    - Eigenvalues retornados em ordem crescente (ground state = E₁)
+    - Eigenvectors normalizados e ortogonais
+  - ✅ `diagonalize_symmetric_real_values_only()`: Eigenvalues only (mais rápido ~2x)
+  - ✅ `diagonalize_hermitian_complex()`: Wrapper ZHEEVD para Hermitianas complexas
+    - Eigenvalues são SEMPRE reais (teorema fundamental QM)
+    - Suporta twisted boundary conditions (Hamiltoniano complexo)
+  - ✅ `diagonalize_hermitian_complex_values_only()`: Eigenvalues only
+  - ✅ Workspace query em duas fases:
+    - Fase 1: lwork=-1, query optimal workspace size
+    - Fase 2: allocate(work(lwork)), chamar LAPACK novamente
+  - ✅ **Bug fix crítico**: Removido `bind(C)` das interfaces LAPACK
+    - LAPACK usa convenção Fortran nativa, não C!
+    - `bind(C)` causava falha em workspace query no gfortran
+
+  **`degeneracy_handler.f90` implementado** (405 linhas, 13 testes):
+  - ✅ `find_degenerate_subspaces()`: Detecta grupos degenerados
+    - Varre eigenvalues, identifica grupos onde |λᵢ - λⱼ| < DEG_TOL (1.0e-8)
+    - Retorna array 2D: subspaces(n_subspaces, max_deg)
+    - Exemplo: eigenvalues [1, 2, 2, 3, 3, 3] → 2 subspaces: [2,3] e [4,5,6]
+  - ✅ `orthonormalize_degenerate_subspace()`: QR decomposition para vetores reais
+    - Usa DGEQRF (QR factorization) + DORGQR (generate Q)
+    - Mais estável numericamente que Gram-Schmidt
+    - LAPACK handles workspace automaticamente via query
+  - ✅ `orthonormalize_degenerate_subspace_complex()`: Gram-Schmidt modificado
+    - Para vetores complexos (e.g., twisted BC)
+    - Modified Gram-Schmidt: v_k ⊥ span{v₁,...,v_{k-1}} iterativamente
+  - ✅ `compute_degeneracy_count()`: Conta quantos eigenvalues são degenerados com índice dado
+  - ✅ `verify_orthonormality()`: Verifica ||V^T V - I||∞ < tol usando DGEMM
+  - ✅ **Bug fix crítico 1**: Removido double conjugation
+    - `DOT_PRODUCT(a,b)` em Fortran JÁ FAZ `SUM(CONJG(a)*b)` para vetores complexos!
+    - Estava fazendo `DOT_PRODUCT(CONJG(a),b)` = `SUM(a*b)` → ERRADO
+  - ✅ **Bug fix crítico 2**: Workspace query separada para DORGQR
+    - DGEQRF e DORGQR podem precisar workspaces de tamanhos diferentes!
+    - Antes: usava lwork do DGEQRF para DORGQR → falha em alguns sistemas
+    - Agora: query separada para cada rotina LAPACK
+
+  **Física dos Eigenproblemas:**
+  - ✅ **Real simétrico**: H = H^T (open/periodic BC sem campo magnético)
+  - ✅ **Complexo Hermitiano**: H = H† (twisted BC, Aharonov-Bohm phase)
+  - ✅ **Degenerescências**: Ocorrem por simetrias (translação, paridade, spin)
+    - Exemplo: PBC com L=10 → eigenvalues vêm em pares ±k (exceto k=0, L/2)
+  - ✅ **Orthonormalização**: LAPACK pode retornar base arbitrária no subespaço degenerado
+    - QR/Gram-Schmidt garante base ortonormal canônica
+
+  **Testes implementados** (31 novos testes, 100% passando):
+  - ✅ 18 testes `test_lapack_wrapper.f90`:
+    - Validação de inputs (6 testes)
+    - Diagonalização real (7 testes): identity, diagonal, 2×2 analítico, tridiagonal tight-binding, ordering, normalização, ortogonalidade
+    - Eigenvalues only (1 teste)
+    - Complexo Hermitiano (4 testes): identity, 2×2 analítico, eigenvalues reais, values only
+  - ✅ 13 testes `test_degeneracy_handler.f90`:
+    - Detecção de degenerescências (5 testes): nenhuma, par, tripla, múltiplos grupos, todos degenerados
+    - Contagem (3 testes): single, par, tripla
+    - Orthonormalization (3 testes): real pair/triple, complex pair
+    - Verificação (2 testes): identity perfeita, detectar não-ortogonalidade
+
+  **Estatísticas Fase 5:**
+  - ✅ Total: 1228 linhas código produção + 1531 linhas testes
+  - ✅ 66 testes (100% passando)
+  - ✅ 4 módulos completos: boundary_conditions, hamiltonian_builder, lapack_wrapper, degeneracy_handler
+  - ✅ Pipeline completo: Bethe Ansatz → Tables → Splines → Potentials → Hamiltonian → **Diagonalization!**
+  - 🔜 Próximo: symmetry.f90 (explorar simetria de paridade para 4x speedup)
+
+  **Total do Projeto:** 158 testes, 100% passando! 🎉
+
+---
 
 ### 2025-01-14 - Fase 5: Hamiltoniano & Boundary Conditions! 🎉
 - ✅ **MILESTONE:** Construção do Hamiltoniano tight-binding completa!
