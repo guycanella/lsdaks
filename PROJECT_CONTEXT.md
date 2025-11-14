@@ -1132,9 +1132,9 @@ fpm test
 
 ## 📊 Status do Projeto
 
-**Versão:** 0.4.0-dev
-**Status:** ✅ Fases 1, 2, 3 & 4 Completas → 🔜 Iniciando Fase 5 (Hamiltoniano & Diagonalização)
-**Última atualização:** 2025-01-13
+**Versão:** 0.5.0-dev
+**Status:** ✅ Fases 1, 2, 3 & 4 Completas → 🔄 Fase 5 em Progresso (Hamiltoniano & Condições de Contorno - 2/3 completo)
+**Última atualização:** 2025-01-14
 
 ### Progresso Geral
 
@@ -1143,7 +1143,7 @@ fpm test
 [████████████████████████████████] 100% Fase 2: Geração de Tabelas XC (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 3: Splines 2D (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 4: Potenciais & Erros (COMPLETO ✅)
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 5: Hamiltoniano & Diagonalização (PRÓXIMA 🔜)
+[█████████████████████░░░░░░░░░░░]  67% Fase 5: Hamiltoniano & Diagonalização (EM PROGRESSO 🔄)
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 6: Ciclo KS & Features
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 7: Otimização
 ```
@@ -1182,17 +1182,33 @@ fpm test
   - [x] Factory pattern para potenciais ✅
   - [x] Testes unitários (34 testes, 100% passando) ✅
 
-- [ ] **Fase 5 - Hamiltoniano & Diagonalização** (0% 🔜):
-  - [ ] Construção do Hamiltoniano tight-binding
+- [~] **Fase 5 - Hamiltoniano & Diagonalização** (67% 🔄):
+  - [x] Boundary conditions (`boundary_conditions.f90`) ✅
+    - [x] Implementação: BC_OPEN, BC_PERIODIC, BC_TWISTED ✅
+    - [x] Validação de parâmetros ✅
+    - [x] Eigenvalues analíticos para free particles ✅
+    - [x] Testes unitários (17 testes, 100% passando) ✅
+  - [x] Construção do Hamiltoniano (`hamiltonian_builder.f90`) ✅
+    - [x] `validate_hamiltonian_inputs()`: validação com NaN/Inf ✅
+    - [x] `build_hamiltonian()`: H real com BCs ✅
+    - [x] `build_hamiltonian_complex()`: H complexo (twisted BC) ✅
+    - [x] `build_hamiltonian_free()`: H livre (validação) ✅
+    - [x] `compute_effective_potential()`: V_eff = V_ext + V_xc ✅
+    - [x] Bug fix: loop de hopping corrigido ✅
+    - [x] Testes unitários (18 testes, 100% passando) ✅
+  - [ ] Simetria de paridade (`symmetry.f90`) 🔜
+    - [ ] `check_parity_symmetry()`: detectar V(i) = V(L+1-i)
+    - [ ] `block_diagonalize_hamiltonian()`: split H → H_even, H_odd
+    - [ ] `reconstruct_eigenstates()`: merge eigenvectors
+    - [ ] Speedup 4x para potenciais simétricos
   - [ ] Wrapper LAPACK para diagonalização
-  - [ ] Boundary conditions
 
 - [ ] **Fases 6-7**: Ciclo KS, Features, Otimização
 
 #### Features 🔄
 - [x] Potenciais (7 tipos completos: uniform, harmonic, impurity, random, barrier, quasiperiodic) ✅
-- [ ] Simetria
-- [ ] Twisted BC
+- [x] Boundary Conditions (Open, Periodic, Twisted) ✅
+- [ ] Simetria de paridade (próximo 🔜)
 - [ ] Degenerescências
 
 #### Qualidade ✅
@@ -1200,8 +1216,9 @@ fpm test
 - [x] Testes unitários Fase 2 (16 testes, 100% passando) ✅
 - [x] Testes unitários Fase 3 (11 testes, 100% passando) ✅
 - [x] Testes unitários Fase 4 (34 testes, 100% passando) ✅
-- [x] **Total: 92 testes, 100% passando** ✅
-- [x] Pipeline Bethe → Tabelas → Splines → Potenciais validado ✅
+- [x] Testes unitários Fase 5 (35 testes, 100% passando) ✅
+- [x] **Total: 110 testes, 100% passando** ✅
+- [x] Pipeline Bethe → Tabelas → Splines → Potenciais → Hamiltoniano validado ✅
 - [ ] Testes E2E (ciclo KS completo)
 - [ ] Documentação completa (FORD)
 - [ ] Benchmarks de performance
@@ -1258,12 +1275,112 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 **Mantido por:** Guilherme Canella
 **Contato:** guycanella@gmail.com
 **Repositório:** https://github.com/guycanella/lsdaks
-**Última atualização:** 2025-01-13
-**Status:** Fases 1, 2, 3 & 4 Completas (100%) → Iniciando Fase 5 (Hamiltoniano & Diagonalização)
+**Última atualização:** 2025-01-14
+**Status:** Fases 1-4 Completas (100%) → Fase 5 em Progresso (67% - Hamiltoniano & BCs completos, falta simetria)
 
 ---
 
 ## 📅 Histórico de Mudanças
+
+### 2025-01-14 - Fase 5: Hamiltoniano & Boundary Conditions! 🎉
+- ✅ **MILESTONE:** Construção do Hamiltoniano tight-binding completa!
+
+  **`boundary_conditions.f90` implementado** (256 linhas, 17 testes):
+  - ✅ Enum com tipos de BC: `BC_OPEN`, `BC_PERIODIC`, `BC_TWISTED`
+  - ✅ `validate_bc_parameters()`: Validação completa
+    - BC type válido (1, 2, ou 3)
+    - Sistema com L > 1 (mínimo 2 sites para tight-binding)
+    - Para BC_TWISTED: theta obrigatório e em [0, 2π)
+  - ✅ `apply_boundary_conditions()`: BCs para matrizes reais
+    - BC_OPEN: sem modificação (H já é tridiagonal)
+    - BC_PERIODIC: H(1,L) = H(L,1) = -1 (cria anel)
+    - BC_TWISTED: retorna erro (use versão complexa)
+  - ✅ `apply_boundary_conditions_complex()`: BCs para matrizes complexas
+    - BC_OPEN: sem modificação
+    - BC_PERIODIC: H(1,L) = H(L,1) = -1
+    - BC_TWISTED: H(1,L) = -exp(iθ), H(L,1) = -exp(-iθ) (efeito Aharonov-Bohm)
+  - ✅ `get_free_particle_eigenvalues()`: Eigenvalues analíticos para validação
+    - OBC: E_n = -2cos(nπ/(L+1)), n=1,...,L (standing waves)
+    - PBC: E_k = -2cos(2πk/L), k=0,...,L-1 (Bloch waves)
+    - TBC: E_k(θ) = -2cos((2πk+θ)/L), k=0,...,L-1 (shifted spectrum)
+
+  **Física das Boundary Conditions:**
+  - ✅ **OBC**: Hard-wall boundaries, edge states, confinamento quântico
+  - ✅ **PBC**: Conservação de momento, propriedades bulk, Bethe Ansatz
+  - ✅ **TBC**: Persistent currents, efeito Aharonov-Bohm, flux threading
+  - ✅ Antiperiodic BC (θ=π): meio quantum de fluxo, quebra degenerescências
+
+  **`hamiltonian_builder.f90` implementado** (220 linhas, 18 testes):
+  - ✅ `validate_hamiltonian_inputs()`: Validação robusta
+    - L > 0 (sistema físico)
+    - size(V_ext) == size(V_xc) == L
+    - NaN/Inf checking usando `ieee_is_finite()` (importado de `ieee_arithmetic`)
+  - ✅ `build_hamiltonian()`: Construção H real
+    - Diagonal: H(i,i) = V_ext(i) + V_xc(i) (on-site energies)
+    - Off-diagonal: H(i,i±1) = -t = -1 (hopping)
+    - Aplica BCs via `apply_boundary_conditions()`
+  - ✅ `build_hamiltonian_complex()`: Construção H complexo
+    - Similar ao real mas com tipo `complex(dp)`
+    - Suporta BC_TWISTED com theta
+    - Diagonal sempre real (potenciais on-site)
+  - ✅ `build_hamiltonian_free()`: H livre (U=0, V=0)
+    - Apenas hopping, sem potenciais
+    - Útil para validação contra eigenvalues analíticos
+  - ✅ `compute_effective_potential()`: V_eff = V_ext + V_xc
+    - Helper function simples
+    - Validação de size matching
+
+  **Bug crítico corrigido:**
+  - ❌ **Problema:** Todas as 3 funções tinham loop incorreto:
+    ```fortran
+    do i = 1, L - 1
+        if (i > 1) then  ! ❌ Pula i=1!
+            H(i,i+1) = -1.0_dp
+            H(i+1,i) = -1.0_dp
+        end if
+    end do
+    ```
+  - ✅ **Solução:** Removido `if (i > 1)` em todas as funções
+  - ✅ **Impacto:** Sem o fix, H(1,2) e H(2,1) nunca eram setados → Hamiltoniano incorreto!
+  - ✅ Detectado pelos testes `test_build_free_hamiltonian_open_bc` e `test_build_hamiltonian_offdiagonal`
+
+  **Correção no sistema de erros:**
+  - ✅ `ERROR_NOT_A_NUMBER` adicionado aos exports públicos de `lsda_errors.f90`
+  - ✅ Mensagem de erro adicionada: "Array contains NaN or Inf values"
+
+  **Testes implementados** (866 linhas, 35 testes):
+  - ✅ **`test_boundary_conditions.f90`** (433 linhas, 17 testes):
+    - Validação de BC: open, periodic, twisted (com/sem theta, ranges)
+    - Aplicação de BC: open (no-op), periodic (edges), twisted (complex phases)
+    - Antiperiodic (θ=π): H(1,L) = H(L,1) = +1
+    - Free particle eigenvalues: OBC, PBC, TBC (validação analítica)
+    - Size mismatch detection
+  - ✅ **`test_hamiltonian_builder.f90`** (433 linhas, 18 testes):
+    - Validação: inputs válidos, L inválido, size mismatches, NaN/Inf detection
+    - Effective potential: computação e size mismatch
+    - Free Hamiltonian: estrutura tridiagonal, OBC (sem edges), PBC (com edges)
+    - Full Hamiltonian: diagonal (V_ext+V_xc), off-diagonal (hopping), BCs, simetria hermitiana
+    - Complex Hamiltonian: diagonal real para potenciais on-site
+    - Error handling completo
+
+  **Física validada:**
+  - ✅ Estrutura tridiagonal do tight-binding
+  - ✅ Hermitianidade (H† = H → H simétrica para H real)
+  - ✅ Dispersion relation E(k) = -2cos(k) para free particles
+  - ✅ Boundary effects: OBC vs PBC vs TBC
+  - ✅ Aharonov-Bohm phase em TBC
+
+  **Estatísticas Fase 5 (parcial):**
+  - **Código produção:** 476 linhas (2 módulos completos)
+  - **Testes:** 866 linhas (35 testes, 100% passando)
+  - **Total do projeto:** 110 testes (antes 92 + 18 novos)
+  - **Próximo:** `symmetry.f90` para exploração de paridade
+
+  **🎯 Próximo Passo:**
+  - `src/hamiltonian/symmetry.f90`: Simetria de paridade
+    - Para V(i) = V(L+1-i): H se block-diagonaliza em setores even/odd
+    - Cada setor tem dimensão L/2 → speedup 4x na diagonalização
+    - Funções: `check_parity_symmetry()`, `block_diagonalize_hamiltonian()`, `reconstruct_eigenstates()`
 
 ### 2025-01-13 (Parte 2) - Potencial Quasiperiódico Adicionado! 🎉
 - ✅ **Correção e implementação do potencial quasiperiódico (AAH model)**
