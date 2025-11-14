@@ -101,10 +101,8 @@ contains
         end do
 
         do i = 1, L - 1
-            if (i > 1) then
-                H(i,i+1) = -1.0_dp ! Assuming hopping parameter t = 1
-                H(i+1,i) = -1.0_dp ! Assuming hopping parameter t = 1
-            end if
+            H(i,i+1) = -1.0_dp ! Assuming hopping parameter t = 1
+            H(i+1,i) = -1.0_dp ! Assuming hopping parameter t = 1
         end do
 
         call apply_boundary_conditions(H, L, bc_type, theta, ierr)
@@ -145,10 +143,8 @@ contains
         end do
 
         do i = 1, L - 1
-            if (i > 1) then
-                H(i,i+1) = cmplx(-1.0_dp, 0.0_dp, kind=dp) ! Assuming hopping parameter t = 1
-                H(i+1,i) = cmplx(-1.0_dp, 0.0_dp, kind=dp) ! Assuming hopping parameter t = 1
-            end if
+            H(i,i+1) = cmplx(-1.0_dp, 0.0_dp, kind=dp) ! Assuming hopping parameter t = 1
+            H(i+1,i) = cmplx(-1.0_dp, 0.0_dp, kind=dp) ! Assuming hopping parameter t = 1
         end do
 
         call apply_boundary_conditions_complex(H, L, bc_type, theta, ierr)
@@ -186,10 +182,8 @@ contains
         H = 0.0_dp
 
         do i = 1, L - 1
-            if (i > 1) then
-                H(i,i+1) = -1.0_dp ! Assuming hopping parameter t = 1
-                H(i+1,i) = -1.0_dp ! Assuming hopping parameter t = 1
-            end if
+            H(i,i+1) = -1.0_dp ! Assuming hopping parameter t = 1
+            H(i+1,i) = -1.0_dp ! Assuming hopping parameter t = 1
         end do
 
         call apply_boundary_conditions(H, L, bc_type, theta, ierr)
