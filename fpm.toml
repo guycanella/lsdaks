@@ -54,6 +54,16 @@ name = "test_density_calculator"
 source-dir = "test"
 main = "test_density_calculator.f90"
 
+[[test]]
+name = "test_convergence_monitor"
+source-dir = "test"
+main = "test_convergence_monitor.f90"
+
+[[test]]
+name = "test_mixing_schemes"
+source-dir = "test"
+main = "test_mixing_schemes.f90"
+
 [[executable]]
 name = "lsdaks"
 source-dir = "app"
