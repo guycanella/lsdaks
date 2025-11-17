@@ -30,6 +30,7 @@ module lsda_errors
     public :: ERROR_NEGATIVE_VALUE
     public :: ERROR_INVALID_RANGE
     public :: ERROR_NOT_A_NUMBER
+    public :: ERROR_UNPHYSICAL_DENSITY
     public :: ERROR_CONVERGENCE_FAILED
     public :: ERROR_SINGULAR_MATRIX
     public :: ERROR_LAPACK_FAILED
@@ -50,6 +51,7 @@ module lsda_errors
     integer, parameter :: ERROR_NEGATIVE_VALUE = 5
     integer, parameter :: ERROR_INVALID_RANGE = 6
     integer, parameter :: ERROR_NOT_A_NUMBER = 7
+    integer, parameter :: ERROR_UNPHYSICAL_DENSITY = 8
 
     ! Error codes - Numerical (100-199)
     integer, parameter :: ERROR_CONVERGENCE_FAILED = 100
@@ -97,6 +99,8 @@ contains
             msg = "Value outside valid range"
         case (ERROR_NOT_A_NUMBER)
             msg = "Array contains NaN or Inf values"
+        case (ERROR_UNPHYSICAL_DENSITY)
+            msg = "Unphysical density values detected"
 
         ! Numerical errors (100-199)
         case (ERROR_CONVERGENCE_FAILED)
