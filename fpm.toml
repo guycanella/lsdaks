@@ -49,6 +49,11 @@ name = "test_bethe_tables"
 source-dir = "test"
 main = "test_bethe_tables.f90"
 
+[[test]]
+name = "test_density_calculator"
+source-dir = "test"
+main = "test_density_calculator.f90"
+
 [[executable]]
 name = "lsdaks"
 source-dir = "app"
