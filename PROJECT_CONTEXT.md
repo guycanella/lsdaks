@@ -80,42 +80,44 @@ lsda-hubbard/
 │   │   ├── potential_quasiperiodic.f90 # ✅ COMPLETO - Aubry-André-Harper (AAH)
 │   │   └── potential_factory.f90      # ✅ COMPLETO - Factory pattern (7 tipos)
 │   │
-│   ├── hamiltonian/           # 🔄 EM PROGRESSO (67% completo)
+│   ├── hamiltonian/           # ✅ COMPLETO (Fase 5 - partial)
 │   │   ├── hamiltonian_builder.f90 # ✅ COMPLETO - Tight-binding com Veff
 │   │   ├── boundary_conditions.f90 # ✅ COMPLETO - Open, periodic, twisted
-│   │   └── symmetry.f90            # 🔜 TODO - Exploração de simetria de paridade
+│   │   └── symmetry.f90            # 🔜 TODO - Exploração de simetria de paridade (opcional)
 │   │
 │   ├── diagonalization/       # ✅ COMPLETO (Fase 5)
 │   │   ├── lapack_wrapper.f90      # ✅ COMPLETO - Wrappers DSYEVD/ZHEEVD
 │   │   └── degeneracy_handler.f90  # ✅ COMPLETO - QR/Gram-Schmidt
 │   │
-│   ├── density/               # 🔜 TODO
-│   │   ├── density_calculator.f90  # Ocupação de níveis
-│   │   └── fermi_distribution.f90  # Distribuição de Fermi
+│   ├── density/               # 🔄 EM PROGRESSO (Fase 6 - 20% completo)
+│   │   └── density_calculator.f90  # ✅ COMPLETO - Densidade de autoestados KS
 │   │
-│   ├── convergence/           # 🔜 TODO
-│   │   ├── convergence_monitor.f90 # Critérios de parada
-│   │   └── mixing_schemes.f90      # Mixing linear, Broyden, etc
+│   ├── convergence/           # 🔜 TODO (Fase 6 - 80% restante)
+│   │   └── scf_mixer.f90      # Mixing linear, Broyden, Anderson
 │   │
-│   └── kohn_sham/             # 🔜 TODO
+│   └── kohn_sham/             # 🔜 TODO (Fase 6)
 │       └── ks_cycle.f90       # Loop SCF completo
 │
 ├── app/                        # 🔄 EM PROGRESSO
 │   ├── main.f90               # Ponto de entrada (placeholder)
 │   └── convert_tables.f90     # ✅ COMPLETO - Utilitário conversão tabelas
 │
-├── test/                       # 🔄 EM PROGRESSO (92 testes, 100% passando)
-│   ├── test_bethe_equations.f90      # ✅ COMPLETO - 17 testes
-│   ├── test_nonlinear_solvers.f90    # ✅ COMPLETO - 9 testes
-│   ├── test_continuation.f90         # ✅ COMPLETO - 5 testes
-│   ├── test_table_io.f90             # ✅ COMPLETO - 10 testes
-│   ├── test_bethe_tables.f90         # ✅ COMPLETO - 6 testes
-│   ├── test_spline2d.f90             # ✅ COMPLETO - 5 testes
-│   ├── test_xc_lsda.f90              # ✅ COMPLETO - 6 testes
-│   ├── test_potentials.f90           # ✅ COMPLETO - 21 testes (17 + 4 quasiperiódicos)
-│   ├── test_lsda_errors.f90          # ✅ COMPLETO - 13 testes
-│   ├── test_hamiltonian.f90          # 🔜 TODO
-│   └── test_ks_cycle.f90             # 🔜 TODO
+├── test/                       # 🔄 EM PROGRESSO (164 testes, 100% passando)
+│   ├── test_bethe_equations.f90       # ✅ COMPLETO - 17 testes
+│   ├── test_nonlinear_solvers.f90     # ✅ COMPLETO - 9 testes
+│   ├── test_continuation.f90          # ✅ COMPLETO - 5 testes
+│   ├── test_table_io.f90              # ✅ COMPLETO - 10 testes
+│   ├── test_bethe_tables.f90          # ✅ COMPLETO - 6 testes
+│   ├── test_spline2d.f90              # ✅ COMPLETO - 5 testes
+│   ├── test_xc_lsda.f90               # ✅ COMPLETO - 6 testes
+│   ├── test_potentials.f90            # ✅ COMPLETO - 21 testes
+│   ├── test_lsda_errors.f90           # ✅ COMPLETO - 13 testes
+│   ├── test_boundary_conditions.f90   # ✅ COMPLETO - 17 testes
+│   ├── test_hamiltonian_builder.f90   # ✅ COMPLETO - 18 testes
+│   ├── test_lapack_wrapper.f90        # ✅ COMPLETO - 18 testes
+│   ├── test_degeneracy_handler.f90    # ✅ COMPLETO - 13 testes
+│   ├── test_density_calculator.f90    # ✅ COMPLETO - 6 testes
+│   └── test_ks_cycle.f90              # 🔜 TODO
 │
 ├── examples/                   # 🔜 TODO
 │   ├── harmonic_trap.f90
@@ -1132,9 +1134,9 @@ fpm test
 
 ## 📊 Status do Projeto
 
-**Versão:** 0.5.0-dev
-**Status:** ✅ Fases 1, 2, 3 & 4 Completas → 🔄 Fase 5 em Progresso (Hamiltoniano & Diagonalização - 80% completo)
-**Última atualização:** 2025-01-15
+**Versão:** 0.6.0-dev
+**Status:** ✅ Fases 1-5 Completas → 🔄 Fase 6 em Progresso (Densidade & SCF - 20% completo)
+**Última atualização:** 2025-01-16
 
 ### Progresso Geral
 
@@ -1143,8 +1145,8 @@ fpm test
 [████████████████████████████████] 100% Fase 2: Geração de Tabelas XC (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 3: Splines 2D (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 4: Potenciais & Erros (COMPLETO ✅)
-[█████████████████████████░░░░░░░]  80% Fase 5: Hamiltoniano & Diagonalização (EM PROGRESSO 🔄)
-[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 6: Ciclo KS & Features
+[████████████████████████████████] 100% Fase 5: Hamiltoniano & Diagonalização (COMPLETO ✅)
+[██████░░░░░░░░░░░░░░░░░░░░░░░░░░]  20% Fase 6: Densidade & SCF Cycle (EM PROGRESSO 🔄)
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 7: Otimização
 ```
 
@@ -1182,7 +1184,7 @@ fpm test
   - [x] Factory pattern para potenciais ✅
   - [x] Testes unitários (34 testes, 100% passando) ✅
 
-- [~] **Fase 5 - Hamiltoniano & Diagonalização** (80% 🔄):
+- [x] **Fase 5 - Hamiltoniano & Diagonalização** (100% ✅):
   - [x] Boundary conditions (`boundary_conditions.f90`) ✅
     - [x] Implementação: BC_OPEN, BC_PERIODIC, BC_TWISTED ✅
     - [x] Validação de parâmetros ✅
@@ -1214,13 +1216,32 @@ fpm test
     - [x] Bug fix: removido double conjugation (DOT_PRODUCT já conjuga) ✅
     - [x] Bug fix: workspace query separada para DORGQR ✅
     - [x] Testes unitários (13 testes, 100% passando) ✅
-  - [ ] Simetria de paridade (`symmetry.f90`) 🔜
+
+- [~] **Fase 6 - Densidade & SCF Cycle** (20% 🔄):
+  - [x] Cálculo de densidade (`density_calculator.f90`) ✅
+    - [x] `compute_density_spin()`: n_σ(i) = Σⱼ |ψⱼ(i)|² (real/complex overload) ✅
+    - [x] `compute_total_density()`: n(i) = n↑(i) + n↓(i) ✅
+    - [x] `verify_particle_number()`: Σn(i) = N ✅
+    - [x] `check_density_bounds()`: 0 ≤ n_σ(i) ≤ 1, 0 ≤ n(i) ≤ 2 ✅
+    - [x] Bug fix: variável i→j em loop de `check_density_bounds` ✅
+    - [x] Testes unitários (6 testes, 100% passando) ✅
+  - [ ] Mixing SCF (`scf_mixer.f90`) 🔜
+    - [ ] Linear mixing: ρ_new = α·ρ_out + (1-α)·ρ_in
+    - [ ] Broyden mixing: aceleração de convergência
+    - [ ] Anderson mixing: alternativa
+  - [ ] Ciclo Kohn-Sham (`ks_cycle.f90`) 🔜
+    - [ ] Loop SCF completo: H → diag → density → V_xc → H'
+    - [ ] Monitoramento de convergência
+    - [ ] Mixing adaptativo
+
+- [ ] **Fase 7**: Otimização (opcional)
+  - [ ] Simetria de paridade (`symmetry.f90`)
     - [ ] `check_parity_symmetry()`: detectar V(i) = V(L+1-i)
     - [ ] `block_diagonalize_hamiltonian()`: split H → H_even, H_odd
     - [ ] `reconstruct_eigenstates()`: merge eigenvectors
     - [ ] Speedup 4x para potenciais simétricos
-
-- [ ] **Fases 6-7**: Ciclo KS, Features, Otimização
+  - [ ] Paralelização OpenMP
+  - [ ] Profiling e otimização
 
 #### Features 🔄
 - [x] Potenciais (7 tipos completos: uniform, harmonic, impurity, random, barrier, quasiperiodic) ✅
@@ -1235,8 +1256,9 @@ fpm test
 - [x] Testes unitários Fase 3 (11 testes, 100% passando) ✅
 - [x] Testes unitários Fase 4 (34 testes, 100% passando) ✅
 - [x] Testes unitários Fase 5 (66 testes, 100% passando) ✅
-- [x] **Total: 158 testes, 100% passando** ✅
-- [x] Pipeline Bethe → Tabelas → Splines → Potenciais → Hamiltoniano → Diagonalização validado ✅
+- [x] Testes unitários Fase 6 (6 testes, 100% passando) ✅
+- [x] **Total: 164 testes, 100% passando** ✅
+- [x] Pipeline Bethe → Tabelas → Splines → Potenciais → Hamiltoniano → Diagonalização → Densidade validado ✅
 - [ ] Testes E2E (ciclo KS completo)
 - [ ] Documentação completa (FORD)
 - [ ] Benchmarks de performance
@@ -1299,6 +1321,46 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 ---
 
 ## 📅 Histórico de Mudanças
+
+### 2025-01-16 - Fase 6: Cálculo de Densidade Implementado! 🎉
+- ✅ **MILESTONE:** Fase 5 completa (100%)! Fase 6 iniciada (densidade de autoestados KS).
+
+  **`density_calculator.f90` implementado** (203 linhas, 6 testes):
+  - ✅ `compute_density_spin()`: Cálculo de n_σ(i) = Σⱼ |ψⱼ(i)|² para estados ocupados
+    - Interface genérica: overload para eigenvectors reais (OBC/PBC) e complexos (TBC)
+    - Para T=0 (ground state): ocupar primeiros N níveis
+  - ✅ `compute_total_density()`: n(i) = n↑(i) + n↓(i)
+  - ✅ `verify_particle_number()`: Verifica Σn(i) = N dentro de TOL=1e-10
+  - ✅ `check_density_bounds()`: Valida bounds físicos
+    - 0 ≤ n_σ(i) ≤ 1 para cada spin (máximo 1 férmion por site/spin)
+    - 0 ≤ n(i) ≤ 2 para densidade total (Pauli exclusion)
+  - ✅ **Bug fix**: Variável `i→j` em loop de `check_density_bounds` (linha 195)
+
+  **Testes implementados** (291 linhas, 6 testes):
+  - ✅ `test_single_electron_density`: 1 elétron em caixa 1D (OBC)
+    - Verifica n(i) = |ψ₁(i)|², densidade máxima no centro
+  - ✅ `test_half_filling_unpolarized`: N=L, PBC, U=0
+    - Densidade uniforme n(i)=1, simetria de spin n_up=n_dw=0.5
+  - ✅ `test_particle_number_conservation`: Σn(i) = N (3 elétrons, L=8)
+  - ✅ `test_density_positivity`: n(i) ≥ 0 sempre (física básica)
+  - ✅ `test_physical_bounds`: Verifica 0 ≤ n_σ(i) ≤ 1, 0 ≤ n(i) ≤ 2
+  - ✅ `test_density_from_harmonic_trap`: Armadilha harmônica
+    - Shell structure: densidade maior no centro, decai nas bordas
+    - Perfil qualitativo correto (gaussiano-like)
+
+  **Correções durante implementação:**
+  - ✅ `lsda_errors.f90`: Adicionado `ERROR_UNPHYSICAL_DENSITY` aos exports públicos
+  - ✅ Interface `apply_potential_harmonic`: Corrigida chamada (center calculado automaticamente)
+  - ✅ Interface `diagonalize_symmetric_real`: Ordem de parâmetros corrigida (H, L, ...) não (L, H, ...)
+
+  **Estatísticas Fase 6 (parcial):**
+  - ✅ Total: 203 linhas produção + 291 linhas testes (6 testes)
+  - ✅ **Pipeline completo:** Bethe → Tables → Splines → Potentials → Hamiltonian → Diagonalization → **Density!**
+  - 🔜 Próximo: `scf_mixer.f90` (mixing schemes) + `ks_cycle.f90` (loop SCF)
+
+  **Total do Projeto:** 164 testes, 100% passando! 🎉
+
+---
 
 ### 2025-01-15 - Fase 5: Diagonalização LAPACK & Degenerescências! 🎉
 - ✅ **MILESTONE:** Diagonalização de matrizes simétricas/Hermitianas completa!
