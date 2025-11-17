@@ -89,20 +89,21 @@ lsda-hubbard/
 │   │   ├── lapack_wrapper.f90      # ✅ COMPLETO - Wrappers DSYEVD/ZHEEVD
 │   │   └── degeneracy_handler.f90  # ✅ COMPLETO - QR/Gram-Schmidt
 │   │
-│   ├── density/               # 🔄 EM PROGRESSO (Fase 6 - 20% completo)
+│   ├── density/               # ✅ COMPLETO (Fase 6 - partial)
 │   │   └── density_calculator.f90  # ✅ COMPLETO - Densidade de autoestados KS
 │   │
-│   ├── convergence/           # 🔜 TODO (Fase 6 - 80% restante)
-│   │   └── scf_mixer.f90      # Mixing linear, Broyden, Anderson
+│   ├── convergence/           # ✅ COMPLETO (Fase 6 - partial)
+│   │   ├── convergence_monitor.f90 # ✅ COMPLETO - Monitoramento convergência SCF
+│   │   └── mixing_schemes.f90      # ✅ COMPLETO - Linear mixing (Broyden/Anderson = bonus)
 │   │
-│   └── kohn_sham/             # 🔜 TODO (Fase 6)
-│       └── ks_cycle.f90       # Loop SCF completo
+│   └── kohn_sham/             # 🔜 TODO (Fase 6 - 40% restante)
+│       └── ks_cycle.f90       # Loop SCF completo (FINAL MODULE!)
 │
 ├── app/                        # 🔄 EM PROGRESSO
 │   ├── main.f90               # Ponto de entrada (placeholder)
 │   └── convert_tables.f90     # ✅ COMPLETO - Utilitário conversão tabelas
 │
-├── test/                       # 🔄 EM PROGRESSO (164 testes, 100% passando)
+├── test/                       # 🔄 EM PROGRESSO (185 testes, 100% passando)
 │   ├── test_bethe_equations.f90       # ✅ COMPLETO - 17 testes
 │   ├── test_nonlinear_solvers.f90     # ✅ COMPLETO - 9 testes
 │   ├── test_continuation.f90          # ✅ COMPLETO - 5 testes
@@ -117,7 +118,9 @@ lsda-hubbard/
 │   ├── test_lapack_wrapper.f90        # ✅ COMPLETO - 18 testes
 │   ├── test_degeneracy_handler.f90    # ✅ COMPLETO - 13 testes
 │   ├── test_density_calculator.f90    # ✅ COMPLETO - 6 testes
-│   └── test_ks_cycle.f90              # 🔜 TODO
+│   ├── test_convergence_monitor.f90   # ✅ COMPLETO - 13 testes
+│   ├── test_mixing_schemes.f90        # ✅ COMPLETO - 9 testes
+│   └── test_ks_cycle.f90              # 🔜 TODO (~10-15 testes)
 │
 ├── examples/                   # 🔜 TODO
 │   ├── harmonic_trap.f90
@@ -1065,7 +1068,243 @@ fpm test
 
 ---
 
-## 📚 Referências
+## 🎁 Bonus Features (Pós-Finalização)
+
+Esta seção lista features avançadas para implementação **após** a conclusão da Fase 6 (ciclo SCF básico). Estas features expandem as capacidades do código além do escopo inicial, mas não são necessárias para um solver LSDA funcional.
+
+### 1. Broyden e Anderson Mixing 🚀
+
+**Motivação:**
+Linear mixing (α-mixing) funciona, mas pode ser lento para sistemas com fortes correlações. Métodos acelerados (Broyden, Anderson) aproveitam informação de iterações anteriores para acelerar convergência.
+
+**Física:**
+- **Broyden mixing**: Aproximação quasi-Newton que estima Jacobiano inverso
+  - Típico speedup: 2-5x em comparação com linear mixing
+  - Armazena histórico de Δn e ΔV para construir aproximação
+  - Excelente para sistemas metálicos
+
+- **Anderson mixing**: Minimiza resíduo em subespaço de iterações anteriores
+  - Também conhecido como DIIS (Direct Inversion in Iterative Subspace)
+  - Robusto para sistemas isolantes
+  - Parâmetro m (dimensão do subespaço): tipicamente m = 3-8
+
+**Implementação sugerida:**
+```fortran
+! Em src/convergence/mixing_schemes.f90
+
+!> Broyden mixing com histórico de iterações
+subroutine broyden_mixing(n_new, n_old, history, n_mixed, ierr)
+    real(dp), intent(in) :: n_new(:), n_old(:)
+    type(broyden_history_t), intent(inout) :: history
+    real(dp), intent(out) :: n_mixed(:)
+    integer, intent(out) :: ierr
+
+    ! Atualiza histórico: Δn_i, Δf_i
+    ! Calcula aproximação Jacobiano inverso J^{-1}
+    ! n_mixed = n_old + β·J^{-1}·(n_new - n_old)
+end subroutine
+
+!> Anderson mixing (DIIS)
+subroutine anderson_mixing(n_new, n_old, history, m, n_mixed, ierr)
+    real(dp), intent(in) :: n_new(:), n_old(:)
+    type(anderson_history_t), intent(inout) :: history
+    integer, intent(in) :: m  ! Dimensão do subespaço
+    real(dp), intent(out) :: n_mixed(:)
+    integer, intent(out) :: ierr
+
+    ! Armazena últimas m iterações
+    ! Resolve problema de mínimos quadrados para coeficientes
+    ! n_mixed = Σᵢ cᵢ·n_i com Σcᵢ = 1
+end subroutine
+```
+
+**Referências:**
+- D.D. Johnson, PRB 38, 12807 (1988) - Broyden mixing original
+- P. Pulay, Chem. Phys. Lett. 73, 393 (1980) - Anderson/DIIS
+- Kresse & Furthmüller, Comp. Mat. Sci. 6, 15 (1996) - Implementação em VASP
+
+**Esforço estimado:** 2-3 dias (implementação + testes)
+
+---
+
+### 2. Sistemas com Magnetização (N↑ ≠ N↓) 🧲
+
+**Motivação:**
+Atualmente o código assume sistemas **não-polarizados** (N_up = N_down). Permitir N_up ≠ N_down habilita estudo de:
+- **Isolantes de Mott** polarizados
+- **Transições ferromagnéticas**
+- **Efeitos Zeeman** (campo magnético externo)
+- **Física de spin** (frustração, ondas de spin)
+
+**Física:**
+- **Magnetização total**: M = N↑ - N↓
+- **Densidade de spin**: m(i) = n↑(i) - n↓(i)
+- **Energia Zeeman**: E_Z = -B·M (campo magnético B)
+- **XC funcional**: Já suporta! `get_vxc(n_up, n_dw, v_up, v_dw)` funciona para qualquer n↑, n↓
+
+**Implementação sugerida:**
+
+1. **Modificar `density_calculator.f90`:**
+```fortran
+! Adicionar suporte explícito para N_up ≠ N_down
+subroutine compute_density_spinful_polarized(eigvecs_up, eigvecs_dw, &
+                                               N_up, N_dw, L, &
+                                               n_up, n_dw, ierr)
+    ! N_up e N_down podem ser diferentes
+    ! Já funciona! Apenas documentar melhor.
+end subroutine
+```
+
+2. **Adicionar campo magnético externo:**
+```fortran
+! Em src/potentials/potential_zeeman.f90
+subroutine apply_potential_zeeman(B, L, V_up, V_down, ierr)
+    real(dp), intent(in) :: B  ! Campo magnético
+    integer, intent(in) :: L
+    real(dp), intent(out) :: V_up(:), V_down(:)
+
+    ! V_up(i) = -B (favorece spin-up)
+    ! V_down(i) = +B (favorece spin-down)
+end subroutine
+```
+
+3. **Modificar `ks_cycle.f90`:**
+```fortran
+! Permitir N_up ≠ N_down como input
+type(ks_params_t) :: params
+params%N_up = 5
+params%N_down = 3  ! Sistema polarizado!
+```
+
+**Casos de teste:**
+- N↑ = N, N↓ = 0 (totalmente polarizado) → Deve recuperar Fermi gas sem interação
+- N↑ = 6, N↓ = 4, U > 0 → Verificar se m(i) ≠ 0 (magnetização local)
+- Campo Zeeman B > 0 → M deve aumentar com B
+
+**Referências:**
+- Lieb & Mattis, Phys. Rev. 125, 164 (1962) - Magnetização em 1D
+- Takahashi, Prog. Theor. Phys. 42, 1098 (1969) - Bethe Ansatz com polarização
+
+**Esforço estimado:** 1-2 dias (já quase funciona!)
+
+---
+
+### 3. Temperatura Finita (T > 0) 🌡️
+
+**Motivação:**
+O código atual assume **T = 0** (ground state). Adicionar temperatura permite:
+- **Propriedades termodinâmicas** (entropia, calor específico, susceptibilidade)
+- **Transições de fase** térmicas (Mott transition vs T)
+- **Comparação com experimentos** (átomos frios em T ≠ 0)
+- **Equações de Yang-Yang** (generalização do Bethe Ansatz)
+
+**Física:**
+- **Distribuição de Fermi-Dirac**: f(E) = 1/(exp((E-μ)/kT) + 1)
+- **Potencial químico μ**: Ajustado para fixar N = Σ f(Eᵢ)
+- **Energia livre**: F = E - TS (minimizar ao invés de E)
+- **Yang-Yang (1969)**: Solução exata do Hubbard model para T > 0
+
+**Implementação sugerida:**
+
+1. **Modificar `density_calculator.f90`:**
+```fortran
+!> Distribuição de Fermi-Dirac para T > 0
+subroutine fill_fermi_dirac(eigenvals, N_electrons, T, occupations, mu, ierr)
+    real(dp), intent(in) :: eigenvals(:)
+    integer, intent(in) :: N_electrons
+    real(dp), intent(in) :: T  ! Temperatura (unidades de t)
+    real(dp), intent(out) :: occupations(:)  ! f(E) ∈ [0,1]
+    real(dp), intent(out) :: mu  ! Potencial químico
+    integer, intent(out) :: ierr
+
+    ! 1. Encontrar μ tal que Σf(Eᵢ, μ, T) = N
+    ! 2. Calcular occupations(i) = 1/(exp((E_i-μ)/T) + 1)
+end subroutine
+
+!> Densidade com ocupações fracionárias
+subroutine compute_density_finite_T(eigvecs, occupations, L, density, ierr)
+    real(dp), intent(in) :: eigvecs(:,:)
+    real(dp), intent(in) :: occupations(:)  ! Não mais {0,1}!
+    integer, intent(in) :: L
+    real(dp), intent(out) :: density(:)
+
+    ! n(i) = Σⱼ f(Eⱼ)·|ψⱼ(i)|²
+end subroutine
+```
+
+2. **Adicionar cálculo de entropia:**
+```fortran
+!> Entropia de Fermi-Dirac
+function compute_entropy(occupations) result(S)
+    real(dp), intent(in) :: occupations(:)
+    real(dp) :: S
+    integer :: i
+
+    S = 0.0_dp
+    do i = 1, size(occupations)
+        if (occupations(i) > 0.0_dp .and. occupations(i) < 1.0_dp) then
+            S = S - occupations(i)*log(occupations(i)) &
+                  - (1-occupations(i))*log(1-occupations(i))
+        end if
+    end do
+end function
+```
+
+3. **Yang-Yang (avançado - opcional):**
+```fortran
+! Em src/bethe_ansatz/yang_yang.f90
+!> Equações de Yang-Yang para T > 0
+subroutine solve_yang_yang(N, L, U, T, free_energy, ierr)
+    ! Integral equations para distribuições de quasi-partículas
+    ! Muito mais complexo que Bethe Ansatz (equações integrais não-lineares)
+    ! Referência: Yang & Yang, J. Math. Phys. 10, 1115 (1969)
+end subroutine
+```
+
+**Simplificação inicial:**
+- Começar com **T > 0 apenas no SCF** (usar Kohn-Sham T=0, mas ocupar níveis com Fermi-Dirac)
+- Yang-Yang (solução exata T > 0) fica como feature avançada
+
+**Casos de teste:**
+- T → 0: Deve recuperar ground state (ocupações → {0,1})
+- T >> |E_gap|: Ocupações suavizadas, S > 0
+- Metal vs isolante: Calor específico C(T) diferente
+
+**Referências:**
+- Yang & Yang, J. Math. Phys. 10, 1115 (1969) - Equações originais
+- Takahashi, Thermodynamics of One-Dimensional Solvable Models (1999) - Livro completo
+- Klümper, Z. Phys. B 91, 507 (1993) - Método Quantum Transfer Matrix (TQ)
+
+**Esforço estimado:**
+- T > 0 simplificado (Fermi-Dirac): 2-3 dias
+- Yang-Yang completo: 1-2 semanas (muito complexo!)
+
+---
+
+### Priorização Sugerida
+
+Se você quiser implementar **apenas uma** bonus feature:
+
+🥇 **1º lugar: Magnetização (N↑ ≠ N↓)**
+- Menor esforço (~1-2 dias)
+- Maior impacto científico (ferromagnetismo, Mott)
+- Quase já funciona no código atual!
+
+🥈 **2º lugar: Broyden/Anderson Mixing**
+- Esforço médio (~2-3 dias)
+- Acelera convergência (importante para produção)
+- Útil para sistemas grandes
+
+🥉 **3º lugar: Temperatura T > 0**
+- Maior esforço (2-3 dias simplificado, 1-2 semanas completo)
+- Física muito rica, mas mais complexa
+- Yang-Yang é desafiador!
+
+---
+
+**Nota final:** Estas features são **opcionais** e devem ser implementadas **somente após** a Fase 6 estar completa (ciclo SCF básico funcionando). O objetivo principal é ter um código LSDA funcional primeiro! 🎯
+
+---
 
 ### Papers Fundamentais
 
@@ -1135,7 +1374,7 @@ fpm test
 ## 📊 Status do Projeto
 
 **Versão:** 0.6.0-dev
-**Status:** ✅ Fases 1-5 Completas → 🔄 Fase 6 em Progresso (Densidade & SCF - 20% completo)
+**Status:** ✅ Fases 1-5 Completas → 🔄 Fase 6 em Progresso (Densidade & SCF - 60% completo)
 **Última atualização:** 2025-01-16
 
 ### Progresso Geral
@@ -1146,7 +1385,7 @@ fpm test
 [████████████████████████████████] 100% Fase 3: Splines 2D (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 4: Potenciais & Erros (COMPLETO ✅)
 [████████████████████████████████] 100% Fase 5: Hamiltoniano & Diagonalização (COMPLETO ✅)
-[██████░░░░░░░░░░░░░░░░░░░░░░░░░░]  20% Fase 6: Densidade & SCF Cycle (EM PROGRESSO 🔄)
+[███████████████████░░░░░░░░░░░░░]  60% Fase 6: Densidade & SCF Cycle (EM PROGRESSO 🔄)
 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% Fase 7: Otimização
 ```
 
@@ -1217,7 +1456,7 @@ fpm test
     - [x] Bug fix: workspace query separada para DORGQR ✅
     - [x] Testes unitários (13 testes, 100% passando) ✅
 
-- [~] **Fase 6 - Densidade & SCF Cycle** (20% 🔄):
+- [~] **Fase 6 - Densidade & SCF Cycle** (60% 🔄):
   - [x] Cálculo de densidade (`density_calculator.f90`) ✅
     - [x] `compute_density_spin()`: n_σ(i) = Σⱼ |ψⱼ(i)|² (real/complex overload) ✅
     - [x] `compute_total_density()`: n(i) = n↑(i) + n↓(i) ✅
@@ -1225,14 +1464,25 @@ fpm test
     - [x] `check_density_bounds()`: 0 ≤ n_σ(i) ≤ 1, 0 ≤ n(i) ≤ 2 ✅
     - [x] Bug fix: variável i→j em loop de `check_density_bounds` ✅
     - [x] Testes unitários (6 testes, 100% passando) ✅
-  - [ ] Mixing SCF (`scf_mixer.f90`) 🔜
-    - [ ] Linear mixing: ρ_new = α·ρ_out + (1-α)·ρ_in
-    - [ ] Broyden mixing: aceleração de convergência
-    - [ ] Anderson mixing: alternativa
-  - [ ] Ciclo Kohn-Sham (`ks_cycle.f90`) 🔜
+  - [x] Monitoramento de convergência (`convergence_monitor.f90`) ✅
+    - [x] `compute_density_difference()`: Δn = n_new - n_old ✅
+    - [x] `compute_density_norm()`: Normas L1, L2, L∞ ✅
+    - [x] `check_scf_convergence()`: ||Δn||₂ < tol (tolerância customizável) ✅
+    - [x] `convergence_history_t`: Tipo para rastrear histórico (norms + energias) ✅
+    - [x] `init/update/cleanup_convergence_history()` ✅
+    - [x] Testes unitários (13 testes, 100% passando) ✅
+  - [x] Esquemas de mixing (`mixing_schemes.f90`) ✅
+    - [x] `linear_mixing()`: n_mixed = (1-α)·n_old + α·n_new (0 < α ≤ 1) ✅
+    - [x] Validação de parâmetros e preservação de bounds físicos ✅
+    - [x] Testes unitários (9 testes, 100% passando) ✅
+    - [ ] Broyden mixing: BONUS FEATURE (opcional)
+    - [ ] Anderson mixing: BONUS FEATURE (opcional)
+  - [ ] Ciclo Kohn-Sham (`ks_cycle.f90`) 🔜 **PRÓXIMO!**
     - [ ] Loop SCF completo: H → diag → density → V_xc → H'
     - [ ] Monitoramento de convergência
-    - [ ] Mixing adaptativo
+    - [ ] Cálculo de energia total
+    - [ ] Integração de todos os módulos
+    - [ ] ~10-15 testes unitários
 
 - [ ] **Fase 7**: Otimização (opcional)
   - [ ] Simetria de paridade (`symmetry.f90`)
@@ -1256,9 +1506,9 @@ fpm test
 - [x] Testes unitários Fase 3 (11 testes, 100% passando) ✅
 - [x] Testes unitários Fase 4 (34 testes, 100% passando) ✅
 - [x] Testes unitários Fase 5 (66 testes, 100% passando) ✅
-- [x] Testes unitários Fase 6 (6 testes, 100% passando) ✅
-- [x] **Total: 164 testes, 100% passando** ✅
-- [x] Pipeline Bethe → Tabelas → Splines → Potenciais → Hamiltoniano → Diagonalização → Densidade validado ✅
+- [x] Testes unitários Fase 6 (28 testes, 100% passando) ✅
+- [x] **Total: 185 testes, 100% passando** ✅
+- [x] Pipeline Bethe → Tabelas → Splines → Potenciais → Hamiltoniano → Diagonalização → Densidade → Convergência validado ✅
 - [ ] Testes E2E (ciclo KS completo)
 - [ ] Documentação completa (FORD)
 - [ ] Benchmarks de performance
@@ -1321,6 +1571,64 @@ Este projeto é licenciado sob a [MIT License](LICENSE).
 ---
 
 ## 📅 Histórico de Mudanças
+
+### 2025-01-16 - Fase 6: Convergência SCF & Mixing Implementados! 🎉
+- ✅ **MILESTONE:** Fase 6 agora 60% completa! Falta apenas o loop SCF principal.
+
+  **`convergence_monitor.f90` implementado** (218 linhas, 13 testes):
+  - ✅ `compute_density_difference()`: Calcula Δn = n_new - n_old
+  - ✅ `compute_density_norm()`: Três tipos de norma para monitoramento
+    - L1: ||Δn||₁ = Σᵢ |Δn(i)| (mudança absoluta total)
+    - L2: ||Δn||₂ = √(Σᵢ |Δn(i)|²) (norma Euclidiana - padrão DFT)
+    - L∞: ||Δn||∞ = maxᵢ |Δn(i)| (maior mudança local)
+  - ✅ `check_scf_convergence()`: Verifica ||Δn||₂ < tol (tolerância customizável)
+  - ✅ `convergence_history_t`: Tipo para rastrear histórico SCF
+    - Armazena normas de densidade + energias por iteração
+    - Permite análise de comportamento SCF (oscilações, monotônico, saltos)
+  - ✅ `init_convergence_history()`: Inicializa arrays para max_iter
+  - ✅ `update_convergence_history()`: Armazena dados de cada iteração
+  - ✅ `cleanup_convergence_history()`: Libera memória
+
+  **Testes implementados** (288 linhas, 13 testes):
+  - ✅ `test_density_difference_simple`: Calcula Δn site a site
+  - ✅ `test_density_difference_zero`: Densidades idênticas (convergido)
+  - ✅ `test_density_difference_size_mismatch`: Detecta arrays errados
+  - ✅ `test_density_norm_L1`: Norma L1 = 0.7 para [0.1, -0.2, 0.3, -0.1]
+  - ✅ `test_density_norm_L2`: Norma L2 = 0.5 para [0.3, 0.4, 0.0]
+  - ✅ `test_density_norm_Linf`: Norma L∞ = 0.5 para [0.1, -0.5, 0.2, 0.3, -0.4]
+  - ✅ `test_density_norm_invalid_type`: Rejeita tipo inválido
+  - ✅ `test_convergence_check_converged`: ||Δn||₂ < 1e-6 → convergido
+  - ✅ `test_convergence_check_not_converged`: ||Δn||₂ ≥ 1e-6 → não convergido
+  - ✅ `test_convergence_check_custom_tolerance`: Tolerâncias tight vs loose
+  - ✅ `test_history_init_cleanup`: Inicialização e limpeza de memória
+  - ✅ `test_history_update`: Atualiza histórico com norma + energia
+  - ✅ `test_history_bounds_checking`: Valida limites de iteração
+
+  **`mixing_schemes.f90` implementado** (54 linhas, 9 testes):
+  - ✅ `linear_mixing()`: n_mixed = (1-α)·n_old + α·n_new
+    - Valida 0 < α ≤ 1
+    - Preserva bounds físicos: 0 ≤ n ≤ 2
+  - 💡 **Nota:** Broyden e Anderson mixing comentados para features bonus futuras
+
+  **Testes implementados** (238 linhas, 9 testes):
+  - ✅ `test_linear_mixing_alpha_half`: α=0.5 (média simples, damping moderado)
+  - ✅ `test_linear_mixing_alpha_one`: α=1.0 (sem damping, atualização completa)
+  - ✅ `test_linear_mixing_alpha_small`: α=0.1 (damping pesado, previne oscilações)
+  - ✅ `test_linear_mixing_bounds`: Verifica 0 ≤ n_mixed ≤ 2 (combinação convexa)
+  - ✅ `test_linear_mixing_convergence`: Simulação 10 iterações SCF
+  - ✅ `test_linear_mixing_invalid_alpha_zero`: Rejeita α=0 (sem progresso)
+  - ✅ `test_linear_mixing_invalid_alpha_negative`: Rejeita α<0 (não físico)
+  - ✅ `test_linear_mixing_invalid_alpha_large`: Rejeita α>1 (over-relaxation)
+  - ✅ `test_linear_mixing_size_mismatch`: Detecta arrays de tamanho errado
+
+  **Estatísticas Fase 6 (atualizado):**
+  - ✅ Total: 475 linhas produção + 817 linhas testes (28 testes)
+  - ✅ **Pipeline:** Bethe → Tables → Splines → Potentials → Hamiltonian → Diagonalization → Density → **Convergence!**
+  - 🔜 Próximo: `ks_cycle.f90` (loop SCF completo - MÓDULO FINAL!)
+
+  **Total do Projeto:** 185 testes, 100% passando! 🎉
+
+---
 
 ### 2025-01-16 - Fase 6: Cálculo de Densidade Implementado! 🎉
 - ✅ **MILESTONE:** Fase 5 completa (100%)! Fase 6 iniciada (densidade de autoestados KS).
