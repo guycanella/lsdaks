@@ -15,6 +15,7 @@ module xc_lsda
     use lsda_constants, only: dp, U_SMALL
     use spline2d, only: spline2d_t, spline2d_init, spline2d_eval, spline2d_destroy
     use table_io, only: xc_table_t, read_fortran_table, deallocate_table
+    use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT, ERROR_OUT_OF_BOUNDS, ERROR_FILE_READ, ERROR_SPLINE_INITIALIZATION_FAILED
     implicit none
     private
 
@@ -44,23 +45,23 @@ contains
     !!
     !! @param[out] xc         XC functional object
     !! @param[in]  table_file Path to table file (Fortran binary format)
-    !! @param[out] status     0 on success, -1 on error
-    subroutine xc_lsda_init(xc, table_file, status)
+    !! @param[out] ierr Error code (0 = success)
+    subroutine xc_lsda_init(xc, table_file, ierr)
         type(xc_lsda_t), intent(out) :: xc
         character(len=*), intent(in) :: table_file
-        integer, intent(out) :: status
+        integer, intent(out) :: ierr
 
         type(xc_table_t) :: table
         integer :: io_stat
         integer, allocatable :: n_y_pts(:)
         integer :: i
 
-        status = 0
+        ierr = ERROR_SUCCESS
 
         call read_fortran_table(table_file, table, io_stat)
         if (io_stat /= 0) then
             print *, "ERROR: Failed to read table file: ", trim(table_file)
-            status = -1
+            ierr = ERROR_FILE_READ
             return
         end if
 
@@ -86,8 +87,7 @@ contains
         if (.not. xc%spl_exc%initialized .or. &
             .not. xc%spl_vxc_up%initialized .or. &
             .not. xc%spl_vxc_dw%initialized) then
-            print *, "ERROR: Spline initialization failed"
-            status = -1
+            ierr = ERROR_SPLINE_INITIALIZATION_FAILED
             call deallocate_table(table)
             return
         end if
@@ -101,50 +101,58 @@ contains
     !!
     !! Uses symmetries to map any (n_up, n_dw) to Region I and interpolates.
     !!
-    !! @param[in] xc   Initialized XC functional
-    !! @param[in] n_up Spin-up density (0 ≤ n_up ≤ 1)
-    !! @param[in] n_dw Spin-down density (0 ≤ n_dw ≤ 1)
-    !! @return         Exchange-correlation energy e_xc
-    function get_exc(xc, n_up, n_dw) result(exc)
+    !! @param[in]  xc   Initialized XC functional
+    !! @param[in]  n_up Spin-up density (0 ≤ n_up ≤ 1)
+    !! @param[in]  n_dw Spin-down density (0 ≤ n_dw ≤ 1)
+    !! @param[out] exc  Exchange-correlation energy e_xc
+    !! @param[out] ierr Error code (0 = success)
+    subroutine get_exc(xc, n_up, n_dw, exc, ierr)
         type(xc_lsda_t), intent(in) :: xc
         real(dp), intent(in) :: n_up, n_dw
-        real(dp) :: exc
+        real(dp), intent(out) :: exc
+        integer, intent(out) :: ierr
 
         integer :: region
         real(dp) :: n_up_map, n_dw_map, n, m
 
+        ! Check initialization
         if (.not. xc%initialized) then
-            print *, "ERROR: XC functional not initialized!"
             exc = 0.0_dp
+            ierr = ERROR_INVALID_INPUT
             return
         end if
 
         ! Special case: U = 0 (free Fermi gas)
         if (abs(xc%U) < U_SMALL) then
             exc = 0.0_dp
+            ierr = ERROR_SUCCESS
             return
         end if
 
+        ! Check density bounds
         if (n_up < 0.0_dp .or. n_up > 1.0_dp .or. &
             n_dw < 0.0_dp .or. n_dw > 1.0_dp) then
-            print *, "WARNING: Densities out of physical range!"
-            print *, "  n_up =", n_up, ", n_dw =", n_dw
             exc = 0.0_dp
+            ierr = ERROR_OUT_OF_BOUNDS
             return
         end if
 
+        ! Special case: both densities zero
         if (n_up < 1.0e-12_dp .and. n_dw < 1.0e-12_dp) then
             exc = 0.0_dp
+            ierr = ERROR_SUCCESS
             return
         end if
 
+        ! Determine region and apply symmetry
         region = determine_region(n_up, n_dw)
-
         call apply_symmetry_transform(region, n_up, n_dw, n_up_map, n_dw_map)
         call convert_to_nm(n_up_map, n_dw_map, n, m)
 
+        ! Evaluate spline
         exc = spline2d_eval(xc%spl_exc, n, m)
-    end function get_exc
+        ierr = ERROR_SUCCESS
+    end subroutine get_exc
 
     !> Get exchange-correlation potentials at (n_up, n_dw)
     !!
@@ -155,34 +163,39 @@ contains
     !! @param[in]  n_dw    Spin-down density (0 ≤ n_dw ≤ 1)
     !! @param[out] v_xc_up XC potential for spin-up
     !! @param[out] v_xc_dw XC potential for spin-down
-    subroutine get_vxc(xc, n_up, n_dw, v_xc_up, v_xc_dw)
+    !! @param[out] ierr    Error code (0 = success)
+    subroutine get_vxc(xc, n_up, n_dw, v_xc_up, v_xc_dw, ierr)
         type(xc_lsda_t), intent(in) :: xc
         real(dp), intent(in) :: n_up, n_dw
         real(dp), intent(out) :: v_xc_up, v_xc_dw
+        integer, intent(out) :: ierr
 
         integer :: region
         real(dp) :: n_up_map, n_dw_map, n, m
         real(dp) :: v_up_base, v_dw_base
 
+        ! Check initialization
         if (.not. xc%initialized) then
-            print *, "ERROR: XC functional not initialized!"
             v_xc_up = 0.0_dp
             v_xc_dw = 0.0_dp
+            ierr = ERROR_INVALID_INPUT
             return
         end if
 
-        ! Special case: U = 0
+        ! Special case: U = 0 (free Fermi gas)
         if (abs(xc%U) < U_SMALL) then
             v_xc_up = 0.0_dp
             v_xc_dw = 0.0_dp
+            ierr = ERROR_SUCCESS
             return
         end if
 
+        ! Check density bounds
         if (n_up < 0.0_dp .or. n_up > 1.0_dp .or. &
             n_dw < 0.0_dp .or. n_dw > 1.0_dp) then
-            print *, "WARNING: Densities out of physical range!"
             v_xc_up = 0.0_dp
             v_xc_dw = 0.0_dp
+            ierr = ERROR_OUT_OF_BOUNDS
             return
         end if
 
@@ -190,17 +203,20 @@ contains
         if (n_up < 1.0e-12_dp .and. n_dw < 1.0e-12_dp) then
             v_xc_up = 0.0_dp
             v_xc_dw = 0.0_dp
+            ierr = ERROR_SUCCESS
             return
         end if
 
+        ! Determine region and apply symmetry
         region = determine_region(n_up, n_dw)
-
         call apply_symmetry_transform(region, n_up, n_dw, n_up_map, n_dw_map)
         call convert_to_nm(n_up_map, n_dw_map, n, m)
 
+        ! Evaluate splines
         v_up_base = spline2d_eval(xc%spl_vxc_up, n, m)
         v_dw_base = spline2d_eval(xc%spl_vxc_dw, n, m)
 
+        ! Apply region-specific transformations
         select case (region)
         case (1)
             ! Region I (m ≥ 0, n ≤ 1): Direct
@@ -222,6 +238,8 @@ contains
             v_xc_up = -v_dw_base
             v_xc_dw = -v_up_base
         end select
+
+        ierr = ERROR_SUCCESS
     end subroutine get_vxc
 
     !> Destroy XC functional and free memory
@@ -325,8 +343,8 @@ contains
             n_dw_map = 1.0_dp - n_up
 
         case default
-            ! Should never happen
-            print *, "ERROR: Invalid region:", region
+            ! Should never happen (region is always 1-4 from determine_region)
+            ! Return identity transformation as fallback
             n_up_map = n_up
             n_dw_map = n_dw
         end select

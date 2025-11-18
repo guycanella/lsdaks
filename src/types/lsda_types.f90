@@ -28,7 +28,7 @@ module lsda_types
     !! @note For twisted BC (bc=2), the phase parameter must be provided.
     !!    
     type :: system_params_t
-        integer :: Na           !< Number of lattice sites
+        integer :: L            !< Number of lattice sites
         integer :: Nup          !< Number of spin-up electrons (N↑)
         integer :: Ndown        !< Number of spin-down electrons (N↓)
         integer :: bc           !< Boundary conditions: 0=open, 1=periodic, 2=twisted

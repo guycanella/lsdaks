@@ -52,7 +52,7 @@ contains
         use lsda_constants, only: dp
 
         type(xc_lsda_t) :: xc
-        integer :: status
+        integer :: status, ierr
         real(dp) :: exc, n_up, n_dw
         character(len=256) :: test_file
 
@@ -62,8 +62,9 @@ contains
         n_up = 0.4_dp
         n_dw = 0.3_dp
 
-        exc = get_exc(xc, n_up, n_dw)
+        call get_exc(xc, n_up, n_dw, exc, ierr)
 
+        call check(ierr == 0, "get_exc should succeed")
         call check(exc == exc, "exc should be a valid number")
         call check(abs(exc) > 1.0e-10_dp, "exc should be non-zero for U > 0")
 
@@ -78,7 +79,7 @@ contains
         use lsda_constants, only: dp
 
         type(xc_lsda_t) :: xc
-        integer :: status
+        integer :: status, ierr
         real(dp) :: exc1, exc2, n_up, n_dw
         character(len=256) :: test_file
 
@@ -88,8 +89,11 @@ contains
         n_up = 0.45_dp
         n_dw = 0.30_dp
 
-        exc1 = get_exc(xc, n_up, n_dw)
-        exc2 = get_exc(xc, n_dw, n_up)
+        call get_exc(xc, n_up, n_dw, exc1, ierr)
+        call check(ierr == 0, "get_exc should succeed for (n_up, n_dw)")
+
+        call get_exc(xc, n_dw, n_up, exc2, ierr)
+        call check(ierr == 0, "get_exc should succeed for (n_dw, n_up)")
 
         call check(abs(exc1 - exc2) < 1.0e-6_dp, &
                    "exc should be symmetric under spin exchange")
@@ -105,7 +109,7 @@ contains
         use lsda_constants, only: dp
 
         type(xc_lsda_t) :: xc
-        integer :: status
+        integer :: status, ierr
         real(dp) :: v_up1, v_dw1, v_up2, v_dw2, n_up, n_dw
         character(len=256) :: test_file
 
@@ -115,8 +119,11 @@ contains
         n_up = 0.45_dp
         n_dw = 0.30_dp
 
-        call get_vxc(xc, n_up, n_dw, v_up1, v_dw1)
-        call get_vxc(xc, n_dw, n_up, v_up2, v_dw2)
+        call get_vxc(xc, n_up, n_dw, v_up1, v_dw1, ierr)
+        call check(ierr == 0, "get_vxc should succeed for (n_up, n_dw)")
+
+        call get_vxc(xc, n_dw, n_up, v_up2, v_dw2, ierr)
+        call check(ierr == 0, "get_vxc should succeed for (n_dw, n_up)")
 
         call check(abs(v_up1 - v_dw2) < 1.0e-6_dp, &
                    "V_up(n_up,n_dw) should equal V_dn(n_dw,n_up)")
