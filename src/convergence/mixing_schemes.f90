@@ -15,11 +15,17 @@ contains
     !! Implements: n_mixed = (1-α)·n_old + α·n_new
     !!
     !! Linear mixing damps oscillations in SCF cycles by combining
-    !! input and output densities. Typical values: α ∈ [0.1, 0.5]
+    !! input and output densities.
+    !!
+    !! Convention: α represents the weight of NEW density
+    !! - α small (e.g., 0.05): conservative, keeps 95% old (like C++ Mix=0.95)
+    !! - α large (e.g., 0.5): aggressive, 50/50 mix
+    !!
+    !! Default: α = 0.05 (equivalent to original C++ code with Mix=0.95)
     !!
     !! @param[in] n_new Output density from diagonalization (length L)
     !! @param[in] n_old Input density used to build Hamiltonian (length L)
-    !! @param[in] alpha Mixing parameter (0 < α ≤ 1)
+    !! @param[in] alpha Mixing parameter (0 < α ≤ 1), weight of new density
     !! @param[out] n_mixed Mixed density for next iteration (length L)
     !! @param[in] L System size
     !! @param[out] ierr Error code (0 = success)

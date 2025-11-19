@@ -14,12 +14,17 @@ module lsda_constants
     real(dp), parameter :: TOL_DEFAULT = 1.0e-16_dp       ! Convergence tol
 
     integer, parameter :: ITER_MAX = 10000                ! Max iterations SCF
-    real(dp), parameter :: INITIAL_MIX = 0.95_dp          ! Initial mixing factor
+
+    ! Mixing parameters (convention from original C++ code):
+    ! C++ uses: V_new = Mix * V_old + (1-Mix) * V_calc (Mix = 0.95, keeps 95% old)
+    ! Fortran uses: n_new = alpha * n_calc + (1-alpha) * n_old (alpha = weight of new)
+    ! Therefore: alpha = 1 - Mix_cpp to maintain equivalence
+    real(dp), parameter :: INITIAL_MIX = 0.95_dp          ! C++ mixing factor (keeps 95% old)
+    real(dp), parameter :: MIX_ALPHA = 1.0_dp - INITIAL_MIX  ! Fortran mixing (5% new, 95% old)
 
     real(dp), parameter :: NEWTON_TOL = 1.0e-10_dp        ! Newton convergence tol
     integer, parameter :: NEWTON_MAX_ITER = 50            ! Max Newton iterations
 
     real(dp), parameter :: SCF_ENERGY_TOL = 1.0e-8_dp     ! SCF energy convergence tol
     real(dp), parameter :: SCF_DENSITY_TOL = 1.0e-6_dp    ! SCF density convergence tol
-    real(dp), parameter :: MIX_ALPHA = 0.3_dp             ! Default mixing parameter
 end module lsda_constants
