@@ -1,32 +1,33 @@
+
 &system
-  L = 20         
-  Nup = 10       
-  Ndown = 10     
-  U = 4.0        
-  bc = 'open'
-  phase = 0.0    
+  L = 100     
+  Nup = 25    
+  Ndown = 25  
+  U = -4.0    
+  bc = 'open' 
+  phase = 0.0 
 /
 
 &potential
-  potential_type = 'uniform' 
-                             
-  V0 = 0.0                   
-  pot_center = 10.0          
-  pot_width = 2.0            
+  potential_type = 'impurity'
+  V0 = -4.0                  
+  concentration = 50.0       
+  pot_seed = -1              
 /
 
 &scf
   max_iter = 10000
-  density_tol = 1.0e-6  
-  energy_tol = 1.0e-8   
+  density_tol = 1.0e-6
+  energy_tol = 1.0e-8
   mixing_alpha = 0.05
-  verbose = .true.      
+  verbose = .true.
   store_history = .true.
+  use_adaptive_mixing = .true.
 /
 
 &output
-  output_prefix = 'lsda_output'
-  save_density = .true.        
-  save_eigenvalues = .true.    
-  save_wavefunction = .false.  
+  output_prefix = 'attractive_u4_impurities_quarter'
+  save_density = .true.         
+  save_eigenvalues = .true.     
+  save_wavefunction = .false.   
 /
