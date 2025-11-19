@@ -6,13 +6,11 @@
 !!
 !! Priority: Command line arguments override namelist values
 module input_parser
-    use lsda_constants, only: dp, ITER_MAX, SCF_DENSITY_TOL, &
-                                    SCF_ENERGY_TOL, MIX_ALPHA
+    use lsda_constants, only: dp, ITER_MAX, SCF_DENSITY_TOL, SCF_ENERGY_TOL, MIX_ALPHA
     use lsda_types, only: system_params_t
     use kohn_sham_cycle, only: scf_params_t
     use boundary_conditions, only: BC_OPEN, BC_PERIODIC, BC_TWISTED
-    use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT, &
-                                            ERROR_FILE_NOT_FOUND
+    use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT, ERROR_FILE_NOT_FOUND
     implicit none
     private
 
@@ -31,6 +29,9 @@ module input_parser
         real(dp) :: V0 = 0.0_dp
         real(dp) :: pot_center = 0.0_dp
         real(dp) :: pot_width = 1.0_dp
+        real(dp) :: concentration = 50.0_dp           ! For random impurities (%)
+        integer :: pot_seed = -1                      ! Random seed (-1 = system time)
+        character(len=500) :: imp_positions_str = ''  ! For impurity_multiple: '10, 25, 40, 55'
         
         ! SCF parameters
         integer :: max_iter = ITER_MAX
@@ -39,6 +40,7 @@ module input_parser
         real(dp) :: mixing_alpha = MIX_ALPHA
         logical :: verbose = .true.
         logical :: store_history = .true.
+        logical :: use_adaptive_mixing = .true.   ! Use adaptive mixing (C++ behavior)
         
         ! Output parameters
         character(len=100) :: output_prefix = 'lsda_output'
@@ -69,8 +71,10 @@ contains
         ierr = ERROR_SUCCESS
         use_input_file = .false.
         
+        ! Initialize with defaults
         inputs = input_params_t()
         
+        ! Check command line arguments
         nargs = command_argument_count()
         
         if (nargs == 0) then
@@ -83,6 +87,7 @@ contains
                 return
             end if
         else
+            ! Parse command line
             i = 1
             do while (i <= nargs)
                 call get_command_argument(i, arg)
@@ -146,6 +151,11 @@ contains
                     if (ierr /= ERROR_SUCCESS) return
                     i = i + 2
                     
+                case ('--concentration')
+                    call parse_real_arg(i, nargs, inputs%concentration, ierr)
+                    if (ierr /= ERROR_SUCCESS) return
+                    i = i + 2
+                    
                 case ('--verbose')
                     inputs%verbose = .true.
                     i = i + 1
@@ -156,7 +166,7 @@ contains
                     
                 case ('--help', '-h')
                     call print_help()
-                    ierr = -1  ! Special code: help requested, exit gracefully
+                    ierr = -1  ! Signal to exit gracefully
                     return
                     
                 case default
@@ -194,21 +204,28 @@ contains
         
         ! Potential namelist variables
         character(len=20) :: potential_type
-        real(dp) :: V0, pot_center, pot_width
+        real(dp) :: V0, pot_center, pot_width, concentration
+        integer :: pot_seed
+        character(len=500) :: imp_positions_str
         
         ! SCF namelist variables
         integer :: max_iter
         real(dp) :: density_tol, energy_tol, mixing_alpha
-        logical :: verbose, store_history
+        logical :: verbose, store_history, use_adaptive_mixing
         
         ! Output namelist variables
         character(len=100) :: output_prefix
         logical :: save_density, save_eigenvalues, save_wavefunction
         
         namelist /system/ L, Nup, Ndown, U, bc, phase
-        namelist /potential/ potential_type, V0, pot_center, pot_width
-        namelist /scf/ max_iter, density_tol, energy_tol, mixing_alpha, verbose, store_history
-        namelist /output/ output_prefix, save_density, save_eigenvalues, save_wavefunction
+        namelist /potential/ potential_type, V0, pot_center, pot_width, &
+                                    concentration, pot_seed, imp_positions_str
+
+        namelist /scf/ max_iter, density_tol, energy_tol, mixing_alpha, &
+                       verbose, store_history, use_adaptive_mixing
+
+        namelist /output/ output_prefix, save_density, save_eigenvalues, &
+                                                            save_wavefunction
         
         ierr = ERROR_SUCCESS
         
@@ -232,6 +249,9 @@ contains
         V0 = inputs%V0
         pot_center = inputs%pot_center
         pot_width = inputs%pot_width
+        concentration = inputs%concentration
+        pot_seed = inputs%pot_seed
+        imp_positions_str = inputs%imp_positions_str
         
         max_iter = inputs%max_iter
         density_tol = inputs%density_tol
@@ -239,6 +259,7 @@ contains
         mixing_alpha = inputs%mixing_alpha
         verbose = inputs%verbose
         store_history = inputs%store_history
+        use_adaptive_mixing = inputs%use_adaptive_mixing
         
         output_prefix = inputs%output_prefix
         save_density = inputs%save_density
@@ -279,6 +300,9 @@ contains
         inputs%V0 = V0
         inputs%pot_center = pot_center
         inputs%pot_width = pot_width
+        inputs%concentration = concentration
+        inputs%pot_seed = pot_seed
+        inputs%imp_positions_str = imp_positions_str
         
         inputs%max_iter = max_iter
         inputs%density_tol = density_tol
@@ -286,6 +310,7 @@ contains
         inputs%mixing_alpha = mixing_alpha
         inputs%verbose = verbose
         inputs%store_history = store_history
+        inputs%use_adaptive_mixing = use_adaptive_mixing
         
         inputs%output_prefix = output_prefix
         inputs%save_density = save_density
@@ -324,12 +349,6 @@ contains
             return
         end if
         
-        if (inputs%U < 0.0_dp) then
-            print *, "ERROR: U must be non-negative, got U =", inputs%U
-            ierr = ERROR_INVALID_INPUT
-            return
-        end if
-        
         ! Validate boundary conditions
         select case (trim(inputs%bc_type))
         case ('open', 'periodic', 'twisted')
@@ -340,6 +359,17 @@ contains
             ierr = ERROR_INVALID_INPUT
             return
         end select
+        
+        ! Validate concentration for impurity potential
+        if (trim(inputs%potential_type) == 'impurity') then
+            if (inputs%concentration <= 0.0_dp .or. &
+                inputs%concentration > 100.0_dp) then
+                print *, "ERROR: concentration must be in (0, 100], got:", &
+                                                        inputs%concentration
+                ierr = ERROR_INVALID_INPUT
+                return
+            end if
+        end if
         
         ! Validate SCF parameters
         if (inputs%max_iter <= 0) then
@@ -402,6 +432,7 @@ contains
         scf_params%mixing_alpha = inputs%mixing_alpha
         scf_params%verbose = inputs%verbose
         scf_params%store_history = inputs%store_history
+        scf_params%use_adaptive_mixing = inputs%use_adaptive_mixing
         
     end subroutine convert_to_scf_params
 
@@ -480,8 +511,9 @@ contains
         print '(A)', "  --phase <real>    Twist angle for twisted BC (default: 0.0)"
         print '(A)', ""
         print '(A)', "Potential:"
-        print '(A)', "  --potential <type>  Type: uniform/harmonic/barrier/... (default: uniform)"
-        print '(A)', "  --V0 <real>         Potential strength (default: 0.0)"
+        print '(A)', "  --potential <type>    Type: uniform/harmonic/impurity/... (default: uniform)"
+        print '(A)', "  --V0 <real>           Potential strength (default: 0.0)"
+        print '(A)', "  --concentration <real> Impurity concentration in % (default: 50.0)"
         print '(A)', ""
         print '(A)', "Output:"
         print '(A)', "  --verbose         Print SCF progress (default: on)"

@@ -13,6 +13,8 @@ module kohn_sham_cycle
                                     update_convergence_history, cleanup_convergence_history, &
                                     L2, compute_density_norm
     use mixing_schemes, only: linear_mixing
+    use adaptive_mixing, only: adaptive_mix_t, adaptive_mix_init, adaptive_mix_update, &
+                                adaptive_mix_get_alpha, adaptive_mix_reset
     implicit none
     private
 
@@ -21,9 +23,10 @@ module kohn_sham_cycle
         integer :: max_iter = ITER_MAX             ! Maximum SCF iterations
         real(dp) :: density_tol = SCF_DENSITY_TOL  ! Convergence tolerance for density
         real(dp) :: energy_tol = SCF_ENERGY_TOL    ! Convergence tolerance for energy
-        real(dp) :: mixing_alpha = MIX_ALPHA       ! Linear mixing parameter
+        real(dp) :: mixing_alpha = MIX_ALPHA       ! Linear mixing parameter (used if use_adaptive_mixing = .false.)
         logical :: verbose = .false.               ! Print convergence info
         logical :: store_history = .true.          ! Store convergence history
+        logical :: use_adaptive_mixing = .true.    ! Use adaptive mixing (C++ behavior)
     end type scf_params_t
 
     !> @brief Results from SCF cycle
@@ -180,11 +183,14 @@ contains
         integer :: iter, i, L, Nup, Ndown
         real(dp) :: density_error, total_energy
         logical :: is_converged
+        type(adaptive_mix_t) :: mix_ctrl
+        real(dp) :: current_alpha
 
         real(dp), allocatable :: n_up_in(:), n_down_in(:), n_up_out(:), n_down_out(:), V_xc_up(:), &
                             V_xc_down(:), H_up(:,:), H_down(:,:), eigvals_up(:), &
                             eigvals_down(:), eigvecs_up(:,:), eigvecs_down(:,:), delta_n_up(:), delta_n_down(:), &
-                            delta_n_total(:)
+                            delta_n_total(:), V_eff_up(:), V_eff_down(:), V_eff_up_calc(:), V_eff_down_calc(:), &
+                            V_zero(:)
 
         call validate_kohn_sham_cycle_inputs(params, scf_params, V_ext, ierr)
 
@@ -198,7 +204,11 @@ contains
 
         allocate(n_up_in(L), n_down_in(L), n_up_out(L), n_down_out(L), V_xc_up(L), V_xc_down(L), &
                  H_up(L,L), H_down(L,L), eigvals_up(L), eigvals_down(L), &
-                 eigvecs_up(L,L), eigvecs_down(L,L), delta_n_up(L), delta_n_down(L), delta_n_total(L))
+                 eigvecs_up(L,L), eigvecs_down(L,L), delta_n_up(L), delta_n_down(L), delta_n_total(L), &
+                 V_eff_up(L), V_eff_down(L), V_eff_up_calc(L), V_eff_down_calc(L), V_zero(L))
+
+        ! Initialize zero array for Hamiltonian builder
+        V_zero(:) = 0.0_dp
 
         call init_convergence_history(results%history, scf_params%max_iter, ierr)
 
@@ -206,52 +216,109 @@ contains
             ! TODO: Proper error handling for history init
             deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc)
             return
         end if
 
+        ! Initialize densities (uniform guess)
         n_up_in(:) = real(params%Nup, dp) / real(params%L, dp)
         n_down_in(:) = real(params%Ndown, dp) / real(params%L, dp)
+
+        ! Initialize effective potentials
+        ! First iteration: V_eff = V_ext (no XC contribution yet)
+        V_eff_up(:) = V_ext(:)
+        V_eff_down(:) = V_ext(:)
+
+        ! =================================
+        ! Initialize adaptive mixing (if enabled)
+        ! =================================
+        if (scf_params%use_adaptive_mixing) then
+            call adaptive_mix_init(mix_ctrl, scf_params%energy_tol)
+            if (scf_params%verbose) then
+                print '(A)', "  Using adaptive mixing (C++ behavior)"
+            end if
+        else
+            if (scf_params%verbose) then
+                print '(A,F6.4)', "  Using fixed mixing alpha = ", scf_params%mixing_alpha
+            end if
+        end if
 
         ! =================
         ! STEP 1: SCF loop
         ! =================
 
         do iter = 1, scf_params%max_iter
-            ! ---------------------------------------
+            ! -------------------------------------------------
             ! 1a. Compute V_xc from current densities
-            ! ---------------------------------------
+            ! -------------------------------------------------
             do i = 1, params%L
                 call get_vxc(xc_func, n_up_in(i), n_down_in(i), V_xc_up(i), V_xc_down(i), ierr)
                 if (ierr /= ERROR_SUCCESS) then
                     ! TODO: Proper error handling for V_xc calculation
                     deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
                     return
                 end if
             end do
 
+            ! -------------------------------------------------------------
+            ! 1b. Calculate effective potentials V_eff = V_ext + U*n_other + V_xc
+            ! (This is what C++ calls "v_ext[σ][j] + u*dens[other][j] + Vxc[σ][j]")
+            ! -------------------------------------------------------------
+            do i = 1, params%L
+                ! V_eff_up_calc = V_ext + U*n_down + V_xc_up
+                V_eff_up_calc(i) = V_ext(i) + params%U * n_down_in(i) + V_xc_up(i)
+
+                ! V_eff_down_calc = V_ext + U*n_up + V_xc_down
+                V_eff_down_calc(i) = V_ext(i) + params%U * n_up_in(i) + V_xc_down(i)
+            end do
+
+            ! -------------------------------------------------------------
+            ! 1c. Mix potentials (C++ convention: Mix = weight of OLD)
+            ! V_eff_new = Mix*V_eff_old + (1-Mix)*V_eff_calc
+            ! -------------------------------------------------------------
+            if (scf_params%use_adaptive_mixing) then
+                ! Adaptive mixing uses the Mix parameter (updated each iteration)
+                ! Convert to fortran alpha: alpha = 1 - Mix
+                current_alpha = adaptive_mix_get_alpha(mix_ctrl)
+
+                ! Apply mixing: V = (1-α)*V_old + α*V_calc = Mix*V_old + (1-Mix)*V_calc
+                ! Since alpha = 1-Mix, we have: V = Mix*V_old + (1-Mix)*V_calc ✓
+                do i = 1, params%L
+                    V_eff_up(i) = (1.0_dp - current_alpha) * V_eff_up(i) + current_alpha * V_eff_up_calc(i)
+                    V_eff_down(i) = (1.0_dp - current_alpha) * V_eff_down(i) + current_alpha * V_eff_down_calc(i)
+                end do
+            else
+                ! Fixed mixing: alpha = weight of new
+                current_alpha = scf_params%mixing_alpha
+                do i = 1, params%L
+                    V_eff_up(i) = (1.0_dp - current_alpha) * V_eff_up(i) + current_alpha * V_eff_up_calc(i)
+                    V_eff_down(i) = (1.0_dp - current_alpha) * V_eff_down(i) + current_alpha * V_eff_down_calc(i)
+                end do
+            end if
+
             ! -------------------------------------
-            ! 1c. Build Hamiltonians for both spins
+            ! 1d. Build Hamiltonians with mixed V_eff
+            ! (C++ passes v_eff to hamiltonian_ks)
             ! -------------------------------------
-            call build_hamiltonian(params%L, V_ext, V_xc_up, params%bc, params%phase, H_up, ierr)
+            call build_hamiltonian(params%L, V_eff_up, V_zero, params%bc, params%phase, H_up, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for Hamiltonian Nup build
                 deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
                 return
             end if
 
-            call build_hamiltonian(params%L, V_ext, V_xc_down, params%bc, params%phase, H_down, ierr)
+            call build_hamiltonian(params%L, V_eff_down, V_zero, params%bc, params%phase, H_down, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for Hamiltonian Ndown build
                 deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
                 return
             end if
 
@@ -367,24 +434,46 @@ contains
             end if
 
             ! ------------------------------
-            ! 1j. Print progress (if verbose)
+            ! 1j. Update adaptive mixing (if enabled)
             ! ------------------------------
-            if (scf_params%verbose) then
-                print '(A,I4,A,ES12.4,A,F16.8)', "  Iter ", iter, "  |Δn| = ", density_error, &
-                                                                    "  E_tot = ", total_energy
+            if (scf_params%use_adaptive_mixing) then
+                call adaptive_mix_update(mix_ctrl, total_energy)
+                current_alpha = adaptive_mix_get_alpha(mix_ctrl)
+
+                if (scf_params%verbose) then
+                    print '(A,I4,A,ES12.4,A,F16.8,A,F7.5)', "  Iter ", iter, "  |Δn| = ", density_error, &
+                        "  E_tot = ", total_energy, "  α = ", current_alpha
+                end if
+
+                ! Check convergence: density-based (primary) OR energy-based (fallback)
+                ! With potential mixing, density converges even if energy oscillates slightly
+                call check_scf_convergence(delta_n_total, params%L, scf_params%density_tol, &
+                                           is_converged, ierr)
+                if (ierr /= ERROR_SUCCESS .or. .not. is_converged) then
+                    ! Density not converged OR error - fall back to energy-based check
+                    is_converged = mix_ctrl%converged
+                end if
+            else
+                current_alpha = scf_params%mixing_alpha
+
+                if (scf_params%verbose) then
+                    print '(A,I4,A,ES12.4,A,F16.8)', "  Iter ", iter, "  |Δn| = ", density_error, &
+                                                                        "  E_tot = ", total_energy
+                end if
+
+                ! 1k. Check convergence (fixed mixing)
+                call check_scf_convergence(delta_n_total, params%L, scf_params%density_tol, &
+                                           is_converged, ierr)
             end if
 
-            ! 1k. Check convergence
-            call check_scf_convergence(delta_n_total, params%L, scf_params%density_tol, &
-                                       is_converged, ierr)
-
-            if (ierr /= ERROR_SUCCESS) then
+            ! Validate convergence check
+            if (.not. scf_params%use_adaptive_mixing .and. ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for convergence check
                 deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
                        delta_n_down, delta_n_total)
                 return
-            end if                                       
+            end if
 
             if (is_converged) then
                 ! SUCCESS: Converged!
@@ -407,28 +496,13 @@ contains
                 return  ! return SCF LOOP
             end if
 
-            ! ------------------------------------
-            ! 1l. Mix densities for next iteration
-            ! ------------------------------------
-            call linear_mixing(n_up_out, n_up_in, scf_params%mixing_alpha, n_up_in, params%L, ierr)
-
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for density mixing Nup
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
-                return
-            end if
-
-            call linear_mixing(n_down_out, n_down_in, scf_params%mixing_alpha, n_down_in, params%L, ierr)
-
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for density mixing Ndown
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
-                return
-            end if
+            ! -----------------------------------------------------------------------
+            ! 1l. Copy densities directly (NO MIXING!)
+            ! -----------------------------------------------------------------------
+            ! C++ code does: dens[0][i] = next_dens[0][i]  (line 695-696 in lsdaks.cc)
+            ! Mixing is applied to POTENTIALS, not densities!
+            n_up_in = n_up_out
+            n_down_in = n_down_out
         end do
 
         ! ========================
@@ -468,11 +542,14 @@ contains
         integer :: iter, i, L, Nup, Ndown
         real(dp) :: density_error, total_energy
         logical :: is_converged
+        type(adaptive_mix_t) :: mix_ctrl
+        real(dp) :: current_alpha
 
         real(dp), allocatable :: n_up_in(:), n_down_in(:), n_up_out(:), n_down_out(:), V_xc_up(:), &
                       V_xc_down(:), eigvals_up(:), eigvals_down(:), delta_n_up(:), delta_n_down(:), &
-                      delta_n_total(:)
-                      
+                      delta_n_total(:), V_eff_up(:), V_eff_down(:), V_eff_up_calc(:), V_eff_down_calc(:), &
+                      V_zero(:)
+
         complex(dp), allocatable :: H_up(:,:), H_down(:,:), eigvecs_up(:,:), eigvecs_down(:,:)
 
         call validate_kohn_sham_cycle_inputs(params, scf_params, V_ext, ierr)
@@ -487,7 +564,11 @@ contains
 
         allocate(n_up_in(L), n_down_in(L), n_up_out(L), n_down_out(L), V_xc_up(L), V_xc_down(L), &
                  H_up(L,L), H_down(L,L), eigvals_up(L), eigvals_down(L), &
-                 eigvecs_up(L,L), eigvecs_down(L,L), delta_n_up(L), delta_n_down(L), delta_n_total(L))
+                 eigvecs_up(L,L), eigvecs_down(L,L), delta_n_up(L), delta_n_down(L), delta_n_total(L), &
+                 V_eff_up(L), V_eff_down(L), V_eff_up_calc(L), V_eff_down_calc(L), V_zero(L))
+
+        ! Initialize zero array for Hamiltonian builder
+        V_zero(:) = 0.0_dp
 
         call init_convergence_history(results%history, scf_params%max_iter, ierr)
 
@@ -495,52 +576,109 @@ contains
             ! TODO: Proper error handling for history init
             deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
             return
         end if
 
+        ! Initialize densities (uniform guess)
         n_up_in(:) = real(params%Nup, dp) / real(params%L, dp)
         n_down_in(:) = real(params%Ndown, dp) / real(params%L, dp)
+
+        ! Initialize effective potentials
+        ! First iteration: V_eff = V_ext (no XC contribution yet)
+        V_eff_up(:) = V_ext(:)
+        V_eff_down(:) = V_ext(:)
+
+        ! =================================
+        ! Initialize adaptive mixing (if enabled)
+        ! =================================
+        if (scf_params%use_adaptive_mixing) then
+            call adaptive_mix_init(mix_ctrl, scf_params%energy_tol)
+            if (scf_params%verbose) then
+                print '(A)', "  Using adaptive mixing (C++ behavior)"
+            end if
+        else
+            if (scf_params%verbose) then
+                print '(A,F6.4)', "  Using fixed mixing alpha = ", scf_params%mixing_alpha
+            end if
+        end if
 
         ! =================
         ! STEP 1: SCF loop
         ! =================
 
         do iter = 1, scf_params%max_iter
-            ! ---------------------------------------
+            ! -------------------------------------------------
             ! 1a. Compute V_xc from current densities
-            ! ---------------------------------------
+            ! -------------------------------------------------
             do i = 1, params%L
                 call get_vxc(xc_func, n_up_in(i), n_down_in(i), V_xc_up(i), V_xc_down(i), ierr)
                 if (ierr /= ERROR_SUCCESS) then
                     ! TODO: Proper error handling for V_xc calculation
                     deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
                     return
                 end if
             end do
 
+            ! -------------------------------------------------------------
+            ! 1b. Calculate effective potentials V_eff = V_ext + U*n_other + V_xc
+            ! (This is what C++ calls "v_ext[σ][j] + u*dens[other][j] + Vxc[σ][j]")
+            ! -------------------------------------------------------------
+            do i = 1, params%L
+                ! V_eff_up_calc = V_ext + U*n_down + V_xc_up
+                V_eff_up_calc(i) = V_ext(i) + params%U * n_down_in(i) + V_xc_up(i)
+
+                ! V_eff_down_calc = V_ext + U*n_up + V_xc_down
+                V_eff_down_calc(i) = V_ext(i) + params%U * n_up_in(i) + V_xc_down(i)
+            end do
+
+            ! -------------------------------------------------------------
+            ! 1c. Mix potentials (C++ convention: Mix = weight of OLD)
+            ! V_eff_new = Mix*V_eff_old + (1-Mix)*V_eff_calc
+            ! -------------------------------------------------------------
+            if (scf_params%use_adaptive_mixing) then
+                ! Adaptive mixing uses the Mix parameter (updated each iteration)
+                ! Convert to fortran alpha: alpha = 1 - Mix
+                current_alpha = adaptive_mix_get_alpha(mix_ctrl)
+
+                ! Apply mixing: V = (1-α)*V_old + α*V_calc = Mix*V_old + (1-Mix)*V_calc
+                ! Since alpha = 1-Mix, we have: V = Mix*V_old + (1-Mix)*V_calc ✓
+                do i = 1, params%L
+                    V_eff_up(i) = (1.0_dp - current_alpha) * V_eff_up(i) + current_alpha * V_eff_up_calc(i)
+                    V_eff_down(i) = (1.0_dp - current_alpha) * V_eff_down(i) + current_alpha * V_eff_down_calc(i)
+                end do
+            else
+                ! Fixed mixing: alpha = weight of new
+                current_alpha = scf_params%mixing_alpha
+                do i = 1, params%L
+                    V_eff_up(i) = (1.0_dp - current_alpha) * V_eff_up(i) + current_alpha * V_eff_up_calc(i)
+                    V_eff_down(i) = (1.0_dp - current_alpha) * V_eff_down(i) + current_alpha * V_eff_down_calc(i)
+                end do
+            end if
+
             ! -------------------------------------
-            ! 1c. Build Hamiltonians for both spins
+            ! 1d. Build Hamiltonians with mixed V_eff
+            ! (C++ passes v_eff to hamiltonian_ks)
             ! -------------------------------------
-            call build_hamiltonian_complex(params%L, V_ext, V_xc_up, params%bc, params%phase, H_up, ierr)
+            call build_hamiltonian_complex(params%L, V_eff_up, V_zero, params%bc, params%phase, H_up, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for Hamiltonian Nup build
                 deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
                 return
             end if
 
-            call build_hamiltonian_complex(params%L, V_ext, V_xc_down, params%bc, params%phase, H_down, ierr)
+            call build_hamiltonian_complex(params%L, V_eff_down, V_zero, params%bc, params%phase, H_down, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for Hamiltonian Ndown build
                 deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
                 return
             end if
 
@@ -656,24 +794,46 @@ contains
             end if
 
             ! ------------------------------
-            ! 1j. Print progress (if verbose)
+            ! 1j. Update adaptive mixing (if enabled)
             ! ------------------------------
-            if (scf_params%verbose) then
-                print '(A,I4,A,ES12.4,A,F16.8)', "  Iter ", iter, "  |Δn| = ", density_error, &
-                                                                    "  E_tot = ", total_energy
+            if (scf_params%use_adaptive_mixing) then
+                call adaptive_mix_update(mix_ctrl, total_energy)
+                current_alpha = adaptive_mix_get_alpha(mix_ctrl)
+
+                if (scf_params%verbose) then
+                    print '(A,I4,A,ES12.4,A,F16.8,A,F7.5)', "  Iter ", iter, "  |Δn| = ", density_error, &
+                        "  E_tot = ", total_energy, "  α = ", current_alpha
+                end if
+
+                ! Check convergence: density-based (primary) OR energy-based (fallback)
+                ! With potential mixing, density converges even if energy oscillates slightly
+                call check_scf_convergence(delta_n_total, params%L, scf_params%density_tol, &
+                                           is_converged, ierr)
+                if (ierr /= ERROR_SUCCESS .or. .not. is_converged) then
+                    ! Density not converged OR error - fall back to energy-based check
+                    is_converged = mix_ctrl%converged
+                end if
+            else
+                current_alpha = scf_params%mixing_alpha
+
+                if (scf_params%verbose) then
+                    print '(A,I4,A,ES12.4,A,F16.8)', "  Iter ", iter, "  |Δn| = ", density_error, &
+                                                                        "  E_tot = ", total_energy
+                end if
+
+                ! 1k. Check convergence (fixed mixing)
+                call check_scf_convergence(delta_n_total, params%L, scf_params%density_tol, &
+                                           is_converged, ierr)
             end if
 
-            ! 1k. Check convergence
-            call check_scf_convergence(delta_n_total, params%L, scf_params%density_tol, &
-                                       is_converged, ierr)
-
-            if (ierr /= ERROR_SUCCESS) then
+            ! Validate convergence check
+            if (.not. scf_params%use_adaptive_mixing .and. ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for convergence check
                 deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
                        H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
                        delta_n_down, delta_n_total)
                 return
-            end if                                       
+            end if
 
             if (is_converged) then
                 ! SUCCESS: Converged!
@@ -696,28 +856,13 @@ contains
                 return  ! return SCF LOOP
             end if
 
-            ! ------------------------------------
-            ! 1l. Mix densities for next iteration
-            ! ------------------------------------
-            call linear_mixing(n_up_out, n_up_in, scf_params%mixing_alpha, n_up_in, params%L, ierr)
-
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for density mixing Nup
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
-                return
-            end if
-
-            call linear_mixing(n_down_out, n_down_in, scf_params%mixing_alpha, n_down_in, params%L, ierr)
-
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for density mixing Ndown
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, delta_n_total)
-                return
-            end if
+            ! -----------------------------------------------------------------------
+            ! 1l. Copy densities directly (NO MIXING!)
+            ! -----------------------------------------------------------------------
+            ! C++ code does: dens[0][i] = next_dens[0][i]  (line 695-696 in lsdaks.cc)
+            ! Mixing is applied to POTENTIALS, not densities!
+            n_up_in = n_up_out
+            n_down_in = n_down_out
         end do
 
         ! ========================
