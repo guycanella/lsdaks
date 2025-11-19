@@ -85,6 +85,16 @@ name = "test_kohn_sham_cycle"
 source-dir = "test"
 main = "test_kohn_sham_cycle.f90"
 
+[[test]]
+name = "test_input_parser"
+source-dir = "test"
+main = "test_input_parser.f90"
+
+[[test]]
+name = "test_output_writer"
+source-dir = "test"
+main = "test_output_writer.f90"
+
 # ============================================
 # Dependencies
 # ============================================
