@@ -1,0 +1,27 @@
+!> Half-filling (n=1) - special case with strong correlations
+
+&system
+  L = 16
+  Nup = 8
+  Ndown = 8
+  U = 8.0
+  bc = 'periodic'
+/
+
+&potential
+  potential_type = 'uniform'
+  V0 = 0.0
+/
+
+&scf
+  max_iter = 150
+  density_tol = 1.0e-6
+  mixing_alpha = 0.2        ! Slower mixing for better stability
+  verbose = .true.
+/
+
+&output
+  output_prefix = 'halffilling_u8'
+  save_density = .true.
+  save_eigenvalues = .true.
+/

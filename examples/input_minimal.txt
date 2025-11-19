@@ -1,0 +1,8 @@
+!> Minimal input - uses defaults for everything else
+
+&system
+  L = 10
+  Nup = 5
+  Ndown = 5
+  U = 4.0
+/

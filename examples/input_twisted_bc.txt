@@ -1,0 +1,28 @@
+!> Twisted BC - breaks time-reversal symmetry
+
+&system
+  L = 12
+  Nup = 6
+  Ndown = 6
+  U = 4.0
+  bc = 'twisted'
+  phase = 0.5               ! θ = 0.5π (Aharonov-Bohm flux)
+/
+
+&potential
+  potential_type = 'uniform'
+  V0 = 0.0
+/
+
+&scf
+  max_iter = 100
+  density_tol = 1.0e-6
+  mixing_alpha = 0.3
+  verbose = .true.
+/
+
+&output
+  output_prefix = 'twisted_flux'
+  save_density = .true.
+  save_eigenvalues = .true.
+/

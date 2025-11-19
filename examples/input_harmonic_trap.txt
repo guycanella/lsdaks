@@ -1,0 +1,28 @@
+!> Atoms in a harmonic trap
+
+&system
+  L = 30
+  Nup = 10
+  Ndown = 10
+  U = 4.0
+  bc = 'open'
+/
+
+&potential
+  potential_type = 'harmonic'
+  V0 = 0.1                  ! Spring constant k
+  pot_center = 15.0         ! Center of trap
+/
+
+&scf
+  max_iter = 200
+  density_tol = 1.0e-6
+  mixing_alpha = 0.3
+  verbose = .true.
+/
+
+&output
+  output_prefix = 'harmonic_trap'
+  save_density = .true.
+  save_eigenvalues = .true.
+/

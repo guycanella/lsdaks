@@ -1,0 +1,29 @@
+!> Electrons tunneling through a barrier
+
+&system
+  L = 40
+  Nup = 15
+  Ndown = 15
+  U = 2.0
+  bc = 'periodic'
+/
+
+&potential
+  potential_type = 'barrier'
+  V0 = 5.0                  ! Barrier height
+  pot_center = 20.0         ! Barrier position
+  pot_width = 4.0           ! Barrier width
+/
+
+&scf
+  max_iter = 150
+  density_tol = 1.0e-6
+  mixing_alpha = 0.25
+  verbose = .true.
+/
+
+&output
+  output_prefix = 'quantum_barrier'
+  save_density = .true.
+  save_eigenvalues = .true.
+/

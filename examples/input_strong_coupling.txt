@@ -1,0 +1,24 @@
+!> Strong coupling U >> t (Mott insulator regime)
+
+&system
+  L = 20
+  Nup = 10
+  Ndown = 10
+  U = 16.0                  ! Very strong interaction
+  bc = 'periodic'
+/
+
+&potential
+  potential_type = 'uniform'
+/
+
+&scf
+  max_iter = 200
+  density_tol = 1.0e-5      ! Slightly looser tolerance
+  mixing_alpha = 0.15       ! Very slow mixing for stability
+  verbose = .true.
+/
+
+&output
+  output_prefix = 'strong_coupling_u16'
+/
