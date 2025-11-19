@@ -11,18 +11,34 @@ auto-tests = true
 auto-examples = true
 link = ["lapack", "blas"]
 
-[[executable]]
-name = "convert_tables"
-source-dir = "app"
-main = "convert_tables.f90"
-
-[dependencies]
-
 [library]
 source-dir = "src"
 
 [install]
 library = true
+
+# ============================================
+# Executables
+# ============================================
+
+[[executable]]
+name = "lsdaks"
+source-dir = "app"
+main = "main.f90"
+
+[[executable]]
+name = "convert_tables"
+source-dir = "app"
+main = "convert_tables.f90"
+
+[[executable]]
+name = "generate_xc_table"
+source-dir = "app"
+main = "generate_table.f90"
+
+# ============================================
+# Tests
+# ============================================
 
 [[test]]
 name = "test_bethe_equations"
@@ -64,10 +80,16 @@ name = "test_mixing_schemes"
 source-dir = "test"
 main = "test_mixing_schemes.f90"
 
-[[executable]]
-name = "lsdaks"
-source-dir = "app"
-main = "main.f90"
+[[test]]
+name = "test_kohn_sham_cycle"
+source-dir = "test"
+main = "test_kohn_sham_cycle.f90"
+
+# ============================================
+# Dependencies
+# ============================================
+
+[dependencies]
 
 [dev-dependencies]
 fortuno = { git = "https://github.com/fortuno-repos/fortuno-fpm-serial.git" }
