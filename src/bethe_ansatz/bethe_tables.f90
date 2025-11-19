@@ -24,7 +24,7 @@ module bethe_tables
     end type grid_params_t
 
     type, public :: xc_potentials_t
-        real(dp) :: v_xc_up, v_xc_dw
+        real(dp) :: v_xc_up, v_xc_down
     end type xc_potentials_t
 
     public :: compute_E0
@@ -141,7 +141,7 @@ contains
     !! @param[in] U       Hubbard interaction
     !! @param[in] L       System size
     !! @param[in] delta_n Finite difference increment
-    !! @return            XC potentials (v_xc_up, v_xc_dw)
+    !! @return            XC potentials (v_xc_up, v_xc_down)
     function compute_V_xc_numerical(n_up, n_dw, U, L) result(v_xc)
         real(dp), intent(in) :: n_up, n_dw
         integer, intent(in) :: L
@@ -167,9 +167,9 @@ contains
         E_xc_dw_plus = compute_E_xc(n_up, n_dw + delta_n, U, L)
         E_xc_dw_minus = compute_E_xc(n_up, n_dw - delta_n, U, L)
         if (ieee_is_nan(E_xc_dw_plus) .or. ieee_is_nan(E_xc_dw_minus)) then
-            v_xc%v_xc_dw = ieee_value(0.0_dp, ieee_quiet_nan)
+            v_xc%v_xc_down = ieee_value(0.0_dp, ieee_quiet_nan)
         else
-            v_xc%v_xc_dw = (E_xc_dw_plus - E_xc_dw_minus) / (2.0_dp * delta_n)
+            v_xc%v_xc_down = (E_xc_dw_plus - E_xc_dw_minus) / (2.0_dp * delta_n)
         end if
     end function compute_V_xc_numerical
 
@@ -177,7 +177,7 @@ contains
     !!
     !! Creates table with grid points (n_i, m_j) where:
     !!   n ∈ [n_min, n_max], m ∈ [-n, n]
-    !! and computes exc, vxc_up, vxc_dw at each point.
+    !! and computes exc, vxc_up, vxc_down at each point.
     !!
     !! @param[in]  U      Hubbard interaction parameter
     !! @param[in]  params Grid parameters (densities, points, system size)
@@ -204,12 +204,12 @@ contains
         allocate(table%m_grid(params%m_points, params%n_points))
         allocate(table%exc(params%m_points, params%n_points))
         allocate(table%vxc_up(params%m_points, params%n_points))
-        allocate(table%vxc_dw(params%m_points, params%n_points))
-        
+        allocate(table%vxc_down(params%m_points, params%n_points))
+
         ! Initialize with NaN (for debugging)
         table%exc = ieee_value(0.0_dp, ieee_quiet_nan)
         table%vxc_up = ieee_value(0.0_dp, ieee_quiet_nan)
-        table%vxc_dw = ieee_value(0.0_dp, ieee_quiet_nan)
+        table%vxc_down = ieee_value(0.0_dp, ieee_quiet_nan)
         
         delta_n = (params%n_max - params%n_min) / real(params%n_points - 1, dp)
         
@@ -239,10 +239,10 @@ contains
                 end if
                 
                 table%exc(j, i) = compute_E_xc(n_up, n_dw, U, params%L)
-                
+
                 v_xc = compute_V_xc_numerical(n_up, n_dw, U, params%L)
                 table%vxc_up(j, i) = v_xc%v_xc_up
-                table%vxc_dw(j, i) = v_xc%v_xc_dw
+                table%vxc_down(j, i) = v_xc%v_xc_down
             end do
         end do
         !$OMP END PARALLEL DO
@@ -314,7 +314,7 @@ contains
             if (allocated(table%m_grid)) deallocate(table%m_grid)
             if (allocated(table%exc)) deallocate(table%exc)
             if (allocated(table%vxc_up)) deallocate(table%vxc_up)
-            if (allocated(table%vxc_dw)) deallocate(table%vxc_dw)
+            if (allocated(table%vxc_down)) deallocate(table%vxc_down)
         end do
         
         print '(A)', ""

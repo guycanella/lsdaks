@@ -105,10 +105,10 @@ contains
         L = 20
 
         v_xc = compute_V_xc_numerical(n_up, n_dw, U, L)
-        
+
         ! For symmetric case, potentials should be equal
-        call check(abs(v_xc%v_xc_up - v_xc%v_xc_dw) < 1.0e-6_dp, &
-                   "V_xc_up should equal V_xc_dw for symmetric case")
+        call check(abs(v_xc%v_xc_up - v_xc%v_xc_down) < 1.0e-6_dp, &
+                   "V_xc_up should equal V_xc_down for symmetric case")
         
     end subroutine test_compute_V_xc_symmetric
 
@@ -157,14 +157,14 @@ contains
         call check(table%n_points_m == 1, "Should have 5 magnetization points")
         call check(allocated(table%exc), "exc array should be allocated")
         call check(allocated(table%vxc_up), "vxc_up array should be allocated")
-        call check(allocated(table%vxc_dw), "vxc_dw array should be allocated")
-        
+        call check(allocated(table%vxc_down), "vxc_down array should be allocated")
+
         ! Clean up
         if (allocated(table%n_grid)) deallocate(table%n_grid)
         if (allocated(table%m_grid)) deallocate(table%m_grid)
         if (allocated(table%exc)) deallocate(table%exc)
         if (allocated(table%vxc_up)) deallocate(table%vxc_up)
-        if (allocated(table%vxc_dw)) deallocate(table%vxc_dw)
+        if (allocated(table%vxc_down)) deallocate(table%vxc_down)
         
     end subroutine test_generate_small_table
 

@@ -19,12 +19,12 @@ module xc_lsda
     implicit none
     private
 
-    !> LSDA XC functional type containing splines for exc, vxc_up, vxc_dw
+    !> LSDA XC functional type containing splines for exc, vxc_up, vxc_down
     type, public :: xc_lsda_t
         real(dp) :: U = 0.0_dp                  !< Hubbard U parameter
         type(spline2d_t) :: spl_exc             !< Spline for e_xc(n, m)
         type(spline2d_t) :: spl_vxc_up          !< Spline for V_xc^up(n, m)
-        type(spline2d_t) :: spl_vxc_dw          !< Spline for V_xc^dn(n, m)
+        type(spline2d_t) :: spl_vxc_down        !< Spline for V_xc^dn(n, m)
         logical :: initialized = .false.        !< Initialization flag
     end type xc_lsda_t
 
@@ -41,7 +41,7 @@ contains
 
     !> Initialize XC functional from table file
     !!
-    !! Loads table and constructs 2D splines for exc, vxc_up, vxc_dw.
+    !! Loads table and constructs 2D splines for exc, vxc_up, vxc_down.
     !!
     !! @param[out] xc         XC functional object
     !! @param[in]  table_file Path to table file (Fortran binary format)
@@ -79,14 +79,14 @@ contains
         call spline2d_init(xc%spl_vxc_up, table%n_grid, table%m_grid, &
                            table%vxc_up, n_y_pts)
 
-        call spline2d_init(xc%spl_vxc_dw, table%n_grid, table%m_grid, &
-                           table%vxc_dw, n_y_pts)
+        call spline2d_init(xc%spl_vxc_down, table%n_grid, table%m_grid, &
+                           table%vxc_down, n_y_pts)
 
         deallocate(n_y_pts)
 
         if (.not. xc%spl_exc%initialized .or. &
             .not. xc%spl_vxc_up%initialized .or. &
-            .not. xc%spl_vxc_dw%initialized) then
+            .not. xc%spl_vxc_down%initialized) then
             ierr = ERROR_SPLINE_INITIALIZATION_FAILED
             call deallocate_table(table)
             return
@@ -214,7 +214,7 @@ contains
 
         ! Evaluate splines
         v_up_base = spline2d_eval(xc%spl_vxc_up, n, m)
-        v_dw_base = spline2d_eval(xc%spl_vxc_dw, n, m)
+        v_dw_base = spline2d_eval(xc%spl_vxc_down, n, m)
 
         ! Apply region-specific transformations
         select case (region)
@@ -250,7 +250,7 @@ contains
 
         call spline2d_destroy(xc%spl_exc)
         call spline2d_destroy(xc%spl_vxc_up)
-        call spline2d_destroy(xc%spl_vxc_dw)
+        call spline2d_destroy(xc%spl_vxc_down)
 
         xc%initialized = .false.
         xc%U = 0.0_dp

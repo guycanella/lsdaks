@@ -2,6 +2,9 @@
 module table_io
     use, intrinsic :: iso_fortran_env, only: real64, int32, error_unit
     use lsda_constants, only: dp
+    use lsda_errors, only: ERROR_SUCCESS, ERROR_FILE_NOT_FOUND, &
+                                    ERROR_FILE_READ, ERROR_FILE_WRITE, &
+                                    ERROR_INVALID_INPUT
     implicit none
     private
 
@@ -20,26 +23,26 @@ module table_io
         real(dp), allocatable :: m_grid(:,:)
         real(dp), allocatable :: exc(:,:)
         real(dp), allocatable :: vxc_up(:,:)
-        real(dp), allocatable :: vxc_dw(:,:)
+        real(dp), allocatable :: vxc_down(:,:)
     end type xc_table_t
 
 contains
 
-    subroutine read_cpp_table(filename, table, status)
+    subroutine read_cpp_table(filename, table, ierr)
         character(len=*), intent(in) :: filename
         type(xc_table_t), intent(out) :: table
-        integer, intent(out) :: status
+        integer, intent(out) :: ierr
         integer :: unit, io_stat
         character(len=MAX_LINE_LEN) :: line
         integer :: n_blocks, n_mag_points
         integer :: i_block, i_mag
-        real(dp) :: n_val, m_val, exc_val, vxc_up_val, vxc_dw_val
+        real(dp) :: n_val, m_val, exc_val, vxc_up_val, vxc_down_val
 
-        call extract_U_from_filename(filename, table%U, status)
-        if (status /= 0) return
+        call extract_U_from_filename(filename, table%U, ierr)
+        if (ierr /= ERROR_SUCCESS) return
 
-        call count_blocks_and_points(filename, n_blocks, n_mag_points, status)
-        if (status /= 0) return
+        call count_blocks_and_points(filename, n_blocks, n_mag_points, ierr)
+        if (ierr /= ERROR_SUCCESS) return
 
         table%n_points_n = n_blocks
         table%n_points_m = n_mag_points
@@ -48,24 +51,28 @@ contains
         allocate(table%m_grid(n_mag_points, n_blocks))
         allocate(table%exc(n_mag_points, n_blocks))
         allocate(table%vxc_up(n_mag_points, n_blocks))
-        allocate(table%vxc_dw(n_mag_points, n_blocks))
+        allocate(table%vxc_down(n_mag_points, n_blocks))
 
         open(newunit=unit, file=filename, status='old', action='read', iostat=io_stat)
         if (io_stat /= 0) then
-            status = -2
+            ierr = ERROR_FILE_NOT_FOUND
             return
         end if
 
         i_block = 0
         do
             read(unit, '(A)', iostat=io_stat) line
-            if (io_stat /= 0) exit
+            if (io_stat /= 0) then
+                ierr = ERROR_FILE_READ
+                close(unit)
+                exit
+            end if
 
             if (line(1:2) == 'n:') then
                 i_block = i_block + 1
                 read(line(3:), *, iostat=io_stat) n_val
                 if (io_stat /= 0) then
-                    status = -3
+                    ierr = ERROR_FILE_READ
                     close(unit)
                     return
                 end if
@@ -73,7 +80,7 @@ contains
 
                 read(unit, '(A)', iostat=io_stat) line  ! Skip header
                 if (io_stat /= 0) then
-                    status = -4
+                    ierr = ERROR_FILE_READ
                     close(unit)
                     return
                 end if
@@ -89,17 +96,17 @@ contains
                                 table%exc(i_mag-1, i_block)
                             table%vxc_up(i_mag:n_mag_points, i_block) = &
                                 table%vxc_up(i_mag-1, i_block)
-                            table%vxc_dw(i_mag:n_mag_points, i_block) = &
-                                table%vxc_dw(i_mag-1, i_block)
+                            table%vxc_down(i_mag:n_mag_points, i_block) = &
+                                table%vxc_down(i_mag-1, i_block)
                         end if
                         
                         if (line(1:2) == 'n:') backspace(unit)
                         exit
                     end if
                     
-                    read(line, *, iostat=io_stat) m_val, exc_val, vxc_up_val, vxc_dw_val
+                    read(line, *, iostat=io_stat) m_val, exc_val, vxc_up_val, vxc_down_val
                     if (io_stat /= 0) then
-                        status = -5
+                        ierr = ERROR_FILE_READ
                         close(unit)
                         return
                     end if
@@ -107,18 +114,18 @@ contains
                     table%m_grid(i_mag, i_block) = m_val
                     table%exc(i_mag, i_block) = exc_val
                     table%vxc_up(i_mag, i_block) = vxc_up_val
-                    table%vxc_dw(i_mag, i_block) = vxc_dw_val
+                    table%vxc_down(i_mag, i_block) = vxc_down_val
                 end do
             end if
         end do
 
         close(unit)
-        status = 0
+        ierr = ERROR_SUCCESS
     end subroutine read_cpp_table
 
-    subroutine count_blocks_and_points(filename, n_blocks, n_mag_points, status)
+    subroutine count_blocks_and_points(filename, n_blocks, n_mag_points, ierr)
         character(len=*), intent(in) :: filename
-        integer, intent(out) :: n_blocks, n_mag_points, status
+        integer, intent(out) :: n_blocks, n_mag_points, ierr
         integer :: unit, io_stat
         character(len=MAX_LINE_LEN) :: line
         integer :: points_in_block, max_points
@@ -126,7 +133,7 @@ contains
 
         open(newunit=unit, file=filename, status='old', action='read', iostat=io_stat)
         if (io_stat /= 0) then
-            status = -1
+            ierr = ERROR_FILE_NOT_FOUND
             return
         end if
 
@@ -137,7 +144,11 @@ contains
 
         do
             read(unit, '(A)', iostat=io_stat) line
-            if (io_stat /= 0) exit
+            if (io_stat /= 0) then
+                ierr = ERROR_FILE_READ
+                close(unit)
+                exit
+            end if
 
             if (line(1:2) == 'n:') then
                 if (n_blocks > 0) then
@@ -164,24 +175,24 @@ contains
         close(unit)
 
         if (n_blocks == 0 .or. n_mag_points == 0) then
-            status = -2
+            ierr = ERROR_INVALID_INPUT
             return
         end if
         
-        status = 0
+        ierr = ERROR_SUCCESS
     end subroutine count_blocks_and_points
 
-    subroutine extract_U_from_filename(filename, U, status)
+    subroutine extract_U_from_filename(filename, U, ierr)
         character(len=*), intent(in) :: filename
         real(dp), intent(out) :: U
-        integer, intent(out) :: status
+        integer, intent(out) :: ierr
         integer :: pos_u, pos_end, i, io_stat
         character(len=32) :: u_string
         logical :: found_dot
 
         pos_u = index(filename, '_u')
         if (pos_u == 0) then
-            status = -1
+            ierr = ERROR_INVALID_INPUT
             return
         end if
 
@@ -211,29 +222,29 @@ contains
         read(u_string(1:pos_end), *, iostat=io_stat) U
         
         if (io_stat /= 0) then
-            status = -2
+            ierr = ERROR_FILE_READ
             return
         end if
         
-        status = 0
+        ierr = ERROR_SUCCESS
 
     end subroutine extract_U_from_filename
     
-    subroutine write_fortran_table(filename, table, status)
+    subroutine write_fortran_table(filename, table, ierr)
         character(len=*), intent(in) :: filename
         type(xc_table_t), intent(in) :: table
-        integer, intent(out) :: status
+        integer, intent(out) :: ierr
         integer :: unit, io_stat
 
         if (.not. allocated(table%n_grid)) then
-            status = -1
+            ierr = ERROR_INVALID_INPUT
             return
         end if
 
         open(newunit=unit, file=filename, status='replace', action='write', &
              form='unformatted', access='stream', iostat=io_stat)
         if (io_stat /= 0) then
-            status = -2
+            ierr = ERROR_FILE_WRITE
             return
         end if
 
@@ -249,22 +260,22 @@ contains
         if (io_stat /= 0) goto 100
         write(unit, iostat=io_stat) table%vxc_up
         if (io_stat /= 0) goto 100
-        write(unit, iostat=io_stat) table%vxc_dw
+        write(unit, iostat=io_stat) table%vxc_down
         if (io_stat /= 0) goto 100
 
         close(unit)
-        status = 0
+        ierr = ERROR_SUCCESS
         return
 
-100     status = -3
+100     ierr = ERROR_FILE_WRITE
         close(unit)
     end subroutine write_fortran_table
 
 
-    subroutine read_fortran_table(filename, table, status)
+    subroutine read_fortran_table(filename, table, ierr)
         character(len=*), intent(in) :: filename
         type(xc_table_t), intent(out) :: table
-        integer, intent(out) :: status
+        integer, intent(out) :: ierr
         integer :: unit, io_stat
 
         call deallocate_table(table)
@@ -272,7 +283,7 @@ contains
         open(newunit=unit, file=filename, status='old', action='read', &
              form='unformatted', access='stream', iostat=io_stat)
         if (io_stat /= 0) then
-            status = -1
+            ierr = ERROR_FILE_NOT_FOUND
             return
         end if
 
@@ -282,7 +293,7 @@ contains
         if (io_stat /= 0) goto 200
 
         if (table%n_points_n <= 0 .or. table%n_points_m <= 0) then
-            status = -2
+            ierr = ERROR_INVALID_INPUT
             close(unit)
             return
         end if
@@ -291,7 +302,7 @@ contains
         allocate(table%m_grid(table%n_points_m, table%n_points_n))
         allocate(table%exc(table%n_points_m, table%n_points_n))
         allocate(table%vxc_up(table%n_points_m, table%n_points_n))
-        allocate(table%vxc_dw(table%n_points_m, table%n_points_n))
+        allocate(table%vxc_down(table%n_points_m, table%n_points_n))
 
         read(unit, iostat=io_stat) table%n_grid
         if (io_stat /= 0) goto 200
@@ -301,14 +312,14 @@ contains
         if (io_stat /= 0) goto 200
         read(unit, iostat=io_stat) table%vxc_up
         if (io_stat /= 0) goto 200
-        read(unit, iostat=io_stat) table%vxc_dw
+        read(unit, iostat=io_stat) table%vxc_down
         if (io_stat /= 0) goto 200
 
         close(unit)
-        status = 0
+        ierr = ERROR_SUCCESS
         return
 
-200     status = -3
+200     ierr = ERROR_FILE_READ
         close(unit)
         call deallocate_table(table)
     end subroutine read_fortran_table
@@ -320,7 +331,7 @@ contains
         if (allocated(table%m_grid)) deallocate(table%m_grid)
         if (allocated(table%exc)) deallocate(table%exc)
         if (allocated(table%vxc_up)) deallocate(table%vxc_up)
-        if (allocated(table%vxc_dw)) deallocate(table%vxc_dw)
+        if (allocated(table%vxc_down)) deallocate(table%vxc_down)
     end subroutine deallocate_table
 
 
@@ -344,8 +355,8 @@ contains
         m_max = maxval(table%m_grid)
         exc_min = minval(table%exc)
         exc_max = maxval(table%exc)
-        vxc_min = min(minval(table%vxc_up), minval(table%vxc_dw))
-        vxc_max = max(maxval(table%vxc_up), maxval(table%vxc_dw))
+        vxc_min = min(minval(table%vxc_up), minval(table%vxc_down))
+        vxc_max = max(maxval(table%vxc_up), maxval(table%vxc_down))
 
         write(out_unit, '(A)') "========================================="
         write(out_unit, '(A)') "XC Table Summary"
