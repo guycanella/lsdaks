@@ -12,5 +12,9 @@
   ],
   "fortran.provide.symbols": true,
   "fortran.provide.hover": true,
-  "fortran.provide.completions": true
+  "fortran.provide.completions": true,
+  "files.associations": {
+      "input*.txt": "fortran-namelist",
+      "*.nml": "fortran-namelist"
+  }
 }
