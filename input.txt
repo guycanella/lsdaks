@@ -19,7 +19,7 @@
   max_iter = 10000
   density_tol = 1.0e-6  
   energy_tol = 1.0e-8   
-  mixing_alpha = 0.3   
+  mixing_alpha = 0.05
   verbose = .true.      
   store_history = .true.
 /

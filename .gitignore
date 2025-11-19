@@ -8,3 +8,4 @@ build/
 CLAUDE.md
 data/tables/fortran_native/
 data/tables/cpp_legacy/
+MIXING_EQUIVALENCE.md
