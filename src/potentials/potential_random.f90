@@ -23,17 +23,18 @@ module potential_random
 
 contains
 
-    !> Random potential with uniform distribution: V(i) ~ U[-W/2, W/2]
+    !> Random potential with uniform distribution: V(i) ~ U[-W, W]
     !!
     !! Creates a disordered potential with uniform distribution.
-    !! Each site has an independent random value drawn from [-W/2, W/2].
+    !! Each site has an independent random value drawn from [-W, W].
+    !! Matches C++ random1 implementation: V*(2*rand - 1).
     !!
     !! Physical properties:
     !! - Mean: ⟨V(i)⟩ = 0
-    !! - Variance: σ² = W²/12
+    !! - Variance: σ² = W²/3
     !! - Models box disorder (flat probability distribution)
     !!
-    !! @param[in]  W      Disorder strength (width of distribution), W > 0
+    !! @param[in]  W      Disorder strength (half-width of distribution), W > 0
     !! @param[in]  L      Number of lattice sites
     !! @param[in]  seed   Random seed for reproducibility (use system time if < 0)
     !! @param[out] V      Potential array V(i) for i = 1..L
@@ -41,6 +42,7 @@ contains
     !!
     !! @note For W → 0: No disorder (all sites have V ≈ 0)
     !! @note For W >> t (hopping): Strong disorder, Anderson localization
+    !! @note Range is [-W, +W] with total width = 2W (matches C++ random1)
     subroutine potential_random_uniform(W, L, seed, V, ierr)
         real(dp), intent(in) :: W
         integer, intent(in) :: L, seed
@@ -76,7 +78,9 @@ contains
 
         do i = 1, L
             call random_number(rand_val)
-            V(i) = W * (rand_val - 0.5_dp)  ! Maps [0,1] → [-W/2, W/2]
+            ! C++ formula: V*(2.0*rand - 1.0) gives [-V, +V]
+            ! Matches C++ random1 implementation exactly
+            V(i) = W * (2.0_dp * rand_val - 1.0_dp)  ! Maps [0,1] → [-W, +W]
         end do
     end subroutine potential_random_uniform
 

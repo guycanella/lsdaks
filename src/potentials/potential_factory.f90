@@ -51,7 +51,7 @@ contains
     !! - "random_uniform": params(1) = W
     !! - "random_gaussian": params(1) = sigma
     !! - "barrier_single": params(1) = V_bar, params(2) = i_start, params(3) = i_end
-    !! - "barrier_double": params(1) = V_bar, params(2:5) = i1_start, i1_end, i2_start, i2_end
+    !! - "barrier_double": params(1) = V_bar, params(2) = L_bar, params(3) = V_well, params(4) = L_well
     !! - "quasiperiodic": params(1) = lambda, params(2) = beta, params(3) = phi
     !!
     !! @param[in]  potential_type  String identifying potential type
@@ -126,13 +126,13 @@ contains
             call potential_barrier_single(params(1), int(params(2)), int(params(3)), L, V, ierr)
             
         case ("barrier_double")
-            ! Double barrier: params(1) = V_bar, params(2:5) = i1_start, i1_end, i2_start, i2_end
-            if (size(params) < 5) then
+            ! Double barrier: params(1) = V_bar, params(2) = L_bar, params(3) = V_well, params(4) = L_well
+            ! Matches C++ double_barrier(Na, Vb, Lb, Vwell, Lwell, v_ext)
+            if (size(params) < 4) then
                 ierr = ERROR_INVALID_INPUT
                 return
             end if
-            call potential_barrier_double(params(1), int(params(2)), int(params(3)), &
-                                         int(params(4)), int(params(5)), L, V, ierr)
+            call potential_barrier_double(params(1), params(2), params(3), params(4), L, V, ierr)
 
         case ("quasiperiodic")
             ! Quasiperiodic: params(1) = lambda, params(2) = beta, params(3) = phi
@@ -161,7 +161,7 @@ contains
         case ("uniform")
             info = "Uniform potential: V(i) = V0. Parameters: [V0]"
         case ("harmonic")
-            info = "Harmonic trap: V(i) = 0.5*k*(i-center)^2. Parameters: [k]"
+            info = "Harmonic trap: V(i) = k*(i-center)^2. Parameters: [k]"
         case ("impurity_single")
             info = "Single impurity: V(i) = V_imp at i_imp. Parameters: [V_imp, i_imp]"
         case ("impurity_multiple")
@@ -169,13 +169,13 @@ contains
         case ("impurity_random")
             info = "Random impurities: Use potential_impurity_random directly"
         case ("random_uniform")
-            info = "Random uniform: V(i) ~ U[-W/2, W/2]. Parameters: [W]"
+            info = "Random uniform disorder: V(i) ~ Uniform[-W, +W]. Parameters: [W]"
         case ("random_gaussian")
             info = "Random Gaussian: V(i) ~ N(0, sigma^2). Parameters: [sigma]"
         case ("barrier_single")
             info = "Single barrier: V(i) = V_bar in [i_start, i_end]. Parameters: [V_bar, i_start, i_end]"
         case ("barrier_double")
-            info = "Double barrier: Two barriers. Parameters: [V_bar, i1_start, i1_end, i2_start, i2_end]"
+            info = "Double barrier: Two barriers with well. Parameters: [V_bar, L_bar, V_well, L_well]"
         case ("quasiperiodic")
             info = "Quasiperiodic AAH: V(i) = lambda*cos(2*pi*beta*i + phi). Parameters: [lambda, beta, phi]"
         case default

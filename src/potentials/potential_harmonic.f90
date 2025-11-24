@@ -11,7 +11,7 @@ module potential_harmonic
 
 contains
 
-    !> Harmonic trap potential: V(i) = 0.5 * k * (i - i_center)²
+    !> Harmonic trap potential: V(i) = k * (i - i_center)²
     !!
     !! Creates a parabolic confining potential centered at the middle of the chain.
     !! The center is at i_center = (L+1)/2, which works for both odd and even L.
@@ -29,6 +29,7 @@ contains
     !!
     !! @note For k → 0, reduces to uniform potential V = 0
     !! @note For k >> 1, creates strong confinement (Landau regime)
+    !! @note Matches C++ lsdaks.cc: V = k*(i-i0)^2 (NO 0.5 factor!)
     subroutine apply_potential_harmonic(k, L, V, ierr)
         use lsda_errors, only: ERROR_SUCCESS
         real(dp), intent(in) :: k
@@ -40,7 +41,8 @@ contains
 
         i_center = real(L + 1, dp) / 2.0_dp
 
-        V = [(0.5_dp * k * (real(i, dp) - i_center)**2, i = 1, L)]
+        ! NOTE: NO 0.5 factor! This matches C++ original code exactly.
+        V = [(k * (real(i, dp) - i_center)**2, i = 1, L)]
         ierr = ERROR_SUCCESS
     end subroutine apply_potential_harmonic
 end module potential_harmonic
