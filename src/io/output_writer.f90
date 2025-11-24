@@ -89,7 +89,6 @@ contains
         print '(A,I0)', "  N_down:           ", sys_params%Ndown
         print '(A,I0)', "  N_total:          ", sys_params%Nup + sys_params%Ndown
         print '(A,F0.4)', "  U:                ", sys_params%U
-        print '(A,I0)', "  BC:               ", sys_params%bc
         if (sys_params%bc == 2) then
             print '(A,F0.4)', "  Phase:            ", sys_params%phase
         end if
@@ -103,7 +102,11 @@ contains
         end if
         print '(A,I0)', "  Iterations:       ", results%n_iterations
         print '(A,ES12.4)', "  Final |Δn|:       ", results%final_density_error
-        print '(A,F16.8)', "  Final Energy:     ", results%final_energy
+        if (allocated(results%density_up)) then
+            print '(A,F20.12)', "  Final Energy per site: ", results%final_energy / size(results%density_up)
+        else
+            print '(A,F20.12)', "  Final Energy per site: ", results%final_energy
+        end if
         print '(A)', ""
         
         if (allocated(results%density_up)) then
@@ -156,7 +159,11 @@ contains
         end if
         write(io_unit, '(A,I0)') "Iterations: ", results%n_iterations
         write(io_unit, '(A,ES12.4)') "Final |Δn|: ", results%final_density_error
-        write(io_unit, '(A,F16.8)') "Final Energy: ", results%final_energy
+        if (allocated(results%density_up)) then
+            write(io_unit, '(A,F20.12)') "Final Energy: ", results%final_energy / size(results%density_up)
+        else
+            write(io_unit, '(A,F20.12)') "Final Energy: ", results%final_energy
+        end if
         
         close(io_unit)
         

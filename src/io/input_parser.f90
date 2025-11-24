@@ -29,9 +29,21 @@ module input_parser
         real(dp) :: V0 = 0.0_dp
         real(dp) :: pot_center = 0.0_dp
         real(dp) :: pot_width = 1.0_dp
+        real(dp) :: spring_constant = 0.001_dp        ! For harmonic potential (k)
         real(dp) :: concentration = 50.0_dp           ! For random impurities (%)
         integer :: pot_seed = -1                      ! Random seed (-1 = system time)
         character(len=500) :: imp_positions_str = ''  ! For impurity_multiple: '10, 25, 40, 55'
+        real(dp) :: disorder_strength = 2.0_dp        ! For random disorder (W or sigma)
+        character(len=20) :: distribution = 'gaussian' ! For random: 'uniform' or 'gaussian'
+        integer :: position = 50                      ! For barrier_single: center position
+        integer :: width = 5                          ! For barrier_single: width
+        real(dp) :: barrier_width = 3.0_dp            ! For barrier_double: width of each barrier (Lb)
+        real(dp) :: well_depth = -3.0_dp              ! For barrier_double: potential in well (Vwell, typically negative)
+        real(dp) :: well_width = 20.0_dp              ! For barrier_double: width of well between barriers (Lwell)
+        integer :: position1 = 35                     ! DEPRECATED for barrier_double
+        integer :: width1 = 3                         ! DEPRECATED for barrier_double
+        integer :: position2 = 65                     ! DEPRECATED for barrier_double
+        integer :: width2 = 3                         ! DEPRECATED for barrier_double
         
         ! SCF parameters
         integer :: max_iter = ITER_MAX
@@ -204,22 +216,27 @@ contains
         
         ! Potential namelist variables
         character(len=20) :: potential_type
-        real(dp) :: V0, pot_center, pot_width, concentration
-        integer :: pot_seed
+        real(dp) :: V0, pot_center, pot_width, concentration, disorder_strength
+        real(dp) :: barrier_width, well_depth, well_width
+        integer :: pot_seed, position, width, position1, width1, position2, width2
         character(len=500) :: imp_positions_str
-        
+        character(len=20) :: distribution
+
         ! SCF namelist variables
         integer :: max_iter
         real(dp) :: density_tol, energy_tol, mixing_alpha
         logical :: verbose, store_history, use_adaptive_mixing
-        
+
         ! Output namelist variables
         character(len=100) :: output_prefix
         logical :: save_density, save_eigenvalues, save_wavefunction
-        
+
         namelist /system/ L, Nup, Ndown, U, bc, phase
         namelist /potential/ potential_type, V0, pot_center, pot_width, &
-                                    concentration, pot_seed, imp_positions_str
+                             concentration, pot_seed, imp_positions_str, &
+                             disorder_strength, distribution, position, width, &
+                             barrier_width, well_depth, well_width, &
+                             position1, width1, position2, width2
 
         namelist /scf/ max_iter, density_tol, energy_tol, mixing_alpha, &
                        verbose, store_history, use_adaptive_mixing
@@ -252,6 +269,17 @@ contains
         concentration = inputs%concentration
         pot_seed = inputs%pot_seed
         imp_positions_str = inputs%imp_positions_str
+        disorder_strength = inputs%disorder_strength
+        distribution = inputs%distribution
+        position = inputs%position
+        width = inputs%width
+        barrier_width = inputs%barrier_width
+        well_depth = inputs%well_depth
+        well_width = inputs%well_width
+        position1 = inputs%position1
+        width1 = inputs%width1
+        position2 = inputs%position2
+        width2 = inputs%width2
         
         max_iter = inputs%max_iter
         density_tol = inputs%density_tol
@@ -303,6 +331,17 @@ contains
         inputs%concentration = concentration
         inputs%pot_seed = pot_seed
         inputs%imp_positions_str = imp_positions_str
+        inputs%disorder_strength = disorder_strength
+        inputs%distribution = distribution
+        inputs%position = position
+        inputs%width = width
+        inputs%barrier_width = barrier_width
+        inputs%well_depth = well_depth
+        inputs%well_width = well_width
+        inputs%position1 = position1
+        inputs%width1 = width1
+        inputs%position2 = position2
+        inputs%width2 = width2
         
         inputs%max_iter = max_iter
         inputs%density_tol = density_tol
@@ -342,9 +381,9 @@ contains
             return
         end if
         
-        if (inputs%Nup + inputs%Ndown > inputs%L) then
-            print *, "ERROR: N = Nup + Ndown cannot exceed L"
-            print *, "  N =", inputs%Nup + inputs%Ndown, ", L =", inputs%L
+        if (inputs%Nup + inputs%Ndown > 2 * inputs%L) then
+            print *, "ERROR: N = Nup + Ndown cannot exceed 2L (Pauli exclusion)"
+            print *, "  N =", inputs%Nup + inputs%Ndown, ", 2L =", 2 * inputs%L
             ierr = ERROR_INVALID_INPUT
             return
         end if
