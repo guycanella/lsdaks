@@ -1,0 +1,1173 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>output_writer &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>output_writer
+      <small>Module</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 5.4% of total for modules and submodules.">238 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/output_writer.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/output_writer.f90.html'>output_writer.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">output_writer</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
+      </a>
+      <div id="subs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/output_writer.html#proc-write_results">write_results</a>
+            <a class="list-group-item" href="../module/output_writer.html#proc-write_summary">write_summary</a>
+            <a class="list-group-item" href="../module/output_writer.html#proc-write_density_profile">write_density_profile</a>
+            <a class="list-group-item" href="../module/output_writer.html#proc-write_eigenvalues">write_eigenvalues</a>
+            <a class="list-group-item" href="../module/output_writer.html#proc-write_convergence_history">write_convergence_history</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+
+    <div class="col-md-9" id='text'>
+      <p>Module for writing simulation results to files</p>
+<br>          <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='lsda_constants.html'>lsda_constants</a></li>
+                  <li class="list-inline-item"><a href='lsda_types.html'>lsda_types</a></li>
+                  <li class="list-inline-item"><a href='lsda_errors.html'>lsda_errors</a></li>
+                  <li class="list-inline-item"><a href='input_parser.html'>input_parser</a></li>
+                  <li class="list-inline-item"><a href='kohn_sham_cycle.html'>kohn_sham_cycle</a></li>
+              </ul>
+            </li>
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: module~~output_writer~~UsesGraph Pages: 1 -->
+<svg id="moduleoutput_writerUsesGraph" width="641pt" height="361pt"
+ viewBox="0.00 0.00 641.00 361.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~output_writer~~UsesGraph" class="graph" transform="scale(0.670565 0.670565) rotate(0) translate(4 534.63)">
+<title>module~~output_writer~~UsesGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-534.63 951.91,-534.63 951.91,4 -4,4"/>
+<!-- module~output_writer -->
+<g id="module~~output_writer~~UsesGraph_node1" class="node">
+<title>module~output_writer</title>
+<polygon fill="none" stroke="black" points="947.91,-278.77 874.14,-278.77 874.14,-256 947.91,-256 947.91,-278.77"/>
+<text xml:space="preserve" text-anchor="middle" x="911.02" y="-263.03" font-family="Helvetica,sans-Serif" font-size="10.50">output_writer</text>
+</g>
+<!-- module~input_parser -->
+<g id="module~~output_writer~~UsesGraph_node2" class="node">
+<title>module~input_parser</title>
+<g id="a_module~~output_writer~~UsesGraph_node2"><a xlink:href="../module/input_parser.html" xlink:title="input_parser">
+<polygon fill="#337ab7" stroke="#337ab7" points="838.14,-278.77 766.62,-278.77 766.62,-256 838.14,-256 838.14,-278.77"/>
+<text xml:space="preserve" text-anchor="middle" x="802.38" y="-263.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">input_parser</text>
+</a>
+</g>
+</g>
+<!-- module~output_writer&#45;&gt;module~input_parser -->
+<g id="module~~output_writer~~UsesGraph_edge1" class="edge">
+<title>module~output_writer&#45;&gt;module~input_parser</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M873.92,-267.38C866.12,-267.38 857.76,-267.38 849.63,-267.38"/>
+<polygon fill="#000000" stroke="#000000" points="849.88,-263.89 839.88,-267.39 849.88,-270.89 849.88,-263.89"/>
+</g>
+<!-- module~kohn_sham_cycle -->
+<g id="module~~output_writer~~UsesGraph_node3" class="node">
+<title>module~kohn_sham_cycle</title>
+<g id="a_module~~output_writer~~UsesGraph_node3"><a xlink:href="../module/kohn_sham_cycle.html" xlink:title="kohn_sham_cycle">
+<polygon fill="#337ab7" stroke="#337ab7" points="730.62,-278.77 633.6,-278.77 633.6,-256 730.62,-256 730.62,-278.77"/>
+<text xml:space="preserve" text-anchor="middle" x="682.11" y="-263.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">kohn_sham_cycle</text>
+</a>
+</g>
+</g>
+<!-- module~output_writer&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~output_writer~~UsesGraph_edge2" class="edge">
+<title>module~output_writer&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M801.38,-152.38C748.31,-142.51 709.27,-209.53 692.37,-245.56"/>
+<polygon fill="#000000" stroke="#000000" points="689.37,-243.69 688.47,-254.24 695.76,-246.56 689.37,-243.69"/>
+</g>
+<!-- module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_node4" class="node">
+<title>module~lsda_constants</title>
+<g id="a_module~~output_writer~~UsesGraph_node4"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
+<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-80.77 121.77,-80.77 121.77,-58 204.54,-58 204.54,-80.77"/>
+<text xml:space="preserve" text-anchor="middle" x="163.15" y="-65.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
+</a>
+</g>
+</g>
+<!-- module~output_writer&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge3" class="edge">
+<title>module~output_writer&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M681.11,-523.38C621.99,-533 606.09,-519.15 546.34,-523.38"/>
+</g>
+<!-- module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_node5" class="node">
+<title>module~lsda_errors</title>
+<g id="a_module~~output_writer~~UsesGraph_node5"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
+<polygon fill="#337ab7" stroke="#337ab7" points="306.06,-199.77 240.54,-199.77 240.54,-177 306.06,-177 306.06,-199.77"/>
+<text xml:space="preserve" text-anchor="middle" x="273.3" y="-184.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
+</a>
+</g>
+</g>
+<!-- module~output_writer&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge4" class="edge">
+<title>module~output_writer&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M801.38,-152.38C626.09,-119.78 578.64,-160.37 400.57,-169.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M904.98,-255.68C892.5,-228.68 857.25,-163.51 803.38,-152.38"/>
+</g>
+<!-- module~lsda_types -->
+<g id="module~~output_writer~~UsesGraph_node6" class="node">
+<title>module~lsda_types</title>
+<g id="a_module~~output_writer~~UsesGraph_node6"><a xlink:href="../module/lsda_types.html" xlink:title="lsda_types">
+<polygon fill="#337ab7" stroke="#337ab7" points="576.6,-495.77 514.08,-495.77 514.08,-473 576.6,-473 576.6,-495.77"/>
+<text xml:space="preserve" text-anchor="middle" x="545.34" y="-480.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_types</text>
+</a>
+</g>
+</g>
+<!-- module~output_writer&#45;&gt;module~lsda_types -->
+<g id="module~~output_writer~~UsesGraph_edge5" class="edge">
+<title>module~output_writer&#45;&gt;module~lsda_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M906.38,-279.17C889.69,-330.64 815.52,-532.78 683.11,-523.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M681.11,-523.38C662.97,-526.34 619.37,-512.25 586.64,-500.19"/>
+<polygon fill="#000000" stroke="#000000" points="588.02,-496.97 577.42,-496.74 585.56,-503.52 588.02,-496.97"/>
+</g>
+<!-- module~input_parser&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~output_writer~~UsesGraph_edge7" class="edge">
+<title>module~input_parser&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M766.22,-267.38C758.72,-267.38 750.6,-267.38 742.48,-267.38"/>
+<polygon fill="#000000" stroke="#000000" points="742.57,-263.89 732.57,-267.39 742.57,-270.89 742.57,-263.89"/>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge8" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M681.11,-484.38C627.38,-516.03 608.54,-518.97 546.34,-523.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-523.38C480.6,-527.91 463.06,-536.72 400.57,-523.38"/>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge9" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M774.24,-255.67C710.34,-229.23 544.9,-167.35 400.57,-169.38"/>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_types -->
+<g id="module~~output_writer~~UsesGraph_edge10" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M681.11,-484.38C653.29,-500.77 616.31,-499.49 588.12,-494.83"/>
+<polygon fill="#000000" stroke="#000000" points="588.98,-491.43 578.5,-493.03 587.69,-498.31 588.98,-491.43"/>
+</g>
+<!-- module~boundary_conditions -->
+<g id="module~~output_writer~~UsesGraph_node9" class="node">
+<title>module~boundary_conditions</title>
+<g id="a_module~~output_writer~~UsesGraph_node9"><a xlink:href="../module/boundary_conditions.html" xlink:title="boundary_conditions">
+<polygon fill="#337ab7" stroke="#337ab7" points="454.83,-495.77 344.31,-495.77 344.31,-473 454.83,-473 454.83,-495.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-480.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">boundary_conditions</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~boundary_conditions -->
+<g id="module~~output_writer~~UsesGraph_edge6" class="edge">
+<title>module~input_parser&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M799.26,-279.23C791.71,-317.46 762.22,-437.78 683.11,-484.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M681.11,-484.38C627.38,-516.03 604.57,-423.08 546.34,-445.38"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge17" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-266.38C447.83,-265.17 417.48,-285.16 342.06,-345.38 300.11,-378.88 324.13,-465.37 274.3,-445.38"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge18" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M633.39,-267.15C607.62,-266.99 575.23,-266.75 546.34,-266.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-266.38C519.19,-266.07 512.15,-258.79 493.08,-242.38 471.21,-223.58 479.98,-205.92 457.08,-188.38 436.04,-172.27 427.06,-169.01 400.57,-169.38"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_types -->
+<g id="module~~output_writer~~UsesGraph_edge19" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M679.01,-278.87C672.55,-311.26 650.14,-404.51 597.6,-459.38 594.45,-462.67 590.79,-465.58 586.89,-468.15"/>
+<polygon fill="#000000" stroke="#000000" points="585.16,-465.1 578.19,-473.08 588.62,-471.19 585.16,-465.1"/>
+</g>
+<!-- module~adaptive_mixing -->
+<g id="module~~output_writer~~UsesGraph_node8" class="node">
+<title>module~adaptive_mixing</title>
+<g id="a_module~~output_writer~~UsesGraph_node8"><a xlink:href="../module/adaptive_mixing.html" xlink:title="adaptive_mixing">
+<polygon fill="#337ab7" stroke="#337ab7" points="443.95,-376.77 355.18,-376.77 355.18,-354 443.95,-354 443.95,-376.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-361.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mixing</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing -->
+<g id="module~~output_writer~~UsesGraph_edge11" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-266.38C493.49,-265.75 500.16,-313.38 457.08,-340.38 452.26,-343.41 447.01,-346.25 441.72,-348.86"/>
+<polygon fill="#000000" stroke="#000000" points="440.56,-345.54 432.97,-352.93 443.51,-351.88 440.56,-345.54"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~boundary_conditions -->
+<g id="module~~output_writer~~UsesGraph_edge12" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M678.09,-279.2C670.04,-308.36 645.38,-384.39 597.6,-426.38 579.35,-442.43 569.03,-436.69 546.34,-445.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-445.38C518.99,-455.09 490.26,-463.4 465.18,-469.82"/>
+<polygon fill="#000000" stroke="#000000" points="464.62,-466.35 455.77,-472.17 466.33,-473.14 464.62,-466.35"/>
+</g>
+<!-- module~convergence_monitor -->
+<g id="module~~output_writer~~UsesGraph_node10" class="node">
+<title>module~convergence_monitor</title>
+<g id="a_module~~output_writer~~UsesGraph_node10"><a xlink:href="../module/convergence_monitor.html" xlink:title="convergence_monitor">
+<polygon fill="#337ab7" stroke="#337ab7" points="457.08,-219.77 342.06,-219.77 342.06,-197 457.08,-197 457.08,-219.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-204.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">convergence_monitor</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~convergence_monitor -->
+<g id="module~~output_writer~~UsesGraph_edge13" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~convergence_monitor</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-266.38C502.22,-265.86 496.22,-244.95 457.08,-229.38 452.76,-227.67 448.23,-225.91 443.71,-224.19"/>
+<polygon fill="#000000" stroke="#000000" points="445.25,-221.03 434.65,-220.77 442.78,-227.58 445.25,-221.03"/>
+</g>
+<!-- module~density_calculator -->
+<g id="module~~output_writer~~UsesGraph_node11" class="node">
+<title>module~density_calculator</title>
+<g id="a_module~~output_writer~~UsesGraph_node11"><a xlink:href="../module/density_calculator.html" xlink:title="density_calculator">
+<polygon fill="#337ab7" stroke="#337ab7" points="448.08,-141.77 351.06,-141.77 351.06,-119 448.08,-119 448.08,-141.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-126.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">density_calculator</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~density_calculator -->
+<g id="module~~output_writer~~UsesGraph_edge14" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~density_calculator</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M658.39,-255.58C618.11,-234.76 531.43,-190.39 457.08,-155.38 451.05,-152.55 444.62,-149.61 438.33,-146.8"/>
+<polygon fill="#000000" stroke="#000000" points="439.94,-143.68 429.38,-142.82 437.1,-150.08 439.94,-143.68"/>
+</g>
+<!-- module~hamiltonian_builder -->
+<g id="module~~output_writer~~UsesGraph_node12" class="node">
+<title>module~hamiltonian_builder</title>
+<g id="a_module~~output_writer~~UsesGraph_node12"><a xlink:href="../module/hamiltonian_builder.html" xlink:title="hamiltonian_builder">
+<polygon fill="#337ab7" stroke="#337ab7" points="597.6,-417.77 493.08,-417.77 493.08,-395 597.6,-395 597.6,-417.77"/>
+<text xml:space="preserve" text-anchor="middle" x="545.34" y="-402.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">hamiltonian_builder</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder -->
+<g id="module~~output_writer~~UsesGraph_edge15" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M669.62,-279.24C646.45,-303.14 593.9,-357.34 565.46,-386.66"/>
+<polygon fill="#000000" stroke="#000000" points="563.3,-383.86 558.85,-393.48 568.33,-388.73 563.3,-383.86"/>
+</g>
+<!-- module~lapack_wrapper -->
+<g id="module~~output_writer~~UsesGraph_node13" class="node">
+<title>module~lapack_wrapper</title>
+<g id="a_module~~output_writer~~UsesGraph_node13"><a xlink:href="../module/lapack_wrapper.html" xlink:title="lapack_wrapper">
+<polygon fill="#337ab7" stroke="#337ab7" points="443.2,-22.77 355.93,-22.77 355.93,0 443.2,0 443.2,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-7.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lapack_wrapper</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper -->
+<g id="module~~output_writer~~UsesGraph_edge16" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M679.2,-255.95C673.23,-223.78 651.98,-131.55 597.6,-81.38 558.04,-44.9 498.22,-27.19 454.88,-18.76"/>
+<polygon fill="#000000" stroke="#000000" points="455.63,-15.34 445.17,-16.98 454.37,-22.22 455.63,-15.34"/>
+</g>
+<!-- module~mixing_schemes -->
+<g id="module~~output_writer~~UsesGraph_node14" class="node">
+<title>module~mixing_schemes</title>
+<g id="a_module~~output_writer~~UsesGraph_node14"><a xlink:href="../module/mixing_schemes.html" xlink:title="mixing_schemes">
+<polygon fill="#337ab7" stroke="#337ab7" points="445.08,-260.77 354.06,-260.77 354.06,-238 445.08,-238 445.08,-260.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-245.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mixing_schemes</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~mixing_schemes -->
+<g id="module~~output_writer~~UsesGraph_edge20" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~mixing_schemes</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-266.38C515.33,-266.02 483.26,-262.53 456.78,-258.8"/>
+<polygon fill="#000000" stroke="#000000" points="457.31,-255.35 446.91,-257.36 456.3,-262.27 457.31,-255.35"/>
+</g>
+<!-- module~xc_lsda -->
+<g id="module~~output_writer~~UsesGraph_node15" class="node">
+<title>module~xc_lsda</title>
+<g id="a_module~~output_writer~~UsesGraph_node15"><a xlink:href="../module/xc_lsda.html" xlink:title="xc_lsda">
+<polygon fill="#337ab7" stroke="#337ab7" points="572.34,-112.77 518.34,-112.77 518.34,-90 572.34,-90 572.34,-112.77"/>
+<text xml:space="preserve" text-anchor="middle" x="545.34" y="-97.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">xc_lsda</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~xc_lsda -->
+<g id="module~~output_writer~~UsesGraph_edge21" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~xc_lsda</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M671.63,-255.71C648.97,-227.8 591.42,-156.92 562.89,-121.78"/>
+<polygon fill="#000000" stroke="#000000" points="565.96,-120 556.94,-114.44 560.53,-124.41 565.96,-120"/>
+</g>
+<!-- iso_fortran_env -->
+<g id="module~~output_writer~~UsesGraph_node7" class="node">
+<title>iso_fortran_env</title>
+<g id="a_module~~output_writer~~UsesGraph_node7"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-41.77 0,-41.77 0,-19 85.77,-19 85.77,-41.77"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-26.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- module~lsda_constants&#45;&gt;iso_fortran_env -->
+<g id="module~~output_writer~~UsesGraph_edge22" class="edge">
+<title>module~lsda_constants&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M126.35,-57.58C115,-53.84 102.29,-49.64 90.31,-45.69"/>
+<polygon fill="#000000" stroke="#000000" points="91.6,-42.43 81.01,-42.63 89.41,-49.08 91.6,-42.43"/>
+</g>
+<!-- module~lsda_errors&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge23" class="edge">
+<title>module~lsda_errors&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M261.54,-176.54C243.07,-156.22 205.17,-114.52 182.48,-89.55"/>
+<polygon fill="#000000" stroke="#000000" points="185.21,-87.35 175.89,-82.3 180.03,-92.06 185.21,-87.35"/>
+</g>
+<!-- module~lsda_types&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge24" class="edge">
+<title>module~lsda_types&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M513.84,-496.18C478.41,-509.27 422.07,-527.97 400.57,-523.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-523.38C372.66,-517.86 365.05,-517.56 342.06,-504.38 307.41,-484.53 311.36,-460.25 274.3,-445.38"/>
+</g>
+<!-- module~adaptive_mixing&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge25" class="edge">
+<title>module~adaptive_mixing&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.91,-377.21C354.43,-379.85 347.91,-382.91 342.06,-386.38 307.73,-406.78 311.4,-460.16 274.3,-445.38"/>
+</g>
+<!-- module~adaptive_mixing&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge26" class="edge">
+<title>module~adaptive_mixing&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M387.01,-353.9C375.04,-341.7 356.15,-321.57 342.06,-302.38 319.7,-271.95 298.17,-233.72 285.6,-210.17"/>
+<polygon fill="#000000" stroke="#000000" points="288.79,-208.73 281.03,-201.52 282.6,-212 288.79,-208.73"/>
+</g>
+<!-- module~boundary_conditions&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge27" class="edge">
+<title>module~boundary_conditions&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M355.17,-472.5C331.04,-465.47 300.66,-455.89 274.3,-445.38"/>
+</g>
+<!-- module~boundary_conditions&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge28" class="edge">
+<title>module~boundary_conditions&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M383.47,-472.6C370.68,-461.86 352.77,-444.88 342.06,-426.38 300.43,-354.49 283.03,-255.42 277.01,-211.24"/>
+<polygon fill="#000000" stroke="#000000" points="280.51,-211.05 275.77,-201.58 273.57,-211.94 280.51,-211.05"/>
+</g>
+<!-- module~convergence_monitor&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge29" class="edge">
+<title>module~convergence_monitor&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-445.38C204.31,-418.3 174.15,-170.37 166.31,-92.6"/>
+<polygon fill="#000000" stroke="#000000" points="169.81,-92.38 165.36,-82.77 162.84,-93.06 169.81,-92.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M354.13,-220.23C349.67,-222.73 345.52,-225.74 342.06,-229.38 272.78,-302.35 367.77,-482.62 274.3,-445.38"/>
+</g>
+<!-- module~convergence_monitor&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge30" class="edge">
+<title>module~convergence_monitor&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M341.89,-199.26C333.72,-197.95 325.42,-196.61 317.57,-195.35"/>
+<polygon fill="#000000" stroke="#000000" points="318.37,-191.93 307.94,-193.8 317.25,-198.84 318.37,-191.93"/>
+</g>
+<!-- module~density_calculator&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge31" class="edge">
+<title>module~density_calculator&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M365.24,-118.53C331.67,-106.73 283.55,-90.24 274.3,-89.38"/>
+</g>
+<!-- module~density_calculator&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge32" class="edge">
+<title>module~density_calculator&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M371.17,-142.26C361.9,-146.35 351.5,-151 342.06,-155.38 331.02,-160.51 319.06,-166.27 308.31,-171.52"/>
+<polygon fill="#000000" stroke="#000000" points="306.83,-168.35 299.39,-175.9 309.91,-174.63 306.83,-168.35"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge35" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M519.52,-418.12C470.73,-439.46 359.67,-479.4 274.3,-445.38"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge36" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M527.7,-394.56C510.21,-382.17 481.84,-362.22 457.08,-345.38 406.41,-310.94 387.76,-310.2 342.06,-269.38 321.6,-251.11 301.91,-226.53 289.08,-209.25"/>
+<polygon fill="#000000" stroke="#000000" points="291.97,-207.27 283.25,-201.25 286.31,-211.4 291.97,-207.27"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~boundary_conditions -->
+<g id="module~~output_writer~~UsesGraph_edge34" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M517.44,-418.21C509.41,-422.08 500.73,-426.62 493.08,-431.38 475.88,-442.11 474.48,-448.98 457.08,-459.38 452.09,-462.37 446.67,-465.21 441.24,-467.84"/>
+<polygon fill="#000000" stroke="#000000" points="439.88,-464.61 432.25,-471.97 442.8,-470.97 439.88,-464.61"/>
+</g>
+<!-- ieee_arithmetic -->
+<g id="module~~output_writer~~UsesGraph_node16" class="node">
+<title>ieee_arithmetic</title>
+<g id="a_module~~output_writer~~UsesGraph_node16"><a xlink:href="http://fortranwiki.org/fortran/show/ieee_arithmetic" xlink:title="ieee_arithmetic">
+<polygon fill="#337ab7" stroke="#337ab7" points="441.7,-417.77 357.43,-417.77 357.43,-395 441.7,-395 441.7,-417.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-402.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ieee_arithmetic</text>
+</a>
+</g>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;ieee_arithmetic -->
+<g id="module~~output_writer~~UsesGraph_edge33" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M492.84,-406.38C479.88,-406.38 465.95,-406.38 452.95,-406.38"/>
+<polygon fill="#000000" stroke="#000000" points="453.32,-402.89 443.32,-406.39 453.32,-409.89 453.32,-402.89"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge37" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M355.47,-12.49C323.22,-14.29 278.34,-18.86 240.54,-30.38 223.86,-35.47 206.45,-44.07 192.47,-51.9"/>
+<polygon fill="#000000" stroke="#000000" points="190.73,-48.86 183.83,-56.91 194.24,-54.92 190.73,-48.86"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge38" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M361.14,-23.26C354.2,-26.69 347.45,-31.01 342.06,-36.38 332.24,-46.18 299.02,-126.82 283.04,-166.5"/>
+<polygon fill="#000000" stroke="#000000" points="279.88,-164.95 279.41,-175.54 286.38,-167.56 279.88,-164.95"/>
+</g>
+<!-- module~mixing_schemes&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge39" class="edge">
+<title>module~mixing_schemes&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M386.3,-261.14C374.11,-273.24 355.36,-293 342.06,-312.38 304.54,-367.09 335.93,-469.94 274.3,-445.38"/>
+</g>
+<!-- module~mixing_schemes&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge40" class="edge">
+<title>module~mixing_schemes&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M363.8,-237.57C356.52,-234.79 348.96,-231.67 342.06,-228.38 328.38,-221.87 313.83,-213.49 301.73,-206.08"/>
+<polygon fill="#000000" stroke="#000000" points="303.85,-203.28 293.51,-200.95 300.14,-209.22 303.85,-203.28"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge41" class="edge">
+<title>module~xc_lsda&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-89.38C253.9,-87.68 233.95,-84.4 216.26,-80.99"/>
+<polygon fill="#000000" stroke="#000000" points="216.97,-77.56 206.48,-79.04 215.6,-84.43 216.97,-77.56"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-50.38C340.93,-45.09 331.94,-94.73 274.3,-89.38"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge42" class="edge">
+<title>module~xc_lsda&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-169.38C371.47,-169.77 341.42,-174.25 317.66,-178.76"/>
+<polygon fill="#000000" stroke="#000000" points="317.16,-175.3 308.03,-180.67 318.51,-182.16 317.16,-175.3"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M525.8,-113.14C508.49,-123.8 481.69,-139.45 457.08,-150.38 432.86,-161.14 427.06,-169.01 400.57,-169.38"/>
+</g>
+<!-- module~spline2d -->
+<g id="module~~output_writer~~UsesGraph_node17" class="node">
+<title>module~spline2d</title>
+<g id="a_module~~output_writer~~UsesGraph_node17"><a xlink:href="../module/spline2d.html" xlink:title="spline2d">
+<polygon fill="#337ab7" stroke="#337ab7" points="300.3,-61.77 246.3,-61.77 246.3,-39 300.3,-39 300.3,-61.77"/>
+<text xml:space="preserve" text-anchor="middle" x="273.3" y="-46.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d</text>
+</a>
+</g>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~spline2d -->
+<g id="module~~output_writer~~UsesGraph_edge43" class="edge">
+<title>module~xc_lsda&#45;&gt;module~spline2d</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M522.23,-89.62C494.67,-75.89 445.67,-54.53 400.57,-50.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-50.38C369.58,-47.72 336.63,-47.86 311.95,-48.6"/>
+<polygon fill="#000000" stroke="#000000" points="311.93,-45.1 302.06,-48.94 312.18,-52.09 311.93,-45.1"/>
+</g>
+<!-- module~table_io -->
+<g id="module~~output_writer~~UsesGraph_node18" class="node">
+<title>module~table_io</title>
+<g id="a_module~~output_writer~~UsesGraph_node18"><a xlink:href="../module/table_io.html" xlink:title="table_io">
+<polygon fill="#337ab7" stroke="#337ab7" points="426.57,-100.77 372.57,-100.77 372.57,-78 426.57,-78 426.57,-100.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-85.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
+</a>
+</g>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~table_io -->
+<g id="module~~output_writer~~UsesGraph_edge44" class="edge">
+<title>module~xc_lsda&#45;&gt;module~table_io</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M517.97,-99.18C495.58,-97.31 463.17,-94.61 438.08,-92.52"/>
+<polygon fill="#000000" stroke="#000000" points="438.54,-89.04 428.28,-91.7 437.95,-96.02 438.54,-89.04"/>
+</g>
+<!-- module~spline2d&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge45" class="edge">
+<title>module~spline2d&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M245.84,-55.03C236.75,-56.63 226.24,-58.48 215.84,-60.3"/>
+<polygon fill="#000000" stroke="#000000" points="215.41,-56.83 206.16,-62 216.62,-63.72 215.41,-56.83"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_constants -->
+<g id="module~~output_writer~~UsesGraph_edge47" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M372.32,-90.79C347.13,-91.8 308.03,-92.51 274.3,-89.38"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_errors -->
+<g id="module~~output_writer~~UsesGraph_edge48" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M372.21,-96.15C362.22,-99.47 351.09,-104.13 342.06,-110.38 319.87,-125.75 300.36,-150 288.04,-167.38"/>
+<polygon fill="#000000" stroke="#000000" points="285.27,-165.23 282.51,-175.45 291.05,-169.18 285.27,-165.23"/>
+</g>
+<!-- module~table_io&#45;&gt;iso_fortran_env -->
+<g id="module~~output_writer~~UsesGraph_edge46" class="edge">
+<title>module~table_io&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M372.29,-79.94C362.42,-75.85 351.35,-70.56 342.06,-64.38 323.73,-52.2 326.51,-38.52 306.06,-30.38 237.94,-3.3 151.77,-10.3 97.22,-19.21"/>
+<polygon fill="#000000" stroke="#000000" points="96.83,-15.72 87.57,-20.87 98.02,-22.62 96.83,-15.72"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panmoduleoutput_writerUsesGraph = svgPanZoom('#moduleoutput_writerUsesGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsesGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsesGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+      
+      <br>
+
+
+
+
+
+
+
+
+        <section>
+          <h2>Subroutines</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-write_results"></span> <h3>public  subroutine <a href='../proc/write_results.html'>write_results</a>(results, sys_params, inputs, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Write all simulation results</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-results"></span>
+              type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>results</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sys_params"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sys_params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-inputs"></span>
+              type(<a href='../type/input_params_t.html'>input_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>inputs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-write_summary"></span> <h3>public  subroutine <a href='../proc/write_summary.html'>write_summary</a>(results, sys_params, inputs, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Write summary to stdout and file</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-results~2"></span>
+              type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>results</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sys_params~2"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sys_params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-inputs~2"></span>
+              type(<a href='../type/input_params_t.html'>input_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>inputs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~2"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-write_density_profile"></span> <h3>public  subroutine <a href='../proc/write_density_profile.html'>write_density_profile</a>(results, sys_params, prefix, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Write density profile to file</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-results~3"></span>
+              type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>results</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sys_params~3"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sys_params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-prefix~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>prefix</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~3"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-write_eigenvalues"></span> <h3>public  subroutine <a href='../proc/write_eigenvalues.html'>write_eigenvalues</a>(results, sys_params, prefix, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Write eigenvalues to file</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-results~4"></span>
+              type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>results</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sys_params~4"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sys_params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-prefix~3"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>prefix</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~4"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-write_convergence_history"></span> <h3>public  subroutine <a href='../proc/write_convergence_history.html'>write_convergence_history</a>(results, prefix, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Write convergence history to file</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-results~5"></span>
+              type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>results</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-prefix~4"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>prefix</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~5"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+
+
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

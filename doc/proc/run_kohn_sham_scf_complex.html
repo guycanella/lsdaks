@@ -1,0 +1,1313 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>run_kohn_sham_scf_complex &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>run_kohn_sham_scf_complex
+      <small>Subroutine</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 4.5% of total for procedures.">178 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/kohn_sham_cycle.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/kohn_sham_cycle.f90.html'>kohn_sham_cycle.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/kohn_sham_cycle.html'>kohn_sham_cycle</a></li>
+            <li class="breadcrumb-item active" aria-current="page">run_kohn_sham_scf_complex</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/run_kohn_sham_scf_complex.html#src">run_kohn_sham_scf_complex</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>public  subroutine run_kohn_sham_scf_complex(params, scf_params, V_ext, xc_func, results, ierr)  
+</h2>
+    
+
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-params~3"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>params</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-scf_params~3"></span>
+              type(<a href='../type/scf_params_t.html'>scf_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>scf_params</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_ext~4"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>V_ext</strong>(:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc_func~3"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc_func</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-results~7"></span>
+              type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>results</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~9"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <br>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Calls</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: proc~~run_kohn_sham_scf_complex~~CallsGraph Pages: 1 -->
+<svg id="procrun_kohn_sham_scf_complexCallsGraph" width="641pt" height="386pt"
+ viewBox="0.00 0.00 641.00 386.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph" class="graph" transform="scale(0.64658 0.64658) rotate(0) translate(4 592.77)">
+<title>proc~~run_kohn_sham_scf_complex~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-592.77 987.37,-592.77 987.37,4 -4,4"/>
+<!-- proc~run_kohn_sham_scf_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node1" class="node">
+<title>proc~run_kohn_sham_scf_complex</title>
+<polygon fill="none" stroke="black" points="154.02,-284.77 0,-284.77 0,-262 154.02,-262 154.02,-284.77"/>
+<text xml:space="preserve" text-anchor="middle" x="77.01" y="-269.03" font-family="Helvetica,sans-Serif" font-size="10.50">run_kohn_sham_scf_complex</text>
+</g>
+<!-- interface~compute_density_spin -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node2" class="node">
+<title>interface~compute_density_spin</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node2"><a xlink:href="../interface/compute_density_spin.html" xlink:title="compute_density_spin">
+<polygon fill="#a7506f" stroke="#a7506f" points="336.16,-547.77 218.14,-547.77 218.14,-525 336.16,-525 336.16,-547.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-532.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_density_spin</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;interface~compute_density_spin -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge1" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;interface~compute_density_spin</title>
+<path fill="none" stroke="#000000" d="M79.79,-285.15C86.39,-324.44 113.14,-452.16 190.02,-515.38 195.12,-519.58 200.94,-522.96 207.08,-525.68"/>
+<polygon fill="#000000" stroke="#000000" points="205.65,-528.88 216.24,-529.13 208.11,-522.33 205.65,-528.88"/>
+</g>
+<!-- proc~adaptive_mix_get_alpha -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node3" class="node">
+<title>proc~adaptive_mix_get_alpha</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node3"><a xlink:href="../proc/adaptive_mix_get_alpha.html" xlink:title="adaptive_mix_get_alpha">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="341.04,-506.77 213.27,-506.77 213.27,-484 341.04,-484 341.04,-506.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-491.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mix_get_alpha</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~adaptive_mix_get_alpha -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge2" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~adaptive_mix_get_alpha</title>
+<path fill="none" stroke="#000000" d="M80.96,-285.1C90.35,-319.89 122.96,-423.32 190.02,-474.38 193.98,-477.4 198.32,-479.99 202.88,-482.22"/>
+<polygon fill="#000000" stroke="#000000" points="201.17,-485.3 211.74,-485.94 203.88,-478.84 201.17,-485.3"/>
+</g>
+<!-- proc~adaptive_mix_init -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node4" class="node">
+<title>proc~adaptive_mix_init</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node4"><a xlink:href="../proc/adaptive_mix_init.html" xlink:title="adaptive_mix_init">
+<polygon fill="#d9534f" stroke="#d9534f" points="324.16,-465.77 230.14,-465.77 230.14,-443 324.16,-443 324.16,-465.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-450.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mix_init</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~adaptive_mix_init -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge3" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~adaptive_mix_init</title>
+<path fill="none" stroke="#000000" d="M82.74,-285.23C95.33,-315.16 132.63,-394.16 190.02,-433.38 198.61,-439.25 208.66,-443.49 218.81,-446.54"/>
+<polygon fill="#000000" stroke="#000000" points="217.77,-449.89 228.33,-449.03 219.54,-443.11 217.77,-449.89"/>
+</g>
+<!-- proc~adaptive_mix_update -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node5" class="node">
+<title>proc~adaptive_mix_update</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node5"><a xlink:href="../proc/adaptive_mix_update.html" xlink:title="adaptive_mix_update">
+<polygon fill="#d9534f" stroke="#d9534f" points="333.91,-424.77 220.39,-424.77 220.39,-402 333.91,-402 333.91,-424.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-409.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mix_update</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~adaptive_mix_update -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge4" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~adaptive_mix_update</title>
+<path fill="none" stroke="#000000" d="M85.42,-284.95C101.43,-308.95 141.72,-364.26 190.02,-392.38 196.04,-395.89 202.63,-398.82 209.39,-401.25"/>
+<polygon fill="#000000" stroke="#000000" points="208.08,-404.51 218.67,-404.23 210.22,-397.84 208.08,-404.51"/>
+</g>
+<!-- proc~build_hamiltonian_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node6" class="node">
+<title>proc~build_hamiltonian_complex</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node6"><a xlink:href="../proc/build_hamiltonian_complex.html" xlink:title="build_hamiltonian_complex">
+<polygon fill="#d9534f" stroke="#d9534f" points="347.41,-383.77 206.89,-383.77 206.89,-361 347.41,-361 347.41,-383.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-368.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">build_hamiltonian_complex</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~build_hamiltonian_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge5" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~build_hamiltonian_complex</title>
+<path fill="none" stroke="#000000" d="M92.73,-285.23C113.37,-301.32 152.58,-330.07 190.02,-347.38 197.97,-351.06 206.58,-354.33 215.19,-357.19"/>
+<polygon fill="#000000" stroke="#000000" points="214,-360.48 224.59,-360.14 216.1,-353.81 214,-360.48"/>
+</g>
+<!-- proc~check_scf_convergence -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node7" class="node">
+<title>proc~check_scf_convergence</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node7"><a xlink:href="../proc/check_scf_convergence.html" xlink:title="check_scf_convergence">
+<polygon fill="#d9534f" stroke="#d9534f" points="340.29,-305.77 214.02,-305.77 214.02,-283 340.29,-283 340.29,-305.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-290.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">check_scf_convergence</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~check_scf_convergence -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge6" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~check_scf_convergence</title>
+<path fill="none" stroke="#000000" d="M154.33,-281.47C170.13,-283.15 186.73,-284.91 202.43,-286.57"/>
+<polygon fill="#000000" stroke="#000000" points="201.85,-290.03 212.17,-287.6 202.59,-283.07 201.85,-290.03"/>
+</g>
+<!-- proc~compute_density_difference -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node8" class="node">
+<title>proc~compute_density_difference</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node8"><a xlink:href="../proc/compute_density_difference.html" xlink:title="compute_density_difference">
+<polygon fill="#d9534f" stroke="#d9534f" points="350.04,-264.77 204.27,-264.77 204.27,-242 350.04,-242 350.04,-264.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-249.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_density_difference</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~compute_density_difference -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge7" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~compute_density_difference</title>
+<path fill="none" stroke="#000000" d="M154.33,-265.68C166.9,-264.41 179.98,-263.09 192.7,-261.81"/>
+<polygon fill="#000000" stroke="#000000" points="192.67,-265.33 202.27,-260.84 191.97,-258.36 192.67,-265.33"/>
+</g>
+<!-- proc~compute_density_norm -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node9" class="node">
+<title>proc~compute_density_norm</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node9"><a xlink:href="../proc/compute_density_norm.html" xlink:title="compute_density_norm">
+<polygon fill="#d9534f" stroke="#d9534f" points="555.81,-301.77 432.54,-301.77 432.54,-279 555.81,-279 555.81,-301.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-286.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_density_norm</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~compute_density_norm -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge8" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~compute_density_norm</title>
+<path fill="none" stroke="#000000" d="M102.67,-285.27C124.91,-295.29 158.82,-308.85 190.02,-314.38 272.61,-329.02 369.43,-316.25 431.03,-304.45"/>
+<polygon fill="#000000" stroke="#000000" points="431.49,-307.93 440.62,-302.56 430.13,-301.06 431.49,-307.93"/>
+</g>
+<!-- proc~compute_total_energy -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node10" class="node">
+<title>proc~compute_total_energy</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node10"><a xlink:href="../proc/compute_total_energy.html" xlink:title="compute_total_energy">
+<polygon fill="#d9534f" stroke="#d9534f" points="336.16,-223.77 218.14,-223.77 218.14,-201 336.16,-201 336.16,-223.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-208.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_total_energy</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~compute_total_energy -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge9" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~compute_total_energy</title>
+<path fill="none" stroke="#000000" d="M108.15,-261.66C130.54,-253.19 161.93,-241.8 190.02,-233.38 197.44,-231.16 205.26,-229 213.05,-226.97"/>
+<polygon fill="#000000" stroke="#000000" points="213.7,-230.41 222.53,-224.55 211.97,-223.63 213.7,-230.41"/>
+</g>
+<!-- proc~diagonalize_hermitian_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node11" class="node">
+<title>proc~diagonalize_hermitian_complex</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node11"><a xlink:href="../proc/diagonalize_hermitian_complex.html" xlink:title="diagonalize_hermitian_complex">
+<polygon fill="#d9534f" stroke="#d9534f" points="357.91,-145.77 196.39,-145.77 196.39,-123 357.91,-123 357.91,-145.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-130.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">diagonalize_hermitian_complex</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~diagonalize_hermitian_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge10" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~diagonalize_hermitian_complex</title>
+<path fill="none" stroke="#000000" d="M86.15,-261.78C102.89,-238.75 143.57,-187.13 190.02,-159.38 195.99,-155.82 202.49,-152.74 209.16,-150.08"/>
+<polygon fill="#000000" stroke="#000000" points="210.1,-153.47 218.31,-146.76 207.71,-146.89 210.1,-153.47"/>
+</g>
+<!-- proc~get_vxc -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node12" class="node">
+<title>proc~get_vxc</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node12"><a xlink:href="../proc/get_vxc.html" xlink:title="get_vxc">
+<polygon fill="#d9534f" stroke="#d9534f" points="521.17,-185.77 467.17,-185.77 467.17,-163 521.17,-163 521.17,-185.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-170.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">get_vxc</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~get_vxc -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge11" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~get_vxc</title>
+<path fill="none" stroke="#000000" d="M89.43,-261.59C108.33,-242.96 148.21,-207.3 190.02,-192.38 281.08,-159.9 397.22,-164.72 455.8,-170.06"/>
+<polygon fill="#000000" stroke="#000000" points="455.26,-173.53 465.56,-171.02 455.94,-166.56 455.26,-173.53"/>
+</g>
+<!-- proc~init_convergence_history -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node13" class="node">
+<title>proc~init_convergence_history</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node13"><a xlink:href="../proc/init_convergence_history.html" xlink:title="init_convergence_history">
+<polygon fill="#d9534f" stroke="#d9534f" points="342.16,-104.77 212.14,-104.77 212.14,-82 342.16,-82 342.16,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-89.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">init_convergence_history</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~init_convergence_history -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge12" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~init_convergence_history</title>
+<path fill="none" stroke="#000000" d="M82.76,-261.61C95.4,-231.87 132.82,-153.36 190.02,-114.38 193.64,-111.92 197.51,-109.74 201.55,-107.82"/>
+<polygon fill="#000000" stroke="#000000" points="202.55,-111.2 210.44,-104.13 199.86,-104.73 202.55,-111.2"/>
+</g>
+<!-- proc~update_convergence_history -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node14" class="node">
+<title>proc~update_convergence_history</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node14"><a xlink:href="../proc/update_convergence_history.html" xlink:title="update_convergence_history">
+<polygon fill="#d9534f" stroke="#d9534f" points="351.91,-63.77 202.39,-63.77 202.39,-41 351.91,-41 351.91,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-48.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">update_convergence_history</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~update_convergence_history -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge13" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~update_convergence_history</title>
+<path fill="none" stroke="#000000" d="M80.98,-261.73C90.42,-227.11 123.16,-124.18 190.02,-73.38 191.81,-72.02 193.68,-70.75 195.61,-69.56"/>
+<polygon fill="#000000" stroke="#000000" points="197.15,-72.7 204.37,-64.95 193.89,-66.51 197.15,-72.7"/>
+</g>
+<!-- proc~validate_kohn_sham_cycle_inputs -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node15" class="node">
+<title>proc~validate_kohn_sham_cycle_inputs</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node15"><a xlink:href="../proc/validate_kohn_sham_cycle_inputs.html" xlink:title="validate_kohn_sham_cycle_inputs">
+<polygon fill="#d9534f" stroke="#d9534f" points="364.29,-22.77 190.02,-22.77 190.02,0 364.29,0 364.29,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="277.15" y="-7.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">validate_kohn_sham_cycle_inputs</text>
+</a>
+</g>
+</g>
+<!-- proc~run_kohn_sham_scf_complex&#45;&gt;proc~validate_kohn_sham_cycle_inputs -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge14" class="edge">
+<title>proc~run_kohn_sham_scf_complex&#45;&gt;proc~validate_kohn_sham_cycle_inputs</title>
+<path fill="none" stroke="#000000" d="M79.81,-261.66C86.46,-222.53 113.35,-95.33 190.02,-32.38 191.53,-31.14 193.11,-29.97 194.74,-28.87"/>
+<polygon fill="#000000" stroke="#000000" points="196.3,-32.01 203.25,-24.01 192.83,-25.93 196.3,-32.01"/>
+</g>
+<!-- proc~compute_density_spin_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node19" class="node">
+<title>proc~compute_density_spin_complex</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node19"><a xlink:href="../proc/compute_density_spin_complex.html" xlink:title="compute_density_spin_complex">
+<polygon fill="#d9534f" stroke="#d9534f" points="576.06,-547.77 412.29,-547.77 412.29,-525 576.06,-525 576.06,-547.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-532.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_density_spin_complex</text>
+</a>
+</g>
+</g>
+<!-- interface~compute_density_spin&#45;&gt;proc~compute_density_spin_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge15" class="edge">
+<title>interface~compute_density_spin&#45;&gt;proc~compute_density_spin_complex</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M336.63,-536.38C356.43,-536.38 379.06,-536.38 400.84,-536.38"/>
+<polygon fill="#000000" stroke="#000000" points="400.62,-539.89 410.62,-536.39 400.62,-532.89 400.62,-539.89"/>
+</g>
+<!-- proc~compute_density_spin_real -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node20" class="node">
+<title>proc~compute_density_spin_real</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node20"><a xlink:href="../proc/compute_density_spin_real.html" xlink:title="compute_density_spin_real">
+<polygon fill="#d9534f" stroke="#d9534f" points="565.18,-588.77 423.16,-588.77 423.16,-566 565.18,-566 565.18,-588.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-573.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_density_spin_real</text>
+</a>
+</g>
+</g>
+<!-- interface~compute_density_spin&#45;&gt;proc~compute_density_spin_real -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge16" class="edge">
+<title>interface~compute_density_spin&#45;&gt;proc~compute_density_spin_real</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M336.63,-547.53C362.31,-552.43 392.75,-558.24 419.93,-563.42"/>
+<polygon fill="#000000" stroke="#000000" points="418.99,-566.8 429.47,-565.24 420.3,-559.93 418.99,-566.8"/>
+</g>
+<!-- proc~dw_mix -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node23" class="node">
+<title>proc~dw_mix</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node23"><a xlink:href="../proc/dw_mix.html" xlink:title="dw_mix">
+<polygon fill="#d9534f" stroke="#d9534f" points="521.17,-506.77 467.17,-506.77 467.17,-484 521.17,-484 521.17,-506.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-491.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dw_mix</text>
+</a>
+</g>
+</g>
+<!-- proc~adaptive_mix_update&#45;&gt;proc~dw_mix -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge17" class="edge">
+<title>proc~adaptive_mix_update&#45;&gt;proc~dw_mix</title>
+<path fill="none" stroke="#000000" d="M334.3,-421.91C344.71,-424.9 355.17,-428.94 364.29,-434.38 384.82,-446.65 379.66,-462.29 400.29,-474.38 416.94,-484.15 437.72,-489.37 455.4,-492.17"/>
+<polygon fill="#000000" stroke="#000000" points="454.9,-495.63 465.28,-493.51 455.84,-488.69 454.9,-495.63"/>
+</g>
+<!-- proc~reset_counts -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node25" class="node">
+<title>proc~reset_counts</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node25"><a xlink:href="../proc/reset_counts.html" xlink:title="reset_counts">
+<polygon fill="#d9534f" stroke="#d9534f" points="530.68,-465.77 457.66,-465.77 457.66,-443 530.68,-443 530.68,-465.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-450.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">reset_counts</text>
+</a>
+</g>
+</g>
+<!-- proc~adaptive_mix_update&#45;&gt;proc~reset_counts -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge18" class="edge">
+<title>proc~adaptive_mix_update&#45;&gt;proc~reset_counts</title>
+<path fill="none" stroke="#000000" d="M334.37,-424.1C369.1,-430.73 413.15,-439.13 446.05,-445.4"/>
+<polygon fill="#000000" stroke="#000000" points="445.22,-448.8 455.69,-447.24 446.53,-441.93 445.22,-448.8"/>
+</g>
+<!-- proc~up_mix -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node27" class="node">
+<title>proc~up_mix</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node27"><a xlink:href="../proc/up_mix.html" xlink:title="up_mix">
+<polygon fill="#d9534f" stroke="#d9534f" points="521.17,-424.77 467.17,-424.77 467.17,-402 521.17,-402 521.17,-424.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-409.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">up_mix</text>
+</a>
+</g>
+</g>
+<!-- proc~adaptive_mix_update&#45;&gt;proc~up_mix -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge19" class="edge">
+<title>proc~adaptive_mix_update&#45;&gt;proc~up_mix</title>
+<path fill="none" stroke="#000000" d="M334.37,-413.38C372.66,-413.38 422.29,-413.38 455.79,-413.38"/>
+<polygon fill="#000000" stroke="#000000" points="455.41,-416.89 465.41,-413.39 455.41,-409.89 455.41,-416.89"/>
+</g>
+<!-- proc~apply_boundary_conditions_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node17" class="node">
+<title>proc~apply_boundary_conditions_complex</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node17"><a xlink:href="../proc/apply_boundary_conditions_complex.html" xlink:title="apply_boundary_conditions_complex">
+<polygon fill="#d9534f" stroke="#d9534f" points="588.06,-342.77 400.29,-342.77 400.29,-320 588.06,-320 588.06,-342.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-327.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">apply_boundary_conditions_complex</text>
+</a>
+</g>
+</g>
+<!-- proc~build_hamiltonian_complex&#45;&gt;proc~apply_boundary_conditions_complex -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge20" class="edge">
+<title>proc~build_hamiltonian_complex&#45;&gt;proc~apply_boundary_conditions_complex</title>
+<path fill="none" stroke="#000000" d="M340.35,-360.53C365.2,-355.79 394,-350.3 419.86,-345.36"/>
+<polygon fill="#000000" stroke="#000000" points="420.47,-348.81 429.64,-343.5 419.16,-341.94 420.47,-348.81"/>
+</g>
+<!-- proc~validate_hamiltonian_inputs -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node28" class="node">
+<title>proc~validate_hamiltonian_inputs</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node28"><a xlink:href="../proc/validate_hamiltonian_inputs.html" xlink:title="validate_hamiltonian_inputs">
+<polygon fill="#d9534f" stroke="#d9534f" points="565.93,-383.77 422.41,-383.77 422.41,-361 565.93,-361 565.93,-383.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-368.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">validate_hamiltonian_inputs</text>
+</a>
+</g>
+</g>
+<!-- proc~build_hamiltonian_complex&#45;&gt;proc~validate_hamiltonian_inputs -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge21" class="edge">
+<title>proc~build_hamiltonian_complex&#45;&gt;proc~validate_hamiltonian_inputs</title>
+<path fill="none" stroke="#000000" d="M347.67,-372.38C367.75,-372.38 389.87,-372.38 410.66,-372.38"/>
+<polygon fill="#000000" stroke="#000000" points="410.54,-375.89 420.54,-372.39 410.54,-368.89 410.54,-375.89"/>
+</g>
+<!-- proc~check_scf_convergence&#45;&gt;proc~compute_density_norm -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge22" class="edge">
+<title>proc~check_scf_convergence&#45;&gt;proc~compute_density_norm</title>
+<path fill="none" stroke="#000000" d="M340.64,-293.22C365.8,-292.75 394.99,-292.21 421.05,-291.73"/>
+<polygon fill="#000000" stroke="#000000" points="420.94,-295.23 430.88,-291.54 420.81,-288.23 420.94,-295.23"/>
+</g>
+<!-- proc~compute_total_energy&#45;&gt;proc~get_vxc -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge24" class="edge">
+<title>proc~compute_total_energy&#45;&gt;proc~get_vxc</title>
+<path fill="none" stroke="#000000" d="M336.63,-202.05C374.67,-195.33 423.14,-186.76 456,-180.96"/>
+<polygon fill="#000000" stroke="#000000" points="456.2,-184.47 465.44,-179.29 454.98,-177.58 456.2,-184.47"/>
+</g>
+<!-- proc~get_exc -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node24" class="node">
+<title>proc~get_exc</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node24"><a xlink:href="../proc/get_exc.html" xlink:title="get_exc">
+<polygon fill="#d9534f" stroke="#d9534f" points="521.17,-226.77 467.17,-226.77 467.17,-204 521.17,-204 521.17,-226.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-211.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">get_exc</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_total_energy&#45;&gt;proc~get_exc -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge23" class="edge">
+<title>proc~compute_total_energy&#45;&gt;proc~get_exc</title>
+<path fill="none" stroke="#000000" d="M336.63,-213.2C374.51,-213.73 422.72,-214.4 455.57,-214.86"/>
+<polygon fill="#000000" stroke="#000000" points="455.36,-218.36 465.41,-215 455.46,-211.36 455.36,-218.36"/>
+</g>
+<!-- interface~zheevd -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node16" class="node">
+<title>interface~zheevd</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node16"><a xlink:href="../interface/zheevd.html" xlink:title="ZHEEVD">
+<polygon fill="#a7506f" stroke="#a7506f" points="521.17,-144.77 467.17,-144.77 467.17,-122 521.17,-122 521.17,-144.77"/>
+<text xml:space="preserve" text-anchor="middle" x="494.17" y="-129.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ZHEEVD</text>
+</a>
+</g>
+</g>
+<!-- proc~diagonalize_hermitian_complex&#45;&gt;interface~zheevd -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge25" class="edge">
+<title>proc~diagonalize_hermitian_complex&#45;&gt;interface~zheevd</title>
+<path fill="none" stroke="#000000" d="M358.22,-134.01C391.61,-133.86 428.78,-133.68 455.64,-133.56"/>
+<polygon fill="#000000" stroke="#000000" points="455.35,-137.06 465.33,-133.51 455.32,-130.06 455.35,-137.06"/>
+</g>
+<!-- proc~apply_symmetry_transform -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node18" class="node">
+<title>proc~apply_symmetry_transform</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node18"><a xlink:href="../proc/apply_symmetry_transform.html" xlink:title="apply_symmetry_transform">
+<polygon fill="#d9534f" stroke="#d9534f" points="765.33,-226.77 624.06,-226.77 624.06,-204 765.33,-204 765.33,-226.77"/>
+<text xml:space="preserve" text-anchor="middle" x="694.69" y="-211.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">apply_symmetry_transform</text>
+</a>
+</g>
+</g>
+<!-- proc~get_vxc&#45;&gt;proc~apply_symmetry_transform -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge26" class="edge">
+<title>proc~get_vxc&#45;&gt;proc~apply_symmetry_transform</title>
+<path fill="none" stroke="#000000" d="M521.54,-179.83C547.92,-185.28 589.61,-193.89 625.36,-201.27"/>
+<polygon fill="#000000" stroke="#000000" points="624.25,-204.62 634.76,-203.21 625.67,-197.76 624.25,-204.62"/>
+</g>
+<!-- proc~convert_to_nm -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node21" class="node">
+<title>proc~convert_to_nm</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node21"><a xlink:href="../proc/convert_to_nm.html" xlink:title="convert_to_nm">
+<polygon fill="#d9534f" stroke="#d9534f" points="736.08,-185.77 653.31,-185.77 653.31,-163 736.08,-163 736.08,-185.77"/>
+<text xml:space="preserve" text-anchor="middle" x="694.69" y="-170.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">convert_to_nm</text>
+</a>
+</g>
+</g>
+<!-- proc~get_vxc&#45;&gt;proc~convert_to_nm -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge27" class="edge">
+<title>proc~get_vxc&#45;&gt;proc~convert_to_nm</title>
+<path fill="none" stroke="#000000" d="M521.54,-174.38C552.16,-174.38 603.41,-174.38 642.05,-174.38"/>
+<polygon fill="#000000" stroke="#000000" points="641.58,-177.89 651.58,-174.39 641.58,-170.89 641.58,-177.89"/>
+</g>
+<!-- proc~determine_region -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node22" class="node">
+<title>proc~determine_region</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node22"><a xlink:href="../proc/determine_region.html" xlink:title="determine_region">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="742.45,-144.77 646.93,-144.77 646.93,-122 742.45,-122 742.45,-144.77"/>
+<text xml:space="preserve" text-anchor="middle" x="694.69" y="-129.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">determine_region</text>
+</a>
+</g>
+</g>
+<!-- proc~get_vxc&#45;&gt;proc~determine_region -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge28" class="edge">
+<title>proc~get_vxc&#45;&gt;proc~determine_region</title>
+<path fill="none" stroke="#000000" d="M521.54,-168.94C550.53,-162.95 598.01,-153.15 635.77,-145.35"/>
+<polygon fill="#000000" stroke="#000000" points="636.07,-148.86 645.16,-143.41 634.66,-142 636.07,-148.86"/>
+</g>
+<!-- proc~spline2d_eval -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node26" class="node">
+<title>proc~spline2d_eval</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node26"><a xlink:href="../proc/spline2d_eval.html" xlink:title="spline2d_eval">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="733.08,-267.77 656.31,-267.77 656.31,-245 733.08,-245 733.08,-267.77"/>
+<text xml:space="preserve" text-anchor="middle" x="694.69" y="-252.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d_eval</text>
+</a>
+</g>
+</g>
+<!-- proc~get_vxc&#45;&gt;proc~spline2d_eval -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge29" class="edge">
+<title>proc~get_vxc&#45;&gt;proc~spline2d_eval</title>
+<path fill="none" stroke="#000000" d="M521.57,-176.06C541.07,-178.28 567.66,-183.43 588.06,-195.38 608.69,-207.48 603.87,-222.57 624.06,-235.38 630.51,-239.48 637.79,-242.81 645.16,-245.51"/>
+<polygon fill="#000000" stroke="#000000" points="643.9,-248.78 654.49,-248.56 646.08,-242.12 643.9,-248.78"/>
+</g>
+<!-- proc~validate_bc_parameters -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node33" class="node">
+<title>proc~validate_bc_parameters</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node33"><a xlink:href="../proc/validate_bc_parameters.html" xlink:title="validate_bc_parameters">
+<polygon fill="#d9534f" stroke="#d9534f" points="757.83,-342.77 631.56,-342.77 631.56,-320 757.83,-320 757.83,-342.77"/>
+<text xml:space="preserve" text-anchor="middle" x="694.69" y="-327.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">validate_bc_parameters</text>
+</a>
+</g>
+</g>
+<!-- proc~apply_boundary_conditions_complex&#45;&gt;proc~validate_bc_parameters -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge30" class="edge">
+<title>proc~apply_boundary_conditions_complex&#45;&gt;proc~validate_bc_parameters</title>
+<path fill="none" stroke="#000000" d="M588.33,-331.38C598.87,-331.38 609.5,-331.38 619.75,-331.38"/>
+<polygon fill="#000000" stroke="#000000" points="619.62,-334.89 629.62,-331.39 619.62,-327.89 619.62,-334.89"/>
+</g>
+<!-- proc~get_exc&#45;&gt;proc~apply_symmetry_transform -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge31" class="edge">
+<title>proc~get_exc&#45;&gt;proc~apply_symmetry_transform</title>
+<path fill="none" stroke="#000000" d="M521.54,-215.38C544.75,-215.38 579.81,-215.38 612.24,-215.38"/>
+<polygon fill="#000000" stroke="#000000" points="612.07,-218.89 622.07,-215.39 612.07,-211.89 612.07,-218.89"/>
+</g>
+<!-- proc~get_exc&#45;&gt;proc~convert_to_nm -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge32" class="edge">
+<title>proc~get_exc&#45;&gt;proc~convert_to_nm</title>
+<path fill="none" stroke="#000000" d="M521.54,-209.94C552.16,-203.62 603.41,-193.03 642.05,-185.05"/>
+<polygon fill="#000000" stroke="#000000" points="642.52,-188.53 651.61,-183.08 641.11,-181.67 642.52,-188.53"/>
+</g>
+<!-- proc~get_exc&#45;&gt;proc~determine_region -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge33" class="edge">
+<title>proc~get_exc&#45;&gt;proc~determine_region</title>
+<path fill="none" stroke="#000000" d="M521.57,-213.71C541.07,-211.49 567.66,-206.34 588.06,-194.38 608.69,-182.29 603.87,-167.2 624.06,-154.38 627.79,-152.02 631.8,-149.9 635.95,-148.02"/>
+<polygon fill="#000000" stroke="#000000" points="637.08,-151.34 645.05,-144.36 634.47,-144.85 637.08,-151.34"/>
+</g>
+<!-- proc~get_exc&#45;&gt;proc~spline2d_eval -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge34" class="edge">
+<title>proc~get_exc&#45;&gt;proc~spline2d_eval</title>
+<path fill="none" stroke="#000000" d="M521.54,-220.83C552.93,-227.31 606,-238.27 644.93,-246.31"/>
+<polygon fill="#000000" stroke="#000000" points="644.03,-249.7 654.53,-248.3 645.45,-242.85 644.03,-249.7"/>
+</g>
+<!-- d2y_tmp -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node29" class="node">
+<title>d2y_tmp</title>
+<polygon fill="#777777" stroke="#777777" points="866.72,-349.77 812.72,-349.77 812.72,-327 866.72,-327 866.72,-349.77"/>
+<text xml:space="preserve" text-anchor="middle" x="839.72" y="-334.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">d2y_tmp</text>
+</g>
+<!-- proc~spline2d_eval&#45;&gt;d2y_tmp -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge35" class="edge">
+<title>proc~spline2d_eval&#45;&gt;d2y_tmp</title>
+<path fill="none" stroke="#000000" d="M715.9,-268.15C737.14,-280.49 771.52,-300.41 801.33,-317.38 803.48,-318.61 805.71,-319.88 807.96,-321.15"/>
+<polygon fill="#000000" stroke="#000000" points="805.98,-324.05 816.41,-325.91 809.42,-317.95 805.98,-324.05"/>
+</g>
+<!-- f_tmp -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node30" class="node">
+<title>f_tmp</title>
+<polygon fill="#777777" stroke="#777777" points="866.72,-308.77 812.72,-308.77 812.72,-286 866.72,-286 866.72,-308.77"/>
+<text xml:space="preserve" text-anchor="middle" x="839.72" y="-293.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">f_tmp</text>
+</g>
+<!-- proc~spline2d_eval&#45;&gt;f_tmp -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge36" class="edge">
+<title>proc~spline2d_eval&#45;&gt;f_tmp</title>
+<path fill="none" stroke="#000000" d="M733.27,-267.16C754.22,-273.16 780.23,-280.62 801.17,-286.62"/>
+<polygon fill="#000000" stroke="#000000" points="800.19,-289.98 810.77,-289.37 802.12,-283.25 800.19,-289.98"/>
+</g>
+<!-- proc~find_interval -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node31" class="node">
+<title>proc~find_interval</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node31"><a xlink:href="../proc/find_interval.html" xlink:title="find_interval">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="983.37,-247.77 914.1,-247.77 914.1,-225 983.37,-225 983.37,-247.77"/>
+<text xml:space="preserve" text-anchor="middle" x="948.74" y="-232.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">find_interval</text>
+</a>
+</g>
+</g>
+<!-- proc~spline2d_eval&#45;&gt;proc~find_interval -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge37" class="edge">
+<title>proc~spline2d_eval&#45;&gt;proc~find_interval</title>
+<path fill="none" stroke="#000000" d="M733.1,-247.54C753.19,-243.23 778.47,-238.53 801.33,-236.38 835.03,-233.22 873.28,-233.35 902.23,-234.2"/>
+<polygon fill="#000000" stroke="#000000" points="902.01,-237.7 912.12,-234.54 902.24,-230.7 902.01,-237.7"/>
+</g>
+<!-- proc~spline1d_eval -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node32" class="node">
+<title>proc~spline1d_eval</title>
+<g id="a_proc~~run_kohn_sham_scf_complex~~CallsGraph_node32"><a xlink:href="../proc/spline1d_eval.html" xlink:title="spline1d_eval">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="878.1,-267.77 801.33,-267.77 801.33,-245 878.1,-245 878.1,-267.77"/>
+<text xml:space="preserve" text-anchor="middle" x="839.72" y="-252.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline1d_eval</text>
+</a>
+</g>
+</g>
+<!-- proc~spline2d_eval&#45;&gt;proc~spline1d_eval -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge38" class="edge">
+<title>proc~spline2d_eval&#45;&gt;proc~spline1d_eval</title>
+<path fill="none" stroke="#000000" d="M733.27,-256.38C750.46,-256.38 771.06,-256.38 789.47,-256.38"/>
+<polygon fill="#000000" stroke="#000000" points="789.38,-259.89 799.38,-256.39 789.38,-252.89 789.38,-259.89"/>
+</g>
+<!-- y_tmp -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_node34" class="node">
+<title>y_tmp</title>
+<polygon fill="#777777" stroke="#777777" points="866.72,-189.77 812.72,-189.77 812.72,-167 866.72,-167 866.72,-189.77"/>
+<text xml:space="preserve" text-anchor="middle" x="839.72" y="-174.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">y_tmp</text>
+</g>
+<!-- proc~spline2d_eval&#45;&gt;y_tmp -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge39" class="edge">
+<title>proc~spline2d_eval&#45;&gt;y_tmp</title>
+<path fill="none" stroke="#000000" d="M733.41,-248.24C744.12,-245.08 755.52,-240.87 765.33,-235.38 784.02,-224.94 784.39,-216.48 801.33,-203.38 804.3,-201.09 807.46,-198.78 810.65,-196.54"/>
+<polygon fill="#000000" stroke="#000000" points="812.56,-199.47 818.86,-190.95 808.62,-193.69 812.56,-199.47"/>
+</g>
+<!-- proc~spline1d_eval&#45;&gt;proc~find_interval -->
+<g id="proc~~run_kohn_sham_scf_complex~~CallsGraph_edge40" class="edge">
+<title>proc~spline1d_eval&#45;&gt;proc~find_interval</title>
+<path fill="none" stroke="#000000" d="M878.45,-249.33C886.3,-247.87 894.65,-246.31 902.74,-244.79"/>
+<polygon fill="#000000" stroke="#000000" points="903.24,-248.26 912.42,-242.98 901.95,-241.38 903.24,-248.26"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panprocrun_kohn_sham_scf_complexCallsGraph = svgPanZoom('#procrun_kohn_sham_scf_complexCallsGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CallsGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CallsGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="w">    </span><span class="k">subroutine </span><span class="n">run_kohn_sham_scf_complex</span><span class="p">(</span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">scf_params</span><span class="p">,</span><span class="w"> </span><span class="n">V_ext</span><span class="p">,</span><span class="w"> </span><span class="n">xc_func</span><span class="p">,</span><span class="w"> </span><span class="n">results</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">system_params_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">params</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">scf_params_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">scf_params</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">V_ext</span><span class="p">(:)</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">xc_lsda_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">xc_func</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">scf_results_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">results</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">ierr</span>
+
+<span class="w">        </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">iter</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">Nup</span><span class="p">,</span><span class="w"> </span><span class="n">Ndown</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">density_error</span><span class="p">,</span><span class="w"> </span><span class="n">total_energy</span>
+<span class="w">        </span><span class="kt">logical</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">is_converged</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">adaptive_mix_t</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mix_ctrl</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">current_alpha</span>
+
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">n_up_in</span><span class="p">(:),</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">(:),</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">(:),</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">(:),</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">(:),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                      </span><span class="n">V_xc_down</span><span class="p">(:),</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">(:),</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">(:),</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">(:),</span><span class="w"> </span><span class="n">delta_n_down</span><span class="p">(:),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                      </span><span class="n">delta_n_total</span><span class="p">(:),</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">(:),</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">(:),</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">(:),</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">(:),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                      </span><span class="n">V_zero</span><span class="p">(:)</span>
+
+<span class="w">        </span><span class="kt">complex</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">H_up</span><span class="p">(:,:),</span><span class="w"> </span><span class="n">H_down</span><span class="p">(:,:),</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">(:,:),</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">(:,:)</span>
+
+<span class="w">        </span><span class="k">call </span><span class="n">validate_kohn_sham_cycle_inputs</span><span class="p">(</span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">scf_params</span><span class="p">,</span><span class="w"> </span><span class="n">V_ext</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            return</span>
+<span class="k">        end if</span>
+
+<span class="k">        </span><span class="n">L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span>
+<span class="w">        </span><span class="n">Nup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">Nup</span>
+<span class="w">        </span><span class="n">Ndown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">Ndown</span>
+
+<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                 </span><span class="n">H_up</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">H_down</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                 </span><span class="n">eigvecs_up</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">delta_n_down</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                 </span><span class="n">V_eff_up</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">V_zero</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+<span class="w">        </span><span class="c">! Initialize zero array for Hamiltonian builder</span>
+<span class="w">        </span><span class="n">V_zero</span><span class="p">(:)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_dp</span>
+
+<span class="w">        </span><span class="k">call </span><span class="n">init_convergence_history</span><span class="p">(</span><span class="n">results</span><span class="p">%</span><span class="n">history</span><span class="p">,</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">max_iter</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">            </span><span class="c">! TODO: Proper error handling for history init</span>
+<span class="w">            </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_zero</span><span class="p">)</span>
+<span class="w">            </span><span class="k">return</span>
+<span class="k">        end if</span>
+
+<span class="w">        </span><span class="c">! Initialize densities (uniform guess)</span>
+<span class="w">        </span><span class="n">n_up_in</span><span class="p">(:)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">real</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">Nup</span><span class="p">,</span><span class="w"> </span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="kt">real</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">dp</span><span class="p">)</span>
+<span class="w">        </span><span class="n">n_down_in</span><span class="p">(:)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">real</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">Ndown</span><span class="p">,</span><span class="w"> </span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="kt">real</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">dp</span><span class="p">)</span>
+
+<span class="w">        </span><span class="c">! Initialize effective potentials from initial density guess</span>
+<span class="w">        </span><span class="c">! This matches C++ initial_guess() function (lsdaks.cc lines 520-521)</span>
+<span class="w">        </span><span class="c">! V_eff = V_ext + U*n_other + V_xc</span>
+<span class="w">        </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span>
+<span class="w">            </span><span class="c">! Get V_xc from initial uniform density</span>
+<span class="w">            </span><span class="k">call </span><span class="n">get_vxc</span><span class="p">(</span><span class="n">xc_func</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_in</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_zero</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="w">            </span><span class="c">! Initialize V_eff = V_ext + U*n_other + V_xc (like C++)</span>
+<span class="w">            </span><span class="n">V_eff_up</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">V_ext</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">U</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">            </span><span class="n">V_eff_down</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">V_ext</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">U</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n_up_in</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="k">end do</span>
+
+<span class="w">        </span><span class="c">! =================================</span>
+<span class="w">        </span><span class="c">! Initialize adaptive mixing (if enabled)</span>
+<span class="w">        </span><span class="c">! =================================</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scf_params</span><span class="p">%</span><span class="n">use_adaptive_mixing</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            call </span><span class="n">adaptive_mix_init</span><span class="p">(</span><span class="n">mix_ctrl</span><span class="p">,</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">energy_tol</span><span class="p">)</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scf_params</span><span class="p">%</span><span class="n">verbose</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  Using adaptive mixing (C++ behavior)&quot;</span>
+<span class="w">            </span><span class="k">end if</span>
+<span class="k">        else</span>
+<span class="k">            if</span><span class="w"> </span><span class="p">(</span><span class="n">scf_params</span><span class="p">%</span><span class="n">verbose</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                print</span><span class="w"> </span><span class="s1">&#39;(A,F6.4)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  Using fixed mixing alpha = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">mixing_alpha</span>
+<span class="w">            </span><span class="k">end if</span>
+<span class="k">        end if</span>
+
+<span class="w">        </span><span class="c">! =================</span>
+<span class="w">        </span><span class="c">! STEP 1: SCF loop</span>
+<span class="w">        </span><span class="c">! =================</span>
+
+<span class="w">        </span><span class="k">do </span><span class="n">iter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">max_iter</span>
+<span class="w">            </span><span class="c">! -------------------------------------------------</span>
+<span class="w">            </span><span class="c">! 1a. Compute V_xc from current densities</span>
+<span class="w">            </span><span class="c">! -------------------------------------------------</span>
+<span class="w">            </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span>
+<span class="w">                </span><span class="k">call </span><span class="n">get_vxc</span><span class="p">(</span><span class="n">xc_func</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_in</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                    </span><span class="c">! TODO: Proper error handling for V_xc calculation</span>
+<span class="w">                    </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_zero</span><span class="p">)</span>
+<span class="w">                    </span><span class="k">return</span>
+<span class="k">                end if</span>
+<span class="k">            end do</span>
+
+<span class="w">            </span><span class="c">! -------------------------------------------------------------</span>
+<span class="w">            </span><span class="c">! 1b. Calculate effective potentials V_eff = V_ext + U*n_other + V_xc</span>
+<span class="w">            </span><span class="c">! (This is what C++ calls &quot;v_ext[σ][j] + u*dens[other][j] + Vxc[σ][j]&quot;)</span>
+<span class="w">            </span><span class="c">! -------------------------------------------------------------</span>
+<span class="w">            </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span>
+<span class="w">                </span><span class="c">! V_eff_up_calc = V_ext + U*n_down + V_xc_up</span>
+<span class="w">                </span><span class="n">V_eff_up_calc</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">V_ext</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">U</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+<span class="w">                </span><span class="c">! V_eff_down_calc = V_ext + U*n_up + V_xc_down</span>
+<span class="w">                </span><span class="n">V_eff_down_calc</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">V_ext</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">U</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n_up_in</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">            </span><span class="k">end do</span>
+
+<span class="w">            </span><span class="c">! -------------------------------------------------------------</span>
+<span class="w">            </span><span class="c">! 1c. Mix potentials (C++ convention: Mix = weight of OLD)</span>
+<span class="w">            </span><span class="c">! V_eff_new = Mix*V_eff_old + (1-Mix)*V_eff_calc</span>
+<span class="w">            </span><span class="c">! -------------------------------------------------------------</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scf_params</span><span class="p">%</span><span class="n">use_adaptive_mixing</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! Adaptive mixing uses the Mix parameter (updated each iteration)</span>
+<span class="w">                </span><span class="c">! Convert to fortran alpha: alpha = 1 - Mix</span>
+<span class="w">                </span><span class="n">current_alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adaptive_mix_get_alpha</span><span class="p">(</span><span class="n">mix_ctrl</span><span class="p">)</span>
+
+<span class="w">                </span><span class="c">! Apply mixing: V = (1-α)*V_old + α*V_calc = Mix*V_old + (1-Mix)*V_calc</span>
+<span class="w">                </span><span class="c">! Since alpha = 1-Mix, we have: V = Mix*V_old + (1-Mix)*V_calc ✓</span>
+<span class="w">                </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span>
+<span class="w">                    </span><span class="n">V_eff_up</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0_dp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">current_alpha</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">current_alpha</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">                    </span><span class="n">V_eff_down</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0_dp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">current_alpha</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">current_alpha</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">                </span><span class="k">end do</span>
+<span class="k">            else</span>
+<span class="w">                </span><span class="c">! Fixed mixing: alpha = weight of new</span>
+<span class="w">                </span><span class="n">current_alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">mixing_alpha</span>
+<span class="w">                </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span>
+<span class="w">                    </span><span class="n">V_eff_up</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0_dp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">current_alpha</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">current_alpha</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">                    </span><span class="n">V_eff_down</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0_dp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">current_alpha</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">current_alpha</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">                </span><span class="k">end do</span>
+<span class="k">            end if</span>
+
+<span class="w">            </span><span class="c">! -------------------------------------</span>
+<span class="w">            </span><span class="c">! 1d. Build Hamiltonians with mixed V_eff</span>
+<span class="w">            </span><span class="c">! (C++ passes v_eff to hamiltonian_ks)</span>
+<span class="w">            </span><span class="c">! -------------------------------------</span>
+<span class="w">            </span><span class="k">call </span><span class="n">build_hamiltonian_complex</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_zero</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">bc</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">phase</span><span class="p">,</span><span class="w"> </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for Hamiltonian Nup build</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_zero</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="k">            call </span><span class="n">build_hamiltonian_complex</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">,</span><span class="w"> </span><span class="n">V_zero</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">bc</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">phase</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for Hamiltonian Ndown build</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_up_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_eff_down_calc</span><span class="p">,</span><span class="w"> </span><span class="n">V_zero</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="w">            </span><span class="c">! ---------------------------------</span>
+<span class="w">            </span><span class="c">! 1d. Diagonalize both Hamiltonians</span>
+<span class="w">            </span><span class="c">! ---------------------------------</span>
+<span class="w">            </span><span class="k">call </span><span class="n">diagonalize_hermitian_complex</span><span class="p">(</span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for diagonalization Nup Hamiltonian</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+<span class="k">            </span>
+<span class="k">            call </span><span class="n">diagonalize_hermitian_complex</span><span class="p">(</span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for diagonalization Ndown Hamiltonian</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="w">            </span><span class="c">! ----------------------------------------------</span>
+<span class="w">            </span><span class="c">! 1e. Compute new densities from eigenvectors</span>
+<span class="w">            </span><span class="c">! ----------------------------------------------</span>
+<span class="w">            </span><span class="k">call </span><span class="n">compute_density_spin</span><span class="p">(</span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">Nup</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for density calculation Nup</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="k">            call </span><span class="n">compute_density_spin</span><span class="p">(</span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">Ndown</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for density calculation Ndown</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+<span class="w">            </span>
+<span class="w">            </span><span class="c">! ----------------------------------------------</span>
+<span class="w">            </span><span class="c">! 1f. Compute density differences</span>
+<span class="w">            </span><span class="c">! ----------------------------------------------</span>
+<span class="w">            </span><span class="k">call </span><span class="n">compute_density_difference</span><span class="p">(</span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for Nup density difference</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+<span class="k">            </span>
+<span class="k">            call </span><span class="n">compute_density_difference</span><span class="p">(</span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for Ndown density difference</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="w">            </span><span class="c">! ------------------------------</span>
+<span class="w">            </span><span class="c">! 1g. Compute total density error</span>
+<span class="w">            </span><span class="c">! ------------------------------</span>
+<span class="w">            </span><span class="n">delta_n_total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">delta_n_up</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">delta_n_down</span>
+<span class="w">            </span><span class="k">call </span><span class="n">compute_density_norm</span><span class="p">(</span><span class="n">delta_n_total</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">L2</span><span class="p">,</span><span class="w"> </span><span class="n">density_error</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for total density up norm</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="w">                </span><span class="c">! ------------------------</span>
+<span class="w">            </span><span class="c">! 1h. Compute total energy</span>
+<span class="w">            </span><span class="c">! ------------------------</span>
+<span class="w">            </span><span class="k">call </span><span class="n">compute_total_energy</span><span class="p">(</span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">Nup</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">Ndown</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                    </span><span class="n">V_ext</span><span class="p">,</span><span class="w"> </span><span class="n">xc_func</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">total_energy</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for total energy calculation</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="w">            </span><span class="c">! ------------------</span>
+<span class="w">            </span><span class="c">! 1i. Store history</span>
+<span class="w">            </span><span class="c">! ------------------</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scf_params</span><span class="p">%</span><span class="n">store_history</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                call </span><span class="n">update_convergence_history</span><span class="p">(</span><span class="n">iter</span><span class="p">,</span><span class="w"> </span><span class="n">density_error</span><span class="p">,</span><span class="w"> </span><span class="n">total_energy</span><span class="p">,</span><span class="w"> </span><span class="n">results</span><span class="p">%</span><span class="n">history</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">            </span><span class="k">end if</span>
+
+<span class="k">            if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for history update</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="w">            </span><span class="c">! ------------------------------</span>
+<span class="w">            </span><span class="c">! 1j. Update adaptive mixing (if enabled)</span>
+<span class="w">            </span><span class="c">! ------------------------------</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scf_params</span><span class="p">%</span><span class="n">use_adaptive_mixing</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                call </span><span class="n">adaptive_mix_update</span><span class="p">(</span><span class="n">mix_ctrl</span><span class="p">,</span><span class="w"> </span><span class="n">total_energy</span><span class="p">)</span>
+<span class="w">                </span><span class="n">current_alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adaptive_mix_get_alpha</span><span class="p">(</span><span class="n">mix_ctrl</span><span class="p">)</span>
+
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scf_params</span><span class="p">%</span><span class="n">verbose</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                    print</span><span class="w"> </span><span class="s1">&#39;(A,I4,A,ES12.4,A,F16.8,A,F7.5)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  Iter &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">iter</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  |Δn| = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">density_error</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                        </span><span class="s2">&quot;  E_tot = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">total_energy</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  α = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">current_alpha</span>
+<span class="w">                </span><span class="k">end if</span>
+
+<span class="w">                </span><span class="c">! Check convergence: density-based (primary) OR energy-based (fallback)</span>
+<span class="w">                </span><span class="c">! With potential mixing, density converges even if energy oscillates slightly</span>
+<span class="w">                </span><span class="k">call </span><span class="n">check_scf_convergence</span><span class="p">(</span><span class="n">delta_n_total</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">density_tol</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                           </span><span class="n">is_converged</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">is_converged</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                    </span><span class="c">! Density not converged OR error - fall back to energy-based check</span>
+<span class="w">                    </span><span class="n">is_converged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mix_ctrl</span><span class="p">%</span><span class="n">converged</span>
+<span class="w">                </span><span class="k">end if</span>
+<span class="k">            else</span>
+<span class="k">                </span><span class="n">current_alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">mixing_alpha</span>
+
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scf_params</span><span class="p">%</span><span class="n">verbose</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                    print</span><span class="w"> </span><span class="s1">&#39;(A,I4,A,ES12.4,A,F16.8)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  Iter &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">iter</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  |Δn| = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">density_error</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                                                        </span><span class="s2">&quot;  E_tot = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">total_energy</span>
+<span class="w">                </span><span class="k">end if</span>
+
+<span class="w">                </span><span class="c">! 1k. Check convergence (fixed mixing)</span>
+<span class="w">                </span><span class="k">call </span><span class="n">check_scf_convergence</span><span class="p">(</span><span class="n">delta_n_total</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">density_tol</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                           </span><span class="n">is_converged</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">            </span><span class="k">end if</span>
+
+<span class="w">            </span><span class="c">! Validate convergence check</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">use_adaptive_mixing</span><span class="w"> </span><span class="p">.</span><span class="nb">and</span><span class="p">.</span><span class="w"> </span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! TODO: Proper error handling for convergence check</span>
+<span class="w">                </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">                </span><span class="k">return</span>
+<span class="k">            end if</span>
+
+<span class="k">            if</span><span class="w"> </span><span class="p">(</span><span class="n">is_converged</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">                </span><span class="c">! SUCCESS: Converged!</span>
+<span class="w">                </span><span class="n">results</span><span class="p">%</span><span class="n">converged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">true</span><span class="p">.</span>
+<span class="w">                </span><span class="n">results</span><span class="p">%</span><span class="n">n_iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">iter</span>
+<span class="w">                </span><span class="n">results</span><span class="p">%</span><span class="n">final_density_error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">density_error</span>
+<span class="w">                </span><span class="n">results</span><span class="p">%</span><span class="n">final_energy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total_energy</span>
+<span class="w">                </span>
+<span class="w">                </span><span class="c">! Store final densities and eigenvalues</span>
+<span class="w">                </span><span class="k">allocate</span><span class="p">(</span><span class="n">results</span><span class="p">%</span><span class="n">density_up</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">))</span>
+<span class="w">                </span><span class="k">allocate</span><span class="p">(</span><span class="n">results</span><span class="p">%</span><span class="n">density_down</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">))</span>
+<span class="w">                </span><span class="k">allocate</span><span class="p">(</span><span class="n">results</span><span class="p">%</span><span class="n">eigvals</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">))</span>
+
+<span class="w">                </span><span class="n">results</span><span class="p">%</span><span class="n">density_up</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n_up_out</span>
+<span class="w">                </span><span class="n">results</span><span class="p">%</span><span class="n">density_down</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n_down_out</span>
+<span class="w">                </span><span class="n">results</span><span class="p">%</span><span class="n">eigvals</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">eigvals_up</span>
+<span class="w">                </span><span class="n">results</span><span class="p">%</span><span class="n">eigvals</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">params</span><span class="p">%</span><span class="n">L</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">eigvals_down</span>
+<span class="w">                </span>
+<span class="w">                </span><span class="n">ierr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span>
+<span class="w">                </span><span class="k">return</span><span class="w">  </span><span class="c">! return SCF LOOP</span>
+<span class="w">            </span><span class="k">end if</span>
+
+<span class="w">            </span><span class="c">! -----------------------------------------------------------------------</span>
+<span class="w">            </span><span class="c">! 1l. Copy densities directly (NO MIXING!)</span>
+<span class="w">            </span><span class="c">! -----------------------------------------------------------------------</span>
+<span class="w">            </span><span class="c">! C++ code does: dens[0][i] = next_dens[0][i]  (line 695-696 in lsdaks.cc)</span>
+<span class="w">            </span><span class="c">! Mixing is applied to POTENTIALS, not densities!</span>
+<span class="w">            </span><span class="n">n_up_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n_up_out</span>
+<span class="w">            </span><span class="n">n_down_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n_down_out</span>
+<span class="w">        </span><span class="k">end do</span>
+
+<span class="w">        </span><span class="c">! ========================</span>
+<span class="w">        </span><span class="c">! STEP 2: Did not converge</span>
+<span class="w">        </span><span class="c">! ========================</span>
+
+<span class="w">        </span><span class="n">results</span><span class="p">%</span><span class="n">converged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">false</span><span class="p">.</span>
+<span class="w">        </span><span class="n">results</span><span class="p">%</span><span class="n">n_iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scf_params</span><span class="p">%</span><span class="n">max_iter</span>
+<span class="w">        </span><span class="n">results</span><span class="p">%</span><span class="n">final_density_error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">density_error</span>
+<span class="w">        </span><span class="n">results</span><span class="p">%</span><span class="n">final_energy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total_energy</span>
+<span class="w">        </span><span class="n">ierr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ERROR_CONVERGENCE_FAILED</span>
+
+<span class="w">        </span><span class="k">deallocate</span><span class="p">(</span><span class="n">n_up_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_in</span><span class="p">,</span><span class="w"> </span><span class="n">n_up_out</span><span class="p">,</span><span class="w"> </span><span class="n">n_down_out</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_up</span><span class="p">,</span><span class="w"> </span><span class="n">V_xc_down</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">H_up</span><span class="p">,</span><span class="w"> </span><span class="n">H_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvals_down</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_up</span><span class="p">,</span><span class="w"> </span><span class="n">eigvecs_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_up</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                       </span><span class="n">delta_n_down</span><span class="p">,</span><span class="w"> </span><span class="n">delta_n_total</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end subroutine </span><span class="n">run_kohn_sham_scf_complex</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

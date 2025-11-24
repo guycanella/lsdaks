@@ -1,0 +1,1991 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>input_parser &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>input_parser
+      <small>Module</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 9.5% of total for modules and submodules.">421 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/input_parser.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/input_parser.f90.html'>input_parser.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">input_parser</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#types-0"
+         aria-expanded="false" aria-controls="types-0">
+         <h4 class="card-header bg-primary text-white">Derived Types</h4>
+      </a>
+      <div id="types-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/input_parser.html#type-input_params_t">input_params_t</a>
+        </div>
+      </div>
+    </div>
+
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
+      </a>
+      <div id="subs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/input_parser.html#proc-parse_inputs">parse_inputs</a>
+            <a class="list-group-item" href="../module/input_parser.html#proc-read_namelist_file">read_namelist_file</a>
+            <a class="list-group-item" href="../module/input_parser.html#proc-validate_inputs">validate_inputs</a>
+            <a class="list-group-item" href="../module/input_parser.html#proc-convert_to_system_params">convert_to_system_params</a>
+            <a class="list-group-item" href="../module/input_parser.html#proc-convert_to_scf_params">convert_to_scf_params</a>
+            <a class="list-group-item" href="../module/input_parser.html#proc-parse_integer_arg">parse_integer_arg</a>
+            <a class="list-group-item" href="../module/input_parser.html#proc-parse_real_arg">parse_real_arg</a>
+            <a class="list-group-item" href="../module/input_parser.html#proc-print_help">print_help</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+
+    <div class="col-md-9" id='text'>
+      <p>Module for parsing input parameters from command line and namelist files</p>
+<br>          <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='lsda_constants.html'>lsda_constants</a></li>
+                  <li class="list-inline-item"><a href='lsda_types.html'>lsda_types</a></li>
+                  <li class="list-inline-item"><a href='boundary_conditions.html'>boundary_conditions</a></li>
+                  <li class="list-inline-item"><a href='lsda_errors.html'>lsda_errors</a></li>
+                  <li class="list-inline-item"><a href='kohn_sham_cycle.html'>kohn_sham_cycle</a></li>
+              </ul>
+            </li>
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: module~~input_parser~~UsesGraph Pages: 1 -->
+<svg id="moduleinput_parserUsesGraph" width="641pt" height="408pt"
+ viewBox="0.00 0.00 641.00 408.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~input_parser~~UsesGraph" class="graph" transform="scale(0.757558 0.757558) rotate(0) translate(4 533.99)">
+<title>module~~input_parser~~UsesGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-533.99 842.14,-533.99 842.14,4 -4,4"/>
+<!-- module~input_parser -->
+<g id="module~~input_parser~~UsesGraph_node1" class="node">
+<title>module~input_parser</title>
+<polygon fill="none" stroke="black" points="838.14,-277.77 766.62,-277.77 766.62,-255 838.14,-255 838.14,-277.77"/>
+<text xml:space="preserve" text-anchor="middle" x="802.38" y="-262.03" font-family="Helvetica,sans-Serif" font-size="10.50">input_parser</text>
+</g>
+<!-- module~boundary_conditions -->
+<g id="module~~input_parser~~UsesGraph_node2" class="node">
+<title>module~boundary_conditions</title>
+<g id="a_module~~input_parser~~UsesGraph_node2"><a xlink:href="../module/boundary_conditions.html" xlink:title="boundary_conditions">
+<polygon fill="#337ab7" stroke="#337ab7" points="454.83,-376.77 344.31,-376.77 344.31,-354 454.83,-354 454.83,-376.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-361.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">boundary_conditions</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~boundary_conditions -->
+<g id="module~~input_parser~~UsesGraph_edge1" class="edge">
+<title>module~input_parser&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M681.11,-488.38C671.64,-494.02 502.33,-431.37 493.08,-425.38 473.28,-412.57 476.67,-399.52 457.08,-386.38 454.84,-384.89 452.48,-383.47 450.05,-382.15"/>
+<polygon fill="#000000" stroke="#000000" points="451.64,-379.03 441.12,-377.84 448.61,-385.34 451.64,-379.03"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M799.43,-278.26C792.33,-317.15 763.89,-440.96 683.11,-488.38"/>
+</g>
+<!-- module~kohn_sham_cycle -->
+<g id="module~~input_parser~~UsesGraph_node3" class="node">
+<title>module~kohn_sham_cycle</title>
+<g id="a_module~~input_parser~~UsesGraph_node3"><a xlink:href="../module/kohn_sham_cycle.html" xlink:title="kohn_sham_cycle">
+<polygon fill="#337ab7" stroke="#337ab7" points="730.62,-277.77 633.6,-277.77 633.6,-255 730.62,-255 730.62,-277.77"/>
+<text xml:space="preserve" text-anchor="middle" x="682.11" y="-262.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">kohn_sham_cycle</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~input_parser~~UsesGraph_edge2" class="edge">
+<title>module~input_parser&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M766.22,-266.38C758.72,-266.38 750.6,-266.38 742.48,-266.38"/>
+<polygon fill="#000000" stroke="#000000" points="742.57,-262.89 732.57,-266.39 742.57,-269.89 742.57,-262.89"/>
+</g>
+<!-- module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_node4" class="node">
+<title>module~lsda_constants</title>
+<g id="a_module~~input_parser~~UsesGraph_node4"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
+<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-179.77 121.77,-179.77 121.77,-157 204.54,-157 204.54,-179.77"/>
+<text xml:space="preserve" text-anchor="middle" x="163.15" y="-164.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge3" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M681.11,-488.38C620.19,-524.15 413.33,-530.13 400.57,-527.38"/>
+</g>
+<!-- module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_node5" class="node">
+<title>module~lsda_errors</title>
+<g id="a_module~~input_parser~~UsesGraph_node5"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
+<polygon fill="#337ab7" stroke="#337ab7" points="306.06,-258.77 240.54,-258.77 240.54,-236 306.06,-236 306.06,-258.77"/>
+<text xml:space="preserve" text-anchor="middle" x="273.3" y="-243.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge4" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M783.91,-254.51C726.81,-217.25 541.24,-108.68 400.57,-169.38"/>
+</g>
+<!-- module~lsda_types -->
+<g id="module~~input_parser~~UsesGraph_node6" class="node">
+<title>module~lsda_types</title>
+<g id="a_module~~input_parser~~UsesGraph_node6"><a xlink:href="../module/lsda_types.html" xlink:title="lsda_types">
+<polygon fill="#337ab7" stroke="#337ab7" points="576.6,-499.77 514.08,-499.77 514.08,-477 576.6,-477 576.6,-499.77"/>
+<text xml:space="preserve" text-anchor="middle" x="545.34" y="-484.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_types</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_types -->
+<g id="module~~input_parser~~UsesGraph_edge5" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M681.11,-488.38C653.37,-504.91 616.38,-503.62 588.17,-498.92"/>
+<polygon fill="#000000" stroke="#000000" points="589.02,-495.52 578.54,-497.1 587.72,-502.39 589.02,-495.52"/>
+</g>
+<!-- module~boundary_conditions&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge6" class="edge">
+<title>module~boundary_conditions&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M366.93,-377.23C331.42,-390.31 278.21,-409.19 274.3,-406.38"/>
+</g>
+<!-- module~boundary_conditions&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge7" class="edge">
+<title>module~boundary_conditions&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M357.48,-353.53C352.01,-350.99 346.7,-347.97 342.06,-344.38 315.91,-324.16 295.86,-291.02 284.57,-269.21"/>
+<polygon fill="#000000" stroke="#000000" points="287.74,-267.71 280.16,-260.31 281.47,-270.83 287.74,-267.71"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~boundary_conditions -->
+<g id="module~~input_parser~~UsesGraph_edge9" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M673.93,-277.94C656.05,-305.68 606.64,-376.29 546.34,-411.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-411.38C539.8,-414.03 484.57,-395.32 443.92,-380.97"/>
+<polygon fill="#000000" stroke="#000000" points="445.17,-377.7 434.58,-377.66 442.83,-384.3 445.17,-377.7"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge14" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-527.38C372.66,-521.82 363.08,-524.51 342.06,-508.38 298.88,-475.26 318.51,-438.12 274.3,-406.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-411.38C473.38,-452.68 480.84,-544.64 400.57,-527.38"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge15" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-247.38C465.09,-236.58 371.55,-240.18 317.95,-243.78"/>
+<polygon fill="#000000" stroke="#000000" points="317.74,-240.28 308.01,-244.48 318.23,-247.27 317.74,-240.28"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_types -->
+<g id="module~~input_parser~~UsesGraph_edge16" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M675.98,-278.01C663.91,-304.89 632.12,-373.08 597.6,-425.38 587.57,-440.58 574.62,-456.47 564.25,-468.49"/>
+<polygon fill="#000000" stroke="#000000" points="561.87,-465.89 557.91,-475.71 567.13,-470.51 561.87,-465.89"/>
+</g>
+<!-- module~adaptive_mixing -->
+<g id="module~~input_parser~~UsesGraph_node8" class="node">
+<title>module~adaptive_mixing</title>
+<g id="a_module~~input_parser~~UsesGraph_node8"><a xlink:href="../module/adaptive_mixing.html" xlink:title="adaptive_mixing">
+<polygon fill="#337ab7" stroke="#337ab7" points="443.95,-458.77 355.18,-458.77 355.18,-436 443.95,-436 443.95,-458.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-443.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mixing</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing -->
+<g id="module~~input_parser~~UsesGraph_edge8" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-411.38C517.27,-427.14 483.44,-436.05 455.39,-441.07"/>
+<polygon fill="#000000" stroke="#000000" points="454.95,-437.59 445.66,-442.68 456.09,-444.5 454.95,-437.59"/>
+</g>
+<!-- module~convergence_monitor -->
+<g id="module~~input_parser~~UsesGraph_node9" class="node">
+<title>module~convergence_monitor</title>
+<g id="a_module~~input_parser~~UsesGraph_node9"><a xlink:href="../module/convergence_monitor.html" xlink:title="convergence_monitor">
+<polygon fill="#337ab7" stroke="#337ab7" points="457.08,-417.77 342.06,-417.77 342.06,-395 457.08,-395 457.08,-417.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-402.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">convergence_monitor</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~convergence_monitor -->
+<g id="module~~input_parser~~UsesGraph_edge10" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~convergence_monitor</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-411.38C516.14,-427.8 479.27,-426.16 449.93,-420.61"/>
+<polygon fill="#000000" stroke="#000000" points="450.68,-417.19 440.17,-418.54 449.23,-424.04 450.68,-417.19"/>
+</g>
+<!-- module~density_calculator -->
+<g id="module~~input_parser~~UsesGraph_node10" class="node">
+<title>module~density_calculator</title>
+<g id="a_module~~input_parser~~UsesGraph_node10"><a xlink:href="../module/density_calculator.html" xlink:title="density_calculator">
+<polygon fill="#337ab7" stroke="#337ab7" points="448.08,-141.77 351.06,-141.77 351.06,-119 448.08,-119 448.08,-141.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-126.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">density_calculator</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~density_calculator -->
+<g id="module~~input_parser~~UsesGraph_edge11" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~density_calculator</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M658.05,-254.55C617.61,-233.88 531.17,-190.11 457.08,-155.38 451.04,-152.56 444.61,-149.63 438.32,-146.81"/>
+<polygon fill="#000000" stroke="#000000" points="439.93,-143.7 429.37,-142.84 437.09,-150.1 439.93,-143.7"/>
+</g>
+<!-- module~hamiltonian_builder -->
+<g id="module~~input_parser~~UsesGraph_node11" class="node">
+<title>module~hamiltonian_builder</title>
+<g id="a_module~~input_parser~~UsesGraph_node11"><a xlink:href="../module/hamiltonian_builder.html" xlink:title="hamiltonian_builder">
+<polygon fill="#337ab7" stroke="#337ab7" points="597.6,-316.77 493.08,-316.77 493.08,-294 597.6,-294 597.6,-316.77"/>
+<text xml:space="preserve" text-anchor="middle" x="545.34" y="-301.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">hamiltonian_builder</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder -->
+<g id="module~~input_parser~~UsesGraph_edge12" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M640.31,-278.19C626.98,-282.05 612,-286.38 597.99,-290.44"/>
+<polygon fill="#000000" stroke="#000000" points="597.09,-287.06 588.46,-293.2 599.04,-293.78 597.09,-287.06"/>
+</g>
+<!-- module~lapack_wrapper -->
+<g id="module~~input_parser~~UsesGraph_node12" class="node">
+<title>module~lapack_wrapper</title>
+<g id="a_module~~input_parser~~UsesGraph_node12"><a xlink:href="../module/lapack_wrapper.html" xlink:title="lapack_wrapper">
+<polygon fill="#337ab7" stroke="#337ab7" points="443.2,-219.77 355.93,-219.77 355.93,-197 443.2,-197 443.2,-219.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-204.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lapack_wrapper</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper -->
+<g id="module~~input_parser~~UsesGraph_edge13" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M633.41,-259.55C607.64,-255.89 575.25,-251.33 546.34,-247.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-247.38C510.41,-242.76 473.11,-232.48 445.01,-223.64"/>
+<polygon fill="#000000" stroke="#000000" points="446.37,-220.4 435.78,-220.67 444.23,-227.07 446.37,-220.4"/>
+</g>
+<!-- module~mixing_schemes -->
+<g id="module~~input_parser~~UsesGraph_node13" class="node">
+<title>module~mixing_schemes</title>
+<g id="a_module~~input_parser~~UsesGraph_node13"><a xlink:href="../module/mixing_schemes.html" xlink:title="mixing_schemes">
+<polygon fill="#337ab7" stroke="#337ab7" points="445.08,-499.77 354.06,-499.77 354.06,-477 445.08,-477 445.08,-499.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-484.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mixing_schemes</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~mixing_schemes -->
+<g id="module~~input_parser~~UsesGraph_edge17" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~mixing_schemes</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-411.38C504.51,-434.56 498.31,-446.8 457.08,-467.38 453.65,-469.1 450.05,-470.75 446.39,-472.32"/>
+<polygon fill="#000000" stroke="#000000" points="445.38,-468.95 437.44,-475.97 448.02,-475.44 445.38,-468.95"/>
+</g>
+<!-- module~xc_lsda -->
+<g id="module~~input_parser~~UsesGraph_node14" class="node">
+<title>module~xc_lsda</title>
+<g id="a_module~~input_parser~~UsesGraph_node14"><a xlink:href="../module/xc_lsda.html" xlink:title="xc_lsda">
+<polygon fill="#337ab7" stroke="#337ab7" points="572.34,-102.77 518.34,-102.77 518.34,-80 572.34,-80 572.34,-102.77"/>
+<text xml:space="preserve" text-anchor="middle" x="545.34" y="-87.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">xc_lsda</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~xc_lsda -->
+<g id="module~~input_parser~~UsesGraph_edge18" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~xc_lsda</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M677.3,-254.83C667.83,-227.65 640.82,-158.85 597.6,-117.38 593.19,-113.15 587.96,-109.46 582.54,-106.29"/>
+<polygon fill="#000000" stroke="#000000" points="584.57,-103.4 574.09,-101.84 581.31,-109.59 584.57,-103.4"/>
+</g>
+<!-- iso_fortran_env -->
+<g id="module~~input_parser~~UsesGraph_node7" class="node">
+<title>iso_fortran_env</title>
+<g id="a_module~~input_parser~~UsesGraph_node7"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-159.77 0,-159.77 0,-137 85.77,-137 85.77,-159.77"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-144.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- module~lsda_constants&#45;&gt;iso_fortran_env -->
+<g id="module~~input_parser~~UsesGraph_edge19" class="edge">
+<title>module~lsda_constants&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M121.45,-161.5C113.64,-160.18 105.35,-158.78 97.21,-157.4"/>
+<polygon fill="#000000" stroke="#000000" points="97.8,-153.95 87.36,-155.74 96.64,-160.86 97.8,-153.95"/>
+</g>
+<!-- module~lsda_errors&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge20" class="edge">
+<title>module~lsda_errors&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M256.34,-235.73C238.69,-222.83 210.02,-201.89 189.33,-186.77"/>
+<polygon fill="#000000" stroke="#000000" points="191.54,-184.05 181.4,-180.98 187.41,-189.71 191.54,-184.05"/>
+</g>
+<!-- module~lsda_types&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge21" class="edge">
+<title>module~lsda_types&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M513.84,-500.2C478.41,-513.29 422.06,-532 400.57,-527.38"/>
+</g>
+<!-- module~adaptive_mixing&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge22" class="edge">
+<title>module~adaptive_mixing&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M354.74,-439.74C329.48,-433.75 298.11,-423.47 274.3,-406.38"/>
+</g>
+<!-- module~adaptive_mixing&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge23" class="edge">
+<title>module~adaptive_mixing&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M354.9,-435.64C350.19,-433.12 345.77,-430.07 342.06,-426.38 298.23,-382.82 282.32,-308.08 276.9,-270.46"/>
+<polygon fill="#000000" stroke="#000000" points="280.39,-270.18 275.63,-260.72 273.45,-271.09 280.39,-270.18"/>
+</g>
+<!-- module~convergence_monitor&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge24" class="edge">
+<title>module~convergence_monitor&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M354.75,-418.22C329.02,-422.48 297.17,-422.8 274.3,-406.38"/>
+</g>
+<!-- module~convergence_monitor&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge25" class="edge">
+<title>module~convergence_monitor&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M355.8,-394.59C350.83,-392.07 346.1,-389.03 342.06,-385.38 307.26,-353.92 288.3,-300.6 279.84,-270.28"/>
+<polygon fill="#000000" stroke="#000000" points="283.23,-269.42 277.31,-260.63 276.46,-271.19 283.23,-269.42"/>
+</g>
+<!-- module~density_calculator&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge26" class="edge">
+<title>module~density_calculator&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M371.17,-142.26C361.9,-146.35 351.5,-151 342.06,-155.38 311.68,-169.5 307.79,-188.89 274.3,-188.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-188.38C253.82,-188.11 233.85,-185.18 216.17,-181.64"/>
+<polygon fill="#000000" stroke="#000000" points="216.9,-178.22 206.39,-179.57 215.45,-185.07 216.9,-178.22"/>
+</g>
+<!-- module~density_calculator&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge27" class="edge">
+<title>module~density_calculator&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M364.07,-142.24C356.38,-145.78 348.59,-150.15 342.06,-155.38 338.66,-158.11 308.06,-200.37 289.16,-226.65"/>
+<polygon fill="#000000" stroke="#000000" points="286.44,-224.44 283.45,-234.6 292.13,-228.52 286.44,-224.44"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~boundary_conditions -->
+<g id="module~~input_parser~~UsesGraph_edge29" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M518.94,-317.26C501.63,-325.22 478.12,-335.78 457.08,-344.38 452.95,-346.07 448.62,-347.78 444.29,-349.46"/>
+<polygon fill="#000000" stroke="#000000" points="443.1,-346.17 434.99,-352.99 445.58,-352.71 443.1,-346.17"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge30" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-285.38C372.18,-287.78 363.08,-288.26 342.06,-304.38 298.88,-337.51 318.51,-438.12 274.3,-406.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-406.38C199.21,-353.92 174.47,-239.99 167.02,-191.25"/>
+<polygon fill="#000000" stroke="#000000" points="170.52,-191 165.66,-181.59 163.59,-191.98 170.52,-191"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge31" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M498.17,-293.53C470.04,-287.67 433.32,-282.41 400.57,-285.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-285.38C365.88,-288.35 330.22,-275.68 305.51,-264.18"/>
+<polygon fill="#000000" stroke="#000000" points="307.19,-261.1 296.67,-259.87 304.13,-267.4 307.19,-261.1"/>
+</g>
+<!-- ieee_arithmetic -->
+<g id="module~~input_parser~~UsesGraph_node15" class="node">
+<title>ieee_arithmetic</title>
+<g id="a_module~~input_parser~~UsesGraph_node15"><a xlink:href="http://fortranwiki.org/fortran/show/ieee_arithmetic" xlink:title="ieee_arithmetic">
+<polygon fill="#337ab7" stroke="#337ab7" points="441.7,-335.77 357.43,-335.77 357.43,-313 441.7,-313 441.7,-335.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-320.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ieee_arithmetic</text>
+</a>
+</g>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;ieee_arithmetic -->
+<g id="module~~input_parser~~UsesGraph_edge28" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M492.84,-312.19C479.88,-313.9 465.95,-315.74 452.95,-317.46"/>
+<polygon fill="#000000" stroke="#000000" points="452.76,-313.96 443.31,-318.74 453.68,-320.9 452.76,-313.96"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge32" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M355.71,-198.36C331.88,-193.58 301.61,-188.8 274.3,-188.38"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge33" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.95,-220.19C347.06,-224.55 331.22,-229.52 316.92,-234.01"/>
+<polygon fill="#000000" stroke="#000000" points="316.28,-230.54 307.78,-236.88 318.37,-237.22 316.28,-230.54"/>
+</g>
+<!-- module~mixing_schemes&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge34" class="edge">
+<title>module~mixing_schemes&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.56,-476.52C354.19,-473.9 347.79,-470.85 342.06,-467.38 307.4,-446.4 307.22,-430.01 274.3,-406.38"/>
+</g>
+<!-- module~mixing_schemes&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge35" class="edge">
+<title>module~mixing_schemes&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M354.11,-476.56C349.65,-474.06 345.51,-471.04 342.06,-467.38 314.67,-438.39 288.8,-320.88 278.73,-270.5"/>
+<polygon fill="#000000" stroke="#000000" points="282.17,-269.86 276.81,-260.72 275.3,-271.21 282.17,-269.86"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge36" class="edge">
+<title>module~xc_lsda&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-50.38C311.23,-31.43 220.1,-110.81 182.27,-148.95"/>
+<polygon fill="#000000" stroke="#000000" points="180.13,-146.14 175.68,-155.75 185.16,-151.01 180.13,-146.14"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge37" class="edge">
+<title>module~xc_lsda&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-169.38C374.24,-179.88 365.05,-175.21 342.06,-188.38 323.59,-198.97 305.55,-215.04 292.73,-227.74"/>
+<polygon fill="#000000" stroke="#000000" points="290.31,-225.21 285.82,-234.8 295.31,-230.11 290.31,-225.21"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M529.66,-103.14C512.9,-116.11 484.29,-136.92 457.08,-150.38 433.33,-162.14 424.9,-158.89 400.57,-169.38"/>
+</g>
+<!-- module~spline2d -->
+<g id="module~~input_parser~~UsesGraph_node16" class="node">
+<title>module~spline2d</title>
+<g id="a_module~~input_parser~~UsesGraph_node16"><a xlink:href="../module/spline2d.html" xlink:title="spline2d">
+<polygon fill="#337ab7" stroke="#337ab7" points="300.3,-22.77 246.3,-22.77 246.3,0 300.3,0 300.3,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="273.3" y="-7.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d</text>
+</a>
+</g>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~spline2d -->
+<g id="module~~input_parser~~UsesGraph_edge38" class="edge">
+<title>module~xc_lsda&#45;&gt;module~spline2d</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M518.1,-82.8C489.47,-73.7 442.17,-59.41 400.57,-50.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-50.38C368.68,-43.9 335.67,-33.38 311.2,-24.9"/>
+<polygon fill="#000000" stroke="#000000" points="312.61,-21.68 302.02,-21.67 310.29,-28.29 312.61,-21.68"/>
+</g>
+<!-- module~table_io -->
+<g id="module~~input_parser~~UsesGraph_node17" class="node">
+<title>module~table_io</title>
+<g id="a_module~~input_parser~~UsesGraph_node17"><a xlink:href="../module/table_io.html" xlink:title="table_io">
+<polygon fill="#337ab7" stroke="#337ab7" points="426.57,-100.77 372.57,-100.77 372.57,-78 426.57,-78 426.57,-100.77"/>
+<text xml:space="preserve" text-anchor="middle" x="399.57" y="-85.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
+</a>
+</g>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~table_io -->
+<g id="module~~input_parser~~UsesGraph_edge39" class="edge">
+<title>module~xc_lsda&#45;&gt;module~table_io</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M517.97,-91.02C495.58,-90.71 463.17,-90.26 438.08,-89.91"/>
+<polygon fill="#000000" stroke="#000000" points="438.33,-86.41 428.29,-89.77 438.24,-93.41 438.33,-86.41"/>
+</g>
+<!-- module~spline2d&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge40" class="edge">
+<title>module~spline2d&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M254.77,-23.27C249.83,-27.11 244.68,-31.61 240.54,-36.38 210.64,-70.87 186.38,-118.76 173.71,-146.37"/>
+<polygon fill="#000000" stroke="#000000" points="170.52,-144.92 169.63,-155.48 176.91,-147.79 170.52,-144.92"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_constants -->
+<g id="module~~input_parser~~UsesGraph_edge42" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-129.38C248.48,-135.24 222.6,-144.46 202.14,-152.47"/>
+<polygon fill="#000000" stroke="#000000" points="201.07,-149.13 193.07,-156.08 203.66,-155.63 201.07,-149.13"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_errors -->
+<g id="module~~input_parser~~UsesGraph_edge43" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M372.12,-94.3C361.65,-97.39 350.2,-102.39 342.06,-110.38 310.75,-141.16 326.87,-163.72 306.06,-202.38 301.64,-210.61 295.97,-219.1 290.65,-226.46"/>
+<polygon fill="#000000" stroke="#000000" points="287.85,-224.36 284.66,-234.46 293.46,-228.55 287.85,-224.36"/>
+</g>
+<!-- module~table_io&#45;&gt;iso_fortran_env -->
+<g id="module~~input_parser~~UsesGraph_edge41" class="edge">
+<title>module~table_io&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-129.38C213.7,-143.79 144.37,-147.79 97.59,-148.67"/>
+<polygon fill="#000000" stroke="#000000" points="97.67,-145.17 87.72,-148.8 97.77,-152.16 97.67,-145.17"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M372.08,-98.55C347.04,-107.05 308.34,-119.81 274.3,-129.38"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panmoduleinput_parserUsesGraph = svgPanZoom('#moduleinput_parserUsesGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsesGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsesGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+          <div class="card">
+      <h3 class="card-header card-title bg-light">Used by</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: module~~input_parser~~UsedByGraph Pages: 1 -->
+<svg id="moduleinput_parserUsedByGraph" width="189pt" height="31pt"
+ viewBox="0.00 0.00 189.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~input_parser~~UsedByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>module~~input_parser~~UsedByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 185.29,-26.77 185.29,4 -4,4"/>
+<!-- module~input_parser -->
+<g id="module~~input_parser~~UsedByGraph_node1" class="node">
+<title>module~input_parser</title>
+<polygon fill="none" stroke="black" points="71.52,-22.77 0,-22.77 0,0 71.52,0 71.52,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="35.76" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">input_parser</text>
+</g>
+<!-- module~output_writer -->
+<g id="module~~input_parser~~UsedByGraph_node2" class="node">
+<title>module~output_writer</title>
+<g id="a_module~~input_parser~~UsedByGraph_node2"><a xlink:href="../module/output_writer.html" xlink:title="output_writer">
+<polygon fill="#337ab7" stroke="#337ab7" points="181.29,-22.77 107.52,-22.77 107.52,0 181.29,0 181.29,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="144.4" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">output_writer</text>
+</a>
+</g>
+</g>
+<!-- module~output_writer&#45;&gt;module~input_parser -->
+<g id="module~~input_parser~~UsedByGraph_edge1" class="edge">
+<title>module~output_writer&#45;&gt;module~input_parser</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M107.3,-11.39C99.5,-11.39 91.14,-11.39 83.01,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="83.26,-7.89 73.26,-11.39 83.26,-14.89 83.26,-7.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsedByGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsedByGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+      <br>
+
+
+
+
+
+
+        <section>
+          <h2>Derived Types</h2>
+              <div class="card">
+    <div class="card-header codesum">
+      <span class="anchor" id="type-input_params_t"></span>
+      <h3>
+        type, public&nbsp;::&nbsp;
+        <a href='../type/input_params_t.html'>input_params_t</a>
+        
+      </h3>
+    </div>
+    <div class="card-body">
+      <p>Input parameters type</p>
+
+        <h4>Components</h4>
+          <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-l~14"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>L</strong></td>
+<td> =</td>
+                <td>10</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nup~10"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Nup</strong></td>
+<td> =</td>
+                <td>5</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ndown~4"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>Ndown</strong></td>
+<td> =</td>
+                <td>5</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-u~13"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>U</strong></td>
+<td> =</td>
+                <td>4.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-bc_type~2"></span>
+              character(len=20),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>bc_type</strong></td>
+<td> =</td>
+                <td>&#39;periodic&#39;</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-phase"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>phase</strong></td>
+<td> =</td>
+                <td>0.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-potential_type"></span>
+              character(len=20),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>potential_type</strong></td>
+<td> =</td>
+                <td>&#39;uniform&#39;</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v0~2"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>V0</strong></td>
+<td> =</td>
+                <td>0.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-pot_center"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>pot_center</strong></td>
+<td> =</td>
+                <td>0.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-pot_width"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>pot_width</strong></td>
+<td> =</td>
+                <td>1.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-spring_constant"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>spring_constant</strong></td>
+<td> =</td>
+                <td>0.001_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-concentration"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>concentration</strong></td>
+<td> =</td>
+                <td>50.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-pot_seed"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>pot_seed</strong></td>
+<td> =</td>
+                <td>-1</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-imp_positions_str"></span>
+              character(len=500),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>imp_positions_str</strong></td>
+<td> =</td>
+                <td>&#39;&#39;</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-disorder_strength"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>disorder_strength</strong></td>
+<td> =</td>
+                <td>2.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-distribution"></span>
+              character(len=20),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>distribution</strong></td>
+<td> =</td>
+                <td>&#39;gaussian&#39;</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-position"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>position</strong></td>
+<td> =</td>
+                <td>50</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-width"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>width</strong></td>
+<td> =</td>
+                <td>5</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-barrier_width"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>barrier_width</strong></td>
+<td> =</td>
+                <td>3.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-well_depth"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>well_depth</strong></td>
+<td> =</td>
+                <td>-3.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-well_width"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>well_width</strong></td>
+<td> =</td>
+                <td>20.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-position1"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>position1</strong></td>
+<td> =</td>
+                <td>35</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-width1"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>width1</strong></td>
+<td> =</td>
+                <td>3</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-position2"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>position2</strong></td>
+<td> =</td>
+                <td>65</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-width2"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>width2</strong></td>
+<td> =</td>
+                <td>3</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-max_iter~3"></span>
+              integer,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>max_iter</strong></td>
+<td> =</td>
+                <td>ITER_MAX</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-density_tol~2"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>density_tol</strong></td>
+<td> =</td>
+                <td>SCF_DENSITY_TOL</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-energy_tol~2"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>energy_tol</strong></td>
+<td> =</td>
+                <td>SCF_ENERGY_TOL</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mixing_alpha~2"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>mixing_alpha</strong></td>
+<td> =</td>
+                <td>MIX_ALPHA</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verbose~2"></span>
+              logical,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>verbose</strong></td>
+<td> =</td>
+                <td>.true.</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-store_history~3"></span>
+              logical,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>store_history</strong></td>
+<td> =</td>
+                <td>.true.</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-use_adaptive_mixing~2"></span>
+              logical,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>use_adaptive_mixing</strong></td>
+<td> =</td>
+                <td>.true.</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-output_prefix"></span>
+              character(len=100),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>output_prefix</strong></td>
+<td> =</td>
+                <td>&#39;lsda_output&#39;</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-save_density"></span>
+              logical,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>save_density</strong></td>
+<td> =</td>
+                <td>.true.</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-save_eigenvalues"></span>
+              logical,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>save_eigenvalues</strong></td>
+<td> =</td>
+                <td>.true.</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-save_wavefunction"></span>
+              logical,
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>save_wavefunction</strong></td>
+<td> =</td>
+                <td>.false.</td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+
+        <section>
+          <h2>Subroutines</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-parse_inputs"></span> <h3>public  subroutine <a href='../proc/parse_inputs.html'>parse_inputs</a>(inputs, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Parse inputs from command line or namelist file</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-inputs~3"></span>
+              type(<a href='../type/input_params_t.html'>input_params_t</a>),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>inputs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~14"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-read_namelist_file"></span> <h3>private  subroutine <a href='../proc/read_namelist_file.html'>read_namelist_file</a>(filename, inputs, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Read parameters from namelist file</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-filename~5"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>filename</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-inputs~4"></span>
+              type(<a href='../type/input_params_t.html'>input_params_t</a>),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>inputs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~15"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-validate_inputs"></span> <h3>public  subroutine <a href='../proc/validate_inputs.html'>validate_inputs</a>(inputs, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Validate input parameters</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-inputs~5"></span>
+              type(<a href='../type/input_params_t.html'>input_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>inputs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~16"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-convert_to_system_params"></span> <h3>public  subroutine <a href='../proc/convert_to_system_params.html'>convert_to_system_params</a>(inputs, sys_params, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Convert input_params_t to system_params_t</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-inputs~6"></span>
+              type(<a href='../type/input_params_t.html'>input_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>inputs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sys_params~5"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sys_params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~17"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-convert_to_scf_params"></span> <h3>public  subroutine <a href='../proc/convert_to_scf_params.html'>convert_to_scf_params</a>(inputs, scf_params)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Convert input_params_t to scf_params_t</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-inputs~7"></span>
+              type(<a href='../type/input_params_t.html'>input_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>inputs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-scf_params~4"></span>
+              type(<a href='../type/scf_params_t.html'>scf_params_t</a>),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>scf_params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-parse_integer_arg"></span> <h3>private  subroutine <a href='../proc/parse_integer_arg.html'>parse_integer_arg</a>(current_idx, nargs, value, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Parse integer argument from command line</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-current_idx"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>current_idx</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nargs~2"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nargs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-value"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>value</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~18"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-parse_real_arg"></span> <h3>private  subroutine <a href='../proc/parse_real_arg.html'>parse_real_arg</a>(current_idx, nargs, value, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Parse real argument from command line</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-current_idx~2"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>current_idx</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nargs~3"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nargs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-value~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>value</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~19"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-print_help"></span> <h3>private  subroutine <a href='../proc/print_help.html'>print_help</a>()  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Print help message</p>
+
+  <h4>Arguments</h4>
+    <em>None</em>
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+
+
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

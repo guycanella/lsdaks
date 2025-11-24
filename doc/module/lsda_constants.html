@@ -1,0 +1,1406 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>lsda_constants &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>lsda_constants
+      <small>Module</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 0.4% of total for modules and submodules.">17 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/lsda_constants.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/lsda_constants.f90.html'>lsda_constants.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">lsda_constants</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-dp">dp</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-sp">sp</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-pi">PI</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-twopi">TWOPI</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-u_small">U_SMALL</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-tol_default">TOL_DEFAULT</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-iter_max">ITER_MAX</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-initial_mix">INITIAL_MIX</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-mix_alpha">MIX_ALPHA</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-newton_tol">NEWTON_TOL</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-newton_max_iter">NEWTON_MAX_ITER</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-scf_energy_tol">SCF_ENERGY_TOL</a>
+            <a class="list-group-item" href="../module/lsda_constants.html#variable-scf_density_tol">SCF_DENSITY_TOL</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+
+    <div class="col-md-9" id='text'>
+      <p>Physical and numerical constants for LSDA-Hubbard calculations</p>
+<br>          <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='http://fortranwiki.org/fortran/show/iso_fortran_env'>iso_fortran_env</a></li>
+              </ul>
+            </li>
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: module~~lsda_constants~~UsesGraph Pages: 1 -->
+<svg id="modulelsda_constantsUsesGraph" width="213pt" height="31pt"
+ viewBox="0.00 0.00 213.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~lsda_constants~~UsesGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>module~~lsda_constants~~UsesGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 208.54,-26.77 208.54,4 -4,4"/>
+<!-- module~lsda_constants -->
+<g id="module~~lsda_constants~~UsesGraph_node1" class="node">
+<title>module~lsda_constants</title>
+<polygon fill="none" stroke="black" points="204.54,-22.77 121.77,-22.77 121.77,0 204.54,0 204.54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="163.15" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">lsda_constants</text>
+</g>
+<!-- iso_fortran_env -->
+<g id="module~~lsda_constants~~UsesGraph_node2" class="node">
+<title>iso_fortran_env</title>
+<g id="a_module~~lsda_constants~~UsesGraph_node2"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-22.77 0,-22.77 0,0 85.77,0 85.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- module~lsda_constants&#45;&gt;iso_fortran_env -->
+<g id="module~~lsda_constants~~UsesGraph_edge1" class="edge">
+<title>module~lsda_constants&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M121.45,-11.39C113.64,-11.39 105.35,-11.39 97.21,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="97.38,-7.89 87.38,-11.39 97.38,-14.89 97.38,-7.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsesGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsesGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+          <div class="card">
+      <h3 class="card-header card-title bg-light">Used by</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: module~~lsda_constants~~UsedByGraph Pages: 1 -->
+<svg id="modulelsda_constantsUsedByGraph" width="641pt" height="775pt"
+ viewBox="0.00 0.00 641.00 775.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~lsda_constants~~UsedByGraph" class="graph" transform="scale(0.691373 0.691373) rotate(0) translate(4 1116.36)">
+<title>module~~lsda_constants~~UsedByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-1116.36 923.14,-1116.36 923.14,4 -4,4"/>
+<!-- module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_node1" class="node">
+<title>module~lsda_constants</title>
+<polygon fill="none" stroke="black" points="82.77,-533.17 0,-533.17 0,-510.4 82.77,-510.4 82.77,-533.17"/>
+<text xml:space="preserve" text-anchor="middle" x="41.38" y="-517.43" font-family="Helvetica,sans-Serif" font-size="10.50">lsda_constants</text>
+</g>
+<!-- module~adaptive_mixing -->
+<g id="module~~lsda_constants~~UsedByGraph_node2" class="node">
+<title>module~adaptive_mixing</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node2"><a xlink:href="../module/adaptive_mixing.html" xlink:title="adaptive_mixing">
+<polygon fill="#337ab7" stroke="#337ab7" points="396.43,-592.17 307.66,-592.17 307.66,-569.4 396.43,-569.4 396.43,-592.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-576.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mixing</text>
+</a>
+</g>
+</g>
+<!-- module~adaptive_mixing&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge1" class="edge">
+<title>module~adaptive_mixing&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M178.28,-859.78C52.02,-814.99 41.66,-612.93 41.85,-544.51"/>
+<polygon fill="#000000" stroke="#000000" points="45.34,-544.91 41.96,-534.87 38.34,-544.83 45.34,-544.91"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M307.31,-585.7C295.94,-588.8 284.47,-593.79 275.79,-601.78 185.84,-684.61 295.52,-900.66 180.28,-859.78"/>
+</g>
+<!-- module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_node14" class="node">
+<title>module~lsda_errors</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node14"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
+<polygon fill="#337ab7" stroke="#337ab7" points="212.04,-533.17 146.52,-533.17 146.52,-510.4 212.04,-510.4 212.04,-533.17"/>
+<text xml:space="preserve" text-anchor="middle" x="179.28" y="-517.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
+</a>
+</g>
+</g>
+<!-- module~adaptive_mixing&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge42" class="edge">
+<title>module~adaptive_mixing&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M315.01,-568.99C302.57,-564.87 288.55,-560.17 275.79,-555.78 258.45,-549.82 239.41,-543.08 222.92,-537.18"/>
+<polygon fill="#000000" stroke="#000000" points="224.51,-534.03 213.92,-533.95 222.15,-540.62 224.51,-534.03"/>
+</g>
+<!-- module~bethe_equations -->
+<g id="module~~lsda_constants~~UsedByGraph_node3" class="node">
+<title>module~bethe_equations</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node3"><a xlink:href="../module/bethe_equations.html" xlink:title="bethe_equations">
+<polygon fill="#337ab7" stroke="#337ab7" points="224.79,-1065.17 133.77,-1065.17 133.77,-1042.4 224.79,-1042.4 224.79,-1065.17"/>
+<text xml:space="preserve" text-anchor="middle" x="179.28" y="-1049.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bethe_equations</text>
+</a>
+</g>
+</g>
+<!-- module~bethe_equations&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge2" class="edge">
+<title>module~bethe_equations&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M134.9,-1041.92C128.73,-1038.56 123.04,-1034.27 118.77,-1028.78 58.72,-951.62 45.48,-633.5 42.93,-544.83"/>
+<polygon fill="#000000" stroke="#000000" points="46.44,-544.88 42.67,-534.98 39.44,-545.07 46.44,-544.88"/>
+</g>
+<!-- module~bethe_tables -->
+<g id="module~~lsda_constants~~UsedByGraph_node4" class="node">
+<title>module~bethe_tables</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node4"><a xlink:href="../module/bethe_tables.html" xlink:title="bethe_tables">
+<polygon fill="#337ab7" stroke="#337ab7" points="553.08,-1026.17 480.06,-1026.17 480.06,-1003.4 553.08,-1003.4 553.08,-1026.17"/>
+<text xml:space="preserve" text-anchor="middle" x="516.57" y="-1010.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bethe_tables</text>
+</a>
+</g>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge3" class="edge">
+<title>module~bethe_tables&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-1014.78C313.16,-1016.91 211.75,-1035.99 180.28,-1014.78"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M479.71,-1013.63C446.76,-1012.84 396.57,-1012.33 353.05,-1014.78"/>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~bethe_equations -->
+<g id="module~~lsda_constants~~UsedByGraph_edge29" class="edge">
+<title>module~bethe_tables&#45;&gt;module~bethe_equations</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-1014.78C308.36,-1017.19 261.05,-1028.71 227.07,-1038.62"/>
+<polygon fill="#000000" stroke="#000000" points="226.11,-1035.25 217.53,-1041.47 228.12,-1041.96 226.11,-1035.25"/>
+</g>
+<!-- module~nonlinear_solvers -->
+<g id="module~~lsda_constants~~UsedByGraph_node17" class="node">
+<title>module~nonlinear_solvers</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node17"><a xlink:href="../module/nonlinear_solvers.html" xlink:title="nonlinear_solvers">
+<polygon fill="#337ab7" stroke="#337ab7" points="399.81,-1065.17 304.29,-1065.17 304.29,-1042.4 399.81,-1042.4 399.81,-1065.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-1049.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">nonlinear_solvers</text>
+</a>
+</g>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~nonlinear_solvers -->
+<g id="module~~lsda_constants~~UsedByGraph_edge66" class="edge">
+<title>module~bethe_tables&#45;&gt;module~nonlinear_solvers</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M479.9,-1023.34C459.75,-1028.18 434.06,-1034.34 411.08,-1039.86"/>
+<polygon fill="#000000" stroke="#000000" points="410.43,-1036.41 401.52,-1042.15 412.06,-1043.22 410.43,-1036.41"/>
+</g>
+<!-- module~table_io -->
+<g id="module~~lsda_constants~~UsedByGraph_node27" class="node">
+<title>module~table_io</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node27"><a xlink:href="../module/table_io.html" xlink:title="table_io">
+<polygon fill="#337ab7" stroke="#337ab7" points="379.05,-987.17 325.05,-987.17 325.05,-964.4 379.05,-964.4 379.05,-987.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-971.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
+</a>
+</g>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~table_io -->
+<g id="module~~lsda_constants~~UsedByGraph_edge75" class="edge">
+<title>module~bethe_tables&#45;&gt;module~table_io</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M479.9,-1006.22C453.33,-999.85 417.14,-991.16 390.22,-984.7"/>
+<polygon fill="#000000" stroke="#000000" points="391.31,-981.37 380.77,-982.44 389.68,-988.17 391.31,-981.37"/>
+</g>
+<!-- module~boundary_conditions -->
+<g id="module~~lsda_constants~~UsedByGraph_node5" class="node">
+<title>module~boundary_conditions</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node5"><a xlink:href="../module/boundary_conditions.html" xlink:title="boundary_conditions">
+<polygon fill="#337ab7" stroke="#337ab7" points="407.31,-793.17 296.79,-793.17 296.79,-770.4 407.31,-770.4 407.31,-793.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-777.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">boundary_conditions</text>
+</a>
+</g>
+</g>
+<!-- module~boundary_conditions&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge4" class="edge">
+<title>module~boundary_conditions&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M333.41,-793.64C296.22,-818.01 210.69,-870.57 180.28,-859.78"/>
+</g>
+<!-- module~boundary_conditions&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge43" class="edge">
+<title>module~boundary_conditions&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M296.52,-773.11C288.96,-770.13 281.75,-766.13 275.79,-760.78 210.31,-702.02 189.05,-592.26 182.73,-544.72"/>
+<polygon fill="#000000" stroke="#000000" points="186.24,-544.55 181.55,-535.05 179.29,-545.39 186.24,-544.55"/>
+</g>
+<!-- module~continuation -->
+<g id="module~~lsda_constants~~UsedByGraph_node6" class="node">
+<title>module~continuation</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node6"><a xlink:href="../module/continuation.html" xlink:title="continuation">
+<polygon fill="#337ab7" stroke="#337ab7" points="551.2,-1085.17 481.93,-1085.17 481.93,-1062.4 551.2,-1062.4 551.2,-1085.17"/>
+<text xml:space="preserve" text-anchor="middle" x="516.57" y="-1069.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">continuation</text>
+</a>
+</g>
+</g>
+<!-- module~continuation&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge5" class="edge">
+<title>module~continuation&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-1092.78C275.15,-1092.88 242.46,-1136.31 180.28,-1092.78"/>
+</g>
+<!-- module~continuation&#45;&gt;module~bethe_equations -->
+<g id="module~~lsda_constants~~UsedByGraph_edge30" class="edge">
+<title>module~continuation&#45;&gt;module~bethe_equations</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-1092.78C306.46,-1092.84 256.92,-1080.04 222.74,-1069.09"/>
+<polygon fill="#000000" stroke="#000000" points="224.23,-1065.9 213.64,-1066.09 222.04,-1072.54 224.23,-1065.9"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M481.46,-1080.08C448.67,-1085.59 397.65,-1092.73 353.05,-1092.78"/>
+</g>
+<!-- module~continuation&#45;&gt;module~nonlinear_solvers -->
+<g id="module~~lsda_constants~~UsedByGraph_edge67" class="edge">
+<title>module~continuation&#45;&gt;module~nonlinear_solvers</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M481.5,-1069.59C461.18,-1067.09 434.84,-1063.85 411.31,-1060.95"/>
+<polygon fill="#000000" stroke="#000000" points="411.87,-1057.5 401.52,-1059.75 411.02,-1064.44 411.87,-1057.5"/>
+</g>
+<!-- module~convergence_monitor -->
+<g id="module~~lsda_constants~~UsedByGraph_node7" class="node">
+<title>module~convergence_monitor</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node7"><a xlink:href="../module/convergence_monitor.html" xlink:title="convergence_monitor">
+<polygon fill="#337ab7" stroke="#337ab7" points="409.56,-354.17 294.54,-354.17 294.54,-331.4 409.56,-331.4 409.56,-354.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-338.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">convergence_monitor</text>
+</a>
+</g>
+</g>
+<!-- module~convergence_monitor&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge6" class="edge">
+<title>module~convergence_monitor&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M336.41,-330.95C321.08,-318.48 296.43,-298.12 275.79,-279.78 232.18,-241.05 228.49,-156.96 180.28,-189.78"/>
+</g>
+<!-- module~convergence_monitor&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge44" class="edge">
+<title>module~convergence_monitor&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M299.22,-354.66C290.87,-358.03 282.71,-362.32 275.79,-367.78 230.73,-403.35 201.38,-466.46 188.24,-499.78"/>
+<polygon fill="#000000" stroke="#000000" points="185.08,-498.22 184.8,-508.81 191.63,-500.71 185.08,-498.22"/>
+</g>
+<!-- module~degeneracy_handler -->
+<g id="module~~lsda_constants~~UsedByGraph_node8" class="node">
+<title>module~degeneracy_handler</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node8"><a xlink:href="../module/degeneracy_handler.html" xlink:title="degeneracy_handler">
+<polygon fill="#337ab7" stroke="#337ab7" points="406.93,-871.17 297.16,-871.17 297.16,-848.4 406.93,-848.4 406.93,-871.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-855.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">degeneracy_handler</text>
+</a>
+</g>
+</g>
+<!-- module~degeneracy_handler&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge7" class="edge">
+<title>module~degeneracy_handler&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M296.79,-868.87C262.42,-872.45 217.58,-873.02 180.28,-859.78"/>
+</g>
+<!-- module~degeneracy_handler&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge45" class="edge">
+<title>module~degeneracy_handler&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M296.78,-848.83C289,-845.36 281.66,-840.79 275.79,-834.78 194.82,-751.8 182.25,-602.23 180.48,-544.96"/>
+<polygon fill="#000000" stroke="#000000" points="183.98,-545.05 180.27,-535.13 176.99,-545.2 183.98,-545.05"/>
+</g>
+<!-- module~density_calculator -->
+<g id="module~~lsda_constants~~UsedByGraph_node9" class="node">
+<title>module~density_calculator</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node9"><a xlink:href="../module/density_calculator.html" xlink:title="density_calculator">
+<polygon fill="#337ab7" stroke="#337ab7" points="400.56,-752.17 303.54,-752.17 303.54,-729.4 400.56,-729.4 400.56,-752.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-736.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">density_calculator</text>
+</a>
+</g>
+</g>
+<!-- module~density_calculator&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge8" class="edge">
+<title>module~density_calculator&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M303.32,-750.01C293.82,-752.96 284.19,-756.8 275.79,-761.78 223.47,-792.8 237.6,-880.12 180.28,-859.78"/>
+</g>
+<!-- module~density_calculator&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge46" class="edge">
+<title>module~density_calculator&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M303.09,-733.93C293.28,-730.82 283.59,-726.31 275.79,-719.78 219.82,-672.95 194.17,-585.61 184.78,-544.41"/>
+<polygon fill="#000000" stroke="#000000" points="188.21,-543.72 182.69,-534.68 181.37,-545.19 188.21,-543.72"/>
+</g>
+<!-- module~hamiltonian_builder -->
+<g id="module~~lsda_constants~~UsedByGraph_node10" class="node">
+<title>module~hamiltonian_builder</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node10"><a xlink:href="../module/hamiltonian_builder.html" xlink:title="hamiltonian_builder">
+<polygon fill="#337ab7" stroke="#337ab7" points="568.83,-692.17 464.31,-692.17 464.31,-669.4 568.83,-669.4 568.83,-692.17"/>
+<text xml:space="preserve" text-anchor="middle" x="516.57" y="-676.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">hamiltonian_builder</text>
+</a>
+</g>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge9" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M514.66,-692.52C511.17,-728.27 495.26,-836.04 428.31,-879.78 335.73,-940.28 284.51,-896.76 180.28,-859.78"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~boundary_conditions -->
+<g id="module~~lsda_constants~~UsedByGraph_edge32" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M506.11,-692.42C491.32,-709.85 461.01,-742.62 428.31,-760.78 424.95,-762.65 421.41,-764.36 417.77,-765.93"/>
+<polygon fill="#000000" stroke="#000000" points="416.79,-762.55 408.73,-769.43 419.32,-769.08 416.79,-762.55"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge47" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M463.85,-676.74C403.16,-671.25 306.86,-659.98 275.79,-641.78 235.63,-618.26 205.78,-570.91 190.89,-543.24"/>
+<polygon fill="#000000" stroke="#000000" points="194.17,-541.97 186.46,-534.71 187.96,-545.2 194.17,-541.97"/>
+</g>
+<!-- module~input_parser -->
+<g id="module~~lsda_constants~~UsedByGraph_node11" class="node">
+<title>module~input_parser</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node11"><a xlink:href="../module/input_parser.html" xlink:title="input_parser">
+<polygon fill="#337ab7" stroke="#337ab7" points="809.37,-393.17 737.85,-393.17 737.85,-370.4 809.37,-370.4 809.37,-393.17"/>
+<text xml:space="preserve" text-anchor="middle" x="773.61" y="-377.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">input_parser</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge10" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M766.33,-370.12C744.45,-330.53 667.48,-199.78 568.83,-128.78 549.11,-114.59 540.82,-116.85 517.57,-109.78"/>
+</g>
+<!-- module~input_parser&#45;&gt;module~boundary_conditions -->
+<g id="module~~lsda_constants~~UsedByGraph_edge33" class="edge">
+<title>module~input_parser&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M768.2,-393.39C750.35,-438.91 679.14,-607.32 568.83,-700.78 525.82,-737.23 464.8,-758.09 418.62,-769.48"/>
+<polygon fill="#000000" stroke="#000000" points="417.91,-766.05 408.99,-771.76 419.52,-772.87 417.91,-766.05"/>
+</g>
+<!-- module~kohn_sham_cycle -->
+<g id="module~~lsda_constants~~UsedByGraph_node12" class="node">
+<title>module~kohn_sham_cycle</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node12"><a xlink:href="../module/kohn_sham_cycle.html" xlink:title="kohn_sham_cycle">
+<polygon fill="#337ab7" stroke="#337ab7" points="701.85,-432.17 604.83,-432.17 604.83,-409.4 701.85,-409.4 701.85,-432.17"/>
+<text xml:space="preserve" text-anchor="middle" x="653.34" y="-416.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">kohn_sham_cycle</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~lsda_constants~~UsedByGraph_edge39" class="edge">
+<title>module~input_parser&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M737.45,-393.38C725.98,-397.16 713.06,-401.42 700.89,-405.43"/>
+<polygon fill="#000000" stroke="#000000" points="699.82,-402.1 691.42,-408.56 702.01,-408.75 699.82,-402.1"/>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge48" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M652.34,-381.78C571.32,-360.43 350.24,-362.35 275.79,-400.78 234.01,-422.35 204.59,-471.3 190.25,-499.89"/>
+<polygon fill="#000000" stroke="#000000" points="187.18,-498.2 185.99,-508.73 193.49,-501.24 187.18,-498.2"/>
+</g>
+<!-- module~lsda_types -->
+<g id="module~~lsda_constants~~UsedByGraph_node15" class="node">
+<title>module~lsda_types</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node15"><a xlink:href="../module/lsda_types.html" xlink:title="lsda_types">
+<polygon fill="#337ab7" stroke="#337ab7" points="547.83,-238.17 485.31,-238.17 485.31,-215.4 547.83,-215.4 547.83,-238.17"/>
+<text xml:space="preserve" text-anchor="middle" x="516.57" y="-222.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_types</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_types -->
+<g id="module~~lsda_constants~~UsedByGraph_edge62" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M652.34,-381.78C585.94,-364.28 620.15,-297.41 568.83,-251.78 565.55,-248.87 561.87,-246.21 558.03,-243.82"/>
+<polygon fill="#000000" stroke="#000000" points="560.04,-240.93 549.6,-239.12 556.64,-247.05 560.04,-240.93"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M737.59,-386.41C713.73,-388.45 681.64,-388.98 654.34,-381.78"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge11" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M629.69,-408.93C560.58,-372.78 356.89,-266.36 353.05,-265.78"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing -->
+<g id="module~~lsda_constants~~UsedByGraph_edge28" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M515.57,-580.78C483.43,-599.88 441.01,-599.21 407.57,-594.11"/>
+<polygon fill="#000000" stroke="#000000" points="408.54,-590.73 398.1,-592.49 407.36,-597.63 408.54,-590.73"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~boundary_conditions -->
+<g id="module~~lsda_constants~~UsedByGraph_edge34" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M515.57,-580.78C479.27,-602.35 482.97,-622.9 464.31,-660.78 443.44,-703.16 462.92,-728.63 428.31,-760.78 425.2,-763.68 421.71,-766.18 418.01,-768.34"/>
+<polygon fill="#000000" stroke="#000000" points="416.59,-765.13 409.11,-772.64 419.63,-771.44 416.59,-765.13"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~convergence_monitor -->
+<g id="module~~lsda_constants~~UsedByGraph_edge35" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~convergence_monitor</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M515.57,-580.78C439.14,-626.2 484.41,-469.76 428.31,-400.78 415.5,-385.04 397.62,-371.03 382.5,-360.72"/>
+<polygon fill="#000000" stroke="#000000" points="384.59,-357.91 374.31,-355.34 380.74,-363.76 384.59,-357.91"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M646.29,-432.34C629.96,-462.25 581.89,-542.56 517.57,-580.78"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~density_calculator -->
+<g id="module~~lsda_constants~~UsedByGraph_edge36" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~density_calculator</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M515.57,-580.78C479.27,-602.35 486.7,-624.98 464.31,-660.78 448.02,-686.83 452.81,-701.25 428.31,-719.78 423.18,-723.66 417.37,-726.83 411.31,-729.4"/>
+<polygon fill="#000000" stroke="#000000" points="410.54,-725.96 402.36,-732.69 412.95,-732.53 410.54,-725.96"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder -->
+<g id="module~~lsda_constants~~UsedByGraph_edge37" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M647.22,-432.36C634.66,-460.55 600.99,-534.85 568.83,-594.78 556.78,-617.23 541.73,-642.17 531.06,-659.38"/>
+<polygon fill="#000000" stroke="#000000" points="528.17,-657.39 525.85,-667.73 534.11,-661.1 528.17,-657.39"/>
+</g>
+<!-- module~lapack_wrapper -->
+<g id="module~~lsda_constants~~UsedByGraph_node13" class="node">
+<title>module~lapack_wrapper</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node13"><a xlink:href="../module/lapack_wrapper.html" xlink:title="lapack_wrapper">
+<polygon fill="#337ab7" stroke="#337ab7" points="395.68,-711.17 308.41,-711.17 308.41,-688.4 395.68,-688.4 395.68,-711.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-695.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lapack_wrapper</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper -->
+<g id="module~~lsda_constants~~UsedByGraph_edge41" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M515.57,-580.78C487.79,-597.29 415.4,-652 377.3,-681.14"/>
+<polygon fill="#000000" stroke="#000000" points="375.41,-678.17 369.61,-687.03 379.67,-683.73 375.41,-678.17"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge49" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M515.57,-580.78C481.37,-601.11 467.38,-568.32 428.31,-560.78 356.99,-547.02 273.42,-534.65 223.77,-527.69"/>
+<polygon fill="#000000" stroke="#000000" points="224.4,-524.24 214.01,-526.33 223.43,-531.18 224.4,-524.24"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_types -->
+<g id="module~~lsda_constants~~UsedByGraph_edge63" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M620.9,-409.07C614.86,-405.59 609.09,-401.21 604.83,-395.78 564.09,-343.9 610.36,-303.04 568.83,-251.78 565.81,-248.06 562.11,-244.85 558.08,-242.1"/>
+<polygon fill="#000000" stroke="#000000" points="560,-239.16 549.58,-237.22 556.51,-245.23 560,-239.16"/>
+</g>
+<!-- module~mixing_schemes -->
+<g id="module~~lsda_constants~~UsedByGraph_node16" class="node">
+<title>module~mixing_schemes</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node16"><a xlink:href="../module/mixing_schemes.html" xlink:title="mixing_schemes">
+<polygon fill="#337ab7" stroke="#337ab7" points="397.56,-633.17 306.54,-633.17 306.54,-610.4 397.56,-610.4 397.56,-633.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-617.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mixing_schemes</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~mixing_schemes -->
+<g id="module~~lsda_constants~~UsedByGraph_edge65" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~mixing_schemes</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M515.57,-580.78C483.12,-600.06 441.83,-610.33 408.99,-615.77"/>
+<polygon fill="#000000" stroke="#000000" points="408.61,-612.29 399.25,-617.27 409.67,-619.21 408.61,-612.29"/>
+</g>
+<!-- module~xc_lsda -->
+<g id="module~~lsda_constants~~UsedByGraph_node28" class="node">
+<title>module~xc_lsda</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node28"><a xlink:href="../module/xc_lsda.html" xlink:title="xc_lsda">
+<polygon fill="#337ab7" stroke="#337ab7" points="543.57,-890.17 489.57,-890.17 489.57,-867.4 543.57,-867.4 543.57,-890.17"/>
+<text xml:space="preserve" text-anchor="middle" x="516.57" y="-874.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">xc_lsda</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~xc_lsda -->
+<g id="module~~lsda_constants~~UsedByGraph_edge77" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~xc_lsda</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M648.87,-432.57C630.92,-493.56 548.46,-773.8 524.26,-856.04"/>
+<polygon fill="#000000" stroke="#000000" points="520.91,-855.05 521.44,-865.63 527.62,-857.02 520.91,-855.05"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge12" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M308.12,-706.29C296.89,-709.41 285.28,-714 275.79,-720.78 214.8,-764.36 250.92,-884.84 180.28,-859.78"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge50" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M308.27,-691.17C296.91,-687.45 285.2,-682.19 275.79,-674.78 230.89,-639.45 201.47,-576.74 188.28,-543.65"/>
+<polygon fill="#000000" stroke="#000000" points="191.68,-542.76 184.83,-534.68 185.15,-545.27 191.68,-542.76"/>
+</g>
+<!-- module~lsda_errors&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge13" class="edge">
+<title>module~lsda_errors&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M146.07,-521.78C130.62,-521.78 111.72,-521.78 94.31,-521.78"/>
+<polygon fill="#000000" stroke="#000000" points="94.65,-518.28 84.65,-521.78 94.65,-525.28 94.65,-518.28"/>
+</g>
+<!-- module~lsda_types&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge14" class="edge">
+<title>module~lsda_types&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-265.78C268.89,-253.52 248.95,-143.03 180.28,-189.78"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M491.33,-238.64C459.79,-252.66 402.84,-273.22 353.05,-265.78"/>
+</g>
+<!-- module~mixing_schemes&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge15" class="edge">
+<title>module~mixing_schemes&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M331.23,-633.65C314.85,-644.21 291.75,-660.87 275.79,-679.78 217.38,-748.99 265.63,-890.06 180.28,-859.78"/>
+</g>
+<!-- module~mixing_schemes&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge51" class="edge">
+<title>module~mixing_schemes&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M306.09,-612.55C295.82,-609.55 285.17,-605.68 275.79,-600.78 246.13,-585.28 217.25,-559.45 199.15,-541.57"/>
+<polygon fill="#000000" stroke="#000000" points="201.77,-539.23 192.25,-534.58 196.79,-544.15 201.77,-539.23"/>
+</g>
+<!-- module~nonlinear_solvers&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge16" class="edge">
+<title>module~nonlinear_solvers&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M178.28,-1092.78C155.53,-1076.86 136.65,-1095.03 118.77,-1073.78 49.83,-991.87 43,-639 42.42,-544.91"/>
+<polygon fill="#000000" stroke="#000000" points="45.92,-545.13 42.37,-535.14 38.92,-545.16 45.92,-545.13"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M313.05,-1065.56C266.11,-1079.63 191.12,-1100.37 180.28,-1092.78"/>
+</g>
+<!-- module~nonlinear_solvers&#45;&gt;module~bethe_equations -->
+<g id="module~~lsda_constants~~UsedByGraph_edge31" class="edge">
+<title>module~nonlinear_solvers&#45;&gt;module~bethe_equations</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M303.93,-1053.78C283.1,-1053.78 258.43,-1053.78 236.62,-1053.78"/>
+<polygon fill="#000000" stroke="#000000" points="236.7,-1050.28 226.7,-1053.78 236.7,-1057.28 236.7,-1050.28"/>
+</g>
+<!-- module~output_writer -->
+<g id="module~~lsda_constants~~UsedByGraph_node18" class="node">
+<title>module~output_writer</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node18"><a xlink:href="../module/output_writer.html" xlink:title="output_writer">
+<polygon fill="#337ab7" stroke="#337ab7" points="919.14,-393.17 845.37,-393.17 845.37,-370.4 919.14,-370.4 919.14,-393.17"/>
+<text xml:space="preserve" text-anchor="middle" x="882.25" y="-377.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">output_writer</text>
+</a>
+</g>
+</g>
+<!-- module~output_writer&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge17" class="edge">
+<title>module~output_writer&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M652.34,-109.78C593.05,-101.25 572.51,-133.65 517.57,-109.78"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M515.57,-109.78C473.3,-91.42 472.35,-67.34 428.31,-53.78 296.8,-13.31 223.53,40.42 118.77,-48.78 49.42,-107.83 42.82,-411.99 42.36,-498.69"/>
+<polygon fill="#000000" stroke="#000000" points="38.87,-498.53 42.34,-508.54 45.87,-498.55 38.87,-498.53"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M878.29,-370.03C869.1,-336.07 837.84,-236.96 774.61,-185.78"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M772.61,-185.78C724.04,-146.47 716.18,-118.68 654.34,-109.78"/>
+</g>
+<!-- module~output_writer&#45;&gt;module~input_parser -->
+<g id="module~~lsda_constants~~UsedByGraph_edge38" class="edge">
+<title>module~output_writer&#45;&gt;module~input_parser</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M845.15,-381.78C837.35,-381.78 828.99,-381.78 820.86,-381.78"/>
+<polygon fill="#000000" stroke="#000000" points="821.11,-378.28 811.11,-381.78 821.11,-385.28 821.11,-378.28"/>
+</g>
+<!-- module~output_writer&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~lsda_constants~~UsedByGraph_edge40" class="edge">
+<title>module~output_writer&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M844.94,-393.02C833.63,-396.22 821.06,-399.45 809.37,-401.78 777.91,-408.05 742.42,-412.58 713.34,-415.65"/>
+<polygon fill="#000000" stroke="#000000" points="713.23,-412.14 703.63,-416.63 713.94,-419.1 713.23,-412.14"/>
+</g>
+<!-- module~output_writer&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge52" class="edge">
+<title>module~output_writer&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M652.34,-109.78C607.36,-103.31 609.1,-147.72 568.83,-168.78 525.03,-191.69 501.12,-173.8 464.31,-206.78 437.37,-230.93 456.12,-256.65 428.31,-279.78 374.16,-324.82 329.7,-277.46 275.79,-322.78 219.7,-369.94 194.11,-457.68 184.76,-499.06"/>
+<polygon fill="#000000" stroke="#000000" points="181.33,-498.33 182.67,-508.84 188.18,-499.79 181.33,-498.33"/>
+</g>
+<!-- module~output_writer&#45;&gt;module~lsda_types -->
+<g id="module~~lsda_constants~~UsedByGraph_edge64" class="edge">
+<title>module~output_writer&#45;&gt;module~lsda_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M772.61,-185.78C740.59,-159.61 622.34,-192.43 558.72,-212.82"/>
+<polygon fill="#000000" stroke="#000000" points="557.75,-209.46 549.32,-215.88 559.92,-216.12 557.75,-209.46"/>
+</g>
+<!-- module~potential_barrier -->
+<g id="module~~lsda_constants~~UsedByGraph_node19" class="node">
+<title>module~potential_barrier</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node19"><a xlink:href="../module/potential_barrier.html" xlink:title="potential_barrier">
+<polygon fill="#337ab7" stroke="#337ab7" points="396.81,-200.17 307.29,-200.17 307.29,-177.4 396.81,-177.4 396.81,-200.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-184.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_barrier</text>
+</a>
+</g>
+</g>
+<!-- module~potential_barrier&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge18" class="edge">
+<title>module~potential_barrier&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M309.66,-176.97C272.5,-168.98 218.14,-164.01 180.28,-189.78"/>
+</g>
+<!-- module~potential_barrier&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge53" class="edge">
+<title>module~potential_barrier&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M306.92,-195.9C295.55,-199.6 284.17,-205.23 275.79,-213.78 195.82,-295.37 182.65,-442.6 180.6,-498.97"/>
+<polygon fill="#000000" stroke="#000000" points="177.11,-498.53 180.35,-508.62 184.11,-498.72 177.11,-498.53"/>
+</g>
+<!-- module~potential_factory -->
+<g id="module~~lsda_constants~~UsedByGraph_node20" class="node">
+<title>module~potential_factory</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node20"><a xlink:href="../module/potential_factory.html" xlink:title="potential_factory">
+<polygon fill="#337ab7" stroke="#337ab7" points="561.7,-160.17 471.43,-160.17 471.43,-137.4 561.7,-137.4 561.7,-160.17"/>
+<text xml:space="preserve" text-anchor="middle" x="516.57" y="-144.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_factory</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge19" class="edge">
+<title>module~potential_factory&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-67.78C316.61,-65.84 302.03,-64.39 275.79,-86.78 244.9,-113.15 269.85,-143.47 239.79,-170.78 219.24,-189.45 203.23,-174.16 180.28,-189.78"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M178.28,-189.78C71.12,-262.74 48.38,-436.56 43.62,-498.98"/>
+<polygon fill="#000000" stroke="#000000" points="40.15,-498.5 42.97,-508.71 47.13,-498.97 40.15,-498.5"/>
+</g>
+<!-- module~potential_factory&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge54" class="edge">
+<title>module~potential_factory&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M487.26,-160.61C479.54,-164.36 471.36,-168.83 464.31,-173.78 446.05,-186.61 446.34,-195.64 428.31,-208.78 366.28,-253.99 327.35,-232.93 275.79,-289.78 218.96,-352.46 193.38,-453.58 184.35,-498.73"/>
+<polygon fill="#000000" stroke="#000000" points="180.94,-497.94 182.51,-508.42 187.82,-499.24 180.94,-497.94"/>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_barrier -->
+<g id="module~~lsda_constants~~UsedByGraph_edge68" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_barrier</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M471.16,-159.71C451.73,-164.5 428.74,-170.15 408.23,-175.2"/>
+<polygon fill="#000000" stroke="#000000" points="407.47,-171.79 398.59,-177.57 409.14,-178.58 407.47,-171.79"/>
+</g>
+<!-- module~potential_harmonic -->
+<g id="module~~lsda_constants~~UsedByGraph_node21" class="node">
+<title>module~potential_harmonic</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node21"><a xlink:href="../module/potential_harmonic.html" xlink:title="potential_harmonic">
+<polygon fill="#337ab7" stroke="#337ab7" points="230.41,-80.17 128.14,-80.17 128.14,-57.4 230.41,-57.4 230.41,-80.17"/>
+<text xml:space="preserve" text-anchor="middle" x="179.28" y="-64.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_harmonic</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_harmonic -->
+<g id="module~~lsda_constants~~UsedByGraph_edge69" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_harmonic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-67.78C314.91,-65.74 274.39,-65.87 241.9,-66.57"/>
+<polygon fill="#000000" stroke="#000000" points="242.19,-63.06 232.27,-66.8 242.35,-70.06 242.19,-63.06"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M486.9,-136.96C479.26,-133.23 471.21,-128.78 464.31,-123.78 445.72,-110.33 448.18,-98.25 428.31,-86.78 398.43,-69.55 387.49,-69.73 353.05,-67.78"/>
+</g>
+<!-- module~potential_impurity -->
+<g id="module~~lsda_constants~~UsedByGraph_node22" class="node">
+<title>module~potential_impurity</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node22"><a xlink:href="../module/potential_impurity.html" xlink:title="potential_impurity">
+<polygon fill="#337ab7" stroke="#337ab7" points="399.81,-159.17 304.29,-159.17 304.29,-136.4 399.81,-136.4 399.81,-159.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-143.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_impurity</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_impurity -->
+<g id="module~~lsda_constants~~UsedByGraph_edge70" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_impurity</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M471.16,-148.51C452.78,-148.4 431.2,-148.26 411.55,-148.14"/>
+<polygon fill="#000000" stroke="#000000" points="411.78,-144.64 401.76,-148.08 411.74,-151.64 411.78,-144.64"/>
+</g>
+<!-- module~potential_quasiperiodic -->
+<g id="module~~lsda_constants~~UsedByGraph_node23" class="node">
+<title>module~potential_quasiperiodic</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node23"><a xlink:href="../module/potential_quasiperiodic.html" xlink:title="potential_quasiperiodic">
+<polygon fill="#337ab7" stroke="#337ab7" points="239.79,-162.17 118.77,-162.17 118.77,-139.4 239.79,-139.4 239.79,-162.17"/>
+<text xml:space="preserve" text-anchor="middle" x="179.28" y="-146.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_quasiperiodic</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_quasiperiodic -->
+<g id="module~~lsda_constants~~UsedByGraph_edge71" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_quasiperiodic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-67.78C316.61,-65.84 305.01,-68.44 275.79,-86.78 254.68,-100.03 260.27,-115.58 239.79,-129.78 237.59,-131.31 235.26,-132.74 232.86,-134.07"/>
+<polygon fill="#000000" stroke="#000000" points="231.47,-130.85 224,-138.37 234.53,-137.15 231.47,-130.85"/>
+</g>
+<!-- module~potential_random -->
+<g id="module~~lsda_constants~~UsedByGraph_node24" class="node">
+<title>module~potential_random</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node24"><a xlink:href="../module/potential_random.html" xlink:title="potential_random">
+<polygon fill="#337ab7" stroke="#337ab7" points="399.43,-118.17 304.66,-118.17 304.66,-95.4 399.43,-95.4 399.43,-118.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-102.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_random</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_random -->
+<g id="module~~lsda_constants~~UsedByGraph_edge72" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_random</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M471.16,-137.31C452.21,-132.41 429.86,-126.63 409.74,-121.43"/>
+<polygon fill="#000000" stroke="#000000" points="410.84,-118.1 400.29,-118.99 409.09,-124.88 410.84,-118.1"/>
+</g>
+<!-- module~potential_uniform -->
+<g id="module~~lsda_constants~~UsedByGraph_node25" class="node">
+<title>module~potential_uniform</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node25"><a xlink:href="../module/potential_uniform.html" xlink:title="potential_uniform">
+<polygon fill="#337ab7" stroke="#337ab7" points="226.29,-121.17 132.27,-121.17 132.27,-98.4 226.29,-98.4 226.29,-121.17"/>
+<text xml:space="preserve" text-anchor="middle" x="179.28" y="-105.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_uniform</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_uniform -->
+<g id="module~~lsda_constants~~UsedByGraph_edge73" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_uniform</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-67.78C327.48,-66.45 270.05,-82.06 228.28,-94.63"/>
+<polygon fill="#000000" stroke="#000000" points="227.49,-91.21 218.94,-97.47 229.53,-97.91 227.49,-91.21"/>
+</g>
+<!-- module~potential_harmonic&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge20" class="edge">
+<title>module~potential_harmonic&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M129.85,-80.57C125.69,-83.07 121.89,-86.11 118.77,-89.78 65.35,-152.78 47.62,-419.13 43.45,-499.03"/>
+<polygon fill="#000000" stroke="#000000" points="39.97,-498.52 42.97,-508.69 46.96,-498.87 39.97,-498.52"/>
+</g>
+<!-- module~potential_impurity&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge21" class="edge">
+<title>module~potential_impurity&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M303.89,-157.61C256.98,-167.67 190.56,-182.78 180.28,-189.78"/>
+</g>
+<!-- module~potential_impurity&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge55" class="edge">
+<title>module~potential_impurity&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M304.08,-152.99C293.65,-156.14 283.43,-161.08 275.79,-168.78 228.23,-216.72 193.76,-428.74 183.47,-499.04"/>
+<polygon fill="#000000" stroke="#000000" points="180.05,-498.21 182.09,-508.61 186.98,-499.21 180.05,-498.21"/>
+</g>
+<!-- module~potential_quasiperiodic&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge22" class="edge">
+<title>module~potential_quasiperiodic&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M135.82,-162.58C129.38,-165.96 123.36,-170.28 118.77,-175.78 77.04,-225.81 52.07,-429.93 44.7,-498.89"/>
+<polygon fill="#000000" stroke="#000000" points="41.24,-498.31 43.68,-508.62 48.2,-499.04 41.24,-498.31"/>
+</g>
+<!-- module~potential_random&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge23" class="edge">
+<title>module~potential_random&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M304.2,-115.16C294.34,-118.18 284.34,-122.27 275.79,-127.78 254.85,-141.3 260.48,-156.89 239.79,-170.78 216.74,-186.26 203.23,-174.16 180.28,-189.78"/>
+</g>
+<!-- module~potential_random&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge56" class="edge">
+<title>module~potential_random&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M304.33,-111.73C293.76,-114.88 283.43,-119.88 275.79,-127.78 249.27,-155.23 199.13,-419 184.43,-498.93"/>
+<polygon fill="#000000" stroke="#000000" points="181.01,-498.17 182.65,-508.63 187.9,-499.43 181.01,-498.17"/>
+</g>
+<!-- module~potential_uniform&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge24" class="edge">
+<title>module~potential_uniform&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M131.94,-120.48C126.98,-123.18 122.42,-126.55 118.77,-130.78 70.27,-186.95 49.41,-423.68 43.93,-498.81"/>
+<polygon fill="#000000" stroke="#000000" points="40.45,-498.42 43.23,-508.65 47.43,-498.92 40.45,-498.42"/>
+</g>
+<!-- module~spline2d -->
+<g id="module~~lsda_constants~~UsedByGraph_node26" class="node">
+<title>module~spline2d</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node26"><a xlink:href="../module/spline2d.html" xlink:title="spline2d">
+<polygon fill="#337ab7" stroke="#337ab7" points="206.28,-948.17 152.28,-948.17 152.28,-925.4 206.28,-925.4 206.28,-948.17"/>
+<text xml:space="preserve" text-anchor="middle" x="179.28" y="-932.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d</text>
+</a>
+</g>
+</g>
+<!-- module~spline2d&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge25" class="edge">
+<title>module~spline2d&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M163.14,-924.96C149.42,-913.4 129.72,-894.54 118.77,-873.78 58.98,-760.41 45.97,-602.94 43.15,-544.66"/>
+<polygon fill="#000000" stroke="#000000" points="46.66,-544.85 42.75,-535 39.67,-545.14 46.66,-544.85"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge26" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M324.89,-983.94C280.06,-997.6 192.23,-1022.83 180.28,-1014.78"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M178.28,-1014.78C147.65,-994.15 136.02,-989.44 118.77,-956.78 43.4,-814.11 40.33,-612.06 41.62,-544.66"/>
+<polygon fill="#000000" stroke="#000000" points="45.11,-544.95 41.87,-534.87 38.12,-544.78 45.11,-544.95"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge57" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M324.85,-973.55C308.5,-970.77 288.25,-964.58 275.79,-950.78 247.85,-919.85 198.02,-629.15 184.03,-544.69"/>
+<polygon fill="#000000" stroke="#000000" points="187.52,-544.37 182.44,-535.07 180.61,-545.51 187.52,-544.37"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_constants~~UsedByGraph_edge27" class="edge">
+<title>module~xc_lsda&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M494.58,-890.63C464.38,-906.65 406.43,-933.59 353.05,-936.78"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-936.78C267.94,-941.76 258.78,-887.53 180.28,-859.78"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge58" class="edge">
+<title>module~xc_lsda&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M492.32,-867.04C475,-858.63 450.58,-847.47 428.31,-839.78 362.27,-817 327.23,-849.05 275.79,-801.78 199.46,-731.65 184.12,-598.07 181.05,-544.68"/>
+<polygon fill="#000000" stroke="#000000" points="184.56,-544.79 180.59,-534.96 177.56,-545.12 184.56,-544.79"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~spline2d -->
+<g id="module~~lsda_constants~~UsedByGraph_edge74" class="edge">
+<title>module~xc_lsda&#45;&gt;module~spline2d</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M351.05,-936.78C305.38,-939.52 252.72,-938.96 218.09,-938.08"/>
+<polygon fill="#000000" stroke="#000000" points="218.25,-934.58 208.15,-937.8 218.05,-941.58 218.25,-934.58"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~table_io -->
+<g id="module~~lsda_constants~~UsedByGraph_edge76" class="edge">
+<title>module~xc_lsda&#45;&gt;module~table_io</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M504.19,-890.58C488.46,-906.29 458.56,-934.05 428.31,-950.78 416.6,-957.26 402.92,-962.43 390.47,-966.34"/>
+<polygon fill="#000000" stroke="#000000" points="389.52,-962.97 380.92,-969.16 391.5,-969.69 389.52,-962.97"/>
+</g>
+<!-- proc~apply_potential_harmonic -->
+<g id="module~~lsda_constants~~UsedByGraph_node29" class="node">
+<title>proc~apply_potential_harmonic</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node29"><a xlink:href="../proc/apply_potential_harmonic.html" xlink:title="apply_potential_harmonic">
+<polygon fill="#d9534f" stroke="#d9534f" points="418.93,-514.17 285.16,-514.17 285.16,-491.4 418.93,-491.4 418.93,-514.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-498.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">apply_potential_harmonic</text>
+</a>
+</g>
+</g>
+<!-- proc~apply_potential_harmonic&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge59" class="edge">
+<title>proc~apply_potential_harmonic&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M285.03,-510.13C264.45,-512.42 242.29,-514.88 223.67,-516.96"/>
+<polygon fill="#000000" stroke="#000000" points="223.35,-513.47 213.8,-518.05 224.13,-520.43 223.35,-513.47"/>
+</g>
+<!-- proc~apply_potential_quasiperiodic -->
+<g id="module~~lsda_constants~~UsedByGraph_node30" class="node">
+<title>proc~apply_potential_quasiperiodic</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node30"><a xlink:href="../proc/apply_potential_quasiperiodic.html" xlink:title="apply_potential_quasiperiodic">
+<polygon fill="#d9534f" stroke="#d9534f" points="428.31,-473.17 275.79,-473.17 275.79,-450.4 428.31,-450.4 428.31,-473.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-457.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">apply_potential_quasiperiodic</text>
+</a>
+</g>
+</g>
+<!-- proc~apply_potential_quasiperiodic&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge60" class="edge">
+<title>proc~apply_potential_quasiperiodic&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M305.42,-473.6C295.58,-476.41 285.29,-479.53 275.79,-482.78 256.14,-489.51 234.7,-498.14 217.12,-505.58"/>
+<polygon fill="#000000" stroke="#000000" points="215.94,-502.28 208.12,-509.43 218.69,-508.71 215.94,-502.28"/>
+</g>
+<!-- proc~apply_potential_uniform -->
+<g id="module~~lsda_constants~~UsedByGraph_node31" class="node">
+<title>proc~apply_potential_uniform</title>
+<g id="a_module~~lsda_constants~~UsedByGraph_node31"><a xlink:href="../proc/apply_potential_uniform.html" xlink:title="apply_potential_uniform">
+<polygon fill="#d9534f" stroke="#d9534f" points="414.81,-432.17 289.29,-432.17 289.29,-409.4 414.81,-409.4 414.81,-432.17"/>
+<text xml:space="preserve" text-anchor="middle" x="352.05" y="-416.43" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">apply_potential_uniform</text>
+</a>
+</g>
+</g>
+<!-- proc~apply_potential_uniform&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_constants~~UsedByGraph_edge61" class="edge">
+<title>proc~apply_potential_uniform&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M297.72,-432.59C290.16,-435.14 282.63,-438.18 275.79,-441.78 246.02,-457.46 217.17,-483.62 199.11,-501.74"/>
+<polygon fill="#000000" stroke="#000000" points="196.68,-499.21 192.21,-508.82 201.69,-504.1 196.68,-499.21"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panmodulelsda_constantsUsedByGraph = svgPanZoom('#modulelsda_constantsUsedByGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsedByGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsedByGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+      <br>
+
+
+        <section>
+          <h2>Variables</h2>
+            <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-dp"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>dp</strong></td>
+<td> =</td>
+                <td>real64</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sp"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>sp</strong></td>
+<td> =</td>
+                <td>int32</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-pi"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>PI</strong></td>
+<td> =</td>
+                <td>4.0_dp*atan(1.0_dp)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-twopi"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>TWOPI</strong></td>
+<td> =</td>
+                <td>2.0_dp*PI</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-u_small"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>U_SMALL</strong></td>
+<td> =</td>
+                <td>1.0e-9_dp</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-tol_default"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>TOL_DEFAULT</strong></td>
+<td> =</td>
+                <td>1.0e-16_dp</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-iter_max"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ITER_MAX</strong></td>
+<td> =</td>
+                <td>10000</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-initial_mix"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>INITIAL_MIX</strong></td>
+<td> =</td>
+                <td>0.95_dp</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mix_alpha"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>MIX_ALPHA</strong></td>
+<td> =</td>
+                <td>1.0_dp-INITIAL_MIX</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-newton_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>NEWTON_TOL</strong></td>
+<td> =</td>
+                <td>1.0e-10_dp</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-newton_max_iter"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>NEWTON_MAX_ITER</strong></td>
+<td> =</td>
+                <td>50</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-scf_energy_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>SCF_ENERGY_TOL</strong></td>
+<td> =</td>
+                <td>1.0e-8_dp</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-scf_density_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>SCF_DENSITY_TOL</strong></td>
+<td> =</td>
+                <td>1.0e-6_dp</td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+        </section>
+        <br>
+
+
+
+
+
+
+
+
+
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

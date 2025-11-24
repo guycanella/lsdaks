@@ -1,0 +1,757 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>compute_V_xc_numerical &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>compute_V_xc_numerical
+      <small>Function</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 0.6% of total for procedures.">24 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/bethe_tables.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/bethe_tables.f90.html'>bethe_tables.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/bethe_tables.html'>bethe_tables</a></li>
+            <li class="breadcrumb-item active" aria-current="page">compute_V_xc_numerical</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/compute_v_xc_numerical.html#src">compute_V_xc_numerical</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>public  function compute_V_xc_numerical(n_up, n_dw, U, L) result(v_xc)  
+</h2>
+    
+
+    <p>Compute XC potentials via numerical derivatives (central finite differences)</p>
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_up~9"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_up</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw~7"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-u~18"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>U</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-l~39"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>L</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <h3>Return Value
+        <small>
+          <span class="anchor" id="variable-v_xc"></span>
+          type(<a href='../type/xc_potentials_t.html'>xc_potentials_t</a>)
+        </small>
+      </h3>
+      
+    <br>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Calls</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: proc~~compute_v_xc_numerical~~CallsGraph Pages: 1 -->
+<svg id="proccompute_v_xc_numericalCallsGraph" width="641pt" height="208pt"
+ viewBox="0.00 0.00 641.00 208.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~compute_v_xc_numerical~~CallsGraph" class="graph" transform="scale(0.772178 0.772178) rotate(0) translate(4 265.77)">
+<title>proc~~compute_v_xc_numerical~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-265.77 826.12,-265.77 826.12,4 -4,4"/>
+<!-- proc~compute_v_xc_numerical -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node1" class="node">
+<title>proc~compute_v_xc_numerical</title>
+<polygon fill="none" stroke="black" points="134.52,-181.77 0,-181.77 0,-159 134.52,-159 134.52,-181.77"/>
+<text xml:space="preserve" text-anchor="middle" x="67.26" y="-166.03" font-family="Helvetica,sans-Serif" font-size="10.50">compute_V_xc_numerical</text>
+</g>
+<!-- proc~compute_e_xc -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node2" class="node">
+<title>proc~compute_e_xc</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node2"><a xlink:href="../proc/compute_e_xc.html" xlink:title="compute_E_xc">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="252.54,-181.77 170.52,-181.77 170.52,-159 252.54,-159 252.54,-181.77"/>
+<text xml:space="preserve" text-anchor="middle" x="211.53" y="-166.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_E_xc</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_v_xc_numerical&#45;&gt;proc~compute_e_xc -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge1" class="edge">
+<title>proc~compute_v_xc_numerical&#45;&gt;proc~compute_e_xc</title>
+<path fill="none" stroke="#000000" d="M134.81,-170.38C142.98,-170.38 151.22,-170.38 159.11,-170.38"/>
+<polygon fill="#000000" stroke="#000000" points="158.86,-173.89 168.86,-170.39 158.86,-166.89 158.86,-173.89"/>
+</g>
+<!-- proc~compute_e0 -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node3" class="node">
+<title>proc~compute_e0</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node3"><a xlink:href="../proc/compute_e0.html" xlink:title="compute_E0">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="396.81,-261.77 325.29,-261.77 325.29,-239 396.81,-239 396.81,-261.77"/>
+<text xml:space="preserve" text-anchor="middle" x="361.05" y="-246.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_E0</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_e_xc&#45;&gt;proc~compute_e0 -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge2" class="edge">
+<title>proc~compute_e_xc&#45;&gt;proc~compute_e0</title>
+<path fill="none" stroke="#000000" d="M224.7,-182.21C238.92,-195.44 263.7,-216.68 288.54,-229.38 296.48,-233.45 305.32,-236.84 314.01,-239.64"/>
+<polygon fill="#000000" stroke="#000000" points="312.82,-242.93 323.4,-242.43 314.82,-236.22 312.82,-242.93"/>
+</g>
+<!-- proc~compute_energy -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node4" class="node">
+<title>proc~compute_energy</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node4"><a xlink:href="../proc/compute_energy.html" xlink:title="compute_energy">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="406.93,-220.77 315.16,-220.77 315.16,-198 406.93,-198 406.93,-220.77"/>
+<text xml:space="preserve" text-anchor="middle" x="361.05" y="-205.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_energy</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_e_xc&#45;&gt;proc~compute_energy -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge3" class="edge">
+<title>proc~compute_e_xc&#45;&gt;proc~compute_energy</title>
+<path fill="none" stroke="#000000" d="M252.84,-181.04C268.66,-185.22 287.07,-190.09 304.14,-194.6"/>
+<polygon fill="#000000" stroke="#000000" points="303.09,-197.95 313.65,-197.12 304.88,-191.18 303.09,-197.95"/>
+</g>
+<!-- proc~compute_residual -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node5" class="node">
+<title>proc~compute_residual</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node5"><a xlink:href="../proc/compute_residual.html" xlink:title="compute_residual">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="710.1,-143.77 613.83,-143.77 613.83,-121 710.1,-121 710.1,-143.77"/>
+<text xml:space="preserve" text-anchor="middle" x="661.96" y="-128.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_residual</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_e_xc&#45;&gt;proc~compute_residual -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge4" class="edge">
+<title>proc~compute_e_xc&#45;&gt;proc~compute_residual</title>
+<path fill="none" stroke="#000000" d="M252.72,-166.98C332.09,-160.25 509.28,-145.24 601.94,-137.39"/>
+<polygon fill="#000000" stroke="#000000" points="602.17,-140.88 611.84,-136.55 601.58,-133.9 602.17,-140.88"/>
+</g>
+<!-- proc~initialize_quantum_numbers -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node6" class="node">
+<title>proc~initialize_quantum_numbers</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node6"><a xlink:href="../proc/initialize_quantum_numbers.html" xlink:title="initialize_quantum_numbers">
+<polygon fill="#d9534f" stroke="#d9534f" points="433.56,-142.77 288.54,-142.77 288.54,-120 433.56,-120 433.56,-142.77"/>
+<text xml:space="preserve" text-anchor="middle" x="361.05" y="-127.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">initialize_quantum_numbers</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_e_xc&#45;&gt;proc~initialize_quantum_numbers -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge5" class="edge">
+<title>proc~compute_e_xc&#45;&gt;proc~initialize_quantum_numbers</title>
+<path fill="none" stroke="#000000" d="M252.84,-159.73C268.66,-155.55 287.07,-150.68 304.14,-146.17"/>
+<polygon fill="#000000" stroke="#000000" points="304.88,-149.59 313.65,-143.65 303.09,-142.82 304.88,-149.59"/>
+</g>
+<!-- proc~solve_newton -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node7" class="node">
+<title>proc~solve_newton</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node7"><a xlink:href="../proc/solve_newton.html" xlink:title="solve_newton">
+<polygon fill="#d9534f" stroke="#d9534f" points="399.43,-101.77 322.66,-101.77 322.66,-79 399.43,-79 399.43,-101.77"/>
+<text xml:space="preserve" text-anchor="middle" x="361.05" y="-86.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">solve_newton</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_e_xc&#45;&gt;proc~solve_newton -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge6" class="edge">
+<title>proc~compute_e_xc&#45;&gt;proc~solve_newton</title>
+<path fill="none" stroke="#000000" d="M224.7,-158.56C238.92,-145.33 263.7,-124.09 288.54,-111.39 295.66,-107.74 303.52,-104.63 311.34,-102.01"/>
+<polygon fill="#000000" stroke="#000000" points="312.32,-105.37 320.84,-99.07 310.25,-98.68 312.32,-105.37"/>
+</g>
+<!-- proc~theta -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node11" class="node">
+<title>proc~theta</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node11"><a xlink:href="../proc/theta.html" xlink:title="theta">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="811.11,-163.77 757.11,-163.77 757.11,-141 811.11,-141 811.11,-163.77"/>
+<text xml:space="preserve" text-anchor="middle" x="784.11" y="-148.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">theta</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_residual&#45;&gt;proc~theta -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge7" class="edge">
+<title>proc~compute_residual&#45;&gt;proc~theta</title>
+<path fill="none" stroke="#000000" d="M710.45,-140.29C722.13,-142.23 734.48,-144.29 745.62,-146.14"/>
+<polygon fill="#000000" stroke="#000000" points="744.77,-149.55 755.21,-147.74 745.92,-142.65 744.77,-149.55"/>
+</g>
+<!-- proc~theta_capital -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node12" class="node">
+<title>proc~theta_capital</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node12"><a xlink:href="../proc/theta_capital.html" xlink:title="Theta_capital">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="822.12,-122.77 746.1,-122.77 746.1,-100 822.12,-100 822.12,-122.77"/>
+<text xml:space="preserve" text-anchor="middle" x="784.11" y="-107.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Theta_capital</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_residual&#45;&gt;proc~theta_capital -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge8" class="edge">
+<title>proc~compute_residual&#45;&gt;proc~theta_capital</title>
+<path fill="none" stroke="#000000" d="M710.45,-124.09C718.47,-122.68 726.81,-121.23 734.86,-119.82"/>
+<polygon fill="#000000" stroke="#000000" points="735.23,-123.31 744.48,-118.14 734.03,-116.41 735.23,-123.31"/>
+</g>
+<!-- proc~solve_newton&#45;&gt;proc~compute_residual -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge10" class="edge">
+<title>proc~solve_newton&#45;&gt;proc~compute_residual</title>
+<path fill="none" stroke="#000000" d="M399.92,-99.57C420.43,-104.27 446.27,-109.75 469.56,-113.39 513.81,-120.29 564.24,-125.18 602.22,-128.26"/>
+<polygon fill="#000000" stroke="#000000" points="601.83,-131.74 612.07,-129.04 602.38,-124.77 601.83,-131.74"/>
+</g>
+<!-- proc~compute_jacobian -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node8" class="node">
+<title>proc~compute_jacobian</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node8"><a xlink:href="../proc/compute_jacobian.html" xlink:title="compute_jacobian">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="572.95,-104.77 474.43,-104.77 474.43,-82 572.95,-82 572.95,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="523.69" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_jacobian</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_newton&#45;&gt;proc~compute_jacobian -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge9" class="edge">
+<title>proc~solve_newton&#45;&gt;proc~compute_jacobian</title>
+<path fill="none" stroke="#000000" d="M399.71,-91.09C418.42,-91.44 441.46,-91.87 462.53,-92.26"/>
+<polygon fill="#000000" stroke="#000000" points="462.42,-95.76 472.48,-92.45 462.55,-88.76 462.42,-95.76"/>
+</g>
+<!-- proc~line_search -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node9" class="node">
+<title>proc~line_search</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node9"><a xlink:href="../proc/line_search.html" xlink:title="line_search">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="556.83,-63.77 490.56,-63.77 490.56,-41 556.83,-41 556.83,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="523.69" y="-48.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">line_search</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_newton&#45;&gt;proc~line_search -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge11" class="edge">
+<title>proc~solve_newton&#45;&gt;proc~line_search</title>
+<path fill="none" stroke="#000000" d="M399.71,-81.48C423.52,-75.84 454.37,-68.55 479.21,-62.67"/>
+<polygon fill="#000000" stroke="#000000" points="479.76,-66.14 488.68,-60.43 478.15,-59.33 479.76,-66.14"/>
+</g>
+<!-- proc~solve_linear_system -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node10" class="node">
+<title>proc~solve_linear_system</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node10"><a xlink:href="../proc/solve_linear_system.html" xlink:title="solve_linear_system">
+<polygon fill="#d9534f" stroke="#d9534f" points="577.83,-22.77 469.56,-22.77 469.56,0 577.83,0 577.83,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="523.69" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">solve_linear_system</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_newton&#45;&gt;proc~solve_linear_system -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge12" class="edge">
+<title>proc~solve_newton&#45;&gt;proc~solve_linear_system</title>
+<path fill="none" stroke="#000000" d="M382.29,-78.53C403.63,-66.26 438.41,-46.88 469.56,-32.39 473.08,-30.74 476.77,-29.11 480.5,-27.53"/>
+<polygon fill="#000000" stroke="#000000" points="481.66,-30.84 489.57,-23.79 478.99,-24.37 481.66,-30.84"/>
+</g>
+<!-- proc~line_search&#45;&gt;proc~compute_residual -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge13" class="edge">
+<title>proc~line_search&#45;&gt;proc~compute_residual</title>
+<path fill="none" stroke="#000000" d="M557.29,-63.83C564.22,-66.66 571.38,-69.89 577.83,-73.39 599.29,-85.02 621.76,-101.24 637.92,-113.74"/>
+<polygon fill="#000000" stroke="#000000" points="635.44,-116.23 645.46,-119.66 639.76,-110.73 635.44,-116.23"/>
+</g>
+<!-- interface~dgesv -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_node13" class="node">
+<title>interface~dgesv</title>
+<g id="a_proc~~compute_v_xc_numerical~~CallsGraph_node13"><a xlink:href="../interface/dgesv.html" xlink:title="DGESV">
+<polygon fill="#a7506f" stroke="#a7506f" points="688.96,-22.77 634.96,-22.77 634.96,0 688.96,0 688.96,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="661.96" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">DGESV</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_linear_system&#45;&gt;interface~dgesv -->
+<g id="proc~~compute_v_xc_numerical~~CallsGraph_edge14" class="edge">
+<title>proc~solve_linear_system&#45;&gt;interface~dgesv</title>
+<path fill="none" stroke="#000000" d="M578.16,-11.39C593.31,-11.39 609.47,-11.39 623.46,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="623.11,-14.89 633.11,-11.39 623.11,-7.89 623.11,-14.89"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panproccompute_v_xc_numericalCallsGraph = svgPanZoom('#proccompute_v_xc_numericalCallsGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CallsGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CallsGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Called by</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: proc~~compute_v_xc_numerical~~CalledByGraph Pages: 1 -->
+<svg id="proccompute_v_xc_numericalCalledByGraph" width="422pt" height="31pt"
+ viewBox="0.00 0.00 422.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~compute_v_xc_numerical~~CalledByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>proc~~compute_v_xc_numerical~~CalledByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 418.06,-26.77 418.06,4 -4,4"/>
+<!-- proc~compute_v_xc_numerical -->
+<g id="proc~~compute_v_xc_numerical~~CalledByGraph_node1" class="node">
+<title>proc~compute_v_xc_numerical</title>
+<polygon fill="none" stroke="black" points="414.06,-22.77 279.54,-22.77 279.54,0 414.06,0 414.06,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="346.8" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">compute_V_xc_numerical</text>
+</g>
+<!-- proc~generate_xc_table -->
+<g id="proc~~compute_v_xc_numerical~~CalledByGraph_node2" class="node">
+<title>proc~generate_xc_table</title>
+<g id="a_proc~~compute_v_xc_numerical~~CalledByGraph_node2"><a xlink:href="../proc/generate_xc_table.html" xlink:title="generate_xc_table">
+<polygon fill="#d9534f" stroke="#d9534f" points="243.54,-22.77 143.52,-22.77 143.52,0 243.54,0 243.54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="193.53" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">generate_xc_table</text>
+</a>
+</g>
+</g>
+<!-- proc~generate_xc_table&#45;&gt;proc~compute_v_xc_numerical -->
+<g id="proc~~compute_v_xc_numerical~~CalledByGraph_edge1" class="edge">
+<title>proc~generate_xc_table&#45;&gt;proc~compute_v_xc_numerical</title>
+<path fill="none" stroke="#000000" d="M243.64,-11.39C251.32,-11.39 259.42,-11.39 267.56,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="267.54,-14.89 277.54,-11.39 267.54,-7.89 267.54,-14.89"/>
+</g>
+<!-- proc~generate_table_grid -->
+<g id="proc~~compute_v_xc_numerical~~CalledByGraph_node3" class="node">
+<title>proc~generate_table_grid</title>
+<g id="a_proc~~compute_v_xc_numerical~~CalledByGraph_node3"><a xlink:href="../proc/generate_table_grid.html" xlink:title="generate_table_grid">
+<polygon fill="#d9534f" stroke="#d9534f" points="107.52,-22.77 0,-22.77 0,0 107.52,0 107.52,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="53.76" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">generate_table_grid</text>
+</a>
+</g>
+</g>
+<!-- proc~generate_table_grid&#45;&gt;proc~generate_xc_table -->
+<g id="proc~~compute_v_xc_numerical~~CalledByGraph_edge2" class="edge">
+<title>proc~generate_table_grid&#45;&gt;proc~generate_xc_table</title>
+<path fill="none" stroke="#000000" d="M107.63,-11.39C115.57,-11.39 123.82,-11.39 131.91,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="131.68,-14.89 141.68,-11.39 131.68,-7.89 131.68,-14.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CalledByGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CalledByGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="w">    </span><span class="k">function </span><span class="n">compute_V_xc_numerical</span><span class="p">(</span><span class="n">n_up</span><span class="p">,</span><span class="w"> </span><span class="n">n_dw</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">v_xc</span><span class="p">)</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">n_up</span><span class="p">,</span><span class="w"> </span><span class="n">n_dw</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">L</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">U</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">xc_potentials_t</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">v_xc</span>
+
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">delta_n</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">E_xc_up_plus</span><span class="p">,</span><span class="w"> </span><span class="n">E_xc_up_minus</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">E_xc_dw_plus</span><span class="p">,</span><span class="w"> </span><span class="n">E_xc_dw_minus</span>
+
+<span class="w">        </span><span class="n">delta_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-4_dp</span>
+
+<span class="w">        </span><span class="c">! Derivative with respect to n_up</span>
+<span class="w">        </span><span class="n">E_xc_up_plus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compute_E_xc</span><span class="p">(</span><span class="n">n_up</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">delta_n</span><span class="p">,</span><span class="w"> </span><span class="n">n_dw</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">)</span>
+<span class="w">        </span><span class="n">E_xc_up_minus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compute_E_xc</span><span class="p">(</span><span class="n">n_up</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">delta_n</span><span class="p">,</span><span class="w"> </span><span class="n">n_dw</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ieee_is_nan</span><span class="p">(</span><span class="n">E_xc_up_plus</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_nan</span><span class="p">(</span><span class="n">E_xc_up_minus</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            </span><span class="n">v_xc</span><span class="p">%</span><span class="n">v_xc_up</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ieee_value</span><span class="p">(</span><span class="mf">0.0_dp</span><span class="p">,</span><span class="w"> </span><span class="n">ieee_quiet_nan</span><span class="p">)</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="k">            </span><span class="n">v_xc</span><span class="p">%</span><span class="n">v_xc_up</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">E_xc_up_plus</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">E_xc_up_minus</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0_dp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">delta_n</span><span class="p">)</span>
+<span class="w">        </span><span class="k">end if</span>
+
+<span class="w">        </span><span class="c">! Derivative with respect to n_dw</span>
+<span class="w">        </span><span class="n">E_xc_dw_plus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compute_E_xc</span><span class="p">(</span><span class="n">n_up</span><span class="p">,</span><span class="w"> </span><span class="n">n_dw</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">delta_n</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">)</span>
+<span class="w">        </span><span class="n">E_xc_dw_minus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compute_E_xc</span><span class="p">(</span><span class="n">n_up</span><span class="p">,</span><span class="w"> </span><span class="n">n_dw</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">delta_n</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ieee_is_nan</span><span class="p">(</span><span class="n">E_xc_dw_plus</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_nan</span><span class="p">(</span><span class="n">E_xc_dw_minus</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            </span><span class="n">v_xc</span><span class="p">%</span><span class="n">v_xc_down</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ieee_value</span><span class="p">(</span><span class="mf">0.0_dp</span><span class="p">,</span><span class="w"> </span><span class="n">ieee_quiet_nan</span><span class="p">)</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="k">            </span><span class="n">v_xc</span><span class="p">%</span><span class="n">v_xc_down</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">E_xc_dw_plus</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">E_xc_dw_minus</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0_dp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">delta_n</span><span class="p">)</span>
+<span class="w">        </span><span class="k">end if</span>
+<span class="k">    end function </span><span class="n">compute_V_xc_numerical</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

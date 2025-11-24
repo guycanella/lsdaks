@@ -1,0 +1,1006 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>lsda_constants.f90 &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>lsda_constants.f90
+      <small>Source File</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 0.4% of total for source files.">17 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/lsda_constants.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+            <li class="breadcrumb-item active" aria-current="page">lsda_constants.f90</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#mods-0"
+         aria-expanded="false" aria-controls="mods-0">
+         <h4 class="card-header bg-primary text-white">Modules</h4>
+      </a>
+      <div id="mods-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/lsda_constants.html">lsda_constants</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../sourcefile/lsda_constants.f90.html#src">lsda_constants.f90</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    <div class="col-md-9" id='text'>
+      
+      <br>
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Files dependent on this one</h3>
+          </div>
+          <div class="card-body">
+            <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: sourcefile~~lsda_constants.f90~~AfferentGraph Pages: 1 -->
+<svg id="sourcefilelsda_constantsf90AfferentGraph" width="641pt" height="630pt"
+ viewBox="0.00 0.00 641.00 630.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph" class="graph" transform="scale(0.647874 0.647874) rotate(0) translate(4 968.99)">
+<title>sourcefile~~lsda_constants.f90~~AfferentGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-968.99 985.39,-968.99 985.39,4 -4,4"/>
+<!-- sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node1" class="node">
+<title>sourcefile~lsda_constants.f90</title>
+<polygon fill="none" stroke="black" points="100.77,-809.82 0,-809.82 0,-787.05 100.77,-787.05 100.77,-809.82"/>
+<text xml:space="preserve" text-anchor="middle" x="50.38" y="-794.08" font-family="Helvetica,sans-Serif" font-size="10.50">lsda_constants.f90</text>
+</g>
+<!-- sourcefile~adaptive_mixing.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node2" class="node">
+<title>sourcefile~adaptive_mixing.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node2"><a xlink:href="../sourcefile/adaptive_mixing.f90.html" xlink:title="adaptive_mixing.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="404.68,-376.82 297.91,-376.82 297.91,-354.05 404.68,-354.05 404.68,-376.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-361.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mixing.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~adaptive_mixing.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge1" class="edge">
+<title>sourcefile~adaptive_mixing.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M336.3,-353.73C322,-341.53 299.46,-321.53 281.79,-302.43 238.05,-255.14 240.48,-145.69 192.28,-188.43"/>
+</g>
+<!-- sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node14" class="node">
+<title>sourcefile~lsda_errors.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node14"><a xlink:href="../sourcefile/lsda_errors.f90.html" xlink:title="lsda_errors.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="233.04,-454.82 149.52,-454.82 149.52,-432.05 233.04,-432.05 233.04,-454.82"/>
+<text xml:space="preserve" text-anchor="middle" x="191.28" y="-439.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~adaptive_mixing.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge42" class="edge">
+<title>sourcefile~adaptive_mixing.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M313.88,-377.31C303.36,-381.12 291.97,-385.61 281.79,-390.43 260.1,-400.71 236.8,-414.6 219.41,-425.58"/>
+<polygon fill="#000000" stroke="#000000" points="217.72,-422.51 211.19,-430.85 221.5,-428.4 217.72,-422.51"/>
+</g>
+<!-- sourcefile~bethe_equations.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node3" class="node">
+<title>sourcefile~bethe_equations.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node3"><a xlink:href="../sourcefile/bethe_equations.f90.html" xlink:title="bethe_equations.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="245.79,-887.82 136.77,-887.82 136.77,-865.05 245.79,-865.05 245.79,-887.82"/>
+<text xml:space="preserve" text-anchor="middle" x="191.28" y="-872.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bethe_equations.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~bethe_equations.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge2" class="edge">
+<title>sourcefile~bethe_equations.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M163.3,-864.58C154.71,-860.61 145.25,-856.02 136.77,-851.43 116.82,-840.63 95.11,-827.13 78.58,-816.46"/>
+<polygon fill="#000000" stroke="#000000" points="80.57,-813.58 70.28,-811.06 76.75,-819.45 80.57,-813.58"/>
+</g>
+<!-- sourcefile~bethe_tables.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node4" class="node">
+<title>sourcefile~bethe_tables.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node4"><a xlink:href="../sourcefile/bethe_tables.f90.html" xlink:title="bethe_tables.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="563.2,-887.82 472.18,-887.82 472.18,-865.05 563.2,-865.05 563.2,-887.82"/>
+<text xml:space="preserve" text-anchor="middle" x="517.69" y="-872.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bethe_tables.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~bethe_tables.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge3" class="edge">
+<title>sourcefile~bethe_tables.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-876.43C278.09,-872.05 263.96,-847.17 192.28,-837.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M472,-877.89C438.91,-878.62 392.75,-878.89 352.3,-876.43"/>
+</g>
+<!-- sourcefile~bethe_tables.f90&#45;&gt;sourcefile~bethe_equations.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge29" class="edge">
+<title>sourcefile~bethe_tables.f90&#45;&gt;sourcefile~bethe_equations.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-876.43C319.85,-874.58 286.05,-874.34 257.54,-874.66"/>
+<polygon fill="#000000" stroke="#000000" points="257.55,-871.16 247.6,-874.8 257.65,-878.16 257.55,-871.16"/>
+</g>
+<!-- sourcefile~nonlinear_solvers.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node17" class="node">
+<title>sourcefile~nonlinear_solvers.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node17"><a xlink:href="../sourcefile/nonlinear_solvers.f90.html" xlink:title="nonlinear_solvers.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="408.06,-926.82 294.54,-926.82 294.54,-904.05 408.06,-904.05 408.06,-926.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-911.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">nonlinear_solvers.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~bethe_tables.f90&#45;&gt;sourcefile~nonlinear_solvers.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge66" class="edge">
+<title>sourcefile~bethe_tables.f90&#45;&gt;sourcefile~nonlinear_solvers.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M471.77,-887.09C453.81,-891.35 432.84,-896.33 413.52,-900.91"/>
+<polygon fill="#000000" stroke="#000000" points="412.77,-897.49 403.85,-903.2 414.39,-904.3 412.77,-897.49"/>
+</g>
+<!-- sourcefile~table_io.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node27" class="node">
+<title>sourcefile~table_io.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node27"><a xlink:href="../sourcefile/table_io.f90.html" xlink:title="table_io.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="384.81,-848.82 317.79,-848.82 317.79,-826.05 384.81,-826.05 384.81,-848.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-833.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~bethe_tables.f90&#45;&gt;sourcefile~table_io.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge75" class="edge">
+<title>sourcefile~bethe_tables.f90&#45;&gt;sourcefile~table_io.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M471.77,-865.78C448.24,-860.19 419.55,-853.39 396.17,-847.84"/>
+<polygon fill="#000000" stroke="#000000" points="397.18,-844.48 386.65,-845.58 395.57,-851.29 397.18,-844.48"/>
+</g>
+<!-- sourcefile~boundary_conditions.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node5" class="node">
+<title>sourcefile~boundary_conditions.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node5"><a xlink:href="../sourcefile/boundary_conditions.f90.html" xlink:title="boundary_conditions.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="415.56,-614.82 287.04,-614.82 287.04,-592.05 415.56,-592.05 415.56,-614.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-599.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">boundary_conditions.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~boundary_conditions.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge4" class="edge">
+<title>sourcefile~boundary_conditions.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M321.96,-615.29C289.59,-629.31 235.51,-654.21 192.28,-681.43"/>
+</g>
+<!-- sourcefile~boundary_conditions.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge43" class="edge">
+<title>sourcefile~boundary_conditions.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M297.89,-591.66C292.16,-589.15 286.65,-586.11 281.79,-582.43 241,-551.55 213.62,-496.3 200.75,-465.57"/>
+<polygon fill="#000000" stroke="#000000" points="204.08,-464.47 197.1,-456.51 197.59,-467.09 204.08,-464.47"/>
+</g>
+<!-- sourcefile~continuation.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node6" class="node">
+<title>sourcefile~continuation.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node6"><a xlink:href="../sourcefile/continuation.f90.html" xlink:title="continuation.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="561.33,-946.82 474.06,-946.82 474.06,-924.05 561.33,-924.05 561.33,-946.82"/>
+<text xml:space="preserve" text-anchor="middle" x="517.69" y="-931.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">continuation.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~continuation.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge5" class="edge">
+<title>sourcefile~continuation.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-954.43C280.21,-950.03 258.07,-979.01 192.28,-954.43"/>
+</g>
+<!-- sourcefile~continuation.f90&#45;&gt;sourcefile~bethe_equations.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge30" class="edge">
+<title>sourcefile~continuation.f90&#45;&gt;sourcefile~bethe_equations.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M473.88,-944.59C440.77,-950.64 393.73,-957.03 352.3,-954.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-954.43C297.9,-951.14 244.75,-917.22 215.4,-895.2"/>
+<polygon fill="#000000" stroke="#000000" points="217.64,-892.52 207.59,-889.18 213.37,-898.06 217.64,-892.52"/>
+</g>
+<!-- sourcefile~continuation.f90&#45;&gt;sourcefile~nonlinear_solvers.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge67" class="edge">
+<title>sourcefile~continuation.f90&#45;&gt;sourcefile~nonlinear_solvers.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M473.93,-930.23C457.39,-928.22 438.05,-925.87 419.72,-923.64"/>
+<polygon fill="#000000" stroke="#000000" points="420.33,-920.18 409.98,-922.45 419.49,-927.13 420.33,-920.18"/>
+</g>
+<!-- sourcefile~convergence_monitor.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node7" class="node">
+<title>sourcefile~convergence_monitor.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node7"><a xlink:href="../sourcefile/convergence_monitor.f90.html" xlink:title="convergence_monitor.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="417.43,-770.82 285.16,-770.82 285.16,-748.05 417.43,-748.05 417.43,-770.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-755.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">convergence_monitor.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~convergence_monitor.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge6" class="edge">
+<title>sourcefile~convergence_monitor.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M313.88,-747.55C303.36,-743.75 291.97,-739.26 281.79,-734.43 240,-714.65 231.4,-656.8 192.28,-681.43"/>
+</g>
+<!-- sourcefile~convergence_monitor.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge44" class="edge">
+<title>sourcefile~convergence_monitor.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M331.59,-747.75C316.26,-737.31 295.01,-720.71 281.79,-701.43 229.12,-624.62 204.57,-513.77 196.01,-466.35"/>
+<polygon fill="#000000" stroke="#000000" points="199.49,-465.98 194.34,-456.72 192.6,-467.17 199.49,-465.98"/>
+</g>
+<!-- sourcefile~degeneracy_handler.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node8" class="node">
+<title>sourcefile~degeneracy_handler.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node8"><a xlink:href="../sourcefile/degeneracy_handler.f90.html" xlink:title="degeneracy_handler.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="414.81,-692.82 287.79,-692.82 287.79,-670.05 414.81,-670.05 414.81,-692.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-677.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">degeneracy_handler.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~degeneracy_handler.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge7" class="edge">
+<title>sourcefile~degeneracy_handler.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M306.62,-669.61C272.8,-663.09 226.17,-660.09 192.28,-681.43"/>
+</g>
+<!-- sourcefile~degeneracy_handler.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge45" class="edge">
+<title>sourcefile~degeneracy_handler.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M302.04,-669.61C294.64,-666.25 287.56,-661.94 281.79,-656.43 225.9,-603.16 203.45,-509.57 195.75,-466.42"/>
+<polygon fill="#000000" stroke="#000000" points="199.23,-465.98 194.14,-456.69 192.32,-467.13 199.23,-465.98"/>
+</g>
+<!-- sourcefile~density_calculator.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node9" class="node">
+<title>sourcefile~density_calculator.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node9"><a xlink:href="../sourcefile/density_calculator.f90.html" xlink:title="density_calculator.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="408.43,-573.82 294.16,-573.82 294.16,-551.05 408.43,-551.05 408.43,-573.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-558.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">density_calculator.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~density_calculator.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge8" class="edge">
+<title>sourcefile~density_calculator.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M300.25,-574.32C293.8,-576.83 287.47,-579.84 281.79,-583.43 231.94,-614.97 242.2,-650 192.28,-681.43"/>
+</g>
+<!-- sourcefile~density_calculator.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge46" class="edge">
+<title>sourcefile~density_calculator.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M308.26,-550.55C299.15,-547.05 289.84,-542.71 281.79,-537.43 251.36,-517.5 223.71,-485.33 207.44,-464.28"/>
+<polygon fill="#000000" stroke="#000000" points="210.33,-462.29 201.51,-456.41 204.74,-466.51 210.33,-462.29"/>
+</g>
+<!-- sourcefile~hamiltonian_builder.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node10" class="node">
+<title>sourcefile~hamiltonian_builder.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node10"><a xlink:href="../sourcefile/hamiltonian_builder.f90.html" xlink:title="hamiltonian_builder.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="578.58,-534.82 456.81,-534.82 456.81,-512.05 578.58,-512.05 578.58,-534.82"/>
+<text xml:space="preserve" text-anchor="middle" x="517.69" y="-519.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">hamiltonian_builder.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~hamiltonian_builder.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge9" class="edge">
+<title>sourcefile~hamiltonian_builder.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M461.65,-535.19C459.92,-536.47 458.3,-537.88 456.81,-539.43 405.77,-592.68 478.34,-655.28 420.81,-701.43 372.61,-740.09 343.2,-708.21 281.79,-701.43 241.27,-696.96 226.77,-659.71 192.28,-681.43"/>
+</g>
+<!-- sourcefile~hamiltonian_builder.f90&#45;&gt;sourcefile~boundary_conditions.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge32" class="edge">
+<title>sourcefile~hamiltonian_builder.f90&#45;&gt;sourcefile~boundary_conditions.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M483.98,-535.31C474.87,-539.23 465.18,-544 456.81,-549.43 438.6,-561.25 439.65,-571.65 420.81,-582.43 417.68,-584.22 414.38,-585.88 410.99,-587.41"/>
+<polygon fill="#000000" stroke="#000000" points="409.97,-584.04 402.02,-591.04 412.6,-590.53 409.97,-584.04"/>
+</g>
+<!-- sourcefile~hamiltonian_builder.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge47" class="edge">
+<title>sourcefile~hamiltonian_builder.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M456.54,-526.92C408.01,-527.77 338.7,-524.53 281.79,-504.43 255.91,-495.29 230.44,-476.74 213.33,-462.49"/>
+<polygon fill="#000000" stroke="#000000" points="215.74,-459.95 205.88,-456.08 211.18,-465.26 215.74,-459.95"/>
+</g>
+<!-- sourcefile~input_parser.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node11" class="node">
+<title>sourcefile~input_parser.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node11"><a xlink:href="../sourcefile/input_parser.f90.html" xlink:title="input_parser.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="854.37,-357.82 765.6,-357.82 765.6,-335.05 854.37,-335.05 854.37,-357.82"/>
+<text xml:space="preserve" text-anchor="middle" x="809.98" y="-342.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">input_parser.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~input_parser.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge10" class="edge">
+<title>sourcefile~input_parser.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-288.43C321.81,-274.78 309.47,-284.67 281.79,-269.43 234.78,-243.57 232.42,-152.83 192.28,-188.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M671.09,-326.43C629.87,-320.91 619.82,-317.74 578.58,-312.43 478.27,-299.53 443.5,-332.15 352.3,-288.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M765.36,-338.91C738.77,-334.59 704.06,-329.46 673.09,-326.43"/>
+</g>
+<!-- sourcefile~input_parser.f90&#45;&gt;sourcefile~boundary_conditions.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge33" class="edge">
+<title>sourcefile~input_parser.f90&#45;&gt;sourcefile~boundary_conditions.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M799.34,-357.95C770.03,-392.16 677.92,-493.81 578.58,-543.43 530.82,-567.29 472.49,-582.46 427.01,-591.58"/>
+<polygon fill="#000000" stroke="#000000" points="426.38,-588.14 417.23,-593.48 427.71,-595.01 426.38,-588.14"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node12" class="node">
+<title>sourcefile~kohn_sham_cycle.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node12"><a xlink:href="../sourcefile/kohn_sham_cycle.f90.html" xlink:title="kohn_sham_cycle.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="729.6,-415.82 614.58,-415.82 614.58,-393.05 729.6,-393.05 729.6,-415.82"/>
+<text xml:space="preserve" text-anchor="middle" x="672.09" y="-400.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">kohn_sham_cycle.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~input_parser.f90&#45;&gt;sourcefile~kohn_sham_cycle.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge39" class="edge">
+<title>sourcefile~input_parser.f90&#45;&gt;sourcefile~kohn_sham_cycle.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M781.16,-358.31C761,-366.91 733.51,-378.64 711.3,-388.12"/>
+<polygon fill="#000000" stroke="#000000" points="710.1,-384.83 702.27,-391.98 712.84,-391.27 710.1,-384.83"/>
+</g>
+<!-- sourcefile~input_parser.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge48" class="edge">
+<title>sourcefile~input_parser.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M671.09,-326.43C603.96,-317.44 586.3,-322.29 518.69,-326.43"/>
+</g>
+<!-- sourcefile~lsda_types.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node15" class="node">
+<title>sourcefile~lsda_types.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node15"><a xlink:href="../sourcefile/lsda_types.f90.html" xlink:title="lsda_types.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="557.95,-55.82 477.43,-55.82 477.43,-33.05 557.95,-33.05 557.95,-55.82"/>
+<text xml:space="preserve" text-anchor="middle" x="517.69" y="-40.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_types.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~input_parser.f90&#45;&gt;sourcefile~lsda_types.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge62" class="edge">
+<title>sourcefile~input_parser.f90&#45;&gt;sourcefile~lsda_types.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M796.83,-334.82C787.93,-326.14 775.68,-313.85 765.6,-302.43 676.8,-201.84 687.79,-143.4 578.58,-65.43 575.44,-63.19 572.03,-61.16 568.49,-59.34"/>
+<polygon fill="#000000" stroke="#000000" points="570.22,-56.28 559.66,-55.36 567.34,-62.66 570.22,-56.28"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge11" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M614.38,-400.69C585.58,-399.73 550.13,-400.01 518.69,-404.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M516.69,-404.43C458.21,-412.67 471.13,-343.34 420.81,-312.43 393.32,-295.55 381.39,-302.38 352.3,-288.43"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~adaptive_mixing.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge28" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~adaptive_mixing.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M516.69,-404.43C494.38,-407.45 439.68,-392.82 399.48,-380.62"/>
+<polygon fill="#000000" stroke="#000000" points="400.6,-377.3 390.01,-377.71 398.54,-383.99 400.6,-377.3"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~boundary_conditions.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge34" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~boundary_conditions.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M516.69,-404.43C465.74,-411.33 480.82,-457.96 456.81,-503.43 438.79,-537.55 449.81,-556.98 420.81,-582.43 419.36,-583.7 417.84,-584.9 416.26,-586.02"/>
+<polygon fill="#000000" stroke="#000000" points="414.78,-582.83 407.93,-590.91 418.33,-588.86 414.78,-582.83"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~convergence_monitor.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge35" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~convergence_monitor.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M663.81,-416.24C648.69,-440.57 612.46,-497.82 578.58,-543.43 562.17,-565.53 443.29,-718.55 420.81,-734.43 416.21,-737.68 411.14,-740.56 405.9,-743.09"/>
+<polygon fill="#000000" stroke="#000000" points="404.85,-739.73 397.09,-746.94 407.65,-746.15 404.85,-739.73"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~density_calculator.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge36" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~density_calculator.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M516.69,-404.43C455.68,-412.69 465.68,-462.26 420.81,-504.43 406.32,-518.05 389.26,-532.5 375.79,-543.57"/>
+<polygon fill="#000000" stroke="#000000" points="373.83,-540.65 368.29,-549.68 378.25,-546.08 373.83,-540.65"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~hamiltonian_builder.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge37" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~hamiltonian_builder.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M655.92,-416.28C629.45,-436.95 574.61,-479.77 542.86,-504.56"/>
+<polygon fill="#000000" stroke="#000000" points="540.72,-501.79 535,-510.7 545.03,-507.31 540.72,-501.79"/>
+</g>
+<!-- sourcefile~lapack_wrapper.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node13" class="node">
+<title>sourcefile~lapack_wrapper.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node13"><a xlink:href="../sourcefile/lapack_wrapper.f90.html" xlink:title="lapack_wrapper.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="403.56,-495.82 299.04,-495.82 299.04,-473.05 403.56,-473.05 403.56,-495.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-480.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lapack_wrapper.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~lapack_wrapper.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge41" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~lapack_wrapper.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M516.69,-404.43C467.11,-411.14 466.41,-442.82 420.81,-463.43 416.54,-465.36 412.04,-467.18 407.47,-468.88"/>
+<polygon fill="#000000" stroke="#000000" points="406.49,-465.51 398.2,-472.11 408.79,-472.12 406.49,-465.51"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge49" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M516.69,-404.43C412.9,-418.47 385.35,-407.75 281.79,-423.43 269.62,-425.28 256.63,-427.83 244.43,-430.5"/>
+<polygon fill="#000000" stroke="#000000" points="243.96,-427.02 234.97,-432.63 245.5,-433.85 243.96,-427.02"/>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~lsda_types.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge63" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~lsda_types.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M656.59,-392.63C643.28,-380.89 624.21,-361.62 614.58,-340.43 563.56,-228.22 656.26,-161.14 578.58,-65.43 575.73,-61.92 572.26,-59 568.44,-56.57"/>
+<polygon fill="#000000" stroke="#000000" points="570.21,-53.54 559.71,-52.14 567.05,-59.79 570.21,-53.54"/>
+</g>
+<!-- sourcefile~mixing_schemes.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node16" class="node">
+<title>sourcefile~mixing_schemes.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node16"><a xlink:href="../sourcefile/mixing_schemes.f90.html" xlink:title="mixing_schemes.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="405.81,-454.82 296.79,-454.82 296.79,-432.05 405.81,-432.05 405.81,-454.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-439.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mixing_schemes.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~mixing_schemes.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge65" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~mixing_schemes.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M516.69,-404.43C478.21,-409.64 435.56,-419.89 403.35,-428.58"/>
+<polygon fill="#000000" stroke="#000000" points="402.6,-425.16 393.88,-431.17 404.45,-431.91 402.6,-425.16"/>
+</g>
+<!-- sourcefile~xc_lsda.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node28" class="node">
+<title>sourcefile~xc_lsda.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node28"><a xlink:href="../sourcefile/xc_lsda.f90.html" xlink:title="xc_lsda.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="550.45,-731.82 484.93,-731.82 484.93,-709.05 550.45,-709.05 550.45,-731.82"/>
+<text xml:space="preserve" text-anchor="middle" x="517.69" y="-716.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">xc_lsda.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~xc_lsda.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge77" class="edge">
+<title>sourcefile~kohn_sham_cycle.f90&#45;&gt;sourcefile~xc_lsda.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M665.49,-416.05C642.99,-462.7 559.03,-636.79 529.25,-698.54"/>
+<polygon fill="#000000" stroke="#000000" points="526.2,-696.82 525.01,-707.34 532.5,-699.86 526.2,-696.82"/>
+</g>
+<!-- sourcefile~lapack_wrapper.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge12" class="edge">
+<title>sourcefile~lapack_wrapper.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M333.88,-496.13C319.2,-507.07 297.62,-524.39 281.79,-542.43 233.33,-597.67 254.46,-642.28 192.28,-681.43"/>
+</g>
+<!-- sourcefile~lapack_wrapper.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge50" class="edge">
+<title>sourcefile~lapack_wrapper.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M304.59,-472.57C285.77,-467.69 263.87,-462.01 244.42,-456.96"/>
+<polygon fill="#000000" stroke="#000000" points="245.33,-453.58 234.77,-454.46 243.57,-460.36 245.33,-453.58"/>
+</g>
+<!-- sourcefile~lsda_errors.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge13" class="edge">
+<title>sourcefile~lsda_errors.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M185.66,-455.24C165.68,-506.31 86.55,-708.56 60.07,-776.24"/>
+<polygon fill="#000000" stroke="#000000" points="56.96,-774.58 56.58,-785.17 63.48,-777.13 56.96,-774.58"/>
+</g>
+<!-- sourcefile~lsda_types.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge14" class="edge">
+<title>sourcefile~lsda_types.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M484.38,-32.6C443.82,-18.48 376.61,2.33 352.3,-5.43"/>
+</g>
+<!-- sourcefile~mixing_schemes.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge15" class="edge">
+<title>sourcefile~mixing_schemes.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M190.28,-681.43C144.22,-710.44 97.11,-753.53 71.32,-778.52"/>
+<polygon fill="#000000" stroke="#000000" points="68.9,-776 64.21,-785.5 73.8,-781 68.9,-776"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M296.52,-454.7C291.16,-457.3 286.11,-460.5 281.79,-464.43 204.64,-534.66 280.56,-625.84 192.28,-681.43"/>
+</g>
+<!-- sourcefile~mixing_schemes.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge51" class="edge">
+<title>sourcefile~mixing_schemes.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M296.36,-443.43C279.65,-443.43 261.28,-443.43 244.67,-443.43"/>
+<polygon fill="#000000" stroke="#000000" points="245.02,-439.93 235.02,-443.43 245.02,-446.93 245.02,-439.93"/>
+</g>
+<!-- sourcefile~nonlinear_solvers.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge16" class="edge">
+<title>sourcefile~nonlinear_solvers.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M319.81,-927.27C280.78,-941.68 215.44,-963.08 192.28,-954.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M190.28,-954.43C126.25,-930.51 81.21,-857.24 61.91,-820.26"/>
+<polygon fill="#000000" stroke="#000000" points="65.06,-818.75 57.43,-811.4 58.81,-821.9 65.06,-818.75"/>
+</g>
+<!-- sourcefile~nonlinear_solvers.f90&#45;&gt;sourcefile~bethe_equations.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge31" class="edge">
+<title>sourcefile~nonlinear_solvers.f90&#45;&gt;sourcefile~bethe_equations.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M302.46,-903.63C286.29,-899.64 268.05,-895.13 251.12,-890.96"/>
+<polygon fill="#000000" stroke="#000000" points="252.25,-887.63 241.7,-888.63 250.57,-894.42 252.25,-887.63"/>
+</g>
+<!-- sourcefile~output_writer.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node18" class="node">
+<title>sourcefile~output_writer.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node18"><a xlink:href="../sourcefile/output_writer.f90.html" xlink:title="output_writer.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="981.39,-357.82 890.37,-357.82 890.37,-335.05 981.39,-335.05 981.39,-357.82"/>
+<text xml:space="preserve" text-anchor="middle" x="935.88" y="-342.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">output_writer.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~output_writer.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge17" class="edge">
+<title>sourcefile~output_writer.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M903.25,-334.63C877.38,-324.28 840.41,-307.88 810.98,-288.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M671.09,-44.43C609.38,-3.02 393.21,7.63 352.3,-5.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M808.98,-288.43C730.93,-236.83 784.09,-169.51 729.6,-93.43 710.24,-66.41 700.76,-62.85 673.09,-44.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M190.28,-188.43C99.49,-268.95 61.38,-673.62 53.15,-775.25"/>
+<polygon fill="#000000" stroke="#000000" points="49.67,-774.83 52.37,-785.07 56.65,-775.38 49.67,-774.83"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-5.43C320.18,-14.98 306.54,-4.79 281.79,-24.43 216.75,-76.05 254.41,-133.34 192.28,-188.43"/>
+</g>
+<!-- sourcefile~output_writer.f90&#45;&gt;sourcefile~input_parser.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge38" class="edge">
+<title>sourcefile~output_writer.f90&#45;&gt;sourcefile~input_parser.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M890.15,-346.43C882.42,-346.43 874.3,-346.43 866.33,-346.43"/>
+<polygon fill="#000000" stroke="#000000" points="866.33,-342.93 856.33,-346.43 866.33,-349.93 866.33,-342.93"/>
+</g>
+<!-- sourcefile~output_writer.f90&#45;&gt;sourcefile~kohn_sham_cycle.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge40" class="edge">
+<title>sourcefile~output_writer.f90&#45;&gt;sourcefile~kohn_sham_cycle.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M890.24,-357.83C878.58,-360.73 866.02,-363.77 854.37,-366.43 817.06,-374.98 775.25,-383.79 741.19,-390.78"/>
+<polygon fill="#000000" stroke="#000000" points="740.53,-387.34 731.44,-392.77 741.94,-394.2 740.53,-387.34"/>
+</g>
+<!-- sourcefile~output_writer.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge52" class="edge">
+<title>sourcefile~output_writer.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M516.69,-326.43C443.77,-330.9 411.38,-283.44 352.3,-326.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M808.98,-288.43C700,-217.34 648.57,-318.47 518.69,-326.43"/>
+</g>
+<!-- sourcefile~output_writer.f90&#45;&gt;sourcefile~lsda_types.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge64" class="edge">
+<title>sourcefile~output_writer.f90&#45;&gt;sourcefile~lsda_types.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M671.09,-44.43C641.64,-24.67 601.25,-25.6 569.45,-30.98"/>
+<polygon fill="#000000" stroke="#000000" points="568.82,-27.54 559.65,-32.85 570.13,-34.41 568.82,-27.54"/>
+</g>
+<!-- sourcefile~potential_barrier.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node19" class="node">
+<title>sourcefile~potential_barrier.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node19"><a xlink:href="../sourcefile/potential_barrier.f90.html" xlink:title="potential_barrier.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="404.68,-137.82 297.91,-137.82 297.91,-115.05 404.68,-115.05 404.68,-137.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-122.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_barrier.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~potential_barrier.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge18" class="edge">
+<title>sourcefile~potential_barrier.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M297.71,-137.2C264.36,-146.24 222.05,-162.04 192.28,-188.43"/>
+</g>
+<!-- sourcefile~potential_barrier.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge53" class="edge">
+<title>sourcefile~potential_barrier.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M297.48,-136.62C291.68,-139.4 286.27,-142.94 281.79,-147.43 242.35,-187.02 207.87,-357.93 196.36,-420.43"/>
+<polygon fill="#000000" stroke="#000000" points="192.92,-419.77 194.58,-430.24 199.81,-421.02 192.92,-419.77"/>
+</g>
+<!-- sourcefile~potential_factory.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node20" class="node">
+<title>sourcefile~potential_factory.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node20"><a xlink:href="../sourcefile/potential_factory.f90.html" xlink:title="potential_factory.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.08,-96.82 464.31,-96.82 464.31,-74.05 571.08,-74.05 571.08,-96.82"/>
+<text xml:space="preserve" text-anchor="middle" x="517.69" y="-81.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_factory.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~potential_factory.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge19" class="edge">
+<title>sourcefile~potential_factory.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M474.5,-73.67C468.32,-71.09 462.22,-68.04 456.81,-64.43 436.9,-51.17 441.15,-37.02 420.81,-24.43 393.94,-7.8 382.4,4.18 352.3,-5.43"/>
+</g>
+<!-- sourcefile~potential_factory.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge54" class="edge">
+<title>sourcefile~potential_factory.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M514.86,-97.21C508.61,-133.25 484.95,-243.18 420.81,-302.43 397.11,-324.33 378.39,-307.45 352.3,-326.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-326.43C324.75,-345.02 308.72,-328.9 281.79,-345.43 249.43,-365.3 221.65,-400.19 205.95,-422.53"/>
+<polygon fill="#000000" stroke="#000000" points="203.22,-420.33 200.47,-430.57 209,-424.28 203.22,-420.33"/>
+</g>
+<!-- sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_barrier.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge68" class="edge">
+<title>sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_barrier.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M469.15,-97.29C450.91,-101.84 429.9,-107.08 410.76,-111.85"/>
+<polygon fill="#000000" stroke="#000000" points="410.07,-108.42 401.21,-114.23 411.76,-115.21 410.07,-108.42"/>
+</g>
+<!-- sourcefile~potential_harmonic.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node21" class="node">
+<title>sourcefile~potential_harmonic.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node21"><a xlink:href="../sourcefile/potential_harmonic.f90.html" xlink:title="potential_harmonic.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="411.43,-96.82 291.16,-96.82 291.16,-74.05 411.43,-74.05 411.43,-96.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-81.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_harmonic.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_harmonic.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge69" class="edge">
+<title>sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_harmonic.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M464.23,-85.43C451.16,-85.43 436.93,-85.43 423.14,-85.43"/>
+<polygon fill="#000000" stroke="#000000" points="423.21,-81.93 413.21,-85.43 423.21,-88.93 423.21,-81.93"/>
+</g>
+<!-- sourcefile~potential_impurity.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node22" class="node">
+<title>sourcefile~potential_impurity.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node22"><a xlink:href="../sourcefile/potential_impurity.f90.html" xlink:title="potential_impurity.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="407.31,-55.82 295.29,-55.82 295.29,-33.05 407.31,-33.05 407.31,-55.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-40.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_impurity.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_impurity.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge70" class="edge">
+<title>sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_impurity.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M469.15,-73.57C450.91,-69.03 429.9,-63.79 410.76,-59.01"/>
+<polygon fill="#000000" stroke="#000000" points="411.76,-55.66 401.21,-56.63 410.07,-62.45 411.76,-55.66"/>
+</g>
+<!-- sourcefile~potential_quasiperiodic.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node23" class="node">
+<title>sourcefile~potential_quasiperiodic.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node23"><a xlink:href="../sourcefile/potential_quasiperiodic.f90.html" xlink:title="potential_quasiperiodic.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="420.81,-260.82 281.79,-260.82 281.79,-238.05 420.81,-238.05 420.81,-260.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-245.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_quasiperiodic.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_quasiperiodic.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge71" class="edge">
+<title>sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_quasiperiodic.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M512.17,-97.03C500.96,-124.21 469.28,-192.43 420.81,-228.43 418.9,-229.85 416.89,-231.18 414.81,-232.41"/>
+<polygon fill="#000000" stroke="#000000" points="413.32,-229.24 405.99,-236.89 416.49,-235.48 413.32,-229.24"/>
+</g>
+<!-- sourcefile~potential_random.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node24" class="node">
+<title>sourcefile~potential_random.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node24"><a xlink:href="../sourcefile/potential_random.f90.html" xlink:title="potential_random.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="407.68,-219.82 294.91,-219.82 294.91,-197.05 407.68,-197.05 407.68,-219.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-204.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_random.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_random.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge72" class="edge">
+<title>sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_random.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M508.91,-97.08C494.2,-118.2 460.22,-162.9 420.81,-187.43 418.09,-189.13 415.22,-190.69 412.26,-192.14"/>
+<polygon fill="#000000" stroke="#000000" points="411.11,-188.82 403.33,-196.01 413.9,-195.25 411.11,-188.82"/>
+</g>
+<!-- sourcefile~potential_uniform.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node25" class="node">
+<title>sourcefile~potential_uniform.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node25"><a xlink:href="../sourcefile/potential_uniform.f90.html" xlink:title="potential_uniform.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="407.31,-178.82 295.29,-178.82 295.29,-156.05 407.31,-156.05 407.31,-178.82"/>
+<text xml:space="preserve" text-anchor="middle" x="351.3" y="-163.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_uniform.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_uniform.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge73" class="edge">
+<title>sourcefile~potential_factory.f90&#45;&gt;sourcefile~potential_uniform.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M501.16,-97.18C482.8,-110.62 450.91,-132.55 420.81,-146.43 416.62,-148.37 412.2,-150.18 407.71,-151.87"/>
+<polygon fill="#000000" stroke="#000000" points="406.87,-148.45 398.6,-155.08 409.2,-155.06 406.87,-148.45"/>
+</g>
+<!-- sourcefile~potential_harmonic.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge20" class="edge">
+<title>sourcefile~potential_harmonic.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M301.99,-97.26C295,-99.81 288.05,-102.85 281.79,-106.43 234.96,-133.22 232.64,-152.64 192.28,-188.43"/>
+</g>
+<!-- sourcefile~potential_harmonic.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge55" class="edge">
+<title>sourcefile~potential_harmonic.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M293.98,-97.22C289.49,-99.72 285.33,-102.76 281.79,-106.43 259.36,-129.72 212.03,-348.84 196.98,-420.72"/>
+<polygon fill="#000000" stroke="#000000" points="193.62,-419.66 195.01,-430.17 200.48,-421.09 193.62,-419.66"/>
+</g>
+<!-- sourcefile~potential_impurity.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge21" class="edge">
+<title>sourcefile~potential_impurity.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M298.8,-56.18C292.78,-58.7 286.96,-61.75 281.79,-65.43 226.75,-104.69 242.86,-143.57 192.28,-188.43"/>
+</g>
+<!-- sourcefile~potential_impurity.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge56" class="edge">
+<title>sourcefile~potential_impurity.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M294.87,-55.57C290.01,-58.2 285.53,-61.44 281.79,-65.43 275.51,-72.13 215.12,-341.08 197.24,-421.16"/>
+<polygon fill="#000000" stroke="#000000" points="193.93,-419.94 195.17,-430.46 200.76,-421.47 193.93,-419.94"/>
+</g>
+<!-- sourcefile~potential_quasiperiodic.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge22" class="edge">
+<title>sourcefile~potential_quasiperiodic.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M308.72,-237.58C299.77,-234.78 290.41,-231.67 281.79,-228.43 240.99,-213.13 224.88,-159.52 192.28,-188.43"/>
+</g>
+<!-- sourcefile~potential_quasiperiodic.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge57" class="edge">
+<title>sourcefile~potential_quasiperiodic.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M335.76,-261.12C321.24,-273.16 298.71,-292.88 281.79,-312.43 250.76,-348.29 220.99,-395.16 204.81,-422.02"/>
+<polygon fill="#000000" stroke="#000000" points="202,-419.9 199.89,-430.28 208.01,-423.48 202,-419.9"/>
+</g>
+<!-- sourcefile~potential_random.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge23" class="edge">
+<title>sourcefile~potential_random.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M309.94,-196.61C268.96,-185.75 209.19,-173.43 192.28,-188.43"/>
+</g>
+<!-- sourcefile~potential_random.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge58" class="edge">
+<title>sourcefile~potential_random.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M295.51,-220.22C290.53,-222.73 285.85,-225.76 281.79,-229.43 224.2,-281.6 202.57,-376.7 195.41,-420.38"/>
+<polygon fill="#000000" stroke="#000000" points="191.96,-419.81 193.92,-430.22 198.88,-420.86 191.96,-419.81"/>
+</g>
+<!-- sourcefile~potential_uniform.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge24" class="edge">
+<title>sourcefile~potential_uniform.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M294.99,-160.4C261.39,-159.3 219.82,-164.01 192.28,-188.43"/>
+</g>
+<!-- sourcefile~potential_uniform.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge59" class="edge">
+<title>sourcefile~potential_uniform.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M294.95,-179.16C290.14,-181.67 285.65,-184.73 281.79,-188.43 214.71,-252.87 197.85,-370.43 193.65,-420.19"/>
+<polygon fill="#000000" stroke="#000000" points="190.17,-419.83 192.93,-430.06 197.15,-420.34 190.17,-419.83"/>
+</g>
+<!-- sourcefile~spline2d.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_node26" class="node">
+<title>sourcefile~spline2d.f90</title>
+<g id="a_sourcefile~~lsda_constants.f90~~AfferentGraph_node26"><a xlink:href="../sourcefile/spline2d.f90.html" xlink:title="spline2d.f90">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="225.91,-809.82 156.64,-809.82 156.64,-787.05 225.91,-787.05 225.91,-809.82"/>
+<text xml:space="preserve" text-anchor="middle" x="191.28" y="-794.08" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d.f90</text>
+</a>
+</g>
+</g>
+<!-- sourcefile~spline2d.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge25" class="edge">
+<title>sourcefile~spline2d.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M156.3,-798.43C143.05,-798.43 127.45,-798.43 112.39,-798.43"/>
+<polygon fill="#000000" stroke="#000000" points="112.54,-794.93 102.54,-798.43 112.54,-801.93 112.54,-794.93"/>
+</g>
+<!-- sourcefile~table_io.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge26" class="edge">
+<title>sourcefile~table_io.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M317.44,-840C285.36,-841.9 235.23,-843.27 192.28,-837.43"/>
+</g>
+<!-- sourcefile~table_io.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge60" class="edge">
+<title>sourcefile~table_io.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M317.57,-832.35C304.77,-828.78 290.99,-822.72 281.79,-812.43 280.3,-810.76 216.82,-545.96 197.68,-466.02"/>
+<polygon fill="#000000" stroke="#000000" points="201.19,-465.61 195.45,-456.7 194.38,-467.24 201.19,-465.61"/>
+</g>
+<!-- sourcefile~xc_lsda.f90&#45;&gt;sourcefile~lsda_constants.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge27" class="edge">
+<title>sourcefile~xc_lsda.f90&#45;&gt;sourcefile~lsda_constants.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M190.28,-837.43C157.45,-832.97 121.47,-822.71 94.35,-813.83"/>
+<polygon fill="#000000" stroke="#000000" points="95.71,-810.6 85.11,-810.74 93.49,-817.23 95.71,-810.6"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-798.43C341.61,-800.93 201.24,-838.65 192.28,-837.43"/>
+</g>
+<!-- sourcefile~xc_lsda.f90&#45;&gt;sourcefile~lsda_errors.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge61" class="edge">
+<title>sourcefile~xc_lsda.f90&#45;&gt;sourcefile~lsda_errors.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M500.84,-708.71C482.44,-695.57 450.76,-674.42 420.81,-661.43 362.05,-635.95 331.27,-664.11 281.79,-623.43 231.19,-581.83 206.67,-504.48 197.19,-466.16"/>
+<polygon fill="#000000" stroke="#000000" points="200.65,-465.6 194.97,-456.66 193.84,-467.19 200.65,-465.6"/>
+</g>
+<!-- sourcefile~xc_lsda.f90&#45;&gt;sourcefile~spline2d.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge74" class="edge">
+<title>sourcefile~xc_lsda.f90&#45;&gt;sourcefile~spline2d.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.3,-798.43C313.43,-809.03 269.69,-808.05 237.59,-804.98"/>
+<polygon fill="#000000" stroke="#000000" points="238.15,-801.52 227.83,-803.93 237.4,-808.48 238.15,-801.52"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M500.84,-732.14C482.42,-745.26 450.73,-766.39 420.81,-779.43 391.84,-792.06 382.67,-789.71 352.3,-798.43"/>
+</g>
+<!-- sourcefile~xc_lsda.f90&#45;&gt;sourcefile~table_io.f90 -->
+<g id="sourcefile~~lsda_constants.f90~~AfferentGraph_edge76" class="edge">
+<title>sourcefile~xc_lsda.f90&#45;&gt;sourcefile~table_io.f90</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M507.28,-732.22C491.34,-751.46 457.23,-789.74 420.81,-812.43 413.18,-817.19 404.51,-821.23 395.97,-824.59"/>
+<polygon fill="#000000" stroke="#000000" points="394.92,-821.24 386.72,-827.96 397.31,-827.82 394.92,-821.24"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var pansourcefilelsda_constantsf90AfferentGraph = svgPanZoom('#sourcefilelsda_constantsf90AfferentGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#AfferentGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="AfferentGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="188pt" height="31pt"
+ viewBox="0.00 0.00 188.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 183.89,-26.77 183.89,4 -4,4"/>
+<!-- Source File -->
+<g id="node1" class="node">
+<title>Source File</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="65.52,-22.77 0,-22.77 0,0 65.52,0 65.52,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="32.76" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Source File</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node2" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="179.89,-22.77 83.62,-22.77 83.62,0 179.89,0 179.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="131.76" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a file to a file which it depends on. A file
+is dependent upon another if the latter must be compiled before the former
+can be.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+<br>
+      <section>
+        <h2><span class="anchor" id="src"></span>Source Code</h2>
+        <div class="hl codehilite"><pre><span></span><a id="ln-1" name="ln-1" href="#ln-1"></a><span class="c">!&gt; Physical and numerical constants for LSDA-Hubbard calculations</span>
+<a id="ln-2" name="ln-2" href="#ln-2"></a>
+<a id="ln-3" name="ln-3" href="#ln-3"></a><span class="k">module </span><span class="n">lsda_constants</span>
+<a id="ln-4" name="ln-4" href="#ln-4"></a><span class="w">    </span><span class="k">use</span><span class="p">,</span><span class="w"> </span><span class="k">intrinsic</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">iso_fortran_env</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">real64</span><span class="p">,</span><span class="w"> </span><span class="n">int32</span>
+<a id="ln-5" name="ln-5" href="#ln-5"></a><span class="w">    </span><span class="k">implicit none</span>
+<a id="ln-6" name="ln-6" href="#ln-6"></a>
+<a id="ln-7" name="ln-7" href="#ln-7"></a><span class="k">    </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">dp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">real64</span><span class="w">                     </span><span class="c">! Double precision (64 bits, ~16 digits)</span>
+<a id="ln-8" name="ln-8" href="#ln-8"></a><span class="w">    </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">int32</span><span class="w">                      </span><span class="c">! Single precision (32 bits, ~8 digits)</span>
+<a id="ln-9" name="ln-9" href="#ln-9"></a>
+<a id="ln-10" name="ln-10" href="#ln-10"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">PI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.0_dp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">atan</span><span class="p">(</span><span class="mf">1.0_dp</span><span class="p">)</span><span class="w">     </span><span class="c">! π = 3.14159...</span>
+<a id="ln-11" name="ln-11" href="#ln-11"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">TWOPI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0_dp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">PI</span><span class="w">            </span><span class="c">! 2π = 6.28318...</span>
+<a id="ln-12" name="ln-12" href="#ln-12"></a>
+<a id="ln-13" name="ln-13" href="#ln-13"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">U_SMALL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-9_dp</span><span class="w">            </span><span class="c">! Check if U ≈ 0</span>
+<a id="ln-14" name="ln-14" href="#ln-14"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">TOL_DEFAULT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-16_dp</span><span class="w">       </span><span class="c">! Convergence tol</span>
+<a id="ln-15" name="ln-15" href="#ln-15"></a>
+<a id="ln-16" name="ln-16" href="#ln-16"></a><span class="w">    </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">ITER_MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10000</span><span class="w">                </span><span class="c">! Max iterations SCF</span>
+<a id="ln-17" name="ln-17" href="#ln-17"></a>
+<a id="ln-18" name="ln-18" href="#ln-18"></a><span class="w">    </span><span class="c">! Mixing parameters (convention from original C++ code):</span>
+<a id="ln-19" name="ln-19" href="#ln-19"></a><span class="w">    </span><span class="c">! C++ uses: V_new = Mix * V_old + (1-Mix) * V_calc (Mix = 0.95, keeps 95% old)</span>
+<a id="ln-20" name="ln-20" href="#ln-20"></a><span class="w">    </span><span class="c">! Fortran uses: n_new = alpha * n_calc + (1-alpha) * n_old (alpha = weight of new)</span>
+<a id="ln-21" name="ln-21" href="#ln-21"></a><span class="w">    </span><span class="c">! Therefore: alpha = 1 - Mix_cpp to maintain equivalence</span>
+<a id="ln-22" name="ln-22" href="#ln-22"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">INITIAL_MIX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.95_dp</span><span class="w">          </span><span class="c">! C++ mixing factor (keeps 95% old)</span>
+<a id="ln-23" name="ln-23" href="#ln-23"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">MIX_ALPHA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0_dp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">INITIAL_MIX</span><span class="w">  </span><span class="c">! Fortran mixing (5% new, 95% old)</span>
+<a id="ln-24" name="ln-24" href="#ln-24"></a>
+<a id="ln-25" name="ln-25" href="#ln-25"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">NEWTON_TOL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-10_dp</span><span class="w">        </span><span class="c">! Newton convergence tol</span>
+<a id="ln-26" name="ln-26" href="#ln-26"></a><span class="w">    </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">NEWTON_MAX_ITER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">50</span><span class="w">            </span><span class="c">! Max Newton iterations</span>
+<a id="ln-27" name="ln-27" href="#ln-27"></a>
+<a id="ln-28" name="ln-28" href="#ln-28"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">SCF_ENERGY_TOL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-8_dp</span><span class="w">     </span><span class="c">! SCF energy convergence tol</span>
+<a id="ln-29" name="ln-29" href="#ln-29"></a><span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">SCF_DENSITY_TOL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-6_dp</span><span class="w">    </span><span class="c">! SCF density convergence tol</span>
+<a id="ln-30" name="ln-30" href="#ln-30"></a><span class="k">end module </span><span class="n">lsda_constants</span>
+</pre></div>
+
+      </section>
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

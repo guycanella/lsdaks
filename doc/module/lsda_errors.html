@@ -1,0 +1,1635 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>lsda_errors &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>lsda_errors
+      <small>Module</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 3.6% of total for modules and submodules.">161 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/lsda_errors.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/lsda_errors.f90.html'>lsda_errors.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">lsda_errors</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_success">ERROR_SUCCESS</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_invalid_input">ERROR_INVALID_INPUT</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_out_of_bounds">ERROR_OUT_OF_BOUNDS</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_size_mismatch">ERROR_SIZE_MISMATCH</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_invalid_concentration">ERROR_INVALID_CONCENTRATION</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_negative_value">ERROR_NEGATIVE_VALUE</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_invalid_range">ERROR_INVALID_RANGE</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_not_a_number">ERROR_NOT_A_NUMBER</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_unphysical_density">ERROR_UNPHYSICAL_DENSITY</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_spline_initialization_failed">ERROR_SPLINE_INITIALIZATION_FAILED</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_convergence_failed">ERROR_CONVERGENCE_FAILED</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_singular_matrix">ERROR_SINGULAR_MATRIX</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_lapack_failed">ERROR_LAPACK_FAILED</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_lapack_invalid_arg">ERROR_LAPACK_INVALID_ARG</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_linear_dependence">ERROR_LINEAR_DEPENDENCE</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_file_not_found">ERROR_FILE_NOT_FOUND</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_file_read">ERROR_FILE_READ</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_file_write">ERROR_FILE_WRITE</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_allocation_failed">ERROR_ALLOCATION_FAILED</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#variable-error_deallocation_failed">ERROR_DEALLOCATION_FAILED</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#funcs-0"
+         aria-expanded="false" aria-controls="funcs-0">
+         <h4 class="card-header bg-primary text-white">Functions</h4>
+      </a>
+      <div id="funcs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/lsda_errors.html#proc-get_error_message">get_error_message</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
+      </a>
+      <div id="subs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/lsda_errors.html#proc-error_handler">error_handler</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#proc-check_bounds">check_bounds</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#proc-check_positive">check_positive</a>
+            <a class="list-group-item" href="../module/lsda_errors.html#proc-check_range">check_range</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+
+    <div class="col-md-9" id='text'>
+      <p>Module for centralized error handling</p>
+<br>          <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='lsda_constants.html'>lsda_constants</a></li>
+              </ul>
+            </li>
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: module~~lsda_errors~~UsesGraph Pages: 1 -->
+<svg id="modulelsda_errorsUsesGraph" width="314pt" height="31pt"
+ viewBox="0.00 0.00 314.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~lsda_errors~~UsesGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>module~~lsda_errors~~UsesGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 310.06,-26.77 310.06,4 -4,4"/>
+<!-- module~lsda_errors -->
+<g id="module~~lsda_errors~~UsesGraph_node1" class="node">
+<title>module~lsda_errors</title>
+<polygon fill="none" stroke="black" points="306.06,-22.77 240.54,-22.77 240.54,0 306.06,0 306.06,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="273.3" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">lsda_errors</text>
+</g>
+<!-- module~lsda_constants -->
+<g id="module~~lsda_errors~~UsesGraph_node2" class="node">
+<title>module~lsda_constants</title>
+<g id="a_module~~lsda_errors~~UsesGraph_node2"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
+<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-22.77 121.77,-22.77 121.77,0 204.54,0 204.54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="163.15" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
+</a>
+</g>
+</g>
+<!-- module~lsda_errors&#45;&gt;module~lsda_constants -->
+<g id="module~~lsda_errors~~UsesGraph_edge1" class="edge">
+<title>module~lsda_errors&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M240.15,-11.39C232.61,-11.39 224.4,-11.39 216.24,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="216.34,-7.89 206.34,-11.39 216.34,-14.89 216.34,-7.89"/>
+</g>
+<!-- iso_fortran_env -->
+<g id="module~~lsda_errors~~UsesGraph_node3" class="node">
+<title>iso_fortran_env</title>
+<g id="a_module~~lsda_errors~~UsesGraph_node3"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-22.77 0,-22.77 0,0 85.77,0 85.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- module~lsda_constants&#45;&gt;iso_fortran_env -->
+<g id="module~~lsda_errors~~UsesGraph_edge2" class="edge">
+<title>module~lsda_constants&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M121.45,-11.39C113.64,-11.39 105.35,-11.39 97.21,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="97.38,-7.89 87.38,-11.39 97.38,-14.89 97.38,-7.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsesGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsesGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+          <div class="card">
+      <h3 class="card-header card-title bg-light">Used by</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: module~~lsda_errors~~UsedByGraph Pages: 1 -->
+<svg id="modulelsda_errorsUsedByGraph" width="641pt" height="659pt"
+ viewBox="0.00 0.00 641.00 659.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~lsda_errors~~UsedByGraph" class="graph" transform="scale(0.839698 0.839698) rotate(0) translate(4 781.17)">
+<title>module~~lsda_errors~~UsedByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-781.17 759.37,-781.17 759.37,4 -4,4"/>
+<!-- module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_node1" class="node">
+<title>module~lsda_errors</title>
+<polygon fill="none" stroke="black" points="65.52,-266.77 0,-266.77 0,-244 65.52,-244 65.52,-266.77"/>
+<text xml:space="preserve" text-anchor="middle" x="32.76" y="-251.03" font-family="Helvetica,sans-Serif" font-size="10.50">lsda_errors</text>
+</g>
+<!-- module~adaptive_mixing -->
+<g id="module~~lsda_errors~~UsedByGraph_node2" class="node">
+<title>module~adaptive_mixing</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node2"><a xlink:href="../module/adaptive_mixing.html" xlink:title="adaptive_mixing">
+<polygon fill="#337ab7" stroke="#337ab7" points="391.94,-666.77 303.17,-666.77 303.17,-644 391.94,-644 391.94,-666.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-651.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mixing</text>
+</a>
+</g>
+</g>
+<!-- module~adaptive_mixing&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge1" class="edge">
+<title>module~adaptive_mixing&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M317.67,-667.2C276.03,-683.39 201.63,-708.89 178.78,-694.38"/>
+</g>
+<!-- module~boundary_conditions -->
+<g id="module~~lsda_errors~~UsedByGraph_node3" class="node">
+<title>module~boundary_conditions</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node3"><a xlink:href="../module/boundary_conditions.html" xlink:title="boundary_conditions">
+<polygon fill="#337ab7" stroke="#337ab7" points="233.04,-383.77 122.52,-383.77 122.52,-361 233.04,-361 233.04,-383.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-368.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">boundary_conditions</text>
+</a>
+</g>
+</g>
+<!-- module~boundary_conditions&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge2" class="edge">
+<title>module~boundary_conditions&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M126.88,-360.64C117.95,-357.23 109.09,-352.89 101.52,-347.38 76.08,-328.9 56.17,-298.04 44.69,-277.21"/>
+<polygon fill="#000000" stroke="#000000" points="47.81,-275.62 40.04,-268.42 41.62,-278.89 47.81,-275.62"/>
+</g>
+<!-- module~convergence_monitor -->
+<g id="module~~lsda_errors~~UsedByGraph_node4" class="node">
+<title>module~convergence_monitor</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node4"><a xlink:href="../module/convergence_monitor.html" xlink:title="convergence_monitor">
+<polygon fill="#337ab7" stroke="#337ab7" points="405.06,-625.77 290.04,-625.77 290.04,-603 405.06,-603 405.06,-625.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-610.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">convergence_monitor</text>
+</a>
+</g>
+</g>
+<!-- module~convergence_monitor&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge3" class="edge">
+<title>module~convergence_monitor&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M312.49,-626.22C305.02,-629.04 297.2,-632.17 290.04,-635.38 238.97,-658.29 226.03,-724.39 178.78,-694.38"/>
+</g>
+<!-- module~degeneracy_handler -->
+<g id="module~~lsda_errors~~UsedByGraph_node5" class="node">
+<title>module~degeneracy_handler</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node5"><a xlink:href="../module/degeneracy_handler.html" xlink:title="degeneracy_handler">
+<polygon fill="#337ab7" stroke="#337ab7" points="232.66,-305.77 122.9,-305.77 122.9,-283 232.66,-283 232.66,-305.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-290.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">degeneracy_handler</text>
+</a>
+</g>
+</g>
+<!-- module~degeneracy_handler&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge4" class="edge">
+<title>module~degeneracy_handler&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M133.48,-282.58C115.59,-277.7 94.9,-272.06 77.01,-267.18"/>
+<polygon fill="#000000" stroke="#000000" points="78.04,-263.83 67.47,-264.58 76.19,-270.58 78.04,-263.83"/>
+</g>
+<!-- module~density_calculator -->
+<g id="module~~lsda_errors~~UsedByGraph_node6" class="node">
+<title>module~density_calculator</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node6"><a xlink:href="../module/density_calculator.html" xlink:title="density_calculator">
+<polygon fill="#337ab7" stroke="#337ab7" points="396.06,-502.77 299.04,-502.77 299.04,-480 396.06,-480 396.06,-502.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-487.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">density_calculator</text>
+</a>
+</g>
+</g>
+<!-- module~density_calculator&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge5" class="edge">
+<title>module~density_calculator&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M298.63,-494.64C263.5,-494.97 215.69,-490.99 178.78,-471.38"/>
+</g>
+<!-- module~hamiltonian_builder -->
+<g id="module~~lsda_errors~~UsedByGraph_node7" class="node">
+<title>module~hamiltonian_builder</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node7"><a xlink:href="../module/hamiltonian_builder.html" xlink:title="hamiltonian_builder">
+<polygon fill="#337ab7" stroke="#337ab7" points="399.81,-461.77 295.29,-461.77 295.29,-439 399.81,-439 399.81,-461.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-446.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">hamiltonian_builder</text>
+</a>
+</g>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge6" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M299.82,-462.23C257.62,-471.85 199.13,-482.19 178.78,-471.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M176.78,-471.38C98.57,-429.84 56.06,-324.42 40.6,-277.96"/>
+<polygon fill="#000000" stroke="#000000" points="43.94,-276.91 37.56,-268.45 37.27,-279.04 43.94,-276.91"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~boundary_conditions -->
+<g id="module~~lsda_errors~~UsedByGraph_edge22" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M319.46,-438.59C310.11,-434.46 299.59,-429.77 290.04,-425.38 264.14,-413.49 235.07,-399.62 213.14,-389.06"/>
+<polygon fill="#000000" stroke="#000000" points="214.89,-386.02 204.36,-384.82 211.84,-392.32 214.89,-386.02"/>
+</g>
+<!-- module~input_parser -->
+<g id="module~~lsda_errors~~UsedByGraph_node8" class="node">
+<title>module~input_parser</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node8"><a xlink:href="../module/input_parser.html" xlink:title="input_parser">
+<polygon fill="#337ab7" stroke="#337ab7" points="645.6,-604.77 574.08,-604.77 574.08,-582 645.6,-582 645.6,-604.77"/>
+<text xml:space="preserve" text-anchor="middle" x="609.84" y="-589.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">input_parser</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge7" class="edge">
+<title>module~input_parser&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M176.78,-333.38C143.86,-323.06 132.09,-330.37 101.52,-314.38 82.65,-304.52 64.64,-288.4 51.94,-275.5"/>
+<polygon fill="#000000" stroke="#000000" points="54.51,-273.13 45.09,-268.3 49.44,-277.96 54.51,-273.13"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M604.35,-581.83C583.54,-530.4 491.39,-325.21 348.55,-333.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M346.55,-333.38C273.21,-319.91 249.93,-355.7 178.78,-333.38"/>
+</g>
+<!-- module~input_parser&#45;&gt;module~boundary_conditions -->
+<g id="module~~lsda_errors~~UsedByGraph_edge23" class="edge">
+<title>module~input_parser&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M346.55,-333.38C304.57,-335.79 258.1,-347.32 224.73,-357.22"/>
+<polygon fill="#000000" stroke="#000000" points="223.93,-353.8 215.39,-360.06 225.97,-360.5 223.93,-353.8"/>
+</g>
+<!-- module~kohn_sham_cycle -->
+<g id="module~~lsda_errors~~UsedByGraph_node9" class="node">
+<title>module~kohn_sham_cycle</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node9"><a xlink:href="../module/kohn_sham_cycle.html" xlink:title="kohn_sham_cycle">
+<polygon fill="#337ab7" stroke="#337ab7" points="538.08,-604.77 441.06,-604.77 441.06,-582 538.08,-582 538.08,-604.77"/>
+<text xml:space="preserve" text-anchor="middle" x="489.57" y="-589.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">kohn_sham_cycle</text>
+</a>
+</g>
+</g>
+<!-- module~input_parser&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~lsda_errors~~UsedByGraph_edge29" class="edge">
+<title>module~input_parser&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M573.68,-593.38C566.18,-593.38 558.06,-593.38 549.94,-593.38"/>
+<polygon fill="#000000" stroke="#000000" points="550.03,-589.89 540.03,-593.39 550.03,-596.89 550.03,-589.89"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge8" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M480.75,-605.19C467.62,-623.87 439.23,-659.71 405.06,-675.38 359.19,-696.42 221.38,-721.44 178.78,-694.38"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing -->
+<g id="module~~lsda_errors~~UsedByGraph_edge21" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M466.17,-605.15C449.52,-613.7 426.13,-625.33 405.06,-634.38 401.01,-636.13 396.77,-637.86 392.5,-639.55"/>
+<polygon fill="#000000" stroke="#000000" points="391.43,-636.21 383.35,-643.07 393.94,-642.74 391.43,-636.21"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~boundary_conditions -->
+<g id="module~~lsda_errors~~UsedByGraph_edge24" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M486.11,-581.84C479.12,-551.9 456.23,-471.27 405.06,-430.38 392.34,-420.22 306.52,-399.98 244.32,-386.31"/>
+<polygon fill="#000000" stroke="#000000" points="245.39,-382.96 234.88,-384.24 243.9,-389.8 245.39,-382.96"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~convergence_monitor -->
+<g id="module~~lsda_errors~~UsedByGraph_edge25" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~convergence_monitor</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M440.77,-600.55C432.93,-601.73 424.67,-602.97 416.45,-604.2"/>
+<polygon fill="#000000" stroke="#000000" points="416.18,-600.7 406.81,-605.65 417.22,-607.63 416.18,-600.7"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~density_calculator -->
+<g id="module~~lsda_errors~~UsedByGraph_edge26" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~density_calculator</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M479.23,-581.63C464.92,-564.31 435.98,-531.9 405.06,-512.38 402.62,-510.85 400.05,-509.39 397.41,-508.03"/>
+<polygon fill="#000000" stroke="#000000" points="398.89,-504.86 388.34,-503.83 395.95,-511.21 398.89,-504.86"/>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder -->
+<g id="module~~lsda_errors~~UsedByGraph_edge27" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M483.49,-581.53C472.6,-557.42 444.7,-502.36 405.06,-471.38 403.33,-470.03 401.5,-468.76 399.6,-467.56"/>
+<polygon fill="#000000" stroke="#000000" points="401.47,-464.59 391.01,-462.92 398.14,-470.75 401.47,-464.59"/>
+</g>
+<!-- module~lapack_wrapper -->
+<g id="module~~lsda_errors~~UsedByGraph_node10" class="node">
+<title>module~lapack_wrapper</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node10"><a xlink:href="../module/lapack_wrapper.html" xlink:title="lapack_wrapper">
+<polygon fill="#337ab7" stroke="#337ab7" points="391.19,-383.77 303.92,-383.77 303.92,-361 391.19,-361 391.19,-383.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-368.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lapack_wrapper</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper -->
+<g id="module~~lsda_errors~~UsedByGraph_edge31" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M486.65,-581.56C480.65,-548.23 459.35,-452.42 405.06,-397.38 402.3,-394.59 399.18,-392.08 395.85,-389.84"/>
+<polygon fill="#000000" stroke="#000000" points="397.77,-386.91 387.36,-384.94 394.28,-392.97 397.77,-386.91"/>
+</g>
+<!-- module~mixing_schemes -->
+<g id="module~~lsda_errors~~UsedByGraph_node11" class="node">
+<title>module~mixing_schemes</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node11"><a xlink:href="../module/mixing_schemes.html" xlink:title="mixing_schemes">
+<polygon fill="#337ab7" stroke="#337ab7" points="393.06,-744.77 302.04,-744.77 302.04,-722 393.06,-722 393.06,-744.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-729.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mixing_schemes</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~mixing_schemes -->
+<g id="module~~lsda_errors~~UsedByGraph_edge32" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~mixing_schemes</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M482.8,-605.06C471.05,-627.77 442.29,-678.3 405.06,-708.38 401.4,-711.34 397.33,-714.02 393.11,-716.43"/>
+<polygon fill="#000000" stroke="#000000" points="391.73,-713.2 384.43,-720.87 394.92,-719.43 391.73,-713.2"/>
+</g>
+<!-- module~xc_lsda -->
+<g id="module~~lsda_errors~~UsedByGraph_node18" class="node">
+<title>module~xc_lsda</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node18"><a xlink:href="../module/xc_lsda.html" xlink:title="xc_lsda">
+<polygon fill="#337ab7" stroke="#337ab7" points="374.55,-584.77 320.55,-584.77 320.55,-562 374.55,-562 374.55,-584.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-569.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">xc_lsda</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;module~xc_lsda -->
+<g id="module~~lsda_errors~~UsedByGraph_edge38" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~xc_lsda</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M440.77,-586.56C422.88,-584 402.83,-581.14 386,-578.73"/>
+<polygon fill="#000000" stroke="#000000" points="386.82,-575.32 376.43,-577.37 385.83,-582.25 386.82,-575.32"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge9" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M303.49,-363.15C261.81,-354.07 201.68,-340.57 178.78,-333.38"/>
+</g>
+<!-- module~mixing_schemes&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge10" class="edge">
+<title>module~mixing_schemes&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M301.75,-731.05C266.04,-727.37 216.01,-718.03 178.78,-694.38"/>
+</g>
+<!-- module~output_writer -->
+<g id="module~~lsda_errors~~UsedByGraph_node12" class="node">
+<title>module~output_writer</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node12"><a xlink:href="../module/output_writer.html" xlink:title="output_writer">
+<polygon fill="#337ab7" stroke="#337ab7" points="755.37,-703.77 681.6,-703.77 681.6,-681 755.37,-681 755.37,-703.77"/>
+<text xml:space="preserve" text-anchor="middle" x="718.49" y="-688.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">output_writer</text>
+</a>
+</g>
+</g>
+<!-- module~output_writer&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge11" class="edge">
+<title>module~output_writer&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M608.84,-772.38C466.9,-772.03 426.7,-791.73 290.04,-753.38 236.15,-738.26 226.11,-724.27 178.78,-694.38"/>
+</g>
+<!-- module~output_writer&#45;&gt;module~input_parser -->
+<g id="module~~lsda_errors~~UsedByGraph_edge28" class="edge">
+<title>module~output_writer&#45;&gt;module~input_parser</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M704.83,-680.64C686.79,-663.89 653.46,-632.95 631.73,-612.78"/>
+<polygon fill="#000000" stroke="#000000" points="634.3,-610.38 624.59,-606.14 629.53,-615.51 634.3,-610.38"/>
+</g>
+<!-- module~output_writer&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~lsda_errors~~UsedByGraph_edge30" class="edge">
+<title>module~output_writer&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M709.65,-704.21C693.83,-726.5 655.74,-772.5 610.84,-772.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M608.84,-772.38C534.83,-772.2 504.46,-664.46 494.57,-616.24"/>
+<polygon fill="#000000" stroke="#000000" points="498.04,-615.76 492.72,-606.6 491.17,-617.08 498.04,-615.76"/>
+</g>
+<!-- module~potential_barrier -->
+<g id="module~~lsda_errors~~UsedByGraph_node13" class="node">
+<title>module~potential_barrier</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node13"><a xlink:href="../module/potential_barrier.html" xlink:title="potential_barrier">
+<polygon fill="#337ab7" stroke="#337ab7" points="222.54,-227.77 133.02,-227.77 133.02,-205 222.54,-205 222.54,-227.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-212.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_barrier</text>
+</a>
+</g>
+</g>
+<!-- module~potential_barrier&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge12" class="edge">
+<title>module~potential_barrier&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M133.48,-228.19C115.59,-233.07 94.9,-238.71 77.01,-243.59"/>
+<polygon fill="#000000" stroke="#000000" points="76.19,-240.19 67.47,-246.19 78.04,-246.94 76.19,-240.19"/>
+</g>
+<!-- module~potential_factory -->
+<g id="module~~lsda_errors~~UsedByGraph_node14" class="node">
+<title>module~potential_factory</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node14"><a xlink:href="../module/potential_factory.html" xlink:title="potential_factory">
+<polygon fill="#337ab7" stroke="#337ab7" points="392.69,-207.77 302.42,-207.77 302.42,-185 392.69,-185 392.69,-207.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-192.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_factory</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge13" class="edge">
+<title>module~potential_factory&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M324.83,-208.17C306.51,-217.5 279.32,-230.01 254.04,-236.38 193.91,-251.55 121.94,-255.14 77.02,-255.73"/>
+<polygon fill="#000000" stroke="#000000" points="77.14,-252.23 67.17,-255.81 77.2,-259.23 77.14,-252.23"/>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_barrier -->
+<g id="module~~lsda_errors~~UsedByGraph_edge33" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_barrier</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M302.03,-201.69C281.2,-204.18 256.18,-207.16 234.14,-209.79"/>
+<polygon fill="#000000" stroke="#000000" points="233.94,-206.28 224.43,-210.94 234.77,-213.23 233.94,-206.28"/>
+</g>
+<!-- module~potential_impurity -->
+<g id="module~~lsda_errors~~UsedByGraph_node15" class="node">
+<title>module~potential_impurity</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node15"><a xlink:href="../module/potential_impurity.html" xlink:title="potential_impurity">
+<polygon fill="#337ab7" stroke="#337ab7" points="225.54,-186.77 130.02,-186.77 130.02,-164 225.54,-164 225.54,-186.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-171.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_impurity</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_impurity -->
+<g id="module~~lsda_errors~~UsedByGraph_edge34" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_impurity</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M302.03,-190.81C282.12,-188.32 258.38,-185.35 237.07,-182.68"/>
+<polygon fill="#000000" stroke="#000000" points="237.72,-179.23 227.36,-181.47 236.85,-186.18 237.72,-179.23"/>
+</g>
+<!-- module~potential_random -->
+<g id="module~~lsda_errors~~UsedByGraph_node16" class="node">
+<title>module~potential_random</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node16"><a xlink:href="../module/potential_random.html" xlink:title="potential_random">
+<polygon fill="#337ab7" stroke="#337ab7" points="225.16,-145.77 130.4,-145.77 130.4,-123 225.16,-123 225.16,-145.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-130.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">potential_random</text>
+</a>
+</g>
+</g>
+<!-- module~potential_factory&#45;&gt;module~potential_random -->
+<g id="module~~lsda_errors~~UsedByGraph_edge35" class="edge">
+<title>module~potential_factory&#45;&gt;module~potential_random</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M322.59,-184.62C304.14,-175.84 277.85,-163.93 254.04,-155.38 248.29,-153.32 242.24,-151.34 236.17,-149.46"/>
+<polygon fill="#000000" stroke="#000000" points="237.32,-146.15 226.73,-146.65 235.32,-152.86 237.32,-146.15"/>
+</g>
+<!-- module~potential_impurity&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge14" class="edge">
+<title>module~potential_impurity&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M129.75,-185.03C120.1,-187.96 110.24,-191.69 101.52,-196.38 82.78,-206.49 64.76,-222.59 52.02,-235.42"/>
+<polygon fill="#000000" stroke="#000000" points="49.55,-232.94 45.15,-242.58 54.6,-237.79 49.55,-232.94"/>
+</g>
+<!-- module~potential_random&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge15" class="edge">
+<title>module~potential_random&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M130.29,-141.88C120.19,-144.95 110,-149.28 101.52,-155.38 73.85,-175.29 54,-210.23 43.2,-233.09"/>
+<polygon fill="#000000" stroke="#000000" points="40.04,-231.58 39.12,-242.13 46.42,-234.45 40.04,-231.58"/>
+</g>
+<!-- module~table_io -->
+<g id="module~~lsda_errors~~UsedByGraph_node17" class="node">
+<title>module~table_io</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node17"><a xlink:href="../module/table_io.html" xlink:title="table_io">
+<polygon fill="#337ab7" stroke="#337ab7" points="204.78,-543.77 150.78,-543.77 150.78,-521 204.78,-521 204.78,-543.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-528.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
+</a>
+</g>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge16" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M150.3,-521.74C134.04,-513.93 114,-501.82 101.52,-485.38 52.84,-421.28 39.04,-322.79 35.2,-278.44"/>
+<polygon fill="#000000" stroke="#000000" points="38.71,-278.42 34.46,-268.71 31.73,-278.95 38.71,-278.42"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge17" class="edge">
+<title>module~xc_lsda&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M320.29,-580.85C310.43,-584.23 299.35,-588.75 290.04,-594.38 233.15,-628.79 234.91,-730.03 178.78,-694.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M176.78,-694.38C102.92,-647.48 51.03,-361.37 37.35,-278.1"/>
+<polygon fill="#000000" stroke="#000000" points="40.84,-277.75 35.79,-268.43 33.93,-278.86 40.84,-277.75"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;module~table_io -->
+<g id="module~~lsda_errors~~UsedByGraph_edge37" class="edge">
+<title>module~xc_lsda&#45;&gt;module~table_io</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M320.34,-566.98C292.35,-560.14 247.76,-549.24 216.11,-541.51"/>
+<polygon fill="#000000" stroke="#000000" points="217.1,-538.15 206.56,-539.17 215.44,-544.95 217.1,-538.15"/>
+</g>
+<!-- proc~apply_potential_harmonic -->
+<g id="module~~lsda_errors~~UsedByGraph_node19" class="node">
+<title>proc~apply_potential_harmonic</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node19"><a xlink:href="../proc/apply_potential_harmonic.html" xlink:title="apply_potential_harmonic">
+<polygon fill="#d9534f" stroke="#d9534f" points="244.67,-104.77 110.89,-104.77 110.89,-82 244.67,-82 244.67,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">apply_potential_harmonic</text>
+</a>
+</g>
+</g>
+<!-- proc~apply_potential_harmonic&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge18" class="edge">
+<title>proc~apply_potential_harmonic&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M116.09,-105.2C110.85,-107.7 105.89,-110.73 101.52,-114.39 64.58,-145.34 46.3,-201.12 38.55,-232.45"/>
+<polygon fill="#000000" stroke="#000000" points="35.18,-231.51 36.34,-242.04 42,-233.08 35.18,-231.51"/>
+</g>
+<!-- proc~apply_potential_quasiperiodic -->
+<g id="module~~lsda_errors~~UsedByGraph_node20" class="node">
+<title>proc~apply_potential_quasiperiodic</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node20"><a xlink:href="../proc/apply_potential_quasiperiodic.html" xlink:title="apply_potential_quasiperiodic">
+<polygon fill="#d9534f" stroke="#d9534f" points="254.04,-63.77 101.52,-63.77 101.52,-41 254.04,-41 254.04,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-48.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">apply_potential_quasiperiodic</text>
+</a>
+</g>
+</g>
+<!-- proc~apply_potential_quasiperiodic&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge19" class="edge">
+<title>proc~apply_potential_quasiperiodic&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M114.99,-64.17C110.1,-66.68 105.52,-69.71 101.52,-73.39 55.03,-116.11 40.3,-193.73 35.74,-232.32"/>
+<polygon fill="#000000" stroke="#000000" points="32.27,-231.78 34.72,-242.09 39.24,-232.5 32.27,-231.78"/>
+</g>
+<!-- proc~apply_potential_uniform -->
+<g id="module~~lsda_errors~~UsedByGraph_node21" class="node">
+<title>proc~apply_potential_uniform</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node21"><a xlink:href="../proc/apply_potential_uniform.html" xlink:title="apply_potential_uniform">
+<polygon fill="#d9534f" stroke="#d9534f" points="240.54,-22.77 115.02,-22.77 115.02,0 240.54,0 240.54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="177.78" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">apply_potential_uniform</text>
+</a>
+</g>
+</g>
+<!-- proc~apply_potential_uniform&#45;&gt;module~lsda_errors -->
+<g id="module~~lsda_errors~~UsedByGraph_edge20" class="edge">
+<title>proc~apply_potential_uniform&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M114.75,-22.91C109.91,-25.47 105.4,-28.59 101.52,-32.39 45.3,-87.33 35.39,-187.31 33.87,-232.33"/>
+<polygon fill="#000000" stroke="#000000" points="30.38,-232.14 33.67,-242.21 37.38,-232.28 30.38,-232.14"/>
+</g>
+<!-- module~bethe_tables -->
+<g id="module~~lsda_errors~~UsedByGraph_node22" class="node">
+<title>module~bethe_tables</title>
+<g id="a_module~~lsda_errors~~UsedByGraph_node22"><a xlink:href="../module/bethe_tables.html" xlink:title="bethe_tables">
+<polygon fill="#337ab7" stroke="#337ab7" points="384.06,-543.77 311.04,-543.77 311.04,-521 384.06,-521 384.06,-543.77"/>
+<text xml:space="preserve" text-anchor="middle" x="347.55" y="-528.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bethe_tables</text>
+</a>
+</g>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~table_io -->
+<g id="module~~lsda_errors~~UsedByGraph_edge36" class="edge">
+<title>module~bethe_tables&#45;&gt;module~table_io</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M310.56,-532.38C282.84,-532.38 244.63,-532.38 216.49,-532.38"/>
+<polygon fill="#000000" stroke="#000000" points="216.62,-528.89 206.62,-532.39 216.62,-535.89 216.62,-528.89"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panmodulelsda_errorsUsedByGraph = svgPanZoom('#modulelsda_errorsUsedByGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsedByGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsedByGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+      <br>
+
+
+        <section>
+          <h2>Variables</h2>
+            <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_success"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_SUCCESS</strong></td>
+<td> =</td>
+                <td>0</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_invalid_input"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_INVALID_INPUT</strong></td>
+<td> =</td>
+                <td>1</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_out_of_bounds"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_OUT_OF_BOUNDS</strong></td>
+<td> =</td>
+                <td>2</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_size_mismatch"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_SIZE_MISMATCH</strong></td>
+<td> =</td>
+                <td>3</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_invalid_concentration"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_INVALID_CONCENTRATION</strong></td>
+<td> =</td>
+                <td>4</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_negative_value"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_NEGATIVE_VALUE</strong></td>
+<td> =</td>
+                <td>5</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_invalid_range"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_INVALID_RANGE</strong></td>
+<td> =</td>
+                <td>6</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_not_a_number"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_NOT_A_NUMBER</strong></td>
+<td> =</td>
+                <td>7</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_unphysical_density"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_UNPHYSICAL_DENSITY</strong></td>
+<td> =</td>
+                <td>8</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_spline_initialization_failed"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_SPLINE_INITIALIZATION_FAILED</strong></td>
+<td> =</td>
+                <td>9</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_convergence_failed"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_CONVERGENCE_FAILED</strong></td>
+<td> =</td>
+                <td>100</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_singular_matrix"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_SINGULAR_MATRIX</strong></td>
+<td> =</td>
+                <td>101</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_lapack_failed"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_LAPACK_FAILED</strong></td>
+<td> =</td>
+                <td>102</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_lapack_invalid_arg"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_LAPACK_INVALID_ARG</strong></td>
+<td> =</td>
+                <td>103</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_linear_dependence"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_LINEAR_DEPENDENCE</strong></td>
+<td> =</td>
+                <td>104</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_file_not_found"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_FILE_NOT_FOUND</strong></td>
+<td> =</td>
+                <td>200</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_file_read"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_FILE_READ</strong></td>
+<td> =</td>
+                <td>201</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_file_write"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_FILE_WRITE</strong></td>
+<td> =</td>
+                <td>202</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_allocation_failed"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_ALLOCATION_FAILED</strong></td>
+<td> =</td>
+                <td>300</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error_deallocation_failed"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>ERROR_DEALLOCATION_FAILED</strong></td>
+<td> =</td>
+                <td>301</td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+        </section>
+        <br>
+
+
+
+
+
+        <section>
+          <h2>Functions</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_error_message"></span> <h3>public  function <a href='../proc/get_error_message.html'>get_error_message</a>(ierr) result(msg)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Get human-readable error message for a given error code</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~24"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>character(len=256)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Subroutines</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-error_handler"></span> <h3>public  subroutine <a href='../proc/error_handler.html'>error_handler</a>(ierr, routine_name, extra_info, fatal)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Generic error handler that prints error messages</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~25"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-routine_name"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>routine_name</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-extra_info"></span>
+              character(len=*),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>extra_info</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-fatal"></span>
+              logical,
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>fatal</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-check_bounds"></span> <h3>public  subroutine <a href='../proc/check_bounds.html'>check_bounds</a>(val, min_val, max_val, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Check if a value is within bounds [min_val, max_val]</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-val"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>val</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-min_val"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>min_val</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-max_val"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>max_val</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~26"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-check_positive"></span> <h3>public  subroutine <a href='../proc/check_positive.html'>check_positive</a>(val, allow_zero, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Check if a value is positive (&gt; 0) or non-negative (&gt;= 0)</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-val~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>val</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-allow_zero"></span>
+              logical,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>allow_zero</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~27"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-check_range"></span> <h3>public  subroutine <a href='../proc/check_range.html'>check_range</a>(val, min_val, max_val, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Check if a value is within a real range [min_val, max_val]</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-val~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>val</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-min_val~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>min_val</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-max_val~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>max_val</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~28"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+
+
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

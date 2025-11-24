@@ -1,0 +1,698 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>sweep_U_backward &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>sweep_U_backward
+      <small>Subroutine</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 1.5% of total for procedures.">59 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/continuation.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/continuation.f90.html'>continuation.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/continuation.html'>continuation</a></li>
+            <li class="breadcrumb-item active" aria-current="page">sweep_U_backward</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>public  subroutine sweep_U_backward(I, J, L, U_values, solutions, energies, converged_flags)  
+</h2>
+    
+
+    <p>Backward sweep in U with predictor-corrector method</p>
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-i~7"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>I</strong>(:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-j~4"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>J</strong>(:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-l~58"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>L</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-u_values~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>U_values</strong>(:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-solutions~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>solutions</strong>(:,:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-energies~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>energies</strong>(:)</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-converged_flags~2"></span>
+              logical,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>converged_flags</strong>(:)</td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <br>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Calls</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: proc~~sweep_u_backward~~CallsGraph Pages: 1 -->
+<svg id="procsweep_u_backwardCallsGraph" width="632pt" height="173pt"
+ viewBox="0.00 0.00 632.00 173.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~sweep_u_backward~~CallsGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 168.77)">
+<title>proc~~sweep_u_backward~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-168.77 627.85,-168.77 627.85,4 -4,4"/>
+<!-- proc~sweep_u_backward -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node1" class="node">
+<title>proc~sweep_u_backward</title>
+<polygon fill="none" stroke="black" points="107.52,-123.77 0,-123.77 0,-101 107.52,-101 107.52,-123.77"/>
+<text xml:space="preserve" text-anchor="middle" x="53.76" y="-108.04" font-family="Helvetica,sans-Serif" font-size="10.50">sweep_U_backward</text>
+</g>
+<!-- proc~compute_energy -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node2" class="node">
+<title>proc~compute_energy</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node2"><a xlink:href="../proc/compute_energy.html" xlink:title="compute_energy">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="235.29,-164.77 143.52,-164.77 143.52,-142 235.29,-142 235.29,-164.77"/>
+<text xml:space="preserve" text-anchor="middle" x="189.4" y="-149.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_energy</text>
+</a>
+</g>
+</g>
+<!-- proc~sweep_u_backward&#45;&gt;proc~compute_energy -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge1" class="edge">
+<title>proc~sweep_u_backward&#45;&gt;proc~compute_energy</title>
+<path fill="none" stroke="#000000" d="M93.42,-124.24C107.68,-128.62 124.05,-133.64 139.13,-138.27"/>
+<polygon fill="#000000" stroke="#000000" points="137.8,-141.52 148.39,-141.11 139.86,-134.83 137.8,-141.52"/>
+</g>
+<!-- proc~estimate_dxdu -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node3" class="node">
+<title>proc~estimate_dxdu</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node3"><a xlink:href="../proc/estimate_dxdu.html" xlink:title="estimate_dxdU">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="230.79,-123.77 148.02,-123.77 148.02,-101 230.79,-101 230.79,-123.77"/>
+<text xml:space="preserve" text-anchor="middle" x="189.4" y="-108.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">estimate_dxdU</text>
+</a>
+</g>
+</g>
+<!-- proc~sweep_u_backward&#45;&gt;proc~estimate_dxdu -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge2" class="edge">
+<title>proc~sweep_u_backward&#45;&gt;proc~estimate_dxdu</title>
+<path fill="none" stroke="#000000" d="M107.96,-112.39C117.28,-112.39 126.96,-112.39 136.25,-112.39"/>
+<polygon fill="#000000" stroke="#000000" points="136.23,-115.89 146.23,-112.39 136.23,-108.89 136.23,-115.89"/>
+</g>
+<!-- proc~solve_newton -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node4" class="node">
+<title>proc~solve_newton</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node4"><a xlink:href="../proc/solve_newton.html" xlink:title="solve_newton">
+<polygon fill="#d9534f" stroke="#d9534f" points="227.79,-82.77 151.02,-82.77 151.02,-60 227.79,-60 227.79,-82.77"/>
+<text xml:space="preserve" text-anchor="middle" x="189.4" y="-67.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">solve_newton</text>
+</a>
+</g>
+</g>
+<!-- proc~sweep_u_backward&#45;&gt;proc~solve_newton -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge3" class="edge">
+<title>proc~sweep_u_backward&#45;&gt;proc~solve_newton</title>
+<path fill="none" stroke="#000000" d="M93.42,-100.53C107.93,-96.07 124.62,-90.95 139.92,-86.26"/>
+<polygon fill="#000000" stroke="#000000" points="140.78,-89.66 149.31,-83.38 138.72,-82.97 140.78,-89.66"/>
+</g>
+<!-- proc~compute_jacobian -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node5" class="node">
+<title>proc~compute_jacobian</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node5"><a xlink:href="../proc/compute_jacobian.html" xlink:title="compute_jacobian">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="374.68,-141.77 276.16,-141.77 276.16,-119 374.68,-119 374.68,-141.77"/>
+<text xml:space="preserve" text-anchor="middle" x="325.42" y="-126.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_jacobian</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_newton&#45;&gt;proc~compute_jacobian -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge4" class="edge">
+<title>proc~solve_newton&#45;&gt;proc~compute_jacobian</title>
+<path fill="none" stroke="#000000" d="M217.2,-83.18C237.29,-92.03 265.03,-104.24 287.26,-114.02"/>
+<polygon fill="#000000" stroke="#000000" points="285.72,-117.17 296.29,-118 288.55,-110.77 285.72,-117.17"/>
+</g>
+<!-- proc~compute_residual -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node6" class="node">
+<title>proc~compute_residual</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node6"><a xlink:href="../proc/compute_residual.html" xlink:title="compute_residual">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="511.83,-82.77 415.56,-82.77 415.56,-60 511.83,-60 511.83,-82.77"/>
+<text xml:space="preserve" text-anchor="middle" x="463.69" y="-67.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_residual</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_newton&#45;&gt;proc~compute_residual -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge5" class="edge">
+<title>proc~solve_newton&#45;&gt;proc~compute_residual</title>
+<path fill="none" stroke="#000000" d="M228.26,-71.95C241.83,-72.13 257.25,-72.3 271.29,-72.39 319.41,-72.68 331.44,-72.67 379.56,-72.39 387.41,-72.34 395.67,-72.27 403.82,-72.18"/>
+<polygon fill="#000000" stroke="#000000" points="403.74,-75.68 413.7,-72.07 403.66,-68.68 403.74,-75.68"/>
+</g>
+<!-- proc~line_search -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node7" class="node">
+<title>proc~line_search</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node7"><a xlink:href="../proc/line_search.html" xlink:title="line_search">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="358.56,-63.77 292.29,-63.77 292.29,-41 358.56,-41 358.56,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="325.42" y="-48.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">line_search</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_newton&#45;&gt;proc~line_search -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge6" class="edge">
+<title>proc~solve_newton&#45;&gt;proc~line_search</title>
+<path fill="none" stroke="#000000" d="M228.09,-66.04C244.45,-63.72 263.71,-60.99 280.69,-58.59"/>
+<polygon fill="#000000" stroke="#000000" points="281.11,-62.06 290.52,-57.19 280.13,-55.13 281.11,-62.06"/>
+</g>
+<!-- proc~solve_linear_system -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node8" class="node">
+<title>proc~solve_linear_system</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node8"><a xlink:href="../proc/solve_linear_system.html" xlink:title="solve_linear_system">
+<polygon fill="#d9534f" stroke="#d9534f" points="379.56,-22.77 271.29,-22.77 271.29,0 379.56,0 379.56,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="325.42" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">solve_linear_system</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_newton&#45;&gt;proc~solve_linear_system -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge7" class="edge">
+<title>proc~solve_newton&#45;&gt;proc~solve_linear_system</title>
+<path fill="none" stroke="#000000" d="M213.56,-59.67C229.62,-51.67 251.58,-41.02 271.29,-32.39 275.05,-30.74 278.99,-29.07 282.95,-27.44"/>
+<polygon fill="#000000" stroke="#000000" points="284,-30.79 291.96,-23.79 281.38,-24.3 284,-30.79"/>
+</g>
+<!-- proc~theta -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node10" class="node">
+<title>proc~theta</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node10"><a xlink:href="../proc/theta.html" xlink:title="theta">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="612.84,-102.77 558.84,-102.77 558.84,-80 612.84,-80 612.84,-102.77"/>
+<text xml:space="preserve" text-anchor="middle" x="585.84" y="-87.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">theta</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_residual&#45;&gt;proc~theta -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge8" class="edge">
+<title>proc~compute_residual&#45;&gt;proc~theta</title>
+<path fill="none" stroke="#000000" d="M512.18,-79.29C523.86,-81.23 536.21,-83.29 547.35,-85.14"/>
+<polygon fill="#000000" stroke="#000000" points="546.5,-88.55 556.94,-86.74 547.65,-81.65 546.5,-88.55"/>
+</g>
+<!-- proc~theta_capital -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node11" class="node">
+<title>proc~theta_capital</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node11"><a xlink:href="../proc/theta_capital.html" xlink:title="Theta_capital">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="623.85,-61.77 547.83,-61.77 547.83,-39 623.85,-39 623.85,-61.77"/>
+<text xml:space="preserve" text-anchor="middle" x="585.84" y="-46.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Theta_capital</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_residual&#45;&gt;proc~theta_capital -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge9" class="edge">
+<title>proc~compute_residual&#45;&gt;proc~theta_capital</title>
+<path fill="none" stroke="#000000" d="M512.18,-63.09C520.2,-61.68 528.54,-60.23 536.59,-58.82"/>
+<polygon fill="#000000" stroke="#000000" points="536.96,-62.31 546.21,-57.14 535.76,-55.41 536.96,-62.31"/>
+</g>
+<!-- proc~line_search&#45;&gt;proc~compute_residual -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge10" class="edge">
+<title>proc~line_search&#45;&gt;proc~compute_residual</title>
+<path fill="none" stroke="#000000" d="M358.72,-56.89C372.27,-58.78 388.47,-61.04 404,-63.2"/>
+<polygon fill="#000000" stroke="#000000" points="403.26,-66.63 413.65,-64.55 404.23,-59.7 403.26,-66.63"/>
+</g>
+<!-- interface~dgesv -->
+<g id="proc~~sweep_u_backward~~CallsGraph_node9" class="node">
+<title>interface~dgesv</title>
+<g id="a_proc~~sweep_u_backward~~CallsGraph_node9"><a xlink:href="../interface/dgesv.html" xlink:title="DGESV">
+<polygon fill="#a7506f" stroke="#a7506f" points="490.69,-22.77 436.69,-22.77 436.69,0 490.69,0 490.69,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="463.69" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">DGESV</text>
+</a>
+</g>
+</g>
+<!-- proc~solve_linear_system&#45;&gt;interface~dgesv -->
+<g id="proc~~sweep_u_backward~~CallsGraph_edge11" class="edge">
+<title>proc~solve_linear_system&#45;&gt;interface~dgesv</title>
+<path fill="none" stroke="#000000" d="M379.89,-11.39C395.04,-11.39 411.2,-11.39 425.19,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="424.84,-14.89 434.84,-11.39 424.84,-7.89 424.84,-14.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CallsGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CallsGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Called by</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: proc~~sweep_u_backward~~CalledByGraph Pages: 1 -->
+<svg id="procsweep_u_backwardCalledByGraph" width="270pt" height="31pt"
+ viewBox="0.00 0.00 270.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~sweep_u_backward~~CalledByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>proc~~sweep_u_backward~~CalledByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 266.29,-26.77 266.29,4 -4,4"/>
+<!-- proc~sweep_u_backward -->
+<g id="proc~~sweep_u_backward~~CalledByGraph_node1" class="node">
+<title>proc~sweep_u_backward</title>
+<polygon fill="none" stroke="black" points="262.29,-22.77 154.77,-22.77 154.77,0 262.29,0 262.29,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">sweep_U_backward</text>
+</g>
+<!-- proc~sweep_u_bidirectional -->
+<g id="proc~~sweep_u_backward~~CalledByGraph_node2" class="node">
+<title>proc~sweep_u_bidirectional</title>
+<g id="a_proc~~sweep_u_backward~~CalledByGraph_node2"><a xlink:href="../proc/sweep_u_bidirectional.html" xlink:title="sweep_U_bidirectional">
+<polygon fill="#d9534f" stroke="#d9534f" points="118.77,-22.77 0,-22.77 0,0 118.77,0 118.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="59.38" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">sweep_U_bidirectional</text>
+</a>
+</g>
+</g>
+<!-- proc~sweep_u_bidirectional&#45;&gt;proc~sweep_u_backward -->
+<g id="proc~~sweep_u_backward~~CalledByGraph_edge1" class="edge">
+<title>proc~sweep_u_bidirectional&#45;&gt;proc~sweep_u_backward</title>
+<path fill="none" stroke="#000000" d="M118.96,-11.39C126.92,-11.39 135.11,-11.39 143.16,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="142.89,-14.89 152.89,-11.39 142.89,-7.89 142.89,-14.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CalledByGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CalledByGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>
