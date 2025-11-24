@@ -50,10 +50,24 @@ module kohn_sham_cycle
 contains
     !> @brief Compute total Kohn-Sham energy
     !!
-    !! E_tot = Σ_σ Σ_j ε_j,σ + E_xc - ∫V_xc·n dr
+    !! E_tot = Σ_σ Σ_j ε_j,σ - U·Σ(n_up·n_down) - Σ(V_xc·n) + Σ(ε_xc)
     !!
-    !! The double-counting correction removes the XC potential energy
-    !! that is already included in the eigenvalue sum.
+    !! This formula matches the C++ original (lsdaks.cc lines 676-679).
+    !!
+    !! The eigenvalues ε_j already include V_eff = V_ext + U·n_other + V_xc.
+    !! When summing eigenvalues, we get contributions from both spins:
+    !!   - Spin up sees:   V_ext + U·n_down + V_xc_up
+    !!   - Spin down sees: V_ext + U·n_up + V_xc_down
+    !! This means the Hartree term U·n_other appears TWICE (once for each spin),
+    !! giving 2·U·n_up·n_down instead of the correct U·n_up·n_down.
+    !!
+    !! The double-counting correction:
+    !! - Band energy: Σε_j (includes 2·U·n_up·n_down)
+    !! - Hartree correction: -U·Σ(n_up·n_down) (removes one copy)
+    !! - V_xc correction: -Σ(V_xc·n) (removes V_xc from eigenvalues)
+    !! - XC energy: +Σ(ε_xc) (adds true XC energy)
+    !!
+    !! Note: ε_xc from tables is the TOTAL XC energy at each site, not per particle!
     !!
     !! @param[in] eigvalues_up Spin-up eigenvalues (occupied ones)
     !! @param[in] eigvalues_down Spin-down eigenvalues (occupied ones)
@@ -63,51 +77,66 @@ contains
     !! @param[in] density_down Spin-down density (length L)
     !! @param[in] V_ext External potential (length L)
     !! @param[in] xc_func XC functional object
+    !! @param[in] U Hubbard interaction strength
     !! @param[in] L System size
     !! @param[out] total_energy Total energy
     !! @param[out] ierr Error code (0 = success)
     subroutine compute_total_energy(eigvals_up, eigvals_down, n_up, n_down, density_up, density_down, &
-                                                            V_ext, xc_func, L, total_energy, ierr)
+                                                            V_ext, xc_func, U, L, total_energy, ierr)
         real(dp), intent(in) :: eigvals_up(:), eigvals_down(:)
         integer, intent(in) :: n_up, n_down
         real(dp), intent(in) :: density_up(:), density_down(:), V_ext(:)
         type(xc_lsda_t), intent(in) :: xc_func
+        real(dp), intent(in) :: U
         integer, intent(in) :: L
         real(dp), intent(out) :: total_energy
         integer, intent(out) :: ierr
 
-        real(dp) :: E_band, E_xc_total, V_xc_correction
+        real(dp) :: E_band, E_hartree, E_xc_total, V_xc_correction
         real(dp) :: exc_val, V_xc_up, V_xc_down
         integer :: i
 
         ! 1. Band energy (sum of occupied eigenvalues)
         E_band = sum(eigvals_up(1:n_up)) + sum(eigvals_down(1:n_down))
 
-        ! 2. Exchange-correlation energy and potential correction
+        ! 2. Hartree energy: -U*Σ(n_up*n_down)
+        !    Double-counting correction (matches C++ lsdaks.cc lines 676-679)
+        !    Derivation: eigenvalues include V_eff = V_ext + U*n_other + V_xc
+        !    When we sum v_eff*n for both spins, we get 2*U*n_up*n_down
+        !    But we only want U*n_up*n_down, so we SUBTRACT U*n_up*n_down
+        E_hartree = 0.0_dp
+        do i = 1, L
+            E_hartree = E_hartree + density_up(i) * density_down(i)
+        end do
+        E_hartree = -U * E_hartree  ! Negative sign!
+
+        ! 3. Exchange-correlation energy and potential correction
         E_xc_total = 0.0_dp
         V_xc_correction = 0.0_dp
 
         do i = 1, L
             call get_exc(xc_func, density_up(i), density_down(i), exc_val, ierr)
             if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for exc calculation
                 return
             end if
 
             call get_vxc(xc_func, density_up(i), density_down(i), &
                         V_xc_up, V_xc_down, ierr)
+
             if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for vxc calculation
                 return
             end if
-            
-            E_xc_total = E_xc_total + exc_val * (density_up(i) + density_down(i))
-            V_xc_correction = V_xc_correction + &
-                            V_xc_up * density_up(i) + &
-                            V_xc_down * density_down(i)
+
+            ! Note: exc_val is already the total XC energy at site i, not per particle!
+            ! C++ just adds exc[i], not exc[i]*n_total[i]
+            E_xc_total = E_xc_total + exc_val
+
+            ! V_xc correction for double-counting
+            V_xc_correction = V_xc_correction + V_xc_up * density_up(i) + V_xc_down * density_down(i)
         end do
 
-        total_energy = E_band + E_xc_total - V_xc_correction
+        ! Total: E_band + E_hartree + E_xc - V_xc (matches C++ lsdaks.cc line 676-679)
+        total_energy = E_band + E_hartree + E_xc_total - V_xc_correction
 
         ierr = ERROR_SUCCESS
     end subroutine compute_total_energy
@@ -142,7 +171,7 @@ contains
         Nup = params%Nup
         Ndown = params%Ndown
 
-        if (L <= 0 .or. Nup < 0 .or. Ndown < 0 .or. (Nup + Ndown) > L) then
+        if (L <= 0 .or. Nup < 0 .or. Ndown < 0 .or. (Nup + Ndown) > 2*L) then
             ierr = ERROR_INVALID_INPUT
             return
         end if
@@ -224,10 +253,23 @@ contains
         n_up_in(:) = real(params%Nup, dp) / real(params%L, dp)
         n_down_in(:) = real(params%Ndown, dp) / real(params%L, dp)
 
-        ! Initialize effective potentials
-        ! First iteration: V_eff = V_ext (no XC contribution yet)
-        V_eff_up(:) = V_ext(:)
-        V_eff_down(:) = V_ext(:)
+        ! Initialize effective potentials from initial density guess
+        ! This matches C++ initial_guess() function (lsdaks.cc lines 520-521)
+        ! V_eff = V_ext + U*n_other + V_xc
+        do i = 1, params%L
+            ! Get V_xc from initial uniform density
+            call get_vxc(xc_func, n_up_in(i), n_down_in(i), V_xc_up(i), V_xc_down(i), ierr)
+            if (ierr /= ERROR_SUCCESS) then
+                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
+                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
+                return
+            end if
+
+            ! Initialize V_eff = V_ext + U*n_other + V_xc (like C++)
+            V_eff_up(i) = V_ext(i) + params%U * n_down_in(i) + V_xc_up(i)
+            V_eff_down(i) = V_ext(i) + params%U * n_up_in(i) + V_xc_down(i)
+        end do
 
         ! =================================
         ! Initialize adaptive mixing (if enabled)
@@ -408,7 +450,7 @@ contains
             ! 1h. Compute total energy
             ! ------------------------
             call compute_total_energy(eigvals_up, eigvals_down, params%Nup, params%Ndown, n_up_out, n_down_out, &
-                                    V_ext, xc_func, params%L, total_energy, ierr)
+                                    V_ext, xc_func, params%U, params%L, total_energy, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for total energy calculation
@@ -584,10 +626,23 @@ contains
         n_up_in(:) = real(params%Nup, dp) / real(params%L, dp)
         n_down_in(:) = real(params%Ndown, dp) / real(params%L, dp)
 
-        ! Initialize effective potentials
-        ! First iteration: V_eff = V_ext (no XC contribution yet)
-        V_eff_up(:) = V_ext(:)
-        V_eff_down(:) = V_ext(:)
+        ! Initialize effective potentials from initial density guess
+        ! This matches C++ initial_guess() function (lsdaks.cc lines 520-521)
+        ! V_eff = V_ext + U*n_other + V_xc
+        do i = 1, params%L
+            ! Get V_xc from initial uniform density
+            call get_vxc(xc_func, n_up_in(i), n_down_in(i), V_xc_up(i), V_xc_down(i), ierr)
+            if (ierr /= ERROR_SUCCESS) then
+                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
+                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
+                       delta_n_down, delta_n_total, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
+                return
+            end if
+
+            ! Initialize V_eff = V_ext + U*n_other + V_xc (like C++)
+            V_eff_up(i) = V_ext(i) + params%U * n_down_in(i) + V_xc_up(i)
+            V_eff_down(i) = V_ext(i) + params%U * n_up_in(i) + V_xc_down(i)
+        end do
 
         ! =================================
         ! Initialize adaptive mixing (if enabled)
@@ -768,7 +823,7 @@ contains
             ! 1h. Compute total energy
             ! ------------------------
             call compute_total_energy(eigvals_up, eigvals_down, params%Nup, params%Ndown, n_up_out, n_down_out, &
-                                    V_ext, xc_func, params%L, total_energy, ierr)
+                                    V_ext, xc_func, params%U, params%L, total_energy, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for total energy calculation

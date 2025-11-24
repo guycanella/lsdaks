@@ -130,8 +130,11 @@ contains
         end if
 
         ! Check density bounds
-        if (n_up < 0.0_dp .or. n_up > 1.0_dp .or. &
-            n_dw < 0.0_dp .or. n_dw > 1.0_dp) then
+        ! Note: Particle-hole symmetry allows n_up, n_down > 1.0
+        ! Maximum total density is n_up + n_down ≤ 2 (Pauli exclusion)
+        ! Use small tolerance to handle floating-point roundoff (e.g., 1.0+1.0 = 2.0000...009)
+        if (n_up < -1.0e-12_dp .or. n_dw < -1.0e-12_dp .or. &
+            (n_up + n_dw) > 2.0_dp + 1.0e-10_dp) then
             exc = 0.0_dp
             ierr = ERROR_OUT_OF_BOUNDS
             return
@@ -147,6 +150,13 @@ contains
         ! Determine region and apply symmetry
         region = determine_region(n_up, n_dw)
         call apply_symmetry_transform(region, n_up, n_dw, n_up_map, n_dw_map)
+
+        ! Clip to valid range to handle numerical errors near boundaries
+        ! This is especially important for n ≈ 2.0 where particle-hole transform
+        ! can produce small negative values due to roundoff
+        n_up_map = max(0.0_dp, min(1.0_dp, n_up_map))
+        n_dw_map = max(0.0_dp, min(1.0_dp, n_dw_map))
+
         call convert_to_nm(n_up_map, n_dw_map, n, m)
 
         ! Evaluate spline
@@ -191,8 +201,11 @@ contains
         end if
 
         ! Check density bounds
-        if (n_up < 0.0_dp .or. n_up > 1.0_dp .or. &
-            n_dw < 0.0_dp .or. n_dw > 1.0_dp) then
+        ! Note: Particle-hole symmetry allows n_up, n_down > 1.0
+        ! Maximum total density is n_up + n_down ≤ 2 (Pauli exclusion)
+        ! Use small tolerance to handle floating-point roundoff (e.g., 1.0+1.0 = 2.0000...009)
+        if (n_up < -1.0e-12_dp .or. n_dw < -1.0e-12_dp .or. &
+            (n_up + n_dw) > 2.0_dp + 1.0e-10_dp) then
             v_xc_up = 0.0_dp
             v_xc_dw = 0.0_dp
             ierr = ERROR_OUT_OF_BOUNDS
@@ -210,6 +223,11 @@ contains
         ! Determine region and apply symmetry
         region = determine_region(n_up, n_dw)
         call apply_symmetry_transform(region, n_up, n_dw, n_up_map, n_dw_map)
+
+        ! Clip to valid range to handle numerical errors near boundaries
+        n_up_map = max(0.0_dp, min(1.0_dp, n_up_map))
+        n_dw_map = max(0.0_dp, min(1.0_dp, n_dw_map))
+
         call convert_to_nm(n_up_map, n_dw_map, n, m)
 
         ! Evaluate splines
@@ -271,15 +289,18 @@ contains
         integer :: region
 
         real(dp) :: n, m
+        real(dp), parameter :: TOL = 1.0e-12_dp  ! Tolerance for boundary cases
 
         n = n_up + n_dw
         m = n_up - n_dw
 
-        if (m >= 0.0_dp .and. n <= 1.0_dp) then
+        ! Use tolerances to handle floating-point errors at n = 1.0 boundary
+        ! This is critical for half-filling cases where n = n_up + n_down = 1.0
+        if (m >= -TOL .and. n <= 1.0_dp + TOL) then
             region = 1
-        else if (m < 0.0_dp .and. n <= 1.0_dp) then
+        else if (m < -TOL .and. n <= 1.0_dp + TOL) then
             region = 2
-        else if (m < 0.0_dp .and. n > 1.0_dp) then
+        else if (m < -TOL .and. n > 1.0_dp + TOL) then
             region = 3
         else
             region = 4  ! m ≥ 0 and n > 1
