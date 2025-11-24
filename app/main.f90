@@ -21,16 +21,25 @@ program lsdaks
     type(scf_params_t) :: scf_params
     type(scf_results_t) :: results
     type(xc_lsda_t) :: xc_func
-    
+
     real(dp), allocatable :: V_ext(:)
     real(dp), allocatable :: pot_params(:)
     integer, allocatable :: imp_positions(:)
     character(len=256) :: table_file
     integer :: ierr, seed
     logical :: table_exists
+
+    ! Timing variables
+    real :: start_time, end_time, elapsed_time
+    integer :: date_values(8)
+    character(len=10) :: date_str, time_str
     
-    call print_banner()
-    
+    ! Start timing
+    call cpu_time(start_time)
+    call date_and_time(date_str, time_str, values=date_values)
+
+    call print_banner(date_str, time_str)
+
     call parse_inputs(inputs, ierr)
     if (ierr == -1) then
         ! Help was requested
@@ -134,15 +143,23 @@ program lsdaks
             pot_params(1) = inputs%V0
         case ("harmonic")
             allocate(pot_params(1))
-            pot_params(1) = inputs%V0
+            pot_params(1) = inputs%spring_constant
         case ("random_uniform", "random_gaussian")
             allocate(pot_params(1))
-            pot_params(1) = inputs%V0
+            pot_params(1) = inputs%disorder_strength
         case ("barrier_single")
             allocate(pot_params(3))
             pot_params(1) = inputs%V0
-            pot_params(2) = inputs%pot_center - inputs%pot_width/2.0_dp
-            pot_params(3) = inputs%pot_center + inputs%pot_width/2.0_dp
+            ! Use position and width from namelist
+            pot_params(2) = real(inputs%position - inputs%width/2, dp)
+            pot_params(3) = real(inputs%position + inputs%width/2, dp)
+        case ("barrier_double")
+            allocate(pot_params(4))
+            ! Matches C++ double_barrier(Na, Vb, Lb, Vwell, Lwell, v_ext)
+            pot_params(1) = inputs%V0           ! V_bar: barrier height
+            pot_params(2) = inputs%barrier_width ! L_bar: barrier width
+            pot_params(3) = inputs%well_depth    ! V_well: well potential (typically negative)
+            pot_params(4) = inputs%well_width    ! L_well: well width
         case default
             allocate(pot_params(1))
             pot_params(1) = inputs%V0
@@ -222,16 +239,31 @@ program lsdaks
     end if
     
     call cleanup_and_exit(xc_func, V_ext, results)
-    
+
+    ! End timing
+    call cpu_time(end_time)
+    elapsed_time = end_time - start_time
+
     print '(A)', ""
     print '(A)', "=========================================="
     print '(A)', "  Calculation Complete!"
     print '(A)', "=========================================="
     print '(A)', ""
+    print '(A,F12.3,A)', "Elapsed CPU Time: ", elapsed_time, " seconds"
+    print '(A)', ""
     
 contains
 
-    subroutine print_banner()
+    subroutine print_banner(date_str, time_str)
+        character(len=*), intent(in) :: date_str, time_str
+        character(len=50) :: formatted_date, formatted_time
+
+        ! Format date: YYYYMMDD -> YYYY-MM-DD
+        formatted_date = date_str(1:4) // '-' // date_str(5:6) // '-' // date_str(7:8)
+
+        ! Format time: HHMMSS.sss -> HH:MM:SS
+        formatted_time = time_str(1:2) // ':' // time_str(3:4) // ':' // time_str(5:6)
+
         print '(A)', ""
         print '(A)', "=========================================="
         print '(A)', "       LSDAKS - Hubbard LSDA Solver"
@@ -242,6 +274,9 @@ contains
         print '(A)', ""
         print '(A)', "Author: Guilherme Canella"
         print '(A)', "Version: 0.1.0"
+        print '(A)', ""
+        print '(A,A)', "Run Date: ", trim(formatted_date)
+        print '(A,A)', "Run Time: ", trim(formatted_time)
         print '(A)', ""
         print '(A)', "=========================================="
         print '(A)', ""
@@ -258,12 +293,22 @@ contains
         print '(A,I0)', "  L (sites):        ", sys_params%L
         print '(A,I0)', "  N_up:             ", sys_params%Nup
         print '(A,I0)', "  N_down:           ", sys_params%Ndown
-        print '(A,F0.4)', "  Filling:          ", real(sys_params%Nup + sys_params%Ndown, dp) / real(sys_params%L, dp)
+        print '(A,F6.4)', "  Filling:          ", real(sys_params%Nup + sys_params%Ndown, dp) / real(sys_params%L, dp)
         print '(A,F0.4)', "  U:                ", sys_params%U
         if (sys_params%U < 0.0_dp) then
             print '(A)', "    (attractive interaction - pairing)"
         end if
-        print '(A,A)', "  BC:               ", trim(inputs%bc_type)
+        ! Convert BC to full name
+        select case (trim(inputs%bc_type))
+        case ('open')
+            print '(A)', "  BC:               Open Boundary Condition"
+        case ('periodic')
+            print '(A)', "  BC:               Periodic Boundary Condition"
+        case ('twisted')
+            print '(A)', "  BC:               Twisted Boundary Condition"
+        case default
+            print '(A,A)', "  BC:               ", trim(inputs%bc_type)
+        end select
         if (sys_params%bc == BC_TWISTED) then
             print '(A,F0.4,A)', "  Phase:            ", sys_params%phase, " π"
         end if
@@ -285,7 +330,7 @@ contains
         print '(A,I0)', "  Max iterations:   ", scf_params%max_iter
         print '(A,ES10.2)', "  Density tol:      ", scf_params%density_tol
         print '(A,ES10.2)', "  Energy tol:       ", scf_params%energy_tol
-        print '(A,F0.3)', "  Mixing alpha:     ", scf_params%mixing_alpha
+        print '(A,F5.3)', "  Mixing alpha:     ", scf_params%mixing_alpha
         print '(A,L1)', "  Verbose:          ", scf_params%verbose
         print '(A)', "----------------------------------------"
     end subroutine print_configuration
