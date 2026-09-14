@@ -33,7 +33,7 @@ A modern Fortran implementation of **Local Spin Density Approximation (LSDA)** f
 - ✅ **10 types of external potentials**: uniform, harmonic, barriers, disorder, quasiperiodic, impurities
 - ✅ **High-performance linear algebra** using LAPACK (DSYEVD/ZHEEVD)
 - ✅ **Three boundary conditions**: open, periodic, twisted
-- ✅ **Comprehensive test suite** with 252+ tests (100% pass rate)
+- ✅ **Comprehensive test suite** with 243 test runs in 20 suites (100% pass rate)
 - ✅ **Production-ready**: Validated against C++ reference with energy agreement < 1e-8
 
 ## System Requirements
@@ -249,7 +249,7 @@ lsdaks/
 │       ├── input_parser.f90
 │       └── output_writer.f90
 │
-├── test/                         # Test suite (252+ tests)
+├── test/                         # Test suite (20 suites, 243 test runs)
 │   ├── test_bethe_equations.f90
 │   ├── test_nonlinear_solvers.f90
 │   ├── test_continuation.f90
@@ -510,37 +510,70 @@ Density Check:
 
 ## Running Tests
 
-The project includes a comprehensive test suite with 252+ tests:
+The project includes a comprehensive test suite: 20 suites, 243 test runs.
+
+> ⚠️ **Always run the tests with `--profile release`.**
+>
+> With gfortran 16, the default (debug) profile aborts 18 of the 20 suites inside
+> the Fortuno test driver before a single test runs:
+>
+> ```
+> At line 233 of file build/dependencies/fortuno/src/fortuno/testdriver.f90
+> Fortran runtime error: Index '1' of dimension 1 of array 'this...%suiteresults'
+> outside of expected range (0:0)
+> ```
+>
+> This is debug-only `-fcheck=bounds` tripping over a zero-sized array inside
+> the Fortuno dependency, not a defect in this project. Pinning Fortuno to its
+> only published tag (`v0.1.0`) was tested and does **not** avoid the abort, so
+> the dependency is left unpinned and the release profile is the supported way
+> to run the suite until Fortuno fixes the zero-sized-array access.
 
 ### Run All Tests
 ```bash
-fpm test
+fpm test --profile release
 ```
 
 ### Run Specific Test Suites
 ```bash
-fpm test test_bethe_equations
-fpm test test_kohn_sham_cycle
-fpm test test_potentials
-fpm test test_nonlinear_solvers
+fpm test --profile release test_bethe_equations
+fpm test --profile release test_kohn_sham_cycle
+fpm test --profile release test_potentials
+fpm test --profile release test_nonlinear_solvers
 ```
+
+All test programs are listed explicitly as `[[test]]` blocks in `fpm.toml`
+(`auto-tests` is disabled) so the test inventory is auditable. When adding a
+test file under `test/`, add a matching `[[test]]` block.
 
 ### Test Coverage
 
-| Module                  | Tests | Status |
-|-------------------------|-------|--------|
-| Bethe Equations         | 28    | ✅ 100% |
-| Nonlinear Solvers       | 16    | ✅ 100% |
-| Continuation            | 12    | ✅ 100% |
-| XC Functional           | 24    | ✅ 100% |
-| Potentials              | 42    | ✅ 100% |
-| Hamiltonian             | 18    | ✅ 100% |
-| Diagonalization         | 22    | ✅ 100% |
-| Density Calculator      | 14    | ✅ 100% |
-| Convergence Monitor     | 16    | ✅ 100% |
-| Kohn-Sham Cycle         | 32    | ✅ 100% |
-| I/O                     | 28    | ✅ 100% |
-| **Total**               | **252+** | **✅ 100%** |
+Counts below are the test runs reported by `fpm test --profile release`
+(one row per `[[test]]` suite in `fpm.toml`).
+
+| Suite                     | Test runs | Status |
+|---------------------------|-----------|--------|
+| `test_adaptive_mixing`    | 9         | ✅ 100% |
+| `test_bethe_equations`    | 17        | ✅ 100% |
+| `test_boundary_conditions`| 17        | ✅ 100% |
+| `test_degeneracy_handler` | 12        | ✅ 100% |
+| `test_errors`             | 13        | ✅ 100% |
+| `test_hamiltonian_builder`| 18        | ✅ 100% |
+| `test_lapack_wrapper`     | 18        | ✅ 100% |
+| `test_potentials`         | 21        | ✅ 100% |
+| `test_spline2d`           | 5         | ✅ 100% |
+| `test_xc_lsda`            | 6         | ✅ 100% |
+| `test_nonlinear_solvers`  | 9         | ✅ 100% |
+| `test_continuation`       | 5         | ✅ 100% |
+| `test_table_io`           | 11        | ✅ 100% |
+| `test_bethe_tables`       | 6         | ✅ 100% |
+| `test_density_calculator` | 6         | ✅ 100% |
+| `test_convergence_monitor`| 13        | ✅ 100% |
+| `test_mixing_schemes`     | 9         | ✅ 100% |
+| `test_kohn_sham_cycle`    | 13        | ✅ 100% |
+| `test_input_parser`       | 21        | ✅ 100% |
+| `test_output_writer`      | 14        | ✅ 100% |
+| **Total (20 suites)**     | **243**   | **✅ 100%** |
 
 ### Validation Tests
 
@@ -789,4 +822,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Status**: Production-ready 🚀 | **Tests**: 252+ passing ✅ | **License**: MIT 📄
+**Status**: Production-ready 🚀 | **Tests**: 243 passing ✅ | **License**: MIT 📄
