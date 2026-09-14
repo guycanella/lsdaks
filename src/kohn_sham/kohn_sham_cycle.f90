@@ -149,8 +149,8 @@ contains
     !!
     !! Validation checks:
     !! - System size L > 0 (at least one lattice site)
-    !! - Particle numbers Nup, Ndown >= 0 (non-negative)
-    !! - Total particles N = Nup + Ndown <= L (Pauli exclusion: max 2 per site)
+    !! - Particle numbers per spin channel: 0 <= Nup <= L and 0 <= Ndown <= L
+    !!   (Pauli exclusion: L orbitals per spin, hence N = Nup + Ndown <= 2L)
     !! - External potential size matches system size: size(V_ext) = L
     !! - SCF max_iter > 0 (at least one iteration allowed)
     !! - Mixing parameter 0 < mixing_alpha <= 1 (valid range for linear mixing)
@@ -171,7 +171,10 @@ contains
         Nup = params%Nup
         Ndown = params%Ndown
 
-        if (L <= 0 .or. Nup < 0 .or. Ndown < 0 .or. (Nup + Ndown) > 2*L) then
+        ! Pauli exclusion per spin channel: each spin channel has exactly L
+        ! orbitals, so 0 <= Nup <= L and 0 <= Ndown <= L. The total bound
+        ! Nup + Ndown <= 2L follows from these two.
+        if (L <= 0 .or. Nup < 0 .or. Ndown < 0 .or. Nup > L .or. Ndown > L) then
             ierr = ERROR_INVALID_INPUT
             return
         end if
@@ -181,7 +184,7 @@ contains
             return
         end if
 
-        if (scf_params%max_iter <= 0 .or. scf_params%mixing_alpha < 0.0_dp .or. &
+        if (scf_params%max_iter <= 0 .or. scf_params%mixing_alpha <= 0.0_dp .or. &
                                             scf_params%mixing_alpha > 1.0_dp) then
             ierr = ERROR_INVALID_INPUT
             return

@@ -381,9 +381,19 @@ contains
             return
         end if
         
-        if (inputs%Nup + inputs%Ndown > 2 * inputs%L) then
-            print *, "ERROR: N = Nup + Ndown cannot exceed 2L (Pauli exclusion)"
-            print *, "  N =", inputs%Nup + inputs%Ndown, ", 2L =", 2 * inputs%L
+        ! Pauli exclusion per spin channel: each spin channel has exactly L
+        ! orbitals, so 0 <= Nup <= L and 0 <= Ndown <= L. The total bound
+        ! Nup + Ndown <= 2L is a consequence of these two.
+        if (inputs%Nup > inputs%L) then
+            print *, "ERROR: Nup cannot exceed L (only L spin-up orbitals available)"
+            print *, "  Nup =", inputs%Nup, ", L =", inputs%L
+            ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
+        if (inputs%Ndown > inputs%L) then
+            print *, "ERROR: Ndown cannot exceed L (only L spin-down orbitals available)"
+            print *, "  Ndown =", inputs%Ndown, ", L =", inputs%L
             ierr = ERROR_INVALID_INPUT
             return
         end if

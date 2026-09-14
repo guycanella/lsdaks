@@ -16,8 +16,9 @@ contains
             test("validate_L_zero", test_validate_L_zero), &
             test("validate_Nup_negative", test_validate_Nup_negative), &
             test("validate_Ndown_negative", test_validate_Ndown_negative), &
-            test("validate_N_exceeds_L", test_validate_N_exceeds_L), &
-            test("validate_U_negative", test_validate_U_negative), &
+            test("validate_N_exceeds_2L", test_validate_N_exceeds_2L), &
+            test("validate_N_per_spin_exceeds_L", test_validate_N_per_spin_exceeds_L), &
+            test("validate_U_negative_accepted", test_validate_U_negative_accepted), &
             test("validate_bc_invalid", test_validate_bc_invalid), &
             test("validate_bc_valid_open", test_validate_bc_valid_open), &
             test("validate_bc_valid_periodic", test_validate_bc_valid_periodic), &
@@ -156,36 +157,118 @@ contains
     end subroutine test_validate_Ndown_negative
 
 
-    !> Test validation with N > L
-    subroutine test_validate_N_exceeds_L()
+    !> Test the Pauli exclusion bound on the total particle number
+    !!
+    !! Each site holds at most one spin-up and one spin-down electron, so the
+    !! physical bound is Nup + Ndown <= 2*L, NOT Nup + Ndown <= L. Double
+    !! occupancy is a legitimate configuration of the Hubbard model (it is what
+    !! the U term acts on), so N > L must be accepted. This test pins both
+    !! sides of the real boundary: 2*L + 1 is rejected, exactly 2*L is accepted.
+    !!
+    !! The total bound is enforced as a consequence of the per-spin bounds
+    !! (0 <= Nup <= L, 0 <= Ndown <= L), which are pinned by
+    !! test_validate_N_per_spin_exceeds_L.
+    subroutine test_validate_N_exceeds_2L()
         use fortuno_serial, only: check => serial_check
         use input_parser
         use lsda_constants, only: dp
-        use lsda_errors, only: ERROR_INVALID_INPUT
+        use lsda_errors, only: ERROR_INVALID_INPUT, ERROR_SUCCESS
 
         type(input_params_t) :: inputs
         integer :: ierr
 
         inputs%L = 10
-        inputs%Nup = 8
-        inputs%Ndown = 5  ! Total = 13 > L
         inputs%U = 4.0_dp
         inputs%bc_type = 'periodic'
         inputs%max_iter = 100
         inputs%mixing_alpha = 0.3_dp
 
+        ! Above the Pauli bound: Nup + Ndown = 21 > 2*L = 20
+        inputs%Nup = 11
+        inputs%Ndown = 10
         call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "N > 2L should fail (Pauli exclusion)")
 
-        call check(ierr == ERROR_INVALID_INPUT, "N > L should fail")
-    end subroutine test_validate_N_exceeds_L
+        ! Exactly at the Pauli bound: completely filled band, Nup + Ndown = 2*L
+        inputs%Nup = 10
+        inputs%Ndown = 10
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "N = 2L should be accepted (band completely filled)")
+
+        ! Between L and 2L: double occupancy is physical and must be accepted
+        inputs%Nup = 8
+        inputs%Ndown = 5
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "L < N < 2L should be accepted (double occupancy)")
+    end subroutine test_validate_N_exceeds_2L
 
 
-    !> Test validation with negative U
-    subroutine test_validate_U_negative()
+    !> Test the per-spin Pauli bound 0 <= Nup <= L and 0 <= Ndown <= L
+    !!
+    !! Each spin channel is a separate single-particle problem with exactly L
+    !! orbitals, so no spin channel can hold more than L electrons even when the
+    !! total N = Nup + Ndown stays below 2*L. Before this check existed,
+    !! validate_inputs accepted e.g. Nup = 11, Ndown = 0 at L = 10 (total 11 <=
+    !! 20) and the configuration was only rejected much later by
+    !! compute_density_spin_real, which requires n_elec <= L. That made the
+    !! public validation contract inconsistent with the solver.
+    !!
+    !! The lower bound is 0 (not 1): a fully polarized system Ndown = 0 is a
+    !! legitimate input at this level.
+    subroutine test_validate_N_per_spin_exceeds_L()
         use fortuno_serial, only: check => serial_check
         use input_parser
         use lsda_constants, only: dp
-        use lsda_errors, only: ERROR_INVALID_INPUT
+        use lsda_errors, only: ERROR_INVALID_INPUT, ERROR_SUCCESS
+
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        inputs%L = 10
+        inputs%U = 4.0_dp
+        inputs%bc_type = 'periodic'
+        inputs%max_iter = 100
+        inputs%mixing_alpha = 0.3_dp
+
+        ! Nup = L + 1 with a total well below 2*L: must still be rejected
+        inputs%Nup = 11
+        inputs%Ndown = 0
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "Nup > L should fail (only L spin-up orbitals)")
+
+        ! Ndown = L + 1 with a total well below 2*L: must still be rejected
+        inputs%Nup = 0
+        inputs%Ndown = 11
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "Ndown > L should fail (only L spin-down orbitals)")
+
+        ! Exactly at the per-spin bound: fully polarized filled channel
+        inputs%Nup = 10
+        inputs%Ndown = 0
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "Nup = L, Ndown = 0 should be accepted (fully polarized)")
+
+        inputs%Nup = 0
+        inputs%Ndown = 10
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "Ndown = L, Nup = 0 should be accepted (fully polarized)")
+    end subroutine test_validate_N_per_spin_exceeds_L
+
+
+    !> Test that attractive (negative) U is accepted
+    !!
+    !! The attractive Hubbard model (U < 0) is a supported regime of this code
+    !! (it is the regime shipped in input.txt), so validate_inputs must not
+    !! reject it. Only genuinely invalid parameters are rejected.
+    subroutine test_validate_U_negative_accepted()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
 
         type(input_params_t) :: inputs
         integer :: ierr
@@ -193,15 +276,15 @@ contains
         inputs%L = 10
         inputs%Nup = 5
         inputs%Ndown = 5
-        inputs%U = -1.0_dp  ! Invalid!
+        inputs%U = -4.0_dp  ! Attractive Hubbard interaction: valid
         inputs%bc_type = 'periodic'
         inputs%max_iter = 100
         inputs%mixing_alpha = 0.3_dp
 
         call validate_inputs(inputs, ierr)
 
-        call check(ierr == ERROR_INVALID_INPUT, "Negative U should fail")
-    end subroutine test_validate_U_negative
+        call check(ierr == ERROR_SUCCESS, "Attractive U = -4 should be accepted")
+    end subroutine test_validate_U_negative_accepted
 
 
     !> Test validation with invalid BC type

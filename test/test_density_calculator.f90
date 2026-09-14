@@ -238,10 +238,14 @@ contains
 
     !> Test density from harmonic trap potential
     !!
-    !! Physics: In a harmonic trap V(i) = 0.5·k·(i - i₀)², the density should
-    !! exhibit "shell structure" - higher density at the center and decreasing
-    !! toward the edges. This is analogous to cold atoms in optical traps.
-    !! For non-interacting fermions, we expect a Thomas-Fermi-like profile.
+    !! Physics: In a harmonic trap V(i) = k·(i - i₀)², the particles are pulled
+    !! toward the trap centre, so the density at the centre is larger than at
+    !! either edge. The envelope is Thomas-Fermi-like, but it is NOT monotonic:
+    !! a finite number of occupied Kohn-Sham levels produces Friedel
+    !! oscillations (n_up + n_dw = 10 particles gives visible shell structure),
+    !! so local dips such as n(centre+2) > n(centre) are physically expected and
+    !! must not be asserted against. What is exact here is particle number
+    !! conservation, sum_i n(i) = N, which is checked to 1e-10.
     subroutine test_density_from_harmonic_trap()
         use fortuno_serial, only: check => serial_check
         use density_calculator, only: compute_density_spin, compute_total_density
@@ -252,10 +256,16 @@ contains
         integer, parameter :: L = 20
         integer, parameter :: n_up = 5, n_dw = 5
         real(dp), parameter :: spring_const = 0.1_dp
+        ! Windows for the confinement assertions, spelled out for L = 20 to keep
+        ! them free of truncating integer division:
+        integer, parameter :: MID_LO = 6, MID_HI = 15     ! middle half, sites 6..15
+        integer, parameter :: OUT_LEFT = 3                ! outer sixth: sites 1..3
+        integer, parameter :: OUT_RIGHT = 18              ! outer sixth: sites 18..20
         real(dp) :: V_ext(L), V_xc(L), H(L, L)
         real(dp) :: eigenvals(L), eigvecs(L, L)
         real(dp) :: density_up(L), density_dw(L), density_total(L)
         real(dp) :: center_density, edge_density
+        real(dp) :: n_total, n_middle_half, n_outer_sixth
         integer :: center, ierr
 
         ! Create harmonic potential (automatically centered at (L+1)/2)
@@ -282,17 +292,32 @@ contains
         edge_density = (density_total(1) + density_total(L)) / 2.0_dp
 
         call check(center_density > edge_density, &
-                   "Harmonic: density at center should exceed edge density")
+                   "Harmonic: density at center should exceed mean edge density")
 
-        ! Check qualitative Gaussian-like profile (peak at center)
-        call check(density_total(center) > density_total(center - 2), &
-                   "Harmonic: density should decrease away from center (left)")
-        call check(density_total(center) > density_total(center + 2), &
-                   "Harmonic: density should decrease away from center (right)")
+        ! Confinement: the center must beat each edge individually, not just
+        ! their average (an average can be dominated by a single large edge).
+        call check(density_total(center) > density_total(1), &
+                   "Harmonic: density at center should exceed left edge density")
+        call check(density_total(center) > density_total(L), &
+                   "Harmonic: density at center should exceed right edge density")
 
-        ! Check particle conservation
-        call check(abs(sum(density_total) - real(n_up + n_dw, dp)) < TOL, &
-                   "Harmonic: total particle number should be conserved")
+        ! Confinement with actual content: comparing the centre with the (nearly
+        ! empty) edges is almost vacuous, so measure how much of the particle
+        ! number the trap actually holds near the middle.
+        !   - middle half  = sites 6..15
+        !   - outer sixth  = sites 1..3 and 18..20
+        n_total = real(n_up + n_dw, dp)
+        n_middle_half = sum(density_total(MID_LO:MID_HI))
+        n_outer_sixth = sum(density_total(1:OUT_LEFT)) + sum(density_total(OUT_RIGHT:L))
+
+        call check(n_middle_half > 0.95_dp * n_total, &
+                   "Harmonic: middle half of the trap must hold more than 95% of the particles")
+        call check(n_outer_sixth < 1.0e-3_dp * n_total, &
+                   "Harmonic: outer sixth of the trap must hold less than 0.1% of the particles")
+
+        ! Check particle conservation: exact, independent of Friedel oscillations
+        call check(abs(sum(density_total) - n_total) < 1.0e-10_dp, &
+                   "Harmonic: total particle number should be conserved to 1e-10")
     end subroutine test_density_from_harmonic_trap
 
 end program test_density_calculator

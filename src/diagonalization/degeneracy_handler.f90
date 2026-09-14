@@ -235,7 +235,8 @@ contains
         do i = 1, n_deg
             eigvecs(:, indexes(i)) = A(:, i)
         end do
-        
+
+        ierr = ERROR_SUCCESS
         deallocate(A, tau, work)
     end subroutine orthonormalize_degenerate_subspace
 

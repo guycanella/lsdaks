@@ -260,9 +260,17 @@ contains
 
     !> Test random uniform potential has zero mean
     !!
-    !! Physics: Random disorder with V(i) ~ U[-W/2, W/2] models Anderson localization.
+    !! Physics: Random disorder with V(i) ~ U[-W, W] models Anderson localization.
     !! The uniform distribution ensures ⟨V⟩ = 0 (no systematic bias).
     !! For large W/t, wavefunctions become exponentially localized (Anderson insulator).
+    !!
+    !! Regression guard for Bug #2 (see CLAUDE.md): the disorder amplitude must
+    !! follow the C++ reference, V = W*(2*rand - 1), which spans the FULL width
+    !! [-W, W]. The old Fortran formula V = W*(rand - 0.5) only spanned
+    !! [-W/2, W/2], i.e. half the intended disorder strength. Checking the upper
+    !! bound alone cannot detect that regression (values in [-W/2, W/2] also
+    !! satisfy it), so this test additionally asserts that the sample actually
+    !! reaches close to both ends of [-W, W].
     subroutine test_random_uniform_mean()
         use fortuno_serial, only: check => serial_check
         use potential_random, only: potential_random_uniform
@@ -281,11 +289,25 @@ contains
 
         ! Check mean is close to zero (within statistical fluctuations)
         mean_V = sum(V) / real(L, dp)
-        call check(abs(mean_V) < 0.01_dp, "Mean should be close to zero")
+        ! Tolerance is statistical, not exact: for V ~ U[-W, W] the standard
+        ! error of the mean is W/sqrt(3*L) ~= 0.01155 for W = 2, L = 10000.
+        ! A 0.01 bound would sit below one standard error and could fail on a
+        ! different compiler's random_number sequence; 0.06 is ~5 standard
+        ! errors. Detecting a halved amplitude (Bug #2) is the job of the
+        ! extreme-value checks below, not of this bound.
+        call check(abs(mean_V) < 0.06_dp, "Mean should be close to zero")
 
-        ! Check all values are within [-W/2, W/2]
-        call check(all(V >= -W/2.0_dp .and. V <= W/2.0_dp), &
-                   "All values should be in [-W/2, W/2]")
+        ! Check all values are within [-W, W] (C++ formula V = W*(2*rand - 1))
+        call check(all(V >= -W .and. V <= W), &
+                   "All values should be in [-W, W]")
+
+        ! Check the sample spans the full width: with L = 10000 draws the
+        ! extremes must land within 1% of the bounds. This fails if the
+        ! amplitude is halved (max would only reach W/2).
+        call check(maxval(V) > 0.99_dp * W, &
+                   "Maximum should approach +W (full disorder amplitude)")
+        call check(minval(V) < -0.99_dp * W, &
+                   "Minimum should approach -W (full disorder amplitude)")
     end subroutine test_random_uniform_mean
 
     !> Test random Gaussian potential has zero mean
@@ -382,12 +404,22 @@ contains
         call check(ierr == ERROR_OUT_OF_BOUNDS, "i_end < i_start should fail")
     end subroutine test_barrier_single_bounds
 
-    !> Test double barrier quantum well separation
+    !> Test double barrier quantum well geometry (barrier - well - barrier)
     !!
     !! Physics: A double barrier creates a quantum well between the two barriers.
-    !! The well width d = i2_start - i1_end - 1 determines the energy levels:
-    !! E_n ~ n²/d² (particle in a box). Resonant tunneling occurs when the
-    !! incident energy matches a well energy level.
+    !! The well width determines the quasi-bound level spacing (E_n ~ n²/L_well²)
+    !! and resonant tunneling occurs when the incident energy matches such a level.
+    !!
+    !! Geometry (mirrors the C++ double_barrier, lsda_potential.cc:166-194):
+    !!   L = 30 (even)  =>  x0 = 30/2 + 0.5 = 15.5
+    !!   L_well = 7     =>  x_1 = 12.0, x1 = 19.0
+    !!   L_bar  = 3     =>  x_2 =  9.0, x2 = 22.0
+    !! Because the barrier branches are tested first and use strict inequalities
+    !! widened by SMALL = 1e-10, sites sitting exactly on the nominal well edges
+    !! (i = 12 and i = 19) are classified as BARRIER, not well. Hence:
+    !!   barrier sites: i = 9..12 and i = 19..22  -> 8 sites with V = V_bar
+    !!   well sites:    i = 13..18                -> 6 sites with V = V_well
+    !!   zero sites:    the remaining 16 sites
     subroutine test_barrier_double_well_separation()
         use fortuno_serial, only: check => serial_check
         use potential_barrier, only: potential_barrier_double
@@ -395,56 +427,104 @@ contains
         use lsda_errors, only: ERROR_SUCCESS
 
         integer, parameter :: L = 30
-        integer, parameter :: i1_start = 8, i1_end = 10
-        integer, parameter :: i2_start = 18, i2_end = 20
-        real(dp) :: V(L), V_bar
-        integer :: ierr, well_width, i
+        real(dp), parameter :: V_bar = 4.0_dp, L_bar = 3.0_dp
+        real(dp), parameter :: V_well = -3.0_dp, L_well = 7.0_dp
+        real(dp) :: V(L)
+        integer :: ierr, i, n_bar, n_well, n_zero
 
-        V_bar = 4.0_dp
-        well_width = i2_start - i1_end - 1
-
-        call potential_barrier_double(V_bar, i1_start, i1_end, i2_start, i2_end, L, V, ierr)
+        call potential_barrier_double(V_bar, L_bar, V_well, L_well, L, V, ierr)
 
         call check(ierr == ERROR_SUCCESS, "Should succeed")
-        call check(well_width == 7, "Well width should be 7")
 
-        ! Check first barrier
-        do i = i1_start, i1_end
-            call check(abs(V(i) - V_bar) < TOL, "First barrier should have V_bar")
+        n_bar = 0
+        n_well = 0
+        n_zero = 0
+        do i = 1, L
+            if (abs(V(i) - V_bar) < TOL) then
+                n_bar = n_bar + 1
+            else if (abs(V(i) - V_well) < TOL) then
+                n_well = n_well + 1
+            else if (abs(V(i)) < TOL) then
+                n_zero = n_zero + 1
+            end if
         end do
 
-        ! Check well region (should be zero)
-        do i = i1_end + 1, i2_start - 1
-            call check(abs(V(i)) < TOL, "Well region should be zero")
-        end do
+        call check(n_bar == 8, "Should have 8 barrier sites (i=9..12 and i=19..22)")
+        call check(n_well == 6, "Should have 6 well sites (i=13..18)")
+        call check(n_zero == L - 14, "Remaining sites should be zero")
 
-        ! Check second barrier
-        do i = i2_start, i2_end
-            call check(abs(V(i) - V_bar) < TOL, "Second barrier should have V_bar")
-        end do
+        ! Explicit region boundaries
+        call check(abs(V(8)) < TOL, "Site 8 is outside the left barrier")
+        call check(abs(V(9) - V_bar) < TOL, "Site 9 starts the left barrier")
+        call check(abs(V(12) - V_bar) < TOL, "Site 12 is barrier (well edge falls on it)")
+        call check(abs(V(13) - V_well) < TOL, "Site 13 starts the well")
+        call check(abs(V(18) - V_well) < TOL, "Site 18 ends the well")
+        call check(abs(V(19) - V_bar) < TOL, "Site 19 is barrier (well edge falls on it)")
+        call check(abs(V(22) - V_bar) < TOL, "Site 22 ends the right barrier")
+        call check(abs(V(23)) < TOL, "Site 23 is outside the right barrier")
     end subroutine test_barrier_double_well_separation
 
-    !> Test double barrier rejects overlapping barriers
+    !> Test that the three double-barrier regions never overlap
     !!
-    !! Physics: Overlapping barriers are ill-defined for a double barrier
-    !! quantum well configuration. This would not create the characteristic
-    !! Fabry-Pérot resonances expected from a true double barrier structure.
+    !! Physics: barrier, well and field-free regions must partition the lattice;
+    !! a site cannot be simultaneously barrier and well, otherwise the
+    !! Fabry-Pérot resonance structure would be ill-defined.
+    !!
+    !! Geometry chosen so that no boundary lands on an integer site:
+    !!   L = 30 => x0 = 15.5; L_well = 4 => x_1 = 13.5, x1 = 17.5;
+    !!   L_bar = 5 => x_2 = 8.5, x2 = 22.5
+    !!   barriers: i = 9..13 and i = 18..22 (5 + 5 sites)
+    !!   well:     i = 14..17 (4 sites)
+    !!   zero:     16 sites
+    !!
+    !! The second part checks the oversized case L_well + 2*L_bar > L: the C++
+    !! original performs no validation and neither does the Fortran port, so the
+    !! call must still succeed, simply clipping the regions to the lattice.
     subroutine test_barrier_double_no_overlap()
         use fortuno_serial, only: check => serial_check
         use potential_barrier, only: potential_barrier_double
         use lsda_constants, only: dp
-        use lsda_errors, only: ERROR_OUT_OF_BOUNDS
+        use lsda_errors, only: ERROR_SUCCESS
 
         integer, parameter :: L = 30
+        real(dp), parameter :: V_bar = 1.0_dp, V_well = -2.0_dp
         real(dp) :: V(L)
-        integer :: ierr
+        real(dp) :: V_small(10)
+        integer :: ierr, i, n_bar, n_well, n_zero
 
-        ! i2_start <= i1_end (overlapping)
-        call potential_barrier_double(1.0_dp, 5, 10, 10, 15, L, V, ierr)
-        call check(ierr == ERROR_OUT_OF_BOUNDS, "Overlapping barriers should fail")
+        call potential_barrier_double(V_bar, 5.0_dp, V_well, 4.0_dp, L, V, ierr)
+        call check(ierr == ERROR_SUCCESS, "Non-overlapping geometry should succeed")
 
-        call potential_barrier_double(1.0_dp, 5, 10, 8, 15, L, V, ierr)
-        call check(ierr == ERROR_OUT_OF_BOUNDS, "Overlapping barriers should fail")
+        n_bar = 0
+        n_well = 0
+        n_zero = 0
+        do i = 1, L
+            if (abs(V(i) - V_bar) < TOL) then
+                n_bar = n_bar + 1
+            else if (abs(V(i) - V_well) < TOL) then
+                n_well = n_well + 1
+            else if (abs(V(i)) < TOL) then
+                n_zero = n_zero + 1
+            end if
+        end do
+
+        ! Every site belongs to exactly one region
+        call check(n_bar + n_well + n_zero == L, "Regions must partition the lattice")
+        call check(n_bar == 10, "Should have 10 barrier sites (i=9..13 and i=18..22)")
+        call check(n_well == 4, "Should have 4 well sites (i=14..17)")
+        call check(n_zero == 16, "Should have 16 field-free sites")
+
+        ! Oversized geometry: L_well + 2*L_bar = 22 > L = 10
+        ! L = 10 => x0 = 5.5; x_1 = 2.5, x1 = 8.5; x_2 = -5.5, x2 = 16.5
+        ! => barriers at i = 1,2 and i = 9,10; well at i = 3..8; no field-free site
+        call potential_barrier_double(V_bar, 8.0_dp, V_well, 6.0_dp, 10, V_small, ierr)
+        call check(ierr == ERROR_SUCCESS, "Oversized geometry is not rejected (matches C++)")
+        call check(abs(V_small(1) - V_bar) < TOL, "Site 1 is clipped left barrier")
+        call check(abs(V_small(2) - V_bar) < TOL, "Site 2 is clipped left barrier")
+        call check(abs(V_small(3) - V_well) < TOL, "Site 3 starts the well")
+        call check(abs(V_small(8) - V_well) < TOL, "Site 8 ends the well")
+        call check(abs(V_small(9) - V_bar) < TOL, "Site 9 is clipped right barrier")
+        call check(abs(V_small(10) - V_bar) < TOL, "Site 10 is clipped right barrier")
     end subroutine test_barrier_double_no_overlap
 
     !> Test quasiperiodic potential with golden ratio

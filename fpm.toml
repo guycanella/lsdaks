@@ -7,7 +7,9 @@ copyright = "2025 Guilherme Canella"
 
 [build]
 auto-executables = true
-auto-tests = true
+# Every test is listed explicitly in the [[test]] blocks below so that the
+# test inventory is auditable; do not re-enable auto discovery.
+auto-tests = false
 auto-examples = true
 link = ["lapack", "blas"]
 
@@ -38,12 +40,60 @@ main = "generate_table.f90"
 
 # ============================================
 # Tests
+#
+# All 20 test programs in test/ are listed here explicitly (auto-tests is off).
+# When adding a test file, add a matching [[test]] block.
 # ============================================
+
+[[test]]
+name = "test_adaptive_mixing"
+source-dir = "test"
+main = "test_adaptive_mixing.f90"
 
 [[test]]
 name = "test_bethe_equations"
 source-dir = "test"
 main = "test_bethe_equations.f90"
+
+[[test]]
+name = "test_boundary_conditions"
+source-dir = "test"
+main = "test_boundary_conditions.f90"
+
+[[test]]
+name = "test_degeneracy_handler"
+source-dir = "test"
+main = "test_degeneracy_handler.f90"
+
+[[test]]
+name = "test_errors"
+source-dir = "test"
+main = "test_errors.f90"
+
+[[test]]
+name = "test_hamiltonian_builder"
+source-dir = "test"
+main = "test_hamiltonian_builder.f90"
+
+[[test]]
+name = "test_lapack_wrapper"
+source-dir = "test"
+main = "test_lapack_wrapper.f90"
+
+[[test]]
+name = "test_potentials"
+source-dir = "test"
+main = "test_potentials.f90"
+
+[[test]]
+name = "test_spline2d"
+source-dir = "test"
+main = "test_spline2d.f90"
+
+[[test]]
+name = "test_xc_lsda"
+source-dir = "test"
+main = "test_xc_lsda.f90"
 
 [[test]]
 name = "test_nonlinear_solvers"
