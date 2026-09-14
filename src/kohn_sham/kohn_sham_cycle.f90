@@ -184,7 +184,7 @@ contains
             return
         end if
 
-        if (scf_params%max_iter <= 0 .or. scf_params%mixing_alpha < 0.0_dp .or. &
+        if (scf_params%max_iter <= 0 .or. scf_params%mixing_alpha <= 0.0_dp .or. &
                                             scf_params%mixing_alpha > 1.0_dp) then
             ierr = ERROR_INVALID_INPUT
             return

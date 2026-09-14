@@ -129,12 +129,12 @@ contains
             V_ext(i) = 0.0_dp
         end do
 
-        ! All L eigenvalues occupied (half-filling)
+        ! The lowest L/2 eigenvalues are occupied in each spin channel
         eigvals_up = [-2.0_dp, -1.8_dp, -1.5_dp, -1.2_dp, -1.0_dp, -0.8_dp, -0.5_dp, -0.2_dp]
         eigvals_down = eigvals_up
 
         ! U = 4.0 matches the XC table loaded above (xc_table_u4.00.dat)
-        call compute_total_energy(eigvals_up, eigvals_down, L, L, n_up, n_down, &
+        call compute_total_energy(eigvals_up, eigvals_down, L / 2, L / 2, n_up, n_down, &
                                   V_ext, xc_func, 4.0_dp, L, total_energy, ierr)
 
         call check(ierr == ERROR_SUCCESS, "Energy calculation should succeed")
@@ -476,12 +476,12 @@ contains
         call xc_lsda_destroy(xc_func)
     end subroutine test_validate_inputs_size_mismatch
 
-    !> Test that the SCF entry point rejects a mixing weight outside [0, 1]
+    !> Test that the SCF entry point rejects a mixing weight outside (0, 1]
     !!
     !! The potential mixing weight alpha is the fraction of the newly computed
-    !! V_eff blended in at each iteration, so it only makes sense in [0, 1];
-    !! alpha = 1.5 would extrapolate the potential and is rejected with
-    !! ERROR_INVALID_INPUT.
+    !! V_eff blended in at each iteration, so it only makes sense in (0, 1].
+    !! Alpha = 0 would discard V_eff_calc completely, while alpha = 1.5 would
+    !! extrapolate the potential; both are rejected with ERROR_INVALID_INPUT.
     !!
     !! Every other input is legal (this exact 5/5 filling on L = 10 runs fine in
     !! the other SCF tests), so only the mixing branch can produce the error:
@@ -520,6 +520,7 @@ contains
         scf_params%mixing_alpha = 1.5_dp  ! Invalid! Must be <= 1
         scf_params%verbose = .false.
         scf_params%store_history = .true.
+        scf_params%use_adaptive_mixing = .false.
 
         V_ext = 0.0_dp
 
@@ -529,6 +530,14 @@ contains
                    "mixing_alpha = 1.5 must be rejected as invalid input")
         call check(.not. allocated(results%history%density_norms), &
                    "invalid mixing_alpha must be rejected by validation, before any allocation")
+
+        scf_params%mixing_alpha = 0.0_dp  ! Invalid! Must be strictly positive
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "mixing_alpha = 0 must be rejected as invalid input")
+        call check(.not. allocated(results%history%density_norms), &
+                   "zero mixing_alpha must be rejected by validation, before any allocation")
 
         call xc_lsda_destroy(xc_func)
     end subroutine test_validate_inputs_invalid_mixing

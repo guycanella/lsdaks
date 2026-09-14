@@ -13,7 +13,7 @@
 !! segfaulted the whole suite. Generating the fixtures here keeps the tests
 !! meaningful and independent of unversioned data.
 program test_table_io
-    use fortuno_serial, only: execute_serial_cmd_app
+    use fortuno_serial, only: execute_serial_cmd_app, check_failed => serial_check_failed
     implicit none
 
     call execute_serial_cmd_app(get_table_io_tests())
@@ -146,6 +146,16 @@ contains
         if (io_stat == 0) close(unit, status='delete')
     end subroutine remove_file
 
+    !> Return whether every allocatable table component is available
+    logical function table_is_allocated(table)
+        use table_io, only: xc_table_t
+        type(xc_table_t), intent(in) :: table
+
+        table_is_allocated = allocated(table%n_grid) .and. allocated(table%m_grid) .and. &
+                             allocated(table%exc) .and. allocated(table%vxc_up) .and. &
+                             allocated(table%vxc_down)
+    end function table_is_allocated
+
 
     ! ------------------------------------------------------------------
     ! Tests
@@ -163,10 +173,20 @@ contains
 
         call make_cpp_table_file(fname, ok)
         call check(ok, "Fixture table should be written")
+        if (check_failed()) then
+            call remove_file(fname)
+            return
+        end if
 
         call read_cpp_table(fname, table, status)
 
         call check(status == 0, "Read status should be 0")
+        if (check_failed()) then
+            call deallocate_table(table)
+            call remove_file(fname)
+            return
+        end if
+
         call check(abs(table%U - 4.0_dp) < 1.0e-10_dp, "U should be 4.0")
         call check(table%n_points_n == n_blocks_ref(), "Should have 50 density points")
         call check(table%n_points_m == n_mag_ref(), "Should have 101 magnetization points")
@@ -175,6 +195,11 @@ contains
         call check(allocated(table%exc), "exc should be allocated")
         call check(allocated(table%vxc_up), "vxc_up should be allocated")
         call check(allocated(table%vxc_down), "vxc_down should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table)
+            call remove_file(fname)
+            return
+        end if
 
         ! The parsed values must reproduce what was written
         call check(abs(table%n_grid(1) - n_ref(1)) < 1.0e-10_dp, &
@@ -248,15 +273,41 @@ contains
 
         call make_cpp_table_file(src_file, ok)
         call check(ok, "Fixture table should be written")
+        if (check_failed()) then
+            call remove_file(src_file)
+            call remove_file(bin_file)
+            return
+        end if
 
         call read_cpp_table(src_file, table_in, status)
         call check(status == 0, "Should read C++ table")
+        call check(table_is_allocated(table_in), "C++ table arrays should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table_in)
+            call remove_file(src_file)
+            call remove_file(bin_file)
+            return
+        end if
 
         call write_fortran_table(bin_file, table_in, status)
         call check(status == 0, "Should write binary table")
+        if (check_failed()) then
+            call deallocate_table(table_in)
+            call remove_file(src_file)
+            call remove_file(bin_file)
+            return
+        end if
 
         call read_fortran_table(bin_file, table_out, status)
         call check(status == 0, "Should read binary table")
+        call check(table_is_allocated(table_out), "Binary table arrays should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table_in)
+            call deallocate_table(table_out)
+            call remove_file(src_file)
+            call remove_file(bin_file)
+            return
+        end if
 
         call check(abs(table_in%U - table_out%U) < 1.0e-14_dp, &
                    "U should match after round-trip")
@@ -296,9 +347,19 @@ contains
 
         call make_cpp_table_file(fname, ok)
         call check(ok, "Fixture table should be written")
+        if (check_failed()) then
+            call remove_file(fname)
+            return
+        end if
 
         call read_cpp_table(fname, table, status)
         call check(status == 0, "Should read table")
+        call check(table_is_allocated(table), "Table arrays should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table)
+            call remove_file(fname)
+            return
+        end if
 
         call check(size(table%n_grid) == table%n_points_n, &
                    "n_grid size should match n_points_n")
@@ -335,9 +396,19 @@ contains
 
         call make_cpp_table_file(fname, ok)
         call check(ok, "Fixture table should be written")
+        if (check_failed()) then
+            call remove_file(fname)
+            return
+        end if
 
         call read_cpp_table(fname, table, status)
         call check(status == 0, "Should read table")
+        call check(table_is_allocated(table), "Table arrays should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table)
+            call remove_file(fname)
+            return
+        end if
 
         n_min = minval(table%n_grid)
         n_max = maxval(table%n_grid)
@@ -400,9 +471,19 @@ contains
         call read_cpp_table("build/test_tmp/nonexistent_hub_u4.00", table_in, status)
         call check(status /= 0, "Reading a missing source table should fail")
         call check(.not. allocated(table_in%n_grid), "Failed read should leave table unallocated")
+        if (check_failed()) then
+            call deallocate_table(table_in)
+            call remove_file(bin_file)
+            return
+        end if
 
         call write_fortran_table(bin_file, table_in, status)
         call check(status /= 0, "Writing an unallocated table should fail, not crash")
+        if (check_failed()) then
+            call deallocate_table(table_in)
+            call remove_file(bin_file)
+            return
+        end if
 
         call read_fortran_table(bin_file, table_out, status)
         call check(status /= 0, "Reading the never-written binary table should fail")
@@ -422,10 +503,20 @@ contains
 
         call make_cpp_table_file(fname, ok)
         call check(ok, "Fixture table should be written")
+        if (check_failed()) then
+            call remove_file(fname)
+            return
+        end if
 
         call read_cpp_table(fname, table, status)
         call check(status == 0, "Should read table")
         call check(allocated(table%n_grid), "Arrays should be allocated")
+        call check(table_is_allocated(table), "All table arrays should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table)
+            call remove_file(fname)
+            return
+        end if
 
         call deallocate_table(table)
 
@@ -459,15 +550,51 @@ contains
         call make_cpp_table_file(f2, ok2)
         call make_cpp_table_file(f3, ok3)
         call check(ok1 .and. ok2 .and. ok3, "Fixture tables should be written")
+        if (check_failed()) then
+            call remove_file(f1)
+            call remove_file(f2)
+            call remove_file(f3)
+            return
+        end if
 
         call read_cpp_table(f1, table1, status)
         call check(status == 0, "Should read U=2 table")
+        call check(table_is_allocated(table1), "U=2 table arrays should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table1)
+            call deallocate_table(table2)
+            call deallocate_table(table3)
+            call remove_file(f1)
+            call remove_file(f2)
+            call remove_file(f3)
+            return
+        end if
 
         call read_cpp_table(f2, table2, status)
         call check(status == 0, "Should read U=4 table")
+        call check(table_is_allocated(table2), "U=4 table arrays should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table1)
+            call deallocate_table(table2)
+            call deallocate_table(table3)
+            call remove_file(f1)
+            call remove_file(f2)
+            call remove_file(f3)
+            return
+        end if
 
         call read_cpp_table(f3, table3, status)
         call check(status == 0, "Should read U=10 table")
+        call check(table_is_allocated(table3), "U=10 table arrays should be allocated")
+        if (check_failed()) then
+            call deallocate_table(table1)
+            call deallocate_table(table2)
+            call deallocate_table(table3)
+            call remove_file(f1)
+            call remove_file(f2)
+            call remove_file(f3)
+            return
+        end if
 
         ! Each table must carry the U encoded in its own filename: tables held
         ! simultaneously must not share state.
