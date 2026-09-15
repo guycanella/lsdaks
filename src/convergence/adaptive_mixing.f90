@@ -8,7 +8,7 @@
 !!
 !! This replicates the logic from lsda_stop.cc (Convergencia class).
 module adaptive_mixing
-    use lsda_constants, only: dp, INITIAL_MIX, ITER_MAX
+    use lsda_constants, only: dp, INITIAL_MIX, MIX_ALPHA_MIN
     use lsda_errors, only: ERROR_SUCCESS
     implicit none
     private
@@ -26,8 +26,13 @@ module adaptive_mixing
         real(dp) :: energy_new = 0.0_dp          !< Current energy
         real(dp) :: energy_old = 0.0_dp          !< Previous energy
         real(dp) :: tol = 1.0e-8_dp              !< Convergence tolerance
+        real(dp) :: alpha_min = MIX_ALPHA_MIN    !< Floor for alpha = 1 - mix
         logical :: converged = .false.           !< Convergence flag
     end type adaptive_mix_t
+
+    !> Cap applied by up_mix to the raw C++ formula (lsda_stop.cc:266-272).
+    !! The effective cap is the tighter of this value and 1 - alpha_min.
+    real(dp), parameter, public :: MIX_FORMULA_CAP = 0.999999999_dp
 
     public :: adaptive_mix_init
     public :: adaptive_mix_update
@@ -38,18 +43,29 @@ contains
 
     !> Initialize adaptive mixing
     !!
-    !! @param[out] mix_ctrl Adaptive mixing control structure
-    !! @param[in]  tol      Convergence tolerance (optional, default 1e-8)
-    subroutine adaptive_mix_init(mix_ctrl, tol)
+    !! @param[out] mix_ctrl      Adaptive mixing control structure
+    !! @param[in]  tol           Convergence tolerance (optional, default 1e-8)
+    !! @param[in]  alpha_min     Floor for alpha = 1 - mix (optional, default
+    !!                           MIX_ALPHA_MIN). Only 0 < alpha_min <= 1 is
+    !!                           accepted; anything else falls back to the
+    !!                           default.
+    !! @param[in]  initial_alpha Starting mixing weight in the Fortran convention
+    !!                           (optional). When present the controller starts at
+    !!                           mix = 1 - initial_alpha instead of the hard-coded
+    !!                           INITIAL_MIX, so that a user-supplied mixing_alpha
+    !!                           is honoured even with the adaptive controller on.
+    !!                           Values outside (0, 1] are ignored.
+    subroutine adaptive_mix_init(mix_ctrl, tol, alpha_min, initial_alpha)
         type(adaptive_mix_t), intent(out) :: mix_ctrl
         real(dp), intent(in), optional :: tol
+        real(dp), intent(in), optional :: alpha_min
+        real(dp), intent(in), optional :: initial_alpha
 
         mix_ctrl%iter = 0
         mix_ctrl%count_sc = 0
         mix_ctrl%count_bot = 0
         mix_ctrl%count_top = 0
         mix_ctrl%count_sc_max = 10
-        mix_ctrl%mix = INITIAL_MIX
         mix_ctrl%energy_top = 0.0_dp
         mix_ctrl%energy_bot = 0.0_dp
         mix_ctrl%energy_new = 0.0_dp
@@ -61,6 +77,31 @@ contains
         else
             mix_ctrl%tol = 1.0e-8_dp
         end if
+
+        if (present(alpha_min)) then
+            ! A non-positive floor would reopen the alpha -> 0 pathology, and
+            ! linear_mixing rejects alpha <= 0 outright. A floor ABOVE 1 is just
+            ! as invalid: clamp_mix would pin mix at 0 and adaptive_mix_get_alpha
+            ! would return alpha_min itself (the `alpha > 1` branch is an
+            ! else-if and is never re-evaluated after the floor is applied), so
+            ! the controller would hand out a mixing weight greater than 1.
+            if (alpha_min > 0.0_dp .and. alpha_min <= 1.0_dp) then
+                mix_ctrl%alpha_min = alpha_min
+            else
+                mix_ctrl%alpha_min = MIX_ALPHA_MIN
+            end if
+        else
+            mix_ctrl%alpha_min = MIX_ALPHA_MIN
+        end if
+
+        mix_ctrl%mix = INITIAL_MIX
+        if (present(initial_alpha)) then
+            if (initial_alpha > 0.0_dp .and. initial_alpha <= 1.0_dp) then
+                mix_ctrl%mix = 1.0_dp - initial_alpha
+            end if
+        end if
+
+        call clamp_mix(mix_ctrl)
     end subroutine adaptive_mix_init
 
     !> Update adaptive mixing based on new energy
@@ -125,7 +166,13 @@ contains
             if (mix_ctrl%count_sc >= mix_ctrl%count_sc_max .and. &
                 (error >= mix_ctrl%tol .or. band_error >= mix_ctrl%tol)) then
                 call up_mix(mix_ctrl)
-                call reset_counts(mix_ctrl)
+                ! C++ Convergencia::Reset() (lsda_stop.cc:260-264) also collapses
+                ! the band onto the current energy (Top = Bot = Old = New).
+                ! Zeroing the counters alone would let energy_top only grow and
+                ! energy_bot only shrink for the whole run, making the band error
+                ! monotonically non-decreasing and the convergence test below
+                ! permanently unreachable.
+                call adaptive_mix_reset(mix_ctrl)
             end if
 
         else if (mix_ctrl%energy_new > mix_ctrl%energy_top) then
@@ -156,14 +203,22 @@ contains
                 mix_ctrl%mix = 0.0_dp
             end if
 
-            call reset_counts(mix_ctrl)
+            ! Same rationale as after up_mix: the C++ Reset() collapses the band.
+            call adaptive_mix_reset(mix_ctrl)
         end if
 
-        ! Max iterations reached
-        if (mix_ctrl%iter >= ITER_MAX) then
-            mix_ctrl%converged = .false.
-        end if
-
+        ! NOTE: there is deliberately no iteration cap here. This module only
+        ! decides HOW MUCH to mix; the number of SCF iterations belongs to the
+        ! caller, which loops up to scf_params%max_iter. The previous code
+        ! compared mix_ctrl%iter against the global constant ITER_MAX (10000)
+        ! and, on reaching it, forced converged = .false. That was wrong twice
+        ! over: it ignored the user's max_iter, and it did the opposite of the
+        ! C++ original (lsda_stop.cc, which sets its Stop flag, i.e. terminates
+        ! the loop). Since the SCF cycle no longer consults mix_ctrl%converged
+        ! at all - convergence is decided by residual_V plus energy stability -
+        ! the only observable effect left was to silently clear a flag on
+        ! iteration 10000. Dropping it keeps the mixing state a pure function of
+        ! the energy sequence.
     end subroutine adaptive_mix_update
 
     !> Get alpha (Fortran convention) from mix (C++ convention)
@@ -173,7 +228,12 @@ contains
     !!
     !! Therefore: α = 1 - Mix
     !!
-    !! IMPORTANT: Clamps alpha to (0, 1] to prevent linear_mixing errors
+    !! IMPORTANT: Clamps alpha to [alpha_min, 1] to prevent linear_mixing errors
+    !! and, above all, to keep the SCF moving. Repeated up_mix drives mix towards
+    !! 1, i.e. alpha towards 0; with an unbounded alpha -> 0 each step changes the
+    !! effective potential by a vanishing amount, ||delta_n|| collapses in step
+    !! with alpha and a density-based criterion declares a convergence that never
+    !! happened. The floor alpha_min (default MIX_ALPHA_MIN) forbids that regime.
     !!
     !! @param[in] mix_ctrl Adaptive mixing control structure
     !! @return alpha Fortran mixing parameter (clamped to valid range)
@@ -183,9 +243,9 @@ contains
 
         alpha = 1.0_dp - mix_ctrl%mix
 
-        ! Clamp to valid range (0, 1] to prevent linear_mixing from failing
-        if (alpha <= 0.0_dp) then
-            alpha = 1.0e-10_dp  ! Very small but positive
+        ! Clamp to [alpha_min, 1]
+        if (alpha < mix_ctrl%alpha_min) then
+            alpha = mix_ctrl%alpha_min
         else if (alpha > 1.0_dp) then
             alpha = 1.0_dp
         end if
@@ -207,8 +267,12 @@ contains
 
     !> Increase mixing parameter (more conservative)
     !!
-    !! C++ implementation: NewMix = Mix + (1.0 - Mix)/1.5
-    !! Capped at 0.999999999
+    !! C++ implementation: NewMix = Mix + (1.0 - Mix)/1.5, capped at
+    !! MIX_FORMULA_CAP = 0.999999999 (lsda_stop.cc:266-272).
+    !!
+    !! On top of that formula cap, `mix` itself is clamped to 1 - alpha_min (see
+    !! clamp_mix): otherwise the state and the mixing weight actually used would
+    !! disagree, since adaptive_mix_get_alpha never returns less than alpha_min.
     !!
     !! @param[inout] mix_ctrl Adaptive mixing control structure
     subroutine up_mix(mix_ctrl)
@@ -217,10 +281,37 @@ contains
 
         new_mix = mix_ctrl%mix + (1.0_dp - mix_ctrl%mix) / 1.5_dp
 
-        if (new_mix < 0.999999999_dp) then
+        if (new_mix < MIX_FORMULA_CAP) then
             mix_ctrl%mix = new_mix
         end if
+
+        call clamp_mix(mix_ctrl)
     end subroutine up_mix
+
+    !> Clamp `mix` to [0, 1 - alpha_min]
+    !!
+    !! adaptive_mix_get_alpha already clamps alpha = 1 - mix from below at
+    !! alpha_min, but without this the stored `mix` could keep climbing towards
+    !! 1 (the formula cap 0.999999999) while the alpha actually applied stayed
+    !! pinned at alpha_min. The controller would then be stuck: dw_mix computes
+    !! Mix - (1 - Mix)*1.9, whose correction (1 - Mix) is ~1e-9 at the formula
+    !! cap, so the "be more aggressive" branch could no longer move the mixing
+    !! weight at all. Clamping the state keeps 1 - mix equal to the alpha in use
+    !! and leaves dw_mix a finite step (alpha_min*1.9) to recover with.
+    !!
+    !! @param[inout] mix_ctrl Adaptive mixing control structure
+    subroutine clamp_mix(mix_ctrl)
+        type(adaptive_mix_t), intent(inout) :: mix_ctrl
+        real(dp) :: mix_cap
+
+        mix_cap = max(0.0_dp, 1.0_dp - mix_ctrl%alpha_min)
+
+        if (mix_ctrl%mix > mix_cap) then
+            mix_ctrl%mix = mix_cap
+        else if (mix_ctrl%mix < 0.0_dp) then
+            mix_ctrl%mix = 0.0_dp
+        end if
+    end subroutine clamp_mix
 
     !> Decrease mixing parameter (more aggressive)
     !!

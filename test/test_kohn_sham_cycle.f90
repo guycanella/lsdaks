@@ -6,6 +6,20 @@ program test_kohn_sham_cycle
 
     real(dp), parameter :: TOL = 1.0e-9_dp
 
+    !> Geometry and interaction of the alpha-independence / residual probe.
+    !!
+    !! Shared by run_fixed_alpha_probe and by the tests that recompute the
+    !! residual independently, so that the reference computation can never
+    !! drift away from the system the probe actually ran.
+    integer, parameter :: PROBE_L = 20
+    integer, parameter :: PROBE_NUP = 7
+    integer, parameter :: PROBE_NDOWN = 5
+    real(dp), parameter :: PROBE_U = 4.0_dp
+    integer, parameter :: PROBE_IMP_SITE = 10
+    real(dp), parameter :: PROBE_IMP_V = -2.0_dp
+    character(len=*), parameter :: PROBE_TABLE = &
+        "data/tables/fortran_native/xc_table_u4.00.dat"
+
     call execute_serial_cmd_app(get_kohn_sham_tests())
 
 contains
@@ -22,12 +36,36 @@ contains
             test("validate_N_per_spin_exceeds_L", test_validate_N_per_spin_exceeds_L), &
             test("validate_inputs_size_mismatch", test_validate_inputs_size_mismatch), &
             test("validate_inputs_invalid_mixing", test_validate_inputs_invalid_mixing), &
+            test("validate_inputs_nonpositive_tolerances", &
+                 test_validate_inputs_nonpositive_tolerances), &
+            test("validate_inputs_non_finite_tolerances", &
+                 test_validate_inputs_non_finite_tolerances), &
             test("scf_results_init_cleanup", test_scf_results_init_cleanup), &
+            test("scf_results_init_propagates_history_error", &
+                 test_scf_results_init_propagates_history_error), &
+            test("complex_loop_matches_real_at_zero_twist", &
+                 test_complex_loop_matches_real_at_zero_twist), &
             test("scf_converges_u0_open", test_scf_converges_u0_open), &
             test("scf_converges_u0_periodic", test_scf_converges_u0_periodic), &
             test("scf_stores_history", test_scf_stores_history), &
+            test("scf_skips_history_when_disabled", test_scf_skips_history_when_disabled), &
             test("scf_density_conservation", test_scf_density_conservation), &
-            test("scf_complex_twisted_bc", test_scf_complex_twisted_bc) &
+            test("scf_complex_twisted_bc", test_scf_complex_twisted_bc), &
+            test("scf_declared_convergence_is_self_consistent", &
+                 test_scf_declared_convergence_is_self_consistent), &
+            test("scf_potential_residual_is_alpha_independent", &
+                 test_scf_potential_residual_is_alpha_independent), &
+            test("scf_residual_nonzero_at_alpha_one", &
+                 test_scf_residual_nonzero_at_alpha_one), &
+            test("scf_potential_residual_absolute_value", &
+                 test_scf_potential_residual_absolute_value), &
+            test("adaptive_mixing_honours_user_alpha", &
+                 test_adaptive_mixing_honours_user_alpha), &
+            test("count_half_filled_sites", test_count_half_filled_sites), &
+            test("half_filling_warning_fires_when_oscillating", &
+                 test_half_filling_warning_fires_when_oscillating), &
+            test("half_filling_warning_silent_otherwise", &
+                 test_half_filling_warning_silent_otherwise) &
         ])
     end function get_kohn_sham_tests
 
@@ -542,6 +580,217 @@ contains
         call xc_lsda_destroy(xc_func)
     end subroutine test_validate_inputs_invalid_mixing
 
+    !> The SCF entry point must reject a tolerance that can never be met
+    !!
+    !! Since T3 BOTH potential_tol and energy_tol decide convergence
+    !! (residual_V < potential_tol AND |dE| < energy_tol*max(1, |E|)), and both
+    !! quantities are non-negative. A tolerance <= 0 is therefore unreachable:
+    !! without this check the cycle would run the full max_iter and return
+    !! ERROR_CONVERGENCE_FAILED, blaming the physics for what is an invalid
+    !! request. Note that the fixed-alpha probe in this very file deliberately
+    !! uses tolerances of 1e-14 to force a full-budget run: that is legal, tiny
+    !! but positive, and must keep working.
+    !!
+    !! Each of the two branches is probed alone, with the other tolerance legal,
+    !! so deleting either one makes exactly the corresponding assertions fail.
+    !! store_history = .true. gives the usual anchor: any implementation that
+    !! reaches the SCF body allocates the history, so an unallocated history
+    !! proves the run stopped inside the validator.
+    subroutine test_validate_inputs_nonpositive_tolerances()
+        use fortuno_serial, only: check => serial_check
+        use lsda_types, only: system_params_t
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, run_kohn_sham_scf_complex, &
+                                    scf_params_t, scf_results_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN, BC_TWISTED
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        integer, parameter :: L = 10
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+        character(len=256) :: table_file
+
+        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC init should succeed")
+
+        params%L = L
+        params%Nup = 5
+        params%Ndown = 5
+        params%bc = BC_OPEN
+        params%U = 4.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 10
+        scf_params%density_tol = 1.0e-6_dp
+        scf_params%energy_tol = 1.0e-8_dp
+        scf_params%potential_tol = 1.0e-6_dp
+        scf_params%mixing_alpha = 0.3_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .true.
+
+        V_ext = 0.0_dp
+
+        ! --- potential_tol ----------------------------------------------------
+        scf_params%potential_tol = 0.0_dp
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "potential_tol = 0 must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "potential_tol = 0 must be rejected before any allocation")
+
+        scf_params%potential_tol = -1.0e-6_dp
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "negative potential_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "negative potential_tol must be rejected before any allocation")
+
+        ! --- energy_tol -------------------------------------------------------
+        scf_params%potential_tol = 1.0e-6_dp
+        scf_params%energy_tol = 0.0_dp
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "energy_tol = 0 must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "energy_tol = 0 must be rejected before any allocation")
+
+        scf_params%energy_tol = -1.0e-8_dp
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "negative energy_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "negative energy_tol must be rejected before any allocation")
+
+        ! The complex entry point shares the validator and must reject the same
+        ! inputs; the two loops are still duplicated code (T16).
+        params%bc = BC_TWISTED
+        call run_kohn_sham_scf_complex(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "the complex entry point must reject a negative energy_tol too")
+        call check(.not. allocated(results%history%density_norms), &
+                   "the complex entry point must reject it before any allocation")
+
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_validate_inputs_nonpositive_tolerances
+
+    !> The SCF entry points must reject non-finite tolerances too
+    !!
+    !! The public run_kohn_sham_scf_* routines are reachable without going
+    !! through input_parser, so the shared validator is the last line of defence.
+    !! A sign check alone accepts NaN and +Infinity:
+    !!   * NaN makes `residual_V < potential_tol` (or the energy comparison)
+    !!     always false, i.e. an unreachable criterion discovered only after the
+    !!     whole iteration budget is spent;
+    !!   * +Infinity makes it always true, DISABLING that criterion. With
+    !!     potential_tol = +Inf the cycle would declare convergence on the energy
+    !!     alone - the very false convergence this criterion was added to stop.
+    !! -Infinity is already caught by `<= 0` and is asserted to keep it covered.
+    !!
+    !! Each branch is probed alone with the other tolerance legal, so removing
+    !! the finiteness guard of one tolerance fails only its own assertions.
+    !! store_history = .true. is the usual anchor: any run that reaches the SCF
+    !! body allocates the history, so an unallocated history proves the rejection
+    !! happened inside the validator.
+    subroutine test_validate_inputs_non_finite_tolerances()
+        use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, &
+                                                 ieee_positive_inf, ieee_negative_inf
+        use fortuno_serial, only: check => serial_check
+        use lsda_types, only: system_params_t
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, run_kohn_sham_scf_complex, &
+                                    scf_params_t, scf_results_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN, BC_TWISTED
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        integer, parameter :: L = 10
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        real(dp) :: nan_v, pinf_v, ninf_v
+        integer :: ierr
+        character(len=256) :: table_file
+
+        nan_v = ieee_value(1.0_dp, ieee_quiet_nan)
+        pinf_v = ieee_value(1.0_dp, ieee_positive_inf)
+        ninf_v = ieee_value(1.0_dp, ieee_negative_inf)
+
+        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC init should succeed")
+
+        params%L = L
+        params%Nup = 5
+        params%Ndown = 5
+        params%bc = BC_OPEN
+        params%U = 4.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 10
+        scf_params%density_tol = 1.0e-6_dp
+        scf_params%energy_tol = 1.0e-8_dp
+        scf_params%potential_tol = 1.0e-6_dp
+        scf_params%mixing_alpha = 0.3_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .true.
+
+        V_ext = 0.0_dp
+
+        ! --- potential_tol ----------------------------------------------------
+        scf_params%potential_tol = nan_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "NaN potential_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "NaN potential_tol must be rejected before any allocation")
+
+        scf_params%potential_tol = pinf_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "+Infinity potential_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "+Infinity potential_tol must be rejected before any allocation")
+
+        scf_params%potential_tol = ninf_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "-Infinity potential_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "-Infinity potential_tol must be rejected before any allocation")
+
+        ! --- energy_tol -------------------------------------------------------
+        scf_params%potential_tol = 1.0e-6_dp
+        scf_params%energy_tol = nan_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "NaN energy_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "NaN energy_tol must be rejected before any allocation")
+
+        scf_params%energy_tol = pinf_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "+Infinity energy_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "+Infinity energy_tol must be rejected before any allocation")
+
+        scf_params%energy_tol = ninf_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "-Infinity energy_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "-Infinity energy_tol must be rejected before any allocation")
+
+        ! The complex entry point shares the validator and must reject the same
+        ! inputs; the two loops are still duplicated code (T16).
+        params%bc = BC_TWISTED
+        scf_params%energy_tol = 1.0e-8_dp
+        scf_params%potential_tol = pinf_v
+        call run_kohn_sham_scf_complex(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "the complex entry point must reject an infinite potential_tol too")
+        call check(.not. allocated(results%history%density_norms), &
+                   "the complex entry point must reject it before any allocation")
+
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_validate_inputs_non_finite_tolerances
+
     !> Test SCF results initialization and cleanup
     subroutine test_scf_results_init_cleanup()
         use fortuno_serial, only: check => serial_check
@@ -559,6 +808,177 @@ contains
         call cleanup_scf_results(results, ierr)
         call check(ierr == ERROR_SUCCESS, "Cleanup should succeed")
     end subroutine test_scf_results_init_cleanup
+
+
+    !> init_scf_results must not swallow a failed history allocation
+    !!
+    !! init_convergence_history rejects max_iter <= 0 with ERROR_INVALID_INPUT,
+    !! but init_scf_results used to overwrite that code with ERROR_SUCCESS on the
+    !! very next line. A caller assembling an scf_results_t outside the SCF cycle
+    !! (which is the only reason this helper is exported) therefore got a success
+    !! code together with an unallocated history, and only found out when it
+    !! indexed into it.
+    !!
+    !! The unallocated history is asserted as well: a correct rejection cannot
+    !! have allocated anything, and it is what distinguishes this from a mere
+    !! error-code change.
+    subroutine test_scf_results_init_propagates_history_error()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: scf_results_t, init_scf_results, cleanup_scf_results
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        type(scf_results_t) :: results
+        integer :: ierr
+
+        call init_scf_results(results, 10, .true., 0, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "max_iter = 0 with store_history must report ERROR_INVALID_INPUT")
+        call check(.not. allocated(results%history%density_norms), &
+                   "a rejected history must not be allocated")
+
+        call init_scf_results(results, 10, .true., -5, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "a negative max_iter with store_history must be reported too")
+
+        ! Without a history there is nothing to allocate, so max_iter is
+        ! irrelevant and the call must succeed.
+        call init_scf_results(results, 10, .false., 0, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "max_iter is irrelevant when no history is requested")
+
+        ! And the ordinary path must still succeed.
+        call init_scf_results(results, 10, .true., 7, ierr)
+        call check(ierr == ERROR_SUCCESS, "a legal max_iter must still succeed")
+        call check(allocated(results%history%density_norms), &
+                   "a legal request must actually allocate the history")
+
+        call cleanup_scf_results(results, ierr)
+    end subroutine test_scf_results_init_propagates_history_error
+
+
+    !> The complex SCF loop must reproduce the real one at zero twist
+    !!
+    !! run_kohn_sham_scf_real and run_kohn_sham_scf_complex are two hand-kept
+    !! copies of the same ~500-line algorithm (unification is T16). Nothing so
+    !! far checked that they agree, so any fix applied to one and forgotten in
+    !! the other would go unnoticed until a twisted-BC run produced silently
+    !! wrong physics.
+    !!
+    !! The anchor is exact by construction: with theta = 0 the Peierls factor
+    !! e^{i*theta} of BC_TWISTED is 1, so the complex Hamiltonian IS the real
+    !! periodic one embedded in C. Both loops therefore see the same spectrum,
+    !! the same densities, the same mixing decisions and the same convergence
+    !! test, and must produce the same energy, the same density profile and the
+    !! same residual_V, up to the difference between ZHEEVD and DSYEVD (which is
+    !! at the level of the eigenvector phases, invisible in |psi|^2).
+    !!
+    !! A small, quickly converging system is used on purpose: L = 8, Nup = 3,
+    !! Ndown = 2 (spin polarised, so the two channels carry different potentials
+    !! and a bug confined to one of them cannot cancel), U = 2, adaptive mixing
+    !! ON so that the controller path is exercised in both copies. The filling
+    !! is kept well below n = 1: at half filling this system sits on the V_xc
+    !! discontinuity and neither loop converges, which would make the comparison
+    !! a comparison of two failures.
+    !!
+    !! MUTATION VERIFIED: changing a single factor in the complex loop's mixing
+    !! (alpha_used -> 0.5*alpha_used on the spin-down channel) makes the density
+    !! and energy assertions fail.
+    subroutine test_complex_loop_matches_real_at_zero_twist()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, run_kohn_sham_scf_complex, &
+                                    scf_params_t, scf_results_t, cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_PERIODIC, BC_TWISTED
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 8
+        real(dp), parameter :: MATCH_TOL = 1.0e-10_dp
+
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: res_real, res_cplx
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        real(dp) :: max_dn_up, max_dn_down
+        integer :: ierr
+        character(len=256) :: table_file
+
+        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC init should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = 3
+        params%Ndown = 2
+        params%U = 2.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 200
+        scf_params%density_tol = 1.0e-6_dp
+        scf_params%energy_tol = 1.0e-10_dp
+        scf_params%potential_tol = 1.0e-8_dp
+        scf_params%mixing_alpha = 0.2_dp
+        scf_params%use_adaptive_mixing = .true.
+        scf_params%verbose = .false.
+        scf_params%store_history = .false.
+
+        ! A non-uniform V_ext so the fixed point is not trivially the uniform
+        ! density: a translationally invariant system would be reproduced by
+        ! almost any bug in the loop.
+        V_ext = 0.0_dp
+        V_ext(3) = -1.5_dp
+        V_ext(6) = 0.8_dp
+
+        params%bc = BC_PERIODIC
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, res_real, ierr)
+        call check(ierr == ERROR_SUCCESS, "the real loop must converge on this system")
+
+        params%bc = BC_TWISTED
+        call run_kohn_sham_scf_complex(params, scf_params, V_ext, xc_func, res_cplx, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "the complex loop at theta = 0 must converge on the same system")
+
+        call check(res_real%converged .and. res_cplx%converged, &
+                   "Precondition: both loops must reach self-consistency")
+
+        if (res_real%converged .and. res_cplx%converged) then
+            call check(res_real%n_iterations == res_cplx%n_iterations, &
+                       "both loops must take the same number of iterations")
+
+            call check(abs(res_real%final_energy - res_cplx%final_energy) <= &
+                       MATCH_TOL * max(1.0_dp, abs(res_real%final_energy)), &
+                       "the two loops must agree on the total energy at theta = 0")
+
+            call check(abs(res_real%final_potential_residual - &
+                           res_cplx%final_potential_residual) <= &
+                       MATCH_TOL * max(1.0_dp, abs(res_real%final_potential_residual)), &
+                       "the two loops must agree on residual_V at theta = 0")
+
+            call check(allocated(res_real%density_up) .and. allocated(res_cplx%density_up), &
+                       "both loops must return a density")
+
+            if (allocated(res_real%density_up) .and. allocated(res_cplx%density_up)) then
+                max_dn_up = maxval(abs(res_real%density_up - res_cplx%density_up))
+                max_dn_down = maxval(abs(res_real%density_down - res_cplx%density_down))
+
+                ! Precondition: the density really is structured, so an equality
+                ! between two flat profiles cannot be what is being measured.
+                call check(maxval(res_real%density_up) - minval(res_real%density_up) > 1.0e-3_dp, &
+                           "Precondition: V_ext must have made the density non-uniform")
+
+                call check(max_dn_up <= MATCH_TOL, &
+                           "the two loops must agree on the spin-up density at theta = 0")
+                call check(max_dn_down <= MATCH_TOL, &
+                           "the two loops must agree on the spin-down density at theta = 0")
+            end if
+        end if
+
+        call cleanup_scf_results(res_real, ierr)
+        call cleanup_scf_results(res_cplx, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_complex_loop_matches_real_at_zero_twist
 
     !> Test SCF convergence for U=0 with open BC
     !!
@@ -739,6 +1159,69 @@ contains
         call xc_lsda_destroy(xc_func)
     end subroutine test_scf_stores_history
 
+    !> store_history = .false. must not allocate the convergence history (T5)
+    !!
+    !! The SCF routine is the single owner of the initialization of `results`,
+    !! and it used to call init_convergence_history unconditionally: a caller who
+    !! explicitly asked for no history still paid for three arrays of max_iter
+    !! doubles (30000 each with the default max_iter = 10000) that were never
+    !! written to, since update_convergence_history is guarded by the same flag.
+    !!
+    !! The run must actually go through the SCF body - asserted via
+    !! n_iterations > 0 - otherwise an unallocated history would prove nothing.
+    subroutine test_scf_skips_history_when_disabled()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
+                                    cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 6
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+        character(len=256) :: table_file
+
+        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        call xc_lsda_init(xc_func, table_file, ierr)
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = 3
+        params%Ndown = 3
+        params%bc = BC_OPEN
+        params%U = 2.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 30
+        scf_params%density_tol = 1.0e-6_dp
+        scf_params%energy_tol = 1.0e-8_dp
+        scf_params%mixing_alpha = 0.4_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .false.
+
+        V_ext = 0.0_dp
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(results%n_iterations > 0, &
+                   "Precondition: the SCF body must have run")
+        call check(.not. allocated(results%history%density_norms), &
+                   "No density-norm history may be allocated when store_history is .false.")
+        call check(.not. allocated(results%history%energies), &
+                   "No energy history may be allocated when store_history is .false.")
+        call check(.not. allocated(results%history%potential_residuals), &
+                   "No residual history may be allocated when store_history is .false.")
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_skips_history_when_disabled
+
     !> Test that particle number is conserved during SCF
     !!
     !! Physics: Total particle number N = Σn(i) must be conserved exactly
@@ -858,5 +1341,561 @@ contains
         call cleanup_scf_results(results, ierr)
         call xc_lsda_destroy(xc_func)
     end subroutine test_scf_complex_twisted_bc
+
+    !> Declaring convergence must mean actual self-consistency (regression, T3)
+    !!
+    !! This is the production case of input.txt with the random seed pinned:
+    !! L = 100, Nup = Ndown = 25, U = -4 (attractive), open BC, 50% random
+    !! impurities of strength V0 = -4. It is a hard, strongly correlated,
+    !! disordered system and it is exactly the case that used to be reported as
+    !! "CONVERGED" after 163 iterations while the total energy was still jumping
+    !! between -310.66 and -311.95 (an oscillation of 1.29, i.e. 4e-3 relative).
+    !!
+    !! The mechanism of that false positive: the old criterion was
+    !! ||n_out - n_in||_2 < density_tol, but n_in IS the previous n_out and the
+    !! two densities come from potentials differing by alpha*(V_calc - V_eff).
+    !! ||delta_n|| is therefore proportional to the mixing weight, and the
+    !! adaptive controller drove alpha geometrically towards zero (0.05, 0.0167,
+    !! 0.0056, ... down to a 1e-10 floor), so ||delta_n|| crossed the tolerance
+    !! purely because the cycle had stopped moving.
+    !!
+    !! The assertions below are the contract that forbids this: whenever the SCF
+    !! reports success, the potential residual must really be below
+    !! potential_tol AND the last two energies must agree to energy_tol in
+    !! relative terms. Both are read back from the stored history, so the test
+    !! checks what the cycle actually did, not what it claims in a summary field.
+    !! Under the old criterion the run reports converged at iteration ~163 with a
+    !! potential residual of order 0.2 and a relative energy step of order 4e-3,
+    !! so both assertions fail.
+    !!
+    !! max_iter = 300 is a deliberate compromise: it is comfortably past the
+    !! iteration where the old code declared victory (163), which is all this
+    !! test needs, while keeping the runtime around a third of a second. With the
+    !! corrected criterion this system does not converge at all (the residual
+    !! plateaus around 0.2 even after 10000 iterations), and the non-convergent
+    !! branch asserts that this outcome is reported honestly: converged = .false.,
+    !! ERROR_CONVERGENCE_FAILED, and a residual that is genuinely above the
+    !! tolerance.
+    subroutine test_scf_declared_convergence_is_self_consistent()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
+                                    cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use potential_impurity, only: potential_impurity_random
+        use boundary_conditions, only: BC_OPEN
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_CONVERGENCE_FAILED
+
+        integer, parameter :: L = 100
+        integer, parameter :: POT_SEED = 12345
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer, allocatable :: imp_positions(:)
+        real(dp) :: energy_step, energy_scale
+        integer :: ierr, n_iter
+        character(len=256) :: table_file
+
+        ! The table is indexed by |U|; U = -4 uses the U = 4 table (main.f90:67).
+        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC init should succeed")
+
+        ! Same potential as input.txt, with the seed pinned for reproducibility
+        call potential_impurity_random(-4.0_dp, 50.0_dp, L, POT_SEED, V_ext, imp_positions, ierr)
+        call check(ierr == ERROR_SUCCESS, "Random impurity potential should be created")
+        if (allocated(imp_positions)) deallocate(imp_positions)
+
+        params%L = L
+        params%Nup = 25
+        params%Ndown = 25
+        params%bc = BC_OPEN
+        params%U = -4.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 300
+        scf_params%density_tol = 1.0e-6_dp
+        scf_params%energy_tol = 1.0e-8_dp
+        scf_params%potential_tol = 1.0e-6_dp
+        scf_params%mixing_alpha = 0.05_dp
+        scf_params%use_adaptive_mixing = .true.
+        scf_params%verbose = .false.
+        scf_params%store_history = .true.
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_SUCCESS .or. ierr == ERROR_CONVERGENCE_FAILED, &
+                   "SCF must finish either converged or explicitly failed")
+        call check(results%converged .eqv. (ierr == ERROR_SUCCESS), &
+                   "The converged flag and the error code must agree")
+
+        ! Particle number is conserved whatever the outcome, and the densities
+        ! must be available even on the non-convergent path.
+        call check(allocated(results%density_up) .and. allocated(results%density_down), &
+                   "Densities must be available even when the SCF does not converge")
+        if (allocated(results%density_up) .and. allocated(results%density_down)) then
+            call check(abs(sum(results%density_up) + sum(results%density_down) - 50.0_dp) < 1.0e-8_dp, &
+                       "Particle number must be conserved")
+        end if
+
+        n_iter = results%n_iterations
+        call check(allocated(results%history%potential_residuals), &
+                   "The potential residual must be recorded in the history")
+
+        if (results%converged) then
+            call check(n_iter >= 2, &
+                       "Convergence cannot be declared at iteration 1: the residual is " // &
+                       "identically zero there because V_eff is seeded from the same density")
+
+            call check(results%final_potential_residual < scf_params%potential_tol, &
+                       "Declared convergence requires a potential residual below potential_tol")
+
+            if (allocated(results%history%potential_residuals) .and. n_iter >= 2) then
+                call check(results%history%potential_residuals(n_iter) < 1.0e-6_dp, &
+                           "The recorded residual at the convergence iteration must be below 1e-6")
+
+                energy_step = abs(results%history%energies(n_iter) - &
+                                  results%history%energies(n_iter - 1))
+                energy_scale = max(1.0_dp, abs(results%history%energies(n_iter)))
+                call check(energy_step < 1.0e-8_dp * energy_scale, &
+                           "The last two energies must agree to 1e-8 in relative terms")
+            end if
+        else
+            call check(ierr == ERROR_CONVERGENCE_FAILED, &
+                       "A non-convergent run must return ERROR_CONVERGENCE_FAILED")
+            call check(results%n_iterations == scf_params%max_iter, &
+                       "A non-convergent run must have used the whole iteration budget")
+            call check(results%final_potential_residual >= scf_params%potential_tol, &
+                       "A run reported as not converged must really have a large residual")
+        end if
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_declared_convergence_is_self_consistent
+
+    !> Run the alpha-independence probe system for a fixed number of iterations
+    !!
+    !! Deliberately small and fully deterministic: L = 20, Nup = 7, Ndown = 5
+    !! (spin polarised, so both channels carry a different potential), U = 4,
+    !! open BC and a single attractive impurity of -2 at site 10. The impurity
+    !! is what makes the problem non-trivial: with a uniform V_ext on a ring the
+    !! seeded V_eff is already a fixed point and every residual would be zero.
+    !!
+    !! The mixing is FIXED (use_adaptive_mixing = .false.) so that alpha is the
+    !! only thing that differs between two calls, and the tolerances are set to
+    !! 1e-14 so the cycle never stops early: both runs perform exactly n_iter
+    !! iterations and the histories can be compared index by index.
+    !!
+    !! @param[in]  alpha      Mixing weight of the new potential
+    !! @param[in]  n_iter     Number of SCF iterations to perform (exactly)
+    !! @param[out] residuals  history%potential_residuals(1:n_iter)
+    !! @param[out] dnorms     history%density_norms(1:n_iter)
+    !! @param[out] ok         .true. if the run produced a full n_iter history
+    !! @param[in]  adaptive   Use the adaptive controller instead of fixed mixing
+    !!                        (optional, default .false.)
+    !! @param[out] dens_up    Final spin-up density n_out of the last iteration
+    !!                        (optional, length >= PROBE_L)
+    !! @param[out] dens_down  Final spin-down density (optional, length >= PROBE_L)
+    !! @param[out] v_ext_out  The external potential the probe used (optional)
+    subroutine run_fixed_alpha_probe(alpha, n_iter, residuals, dnorms, ok, adaptive, &
+                                     dens_up, dens_down, v_ext_out)
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
+                                    cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_CONVERGENCE_FAILED
+
+        real(dp), intent(in) :: alpha
+        integer, intent(in) :: n_iter
+        real(dp), intent(out) :: residuals(:), dnorms(:)
+        logical, intent(out) :: ok
+        logical, intent(in), optional :: adaptive
+        real(dp), intent(out), optional :: dens_up(:), dens_down(:), v_ext_out(:)
+
+        integer, parameter :: L = PROBE_L
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+        character(len=256) :: table_file
+
+        ok = .false.
+        residuals = 0.0_dp
+        dnorms = 0.0_dp
+        if (present(dens_up)) dens_up = 0.0_dp
+        if (present(dens_down)) dens_down = 0.0_dp
+
+        table_file = PROBE_TABLE
+        call xc_lsda_init(xc_func, table_file, ierr)
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = PROBE_NUP
+        params%Ndown = PROBE_NDOWN
+        params%bc = BC_OPEN
+        params%U = PROBE_U
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = n_iter
+        scf_params%density_tol = 1.0e-6_dp
+        scf_params%energy_tol = 1.0e-14_dp
+        scf_params%potential_tol = 1.0e-14_dp
+        scf_params%mixing_alpha = alpha
+        scf_params%use_adaptive_mixing = .false.
+        if (present(adaptive)) scf_params%use_adaptive_mixing = adaptive
+        scf_params%verbose = .false.
+        scf_params%store_history = .true.
+
+        V_ext = 0.0_dp
+        V_ext(PROBE_IMP_SITE) = PROBE_IMP_V
+        if (present(v_ext_out)) v_ext_out(1:L) = V_ext
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        if (ierr == ERROR_CONVERGENCE_FAILED .and. &
+            allocated(results%history%potential_residuals) .and. &
+            results%history%current_iter == n_iter) then
+            residuals(1:n_iter) = results%history%potential_residuals(1:n_iter)
+            dnorms(1:n_iter) = results%history%density_norms(1:n_iter)
+            if (present(dens_up) .and. allocated(results%density_up)) &
+                dens_up(1:L) = results%density_up
+            if (present(dens_down) .and. allocated(results%density_down)) &
+                dens_down(1:L) = results%density_down
+            ok = .true.
+        end if
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine run_fixed_alpha_probe
+
+    !> The potential residual must NOT scale with the mixing weight (regression, T3)
+    !!
+    !! This is the assertion that pins down WHY residual_V replaced ||Δn|| as the
+    !! convergence criterion, and it is deliberately differential: the same system
+    !! is run twice with fixed mixing, alpha = 0.05 and alpha = 0.005 (a factor of
+    !! 10), for the same fixed number of iterations, and the two histories are
+    !! compared.
+    !!
+    !! Expected behaviour:
+    !!   * ||Δn|| IS proportional to alpha. n_in is literally the previous n_out,
+    !!     and the two potentials behind them differ by alpha*(V_calc - V_eff), so
+    !!     dividing alpha by 10 divides ||Δn|| by ~10. That is exactly why a
+    !!     density-based criterion could be satisfied by a cycle that had merely
+    !!     stopped moving.
+    !!   * residual_V is NOT. It measures ||V_calc - V_eff|| BEFORE the mixing,
+    !!     i.e. the distance between V_eff and its image under the Kohn-Sham map,
+    !!     which is a property of the current point and not of the step size.
+    !!
+    !! The sharpest assertion is at iteration 2. Iteration 1 mixes a zero
+    !! difference (V_eff is seeded from the very density used to build V_calc), so
+    !! the state entering iteration 2 is bit-identical for any alpha and the
+    !! recorded residual_V(2) must be EXACTLY equal between the two runs.
+    !!
+    !! MUTATION THIS TEST KILLS: moving the residual_V computation to after the
+    !! mixing block. There residual_V = ||V_calc - V_mixed|| = (1-alpha)*||V_calc
+    !! - V_eff||, which reintroduces an alpha dependence into the convergence
+    !! criterion. Verified by mutation: residual_V(2) then becomes 0.95*r for
+    !! alpha = 0.05 and 0.995*r for alpha = 0.005, a 4.5% relative difference, and
+    !! the "identical at iteration 2" assertion fails (the other assertions, being
+    !! order-of-magnitude, survive - which is why the exact one is here).
+    subroutine test_scf_potential_residual_is_alpha_independent()
+        use fortuno_serial, only: check => serial_check
+
+        integer, parameter :: N_ITER = 6
+        real(dp), parameter :: ALPHA_BIG = 0.05_dp
+        real(dp), parameter :: ALPHA_SMALL = 0.005_dp
+
+        real(dp) :: res_big(N_ITER), dn_big(N_ITER)
+        real(dp) :: res_small(N_ITER), dn_small(N_ITER)
+        real(dp) :: res_ratio_2, dn_ratio_2, res_ratio_n, dn_ratio_n
+        logical :: ok_big, ok_small
+
+        call run_fixed_alpha_probe(ALPHA_BIG, N_ITER, res_big, dn_big, ok_big)
+        call run_fixed_alpha_probe(ALPHA_SMALL, N_ITER, res_small, dn_small, ok_small)
+
+        call check(ok_big .and. ok_small, &
+                   "Precondition: both runs must complete the full 6-iteration history")
+        if (.not. (ok_big .and. ok_small)) return
+
+        ! Precondition: the system really is away from self-consistency, so the
+        ! ratios below are not ratios of noise.
+        call check(res_big(2) > 1.0e-3_dp .and. res_small(2) > 1.0e-3_dp, &
+                   "Precondition: the potential residual must be far from zero")
+        call check(dn_big(N_ITER) > 1.0e-9_dp .and. dn_small(N_ITER) > 1.0e-9_dp, &
+                   "Precondition: the density is still moving at the last iteration")
+
+        ! --- The exact anchor -------------------------------------------------
+        ! Iteration 1 mixes a zero difference, so iteration 2 starts from the very
+        ! same V_eff in both runs: the residual recorded there cannot depend on
+        ! alpha at all. Computing it after the mixing would scale it by (1-alpha)
+        ! and break this equality.
+        ! The tolerance is 1e-9 RELATIVE, not exact equality: (1-a)*V + a*V is not
+        ! bit-identical to V in IEEE (about 1 ulp per component), and that 1e-16
+        ! is amplified by the eigenvector sensitivity 1/gap - this 20-site system
+        ! with an impurity has gaps of order 1e-2 - before reaching the residual.
+        ! 1e-9 sits comfortably above that noise and still seven orders below the
+        ! 4.5e-2 relative signal of the mutation this anchor exists to kill.
+        call check(abs(res_big(2) - res_small(2)) <= 1.0e-9_dp * abs(res_big(2)), &
+                   "residual_V at iteration 2 must be identical for alpha = 0.05 and " // &
+                   "alpha = 0.005: it is measured before the mixing")
+
+        ! --- The qualitative contrast ----------------------------------------
+        res_ratio_2 = res_big(2) / res_small(2)
+        dn_ratio_2 = dn_big(2) / dn_small(2)
+        res_ratio_n = res_big(N_ITER) / res_small(N_ITER)
+        dn_ratio_n = dn_big(N_ITER) / dn_small(N_ITER)
+
+        call check(dn_ratio_2 > 5.0_dp .and. dn_ratio_2 < 20.0_dp, &
+                   "||Δn|| must fall by roughly the factor 10 by which alpha was reduced")
+        call check(dn_ratio_n > 5.0_dp .and. dn_ratio_n < 20.0_dp, &
+                   "||Δn|| must still track alpha after 6 iterations")
+
+        call check(res_ratio_2 > 0.5_dp .and. res_ratio_2 < 2.0_dp, &
+                   "residual_V must NOT fall by a factor ~10 when alpha does")
+        call check(res_ratio_n > 0.2_dp .and. res_ratio_n < 2.0_dp, &
+                   "residual_V after 6 iterations must still be of the same order for both alphas")
+
+        ! The two grandeurs must be qualitatively different, not merely different
+        ! numbers: ||Δn|| shrinks with alpha by at least an order more than the
+        ! residual does.
+        call check(dn_ratio_n > 4.0_dp * res_ratio_n, &
+                   "||Δn|| must be far more sensitive to alpha than residual_V is")
+    end subroutine test_scf_potential_residual_is_alpha_independent
+
+    !> With alpha = 1 the residual must still be non-zero (regression, T3)
+    !!
+    !! Seeding-independent companion of the anchor above, and it kills the same
+    !! mutation ("compute residual_V after the mixing block") without depending
+    !! on floating-point luck or on how V_eff is initialised.
+    !!
+    !! With use_adaptive_mixing = .false. and mixing_alpha = 1 the mixing is pure
+    !! substitution, V_eff <- V_calc. A residual measured AFTER the mixing would
+    !! therefore be (1 - alpha)*||V_calc - V_eff|| = 0 identically, at every
+    !! iteration and for every system. Measured before the mixing - as it is -
+    !! it is the genuine distance between consecutive Kohn-Sham maps and stays
+    !! far from zero while the cycle is still moving.
+    !!
+    !! Iteration 1 is excluded: there the residual is legitimately zero because
+    !! V_eff is seeded from the same density used to build V_calc.
+    subroutine test_scf_residual_nonzero_at_alpha_one()
+        use fortuno_serial, only: check => serial_check
+
+        integer, parameter :: N_ITER = 4
+        real(dp) :: residuals(N_ITER), dnorms(N_ITER)
+        logical :: ok
+        integer :: k
+
+        call run_fixed_alpha_probe(1.0_dp, N_ITER, residuals, dnorms, ok)
+
+        call check(ok, "Precondition: the alpha = 1 run must complete the full history")
+        if (.not. ok) return
+
+        do k = 2, N_ITER
+            call check(residuals(k) > 1.0e-6_dp, &
+                       "with alpha = 1 the potential residual must still be non-zero: " // &
+                       "measuring it after the substitution V_eff <- V_calc would make " // &
+                       "it identically zero")
+        end do
+    end subroutine test_scf_residual_nonzero_at_alpha_one
+
+    !> The residual must equal its own definition, factor included (regression)
+    !!
+    !! Every other assertion about residual_V is a ratio or an order of
+    !! magnitude, so a wrong normalisation (dividing by L instead of 2L) or a
+    !! forgotten spin channel (summing only the up term) would pass all of them.
+    !! This test pins the ABSOLUTE value:
+    !!
+    !!   residual_V(k) = sqrt( (||V_up_calc - V_up||^2 + ||V_dw_calc - V_dw||^2)
+    !!                         / (2*L) )
+    !!
+    !! recomputed here from V_ext, U, the densities and get_vxc alone, with no
+    !! reference to the SCF internals.
+    !!
+    !! How the two potentials are obtained without reaching inside the loop: the
+    !! probe runs with alpha = 1 and fixed mixing, so the mixing is a pure
+    !! substitution and the potential entering iteration k is exactly
+    !! V_calc[n_out(k-2)]. Therefore
+    !!
+    !!   residual_V(3) = || V_calc[n_out(2)] - V_calc[n_out(1)] || / sqrt(2L),
+    !!
+    !! and n_out(1), n_out(2) are read off two shorter runs of the very same
+    !! system (max_iter = 1 and max_iter = 2).
+    !!
+    !! Nup = 7 /= Ndown = 5 is essential: the two spin channels carry different
+    !! densities and different potentials, so dropping the down term from the sum
+    !! changes the answer. On a spin-symmetric system the two channels coincide
+    !! and the forgotten-channel bug would be invisible.
+    !!
+    !! MUTATIONS THIS TEST KILLS (both verified):
+    !!   (a) real(2 * params%L, dp) -> real(params%L, dp) in the normalisation:
+    !!       the recorded residual grows by sqrt(2), a 41% relative error;
+    !!   (b) dropping sum((V_eff_down_calc - V_eff_down)**2) from the sum: the
+    !!       recorded residual drops to the up-only value.
+    subroutine test_scf_potential_residual_absolute_value()
+        use fortuno_serial, only: check => serial_check
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy, get_vxc
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: N1 = 1, N2 = 2, N3 = 3
+        real(dp) :: res1(N1), dn1(N1), res2(N2), dn2(N2), res3(N3), dn3(N3)
+        real(dp) :: n1_up(PROBE_L), n1_down(PROBE_L)
+        real(dp) :: n2_up(PROBE_L), n2_down(PROBE_L)
+        real(dp) :: V_ext(PROBE_L)
+        real(dp) :: V1_up(PROBE_L), V1_down(PROBE_L)
+        real(dp) :: V2_up(PROBE_L), V2_down(PROBE_L)
+        real(dp) :: vxc_up, vxc_down, residual_ref, up_only_ref
+        type(xc_lsda_t) :: xc_func
+        logical :: ok1, ok2, ok3
+        integer :: i, ierr
+
+        ! Three runs of the SAME system, differing only in how many iterations
+        ! they are allowed: alpha = 1, fixed mixing (see the header).
+        call run_fixed_alpha_probe(1.0_dp, N1, res1, dn1, ok1, &
+                                   dens_up=n1_up, dens_down=n1_down, v_ext_out=V_ext)
+        call run_fixed_alpha_probe(1.0_dp, N2, res2, dn2, ok2, &
+                                   dens_up=n2_up, dens_down=n2_down)
+        call run_fixed_alpha_probe(1.0_dp, N3, res3, dn3, ok3)
+
+        call check(ok1 .and. ok2 .and. ok3, &
+                   "Precondition: the 1-, 2- and 3-iteration runs must all complete")
+        if (.not. (ok1 .and. ok2 .and. ok3)) return
+
+        call xc_lsda_init(xc_func, PROBE_TABLE, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC init should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        ! V_calc[n] = V_ext + U*n_other + V_xc, evaluated independently of the
+        ! SCF loop for the two densities that bracket iteration 3.
+        do i = 1, PROBE_L
+            call get_vxc(xc_func, n1_up(i), n1_down(i), vxc_up, vxc_down, ierr)
+            if (ierr /= ERROR_SUCCESS) exit
+            V1_up(i) = V_ext(i) + PROBE_U * n1_down(i) + vxc_up
+            V1_down(i) = V_ext(i) + PROBE_U * n1_up(i) + vxc_down
+
+            call get_vxc(xc_func, n2_up(i), n2_down(i), vxc_up, vxc_down, ierr)
+            if (ierr /= ERROR_SUCCESS) exit
+            V2_up(i) = V_ext(i) + PROBE_U * n2_down(i) + vxc_up
+            V2_down(i) = V_ext(i) + PROBE_U * n2_up(i) + vxc_down
+        end do
+        call check(ierr == ERROR_SUCCESS, "get_vxc must succeed on both densities")
+        call xc_lsda_destroy(xc_func)
+        if (ierr /= ERROR_SUCCESS) return
+
+        residual_ref = sqrt((sum((V2_up - V1_up)**2) + sum((V2_down - V1_down)**2)) &
+                            / real(2 * PROBE_L, dp))
+        up_only_ref = sqrt(sum((V2_up - V1_up)**2) / real(2 * PROBE_L, dp))
+
+        ! Preconditions: the value is a real number, not noise, and the two spin
+        ! channels really do contribute differently - otherwise mutation (b)
+        ! could not be detected.
+        call check(residual_ref > 1.0e-3_dp, &
+                   "Precondition: the reference residual must be far from zero")
+        call check(abs(residual_ref - up_only_ref) > 0.1_dp * residual_ref, &
+                   "Precondition: the down channel must contribute materially, " // &
+                   "otherwise a forgotten channel would be invisible")
+
+        call check(abs(res3(N3) - residual_ref) <= 1.0e-9_dp * max(1.0_dp, residual_ref), &
+                   "residual_V must equal sqrt((||dV_up||^2 + ||dV_down||^2)/(2L)) " // &
+                   "recomputed independently from V_ext, U, n and get_vxc")
+    end subroutine test_scf_potential_residual_absolute_value
+
+    !> The adaptive controller must START from the user's mixing_alpha (T5)
+    !!
+    !! With use_adaptive_mixing = .true. (the default) the controller used to be
+    !! seeded with the hard-coded INITIAL_MIX = 0.95, so scf_params%mixing_alpha
+    !! was silently ignored: every run behaved as if alpha = 0.05 no matter what
+    !! the user asked for. The coincidence 1 - 0.95 = 0.05 = the value in
+    !! input.txt is what kept this invisible.
+    !!
+    !! The controller retunes alpha only after count_sc_max = 10 in-band
+    !! iterations, so over the 6 iterations probed here the mixing weight is
+    !! exactly the seeded one. Consequently ||Δn||, which is proportional to the
+    !! mixing weight, must differ by the factor 10 between the two runs. Without
+    !! the fix both runs start from mix = 0.95 and produce bit-identical
+    !! histories, i.e. a ratio of exactly 1, and this test fails.
+    subroutine test_adaptive_mixing_honours_user_alpha()
+        use fortuno_serial, only: check => serial_check
+
+        integer, parameter :: N_ITER = 6
+        real(dp) :: res_big(N_ITER), dn_big(N_ITER)
+        real(dp) :: res_small(N_ITER), dn_small(N_ITER)
+        logical :: ok_big, ok_small
+
+        call run_fixed_alpha_probe(0.05_dp, N_ITER, res_big, dn_big, ok_big, adaptive=.true.)
+        call run_fixed_alpha_probe(0.005_dp, N_ITER, res_small, dn_small, ok_small, adaptive=.true.)
+
+        call check(ok_big .and. ok_small, &
+                   "Precondition: both adaptive runs must complete the full history")
+        if (.not. (ok_big .and. ok_small)) return
+
+        call check(dn_big(2) > 0.0_dp .and. dn_small(2) > 0.0_dp, &
+                   "Precondition: the density must still be moving")
+
+        call check(abs(dn_big(2) - dn_small(2)) > 1.0e-6_dp, &
+                   "mixing_alpha must not be ignored when adaptive mixing is on")
+        call check(dn_big(2) / dn_small(2) > 5.0_dp .and. dn_big(2) / dn_small(2) < 20.0_dp, &
+                   "the adaptive controller must start at the user's alpha, so ||Δn|| " // &
+                   "must scale with it over the first iterations")
+    end subroutine test_adaptive_mixing_honours_user_alpha
+
+    !> Only sites within HALF_FILLING_TOL of n = 1 are counted
+    subroutine test_count_half_filled_sites()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: count_half_filled_sites, HALF_FILLING_TOL
+        use lsda_constants, only: dp
+
+        real(dp) :: n_up(5), n_down(5)
+
+        ! Sites 1 and 2 sit at half filling (exactly and just inside the band),
+        ! site 3 is just outside it, sites 4 and 5 are far away.
+        n_up   = [0.5_dp, 0.5_dp, 0.5_dp, 0.10_dp, 0.90_dp]
+        n_down = [0.5_dp, 0.5_dp + 0.5_dp * HALF_FILLING_TOL, &
+                  0.5_dp + 2.0_dp * HALF_FILLING_TOL, 0.10_dp, 0.90_dp]
+
+        call check(count_half_filled_sites(n_up, n_down, 5) == 2, &
+                   "exactly the two sites inside the half-filling band must be counted")
+        call check(count_half_filled_sites(n_up, n_down, 1) == 1, &
+                   "counting must respect L")
+    end subroutine test_count_half_filled_sites
+
+    !> The warning fires only with half-filled sites AND an oscillating energy
+    !!
+    !! Regression guard for T4: before it, a run could sit at n = 1 hopping
+    !! across the V_xc discontinuity with ΔE alternating by ±1.29 and the user
+    !! got no explanation at all.
+    subroutine test_half_filling_warning_fires_when_oscillating()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: half_filling_warning_due, OSCILLATION_STREAK_MIN
+        use lsda_constants, only: dp
+
+        call check(half_filling_warning_due(1, OSCILLATION_STREAK_MIN, 1.287_dp, &
+                                            -311.0_dp, 1.0e-8_dp), &
+                   "one half-filled site with an alternating, large dE must warn")
+        call check(half_filling_warning_due(7, OSCILLATION_STREAK_MIN + 4, -1.287_dp, &
+                                            -311.0_dp, 1.0e-8_dp), &
+                   "the sign of the last dE must not matter")
+    end subroutine test_half_filling_warning_fires_when_oscillating
+
+    !> The warning stays silent when either condition is missing
+    subroutine test_half_filling_warning_silent_otherwise()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: half_filling_warning_due, OSCILLATION_STREAK_MIN
+        use lsda_constants, only: dp
+
+        call check(.not. half_filling_warning_due(0, OSCILLATION_STREAK_MIN + 2, 1.287_dp, &
+                                                  -311.0_dp, 1.0e-8_dp), &
+                   "no half-filled site: the discontinuity cannot be the cause")
+        call check(.not. half_filling_warning_due(3, OSCILLATION_STREAK_MIN - 1, 1.287_dp, &
+                                                  -311.0_dp, 1.0e-8_dp), &
+                   "a short sign-flip streak is not an oscillation")
+        call check(.not. half_filling_warning_due(3, OSCILLATION_STREAK_MIN, 1.0e-10_dp, &
+                                                  -311.0_dp, 1.0e-8_dp), &
+                   "a settled energy must not warn, however many sites sit at n = 1")
+    end subroutine test_half_filling_warning_silent_otherwise
 
 end program test_kohn_sham_cycle

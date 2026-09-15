@@ -45,7 +45,10 @@ contains
             test("dw_mix_on_monotonic_drift", test_dw_mix_on_monotonic_drift), &
             test("dw_mix_clamped_non_negative", test_dw_mix_clamped_non_negative), &
             test("get_alpha_always_positive", test_get_alpha_always_positive), &
-            test("reset_keeps_mix", test_reset_keeps_mix) &
+            test("init_rejects_alpha_min_outside_unit_range", &
+                 test_init_rejects_alpha_min_outside_unit_range), &
+            test("reset_keeps_mix", test_reset_keeps_mix), &
+            test("state_independent_of_iteration_count", test_state_independent_of_iteration_count) &
         ])
     end function get_adaptive_mixing_tests
 
@@ -195,39 +198,84 @@ contains
     end subroutine test_up_mix_formula
 
 
-    !> Repeated up_mix must never push mix to or past the 0.999999999 cap
+    !> Repeated up_mix must saturate at the EFFECTIVE cap, 1 - alpha_min
     !!
     !! Each up_mix shrinks (1 - mix) by a factor of 3, so ~17 cycles from
-    !! INITIAL_MIX = 0.95 would reach 1e-9 were the cap absent. 40 cycles is
+    !! INITIAL_MIX = 0.95 would reach 1e-9 were there no cap at all. 40 cycles is
     !! comfortably past that point.
+    !!
+    !! Two caps act on `mix` and this test exercises both, one per controller:
+    !!
+    !!   * the formula cap MIX_CAP = 0.999999999 of the C++ original
+    !!     (lsda_stop.cc:266-272), reproduced by up_mix. It is exercised with a
+    !!     controller whose alpha floor is made negligible (alpha_min = 1e-12),
+    !!     so that the formula is what stops the growth.
+    !!
+    !!   * the effective cap 1 - alpha_min, which is the tighter one under the
+    !!     default alpha_min = MIX_ALPHA_MIN = 0.005. This cap is what keeps the
+    !!     stored state consistent with the alpha actually applied: without it
+    !!     `mix` kept climbing to 0.999999999 while adaptive_mix_get_alpha
+    !!     returned alpha_min anyway, and dw_mix - whose step is (1 - Mix)*1.9 -
+    !!     was left with a 1e-9 correction, i.e. the controller could never climb
+    !!     back out of the floor.
+    !!
+    !! NOTE ON THE PREVIOUS VERSION OF THIS TEST: it asserted `mix > 0.999` on a
+    !! default controller. That assertion was measuring the formula cap through a
+    !! controller whose effective cap is 0.995, which is unreachable by
+    !! construction now. The property it meant to protect (parity of the up_mix
+    !! formula and its cap with the C++ reference) is preserved below on the
+    !! negligible-floor controller; what changed is only which controller can
+    !! legitimately reach 0.999999999.
     subroutine test_up_mix_respects_cap()
         use fortuno_serial, only: check => serial_check
+        use lsda_constants, only: MIX_ALPHA_MIN
         type(adaptive_mix_t) :: ctrl
         integer :: cycle_idx
-        logical :: cap_respected, alpha_positive
+        logical :: cap_respected, alpha_positive, effective_cap_respected
 
+        ! --- Default controller: the effective cap 1 - alpha_min governs ------
         call adaptive_mix_init(ctrl)
         call open_band(ctrl)
 
         cap_respected = .true.
         alpha_positive = .true.
+        effective_cap_respected = .true.
 
         do cycle_idx = 1, 40
             call trigger_up_mix(ctrl)
             if (ctrl%mix >= MIX_CAP) cap_respected = .false.
+            if (ctrl%mix > 1.0_dp - MIX_ALPHA_MIN + TOL) effective_cap_respected = .false.
             if (adaptive_mix_get_alpha(ctrl) <= 0.0_dp) alpha_positive = .false.
         end do
 
         call check(cap_respected, "mix must always stay below the 0.999999999 cap")
+        call check(effective_cap_respected, "mix must never exceed the effective cap 1 - alpha_min")
         call check(alpha_positive, "alpha must stay strictly positive while up_mix saturates")
         call check(ctrl%mix < 1.0_dp, "mix must stay below 1")
 
-        ! 40 forced up_mix calls do saturate the formula at the cap. This says
-        ! something about up_mix alone (parity with lsda_stop.cc:266-272); it is
-        ! NOT a statement that a real SCF run should ever get here. Whether the
-        ! SCF can be driven into this corner depends on the reset semantics
-        ! discussed in trigger_up_mix, which is T3 territory.
-        call check(ctrl%mix > 0.999_dp, "40 forced up_mix calls should saturate the formula near the cap")
+        call check(abs(ctrl%mix - (1.0_dp - MIX_ALPHA_MIN)) < TOL, &
+                   "40 forced up_mix calls must saturate exactly at 1 - alpha_min")
+        call check(abs(adaptive_mix_get_alpha(ctrl) - MIX_ALPHA_MIN) < TOL, &
+                   "the saturated state must agree with the alpha actually applied")
+
+        ! dw_mix must still have something to work with: 1 - mix = alpha_min, so
+        ! the correction (1 - Mix)*1.9 is finite and the controller is recoverable.
+        call check(1.0_dp - ctrl%mix >= MIX_ALPHA_MIN - TOL, &
+                   "the dw_mix correction (1 - mix)*1.9 must not have collapsed to zero")
+
+        ! --- Negligible floor: the C++ formula cap governs --------------------
+        call adaptive_mix_init(ctrl, alpha_min=1.0e-12_dp)
+        call open_band(ctrl)
+
+        cap_respected = .true.
+        do cycle_idx = 1, 40
+            call trigger_up_mix(ctrl)
+            if (ctrl%mix >= MIX_CAP) cap_respected = .false.
+        end do
+
+        call check(cap_respected, "with a negligible floor, mix must still stay below MIX_CAP")
+        call check(ctrl%mix > 0.999_dp, &
+                   "40 forced up_mix calls should saturate the C++ formula near its cap")
     end subroutine test_up_mix_respects_cap
 
 
@@ -413,6 +461,54 @@ contains
     end subroutine test_get_alpha_always_positive
 
 
+    !> Only 0 < alpha_min <= 1 may be honoured as a floor
+    !!
+    !! alpha_min is the FLOOR of a mixing weight, so it lives in (0, 1] just as
+    !! alpha does. A floor above 1 used to be accepted verbatim, and the result
+    !! was an invalid alpha: clamp_mix pins mix at max(0, 1 - alpha_min) = 0, and
+    !! adaptive_mix_get_alpha then computes alpha = 1, finds alpha < alpha_min
+    !! and raises it to alpha_min itself - the `alpha > 1` branch is an else-if
+    !! and is never re-evaluated. With alpha_min = 2 the controller handed out
+    !! alpha = 2, i.e. an extrapolation of the potential the caller never asked
+    !! for and that validate_kohn_sham_cycle_inputs explicitly forbids.
+    !!
+    !! The out-of-range request falls back to the default floor, exactly as the
+    !! non-positive case already did.
+    subroutine test_init_rejects_alpha_min_outside_unit_range()
+        use fortuno_serial, only: check => serial_check
+        use lsda_constants, only: MIX_ALPHA_MIN
+        type(adaptive_mix_t) :: ctrl
+        real(dp) :: alpha
+
+        ! --- The pathological case: a floor above 1 --------------------------
+        call adaptive_mix_init(ctrl, alpha_min=2.0_dp)
+        call check(abs(ctrl%alpha_min - MIX_ALPHA_MIN) < TOL, &
+                   "alpha_min = 2 must be refused and fall back to the default")
+
+        alpha = adaptive_mix_get_alpha(ctrl)
+        call check(alpha > 0.0_dp .and. alpha <= 1.0_dp, &
+                   "the controller must never hand out a mixing weight outside (0, 1]")
+
+        ! --- The boundary itself is legal ------------------------------------
+        call adaptive_mix_init(ctrl, alpha_min=1.0_dp)
+        call check(abs(ctrl%alpha_min - 1.0_dp) < TOL, &
+                   "alpha_min = 1 is the largest legal floor and must be honoured")
+        alpha = adaptive_mix_get_alpha(ctrl)
+        call check(abs(alpha - 1.0_dp) < TOL, &
+                   "with a floor of 1 the controller must mix in the full new potential")
+
+        ! --- And an ordinary interior value still works ----------------------
+        call adaptive_mix_init(ctrl, alpha_min=0.25_dp)
+        call check(abs(ctrl%alpha_min - 0.25_dp) < TOL, &
+                   "a floor inside (0, 1) must be honoured")
+
+        ! --- Non-positive floors keep falling back ---------------------------
+        call adaptive_mix_init(ctrl, alpha_min=0.0_dp)
+        call check(abs(ctrl%alpha_min - MIX_ALPHA_MIN) < TOL, &
+                   "alpha_min = 0 must still fall back to the default")
+    end subroutine test_init_rejects_alpha_min_outside_unit_range
+
+
     !> adaptive_mix_reset clears the counters and band but keeps the tuned mix
     subroutine test_reset_keeps_mix()
         use fortuno_serial, only: check => serial_check
@@ -437,5 +533,52 @@ contains
         call check(abs(ctrl%energy_bot - ctrl%energy_new) < TOL, &
                    "reset must collapse Bot onto the current energy")
     end subroutine test_reset_keeps_mix
+
+
+    !> The controller state must depend only on the energy sequence, never on
+    !! how many iterations have already gone by (T5 regression)
+    !!
+    !! adaptive_mix_update used to end with
+    !!   `if (mix_ctrl%iter >= ITER_MAX) mix_ctrl%converged = .false.`
+    !! comparing the local counter against the GLOBAL constant ITER_MAX = 10000
+    !! instead of the caller's max_iter, and doing the opposite of the C++
+    !! reference (which stops the loop there). This module only decides how much
+    !! to mix; the iteration budget belongs to the SCF driver.
+    !!
+    !! Two controllers are fed the very same trailing sequence - settle on a
+    !! constant energy, then jump above the band - and differ only in how many
+    !! identical iterations preceded it: one stays far below ITER_MAX, the other
+    !! crosses it. Their resulting state must be identical. With the old code the
+    !! second controller had its `converged` flag silently cleared on the 10000th
+    !! iteration and this test failed.
+    subroutine test_state_independent_of_iteration_count()
+        use fortuno_serial, only: check => serial_check
+        use lsda_constants, only: ITER_MAX
+        type(adaptive_mix_t) :: ctrl_early, ctrl_late
+        integer :: i
+
+        ! Short run: settles well before ITER_MAX
+        call adaptive_mix_init(ctrl_early)
+        do i = 1, 20
+            call adaptive_mix_update(ctrl_early, -1.0_dp)
+        end do
+        call adaptive_mix_update(ctrl_early, 5.0_dp)   ! jump above the band
+
+        ! Same sequence, but the jump lands on iteration ITER_MAX + 1
+        call adaptive_mix_init(ctrl_late)
+        do i = 1, ITER_MAX
+            call adaptive_mix_update(ctrl_late, -1.0_dp)
+        end do
+        call adaptive_mix_update(ctrl_late, 5.0_dp)    ! jump above the band
+
+        call check(ctrl_late%iter > ITER_MAX, &
+                   "Precondition: the long run must cross the old ITER_MAX guard")
+        call check(ctrl_late%converged .eqv. ctrl_early%converged, &
+                   "The convergence flag must not depend on the iteration index")
+        call check(abs(ctrl_late%mix - ctrl_early%mix) < TOL, &
+                   "The mixing parameter must not depend on the iteration index")
+        call check(ctrl_late%count_top == ctrl_early%count_top, &
+                   "The counters must not depend on the iteration index")
+    end subroutine test_state_independent_of_iteration_count
 
 end program test_adaptive_mixing

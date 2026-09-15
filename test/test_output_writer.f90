@@ -24,9 +24,57 @@ contains
             test("write_results_density_disabled", test_write_results_density_disabled), &
             test("density_profile_format", test_density_profile_format), &
             test("eigenvalues_format_occupied", test_eigenvalues_format_occupied), &
-            test("eigenvalues_format_unoccupied", test_eigenvalues_format_unoccupied) &
+            test("eigenvalues_format_unoccupied", test_eigenvalues_format_unoccupied), &
+            test("outputs_record_smoothing_and_tolerance", &
+                 test_outputs_record_smoothing_and_tolerance), &
+            test("outputs_record_external_potential_provenance", &
+                 test_outputs_record_external_potential_provenance), &
+            test("provenance_records_type_specific_params", &
+                 test_provenance_records_type_specific_params), &
+            test("convergence_header_identifies_system", &
+                 test_convergence_header_identifies_system), &
+            test("random_uniform_provenance_states_no_false_distribution", &
+                 test_random_uniform_no_false_distribution) &
         ])
     end function get_output_writer_tests
+
+
+    !> Does `filename` contain a line holding `needle`?
+    !!
+    !! @param[in] filename Path of the file to scan
+    !! @param[in] needle   Substring to look for
+    !! @return             .true. if some line of the file contains `needle`
+    function file_contains(filename, needle) result(found)
+        character(len=*), intent(in) :: filename, needle
+        logical :: found
+
+        integer :: io_unit, io_stat
+        character(len=512) :: line
+
+        found = .false.
+        open(newunit=io_unit, file=filename, status='old', iostat=io_stat)
+        if (io_stat /= 0) return
+
+        do
+            read(io_unit, '(A)', iostat=io_stat) line
+            if (io_stat /= 0) exit
+            if (index(line, needle) > 0) found = .true.
+        end do
+
+        close(io_unit)
+    end function file_contains
+
+
+    !> Delete a file if it exists (test housekeeping)
+    !!
+    !! @param[in] filename Path of the file to remove
+    subroutine remove_file(filename)
+        character(len=*), intent(in) :: filename
+        integer :: io_unit, io_stat
+
+        open(newunit=io_unit, file=filename, status='old', iostat=io_stat)
+        if (io_stat == 0) close(io_unit, status='delete')
+    end subroutine remove_file
 
 
     !> Test write_summary creates file successfully
@@ -506,6 +554,592 @@ contains
             close(99, status='delete')
         end if
     end subroutine test_write_results_density_disabled
+
+
+    !> Every output file must carry xc_smoothing_width and potential_tol
+    !!
+    !! A run with the V_xc discontinuity smoothed (w > 0) uses a MODIFIED XC
+    !! functional: the energy per site of the reference case moves from -3.1938
+    !! (w = 0.05) to -3.1719 (w = 0.2), i.e. 0.7%. Before this, a summary reading
+    !! "SCF: CONVERGED / Final Energy: -3.193774" was indistinguishable between
+    !! w = 0.05 and w = 0, so the archived numbers could not be told apart and the
+    !! loss of parity with the C++ reference was invisible in the record.
+    !!
+    !! The test writes the same results twice, with w = 0 and w = 0.05, and
+    !! requires that (a) both the tolerance and w appear in the summary and in the
+    !! _density.dat / _convergence.dat headers, and (b) the w > 0 run carries an
+    !! explicit statement that the functional was modified and has no C++ parity,
+    !! which the w = 0 run must NOT carry.
+    subroutine test_outputs_record_smoothing_and_tolerance()
+        use fortuno_serial, only: check => serial_check
+        use output_writer
+        use lsda_types, only: system_params_t
+        use input_parser, only: input_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        sys_params%L = 3
+        sys_params%Nup = 2
+        sys_params%Ndown = 1
+        sys_params%U = 4.0_dp
+        sys_params%bc = 1
+
+        results%converged = .true.
+        results%n_iterations = 10
+        results%final_density_error = 1.0e-10_dp
+        results%final_potential_residual = 1.0e-9_dp
+        results%final_energy = -5.0_dp
+
+        allocate(results%density_up(3))
+        allocate(results%density_down(3))
+        allocate(results%eigvals(6))
+        allocate(results%history%density_norms(2))
+        allocate(results%history%energies(2))
+
+        results%density_up = [0.7_dp, 0.7_dp, 0.6_dp]
+        results%density_down = [0.3_dp, 0.3_dp, 0.4_dp]
+        results%eigvals = [-1.0_dp, 0.0_dp, 1.0_dp, -0.5_dp, 0.5_dp, 1.5_dp]
+        results%history%current_iter = 2
+        results%history%density_norms = [1.0e-5_dp, 1.0e-10_dp]
+        results%history%energies = [-4.8_dp, -5.0_dp]
+
+        inputs%save_density = .true.
+        inputs%save_eigenvalues = .false.
+        inputs%store_history = .true.
+        inputs%potential_tol = 1.0e-6_dp
+
+        ! --- Unsmoothed run: exact C++ parity, no warning ---------------------
+        inputs%output_prefix = 'test_prov_w0'
+        inputs%xc_smoothing_width = 0.0_dp
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results (w = 0) should succeed")
+
+        call check(file_contains('test_prov_w0_summary.txt', 'xc_smoothing_width'), &
+                   "The summary must record xc_smoothing_width even when it is zero")
+        call check(file_contains('test_prov_w0_summary.txt', 'potential_tol'), &
+                   "The summary must record the potential tolerance actually used")
+        call check(file_contains('test_prov_w0_density.dat', 'xc_smoothing_width'), &
+                   "The density header must record xc_smoothing_width")
+        call check(file_contains('test_prov_w0_convergence.dat', 'xc_smoothing_width'), &
+                   "The convergence header must record xc_smoothing_width")
+        call check(file_contains('test_prov_w0_density.dat', 'potential_tol'), &
+                   "The density header must record the potential tolerance")
+        call check(file_contains('test_prov_w0_convergence.dat', 'potential_tol'), &
+                   "The convergence header must record the potential tolerance")
+        call check(.not. file_contains('test_prov_w0_summary.txt', 'NO parity'), &
+                   "An unsmoothed run must NOT be flagged as departing from the C++ reference")
+        call check(.not. file_contains('test_prov_w0_summary.txt', 'not variational'), &
+                   "At w = 0 V_xc IS the derivative of E_xc, so no variational caveat applies")
+
+        ! --- Smoothed run: modified functional, must say so -------------------
+        inputs%output_prefix = 'test_prov_w05'
+        inputs%xc_smoothing_width = 0.05_dp
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results (w = 0.05) should succeed")
+
+        call check(file_contains('test_prov_w05_summary.txt', '0.050000'), &
+                   "The summary must record the actual value of w")
+        call check(file_contains('test_prov_w05_summary.txt', 'MODIFIED'), &
+                   "A smoothed run must state that the XC functional was modified")
+        call check(file_contains('test_prov_w05_summary.txt', 'NO parity'), &
+                   "A smoothed run must state that it has no parity with the C++ reference")
+        call check(file_contains('test_prov_w05_density.dat', 'MODIFIED'), &
+                   "The density header must carry the modified-functional warning")
+        call check(file_contains('test_prov_w05_convergence.dat', 'MODIFIED'), &
+                   "The convergence header must carry the modified-functional warning")
+
+        ! The decisive line: E_xc is NOT smoothed. compute_total_energy calls the
+        ! smoothed get_vxc and the unsmoothed get_exc, so with w > 0 the pair
+        ! stops being (functional, derivative): the density the cycle converges
+        ! to, n_w, is the stationary point of the SMOOTHED problem, not of the
+        ! functional being evaluated. The reported energy is nevertheless a clean
+        ! evaluation of the unsmoothed functional at n_w, and n_0 (the unsmoothed
+        ! minimiser) IS a stationary point of it WHERE THAT FUNCTIONAL IS
+        ! DIFFERENTIABLE, so there the error is SECOND order:
+        ! E[n_w] - E[n_0] = O(|n_w - n_0|^2). Exactly in the regime that motivates
+        ! w > 0 that caveat bites: the unsmoothed E_xc has a kink at n = 1 (the
+        ! V_xc discontinuity is its derivative jump), so for densities pinned at
+        ! n = 1 the error is FIRST order in |n_w - n_0|, with coefficient given by
+        ! the V_xc jump. Either way it is an uncontrolled error -
+        ! nothing bounds |n_w - n_0| - which is why it must be stated. Saying
+        ! only "the functional was MODIFIED" invites the reader to assume E_xc
+        ! followed V_xc.
+        call check(file_contains('test_prov_w05_summary.txt', 'E_xc is NOT smoothed'), &
+                   "A smoothed run must state that E_xc was left unsmoothed")
+        call check(file_contains('test_prov_w05_summary.txt', 'not variational'), &
+                   "A smoothed run must state that the reported energy is not variational")
+        call check(file_contains('test_prov_w05_density.dat', 'E_xc is NOT smoothed'), &
+                   "The density header must carry the unsmoothed-E_xc statement")
+        call check(file_contains('test_prov_w05_convergence.dat', 'E_xc is NOT smoothed'), &
+                   "The convergence header must carry the unsmoothed-E_xc statement")
+
+        call remove_file('test_prov_w0_summary.txt')
+        call remove_file('test_prov_w0_density.dat')
+        call remove_file('test_prov_w0_convergence.dat')
+        call remove_file('test_prov_w05_summary.txt')
+        call remove_file('test_prov_w05_density.dat')
+        call remove_file('test_prov_w05_convergence.dat')
+
+        deallocate(results%density_up)
+        deallocate(results%density_down)
+        deallocate(results%eigvals)
+        deallocate(results%history%density_norms)
+        deallocate(results%history%energies)
+    end subroutine test_outputs_record_smoothing_and_tolerance
+
+
+    !> Every output file must identify the external potential that produced it
+    !!
+    !! Before this, write_summary recorded L, Nup, Ndown, U, potential_tol and w
+    !! and nothing else: a _density.dat produced with 50% random impurities was
+    !! literally irreproducible from its own contents, because neither the
+    !! potential type, nor its strength, nor its concentration, nor the random
+    !! seed, nor the boundary condition, nor the mixing appeared anywhere. Since
+    !! the reference case of this phase IS a disordered run, that was the worst
+    !! remaining traceability hole.
+    !!
+    !! Two runs are written: one with a pinned seed (fully reproducible) and one
+    !! with pot_seed = -1. The second must record the sentinel AS GIVEN and say
+    !! out loud that the realisation came from the clock; capturing the seed that
+    !! was actually drawn requires changing the potential generators and is out
+    !! of scope here.
+    subroutine test_outputs_record_external_potential_provenance()
+        use fortuno_serial, only: check => serial_check
+        use output_writer
+        use lsda_types, only: system_params_t
+        use input_parser, only: input_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        sys_params%L = 3
+        sys_params%Nup = 2
+        sys_params%Ndown = 1
+        sys_params%U = -4.0_dp
+        sys_params%bc = 0
+
+        results%converged = .true.
+        results%n_iterations = 10
+        results%final_density_error = 1.0e-10_dp
+        results%final_potential_residual = 1.0e-9_dp
+        results%final_energy = -5.0_dp
+
+        allocate(results%density_up(3))
+        allocate(results%density_down(3))
+        allocate(results%eigvals(6))
+        allocate(results%history%density_norms(2))
+        allocate(results%history%energies(2))
+
+        results%density_up = [0.7_dp, 0.7_dp, 0.6_dp]
+        results%density_down = [0.3_dp, 0.3_dp, 0.4_dp]
+        results%eigvals = [-1.0_dp, 0.0_dp, 1.0_dp, -0.5_dp, 0.5_dp, 1.5_dp]
+        results%history%current_iter = 2
+        results%history%density_norms = [1.0e-5_dp, 1.0e-10_dp]
+        results%history%energies = [-4.8_dp, -5.0_dp]
+
+        inputs%save_density = .true.
+        inputs%save_eigenvalues = .true.
+        inputs%store_history = .true.
+        inputs%potential_tol = 1.0e-6_dp
+        inputs%energy_tol = 1.0e-9_dp
+        inputs%max_iter = 4321
+        inputs%xc_smoothing_width = 0.0_dp
+        inputs%potential_type = 'impurity'
+        inputs%V0 = -4.0_dp
+        inputs%concentration = 50.0_dp
+        inputs%bc_type = 'open'
+        inputs%phase = 0.0_dp
+        inputs%mixing_alpha = 0.05_dp
+        inputs%use_adaptive_mixing = .true.
+
+        ! --- Reproducible run: the seed pins the disorder realisation ---------
+        inputs%output_prefix = 'test_potprov_seed'
+        inputs%pot_seed = 12345
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results (pinned seed) should succeed")
+
+        call check(file_contains('test_potprov_seed_summary.txt', 'potential_type = impurity'), &
+                   "The summary must record the external potential type")
+        call check(file_contains('test_potprov_seed_summary.txt', 'V0 ='), &
+                   "The summary must record the potential strength V0")
+        call check(file_contains('test_potprov_seed_summary.txt', 'concentration ='), &
+                   "The summary must record the impurity concentration")
+        call check(file_contains('test_potprov_seed_summary.txt', 'pot_seed = 12345'), &
+                   "The summary must record the random seed that fixes the disorder")
+        call check(file_contains('test_potprov_seed_summary.txt', 'bc = open'), &
+                   "The summary must record the boundary condition")
+        call check(file_contains('test_potprov_seed_summary.txt', 'mixing_alpha ='), &
+                   "The summary must record the mixing weight")
+        call check(file_contains('test_potprov_seed_summary.txt', 'use_adaptive_mixing = T'), &
+                   "The summary must record whether the adaptive controller was on")
+
+        ! The same block must travel with the data files, not only with the summary.
+        call check(file_contains('test_potprov_seed_density.dat', 'pot_seed = 12345'), &
+                   "The density header must record the random seed")
+        call check(file_contains('test_potprov_seed_density.dat', 'potential_type = impurity'), &
+                   "The density header must record the external potential type")
+        call check(file_contains('test_potprov_seed_convergence.dat', 'pot_seed = 12345'), &
+                   "The convergence header must record the random seed")
+
+        ! _eigenvalues.dat used not to receive the block at all (write_eigenvalues
+        ! did not even take `inputs`), so a spectrum was archived with no record
+        ! of the potential or the tolerances that produced it.
+        call check(file_contains('test_potprov_seed_eigenvalues.dat', 'pot_seed = 12345'), &
+                   "The eigenvalue header must record the random seed")
+        call check(file_contains('test_potprov_seed_eigenvalues.dat', 'potential_type = impurity'), &
+                   "The eigenvalue header must record the external potential type")
+        call check(file_contains('test_potprov_seed_eigenvalues.dat', 'potential_tol'), &
+                   "The eigenvalue header must record the SCF tolerance")
+
+        ! The rest of the SCF contract: the second convergence criterion, the
+        ! iteration budget and the twist phase. Without energy_tol and max_iter
+        ! a "NOT CONVERGED" file cannot be told apart from a run that was simply
+        ! never given enough iterations.
+        call check(file_contains('test_potprov_seed_summary.txt', 'energy_tol ='), &
+                   "The summary must record the energy tolerance, the second criterion")
+        call check(file_contains('test_potprov_seed_summary.txt', 'max_iter = 4321'), &
+                   "The summary must record the iteration budget actually granted")
+        call check(file_contains('test_potprov_seed_summary.txt', 'phase ='), &
+                   "The summary must record the twist phase of the boundary condition")
+        call check(file_contains('test_potprov_seed_density.dat', 'energy_tol ='), &
+                   "The density header must record the energy tolerance")
+        call check(file_contains('test_potprov_seed_density.dat', 'max_iter = 4321'), &
+                   "The density header must record the iteration budget")
+
+        call check(.not. file_contains('test_potprov_seed_summary.txt', 'NOT reproducible'), &
+                   "A pinned seed must NOT be flagged as irreproducible")
+
+        ! --- Clock-seeded run: recorded as given, and flagged -----------------
+        inputs%output_prefix = 'test_potprov_noseed'
+        inputs%pot_seed = -1
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results (clock seed) should succeed")
+
+        call check(file_contains('test_potprov_noseed_summary.txt', 'pot_seed = -1'), &
+                   "pot_seed must be recorded exactly as given, sentinel included")
+        call check(file_contains('test_potprov_noseed_summary.txt', 'NOT reproducible'), &
+                   "A clock-seeded disorder realisation must be flagged as irreproducible")
+        call check(file_contains('test_potprov_noseed_density.dat', 'NOT reproducible'), &
+                   "The density header must carry the irreproducibility flag too")
+
+        call remove_file('test_potprov_seed_summary.txt')
+        call remove_file('test_potprov_seed_density.dat')
+        call remove_file('test_potprov_seed_eigenvalues.dat')
+        call remove_file('test_potprov_seed_convergence.dat')
+        call remove_file('test_potprov_noseed_summary.txt')
+        call remove_file('test_potprov_noseed_density.dat')
+        call remove_file('test_potprov_noseed_eigenvalues.dat')
+        call remove_file('test_potprov_noseed_convergence.dat')
+
+        deallocate(results%density_up)
+        deallocate(results%density_down)
+        deallocate(results%eigvals)
+        deallocate(results%history%density_norms)
+        deallocate(results%history%energies)
+    end subroutine test_outputs_record_external_potential_provenance
+
+
+    !> The provenance must record the parameters of the potential ACTUALLY used
+    !!
+    !! Recording only V0 and the concentration made whole families of runs
+    !! untraceable: a harmonic trap is defined by its spring constant, a double
+    !! barrier by its geometry (barrier width, well depth, well width) and a
+    !! disordered run by its strength - none of which appeared anywhere. The
+    !! block is type-directed rather than exhaustive, so this test also checks
+    !! that irrelevant parameters stay OUT: a harmonic run must not carry a well
+    !! depth, nor a seed that never fed any random number generator.
+    subroutine test_provenance_records_type_specific_params()
+        use fortuno_serial, only: check => serial_check
+        use output_writer
+        use lsda_types, only: system_params_t
+        use input_parser, only: input_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        sys_params%L = 3
+        sys_params%Nup = 2
+        sys_params%Ndown = 1
+        sys_params%U = 4.0_dp
+        sys_params%bc = 1
+
+        results%converged = .true.
+        results%n_iterations = 10
+        results%final_energy = -5.0_dp
+
+        inputs%save_density = .false.
+        inputs%save_eigenvalues = .false.
+        inputs%store_history = .false.
+
+        ! --- Harmonic trap: the spring constant IS the potential --------------
+        inputs%output_prefix = 'test_provtype_harm'
+        inputs%potential_type = 'harmonic'
+        inputs%spring_constant = 0.00125_dp
+        inputs%pot_seed = -1
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results (harmonic) should succeed")
+
+        call check(file_contains('test_provtype_harm_summary.txt', 'spring_constant ='), &
+                   "A harmonic run must record the spring constant that defines it")
+        call check(.not. file_contains('test_provtype_harm_summary.txt', 'well_depth'), &
+                   "A harmonic run must not record a barrier well depth it never used")
+        call check(.not. file_contains('test_provtype_harm_summary.txt', 'pot_seed'), &
+                   "A deterministic potential must not record a seed that fed nothing")
+        call check(.not. file_contains('test_provtype_harm_summary.txt', 'NOT reproducible'), &
+                   "A deterministic potential is reproducible whatever pot_seed says")
+
+        ! --- Double barrier: three geometric parameters beyond V0 -------------
+        inputs%output_prefix = 'test_provtype_bar'
+        inputs%potential_type = 'barrier_double'
+        inputs%barrier_width = 3.0_dp
+        inputs%well_depth = -3.0_dp
+        inputs%well_width = 20.0_dp
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results (barrier_double) should succeed")
+
+        call check(file_contains('test_provtype_bar_summary.txt', 'barrier_width ='), &
+                   "A double barrier must record the barrier width")
+        call check(file_contains('test_provtype_bar_summary.txt', 'well_depth ='), &
+                   "A double barrier must record the well depth")
+        call check(file_contains('test_provtype_bar_summary.txt', 'well_width ='), &
+                   "A double barrier must record the well width")
+
+        ! --- Uniform disorder: strength plus the seed that fixes the draw -----
+        inputs%output_prefix = 'test_provtype_dis'
+        inputs%potential_type = 'random_uniform'
+        inputs%disorder_strength = 1.75_dp
+        inputs%pot_seed = 777
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results (random_uniform) should succeed")
+
+        call check(file_contains('test_provtype_dis_summary.txt', 'disorder_strength ='), &
+                   "A disordered run must record the disorder strength")
+        call check(file_contains('test_provtype_dis_summary.txt', 'pot_seed = 777'), &
+                   "A disordered run must record the seed that fixes the realisation")
+
+        call remove_file('test_provtype_harm_summary.txt')
+        call remove_file('test_provtype_bar_summary.txt')
+        call remove_file('test_provtype_dis_summary.txt')
+    end subroutine test_provenance_records_type_specific_params
+
+
+    !> _convergence.dat must say which system produced the series
+    !!
+    !! The convergence history used to start straight at potential_tol: L, Nup,
+    !! Ndown and U appeared in the other three files (they were written by each
+    !! writer from sys_params) but never in the history, so an archived residual
+    !! series could not be attributed to a system - not even to a filling or a
+    !! sign of U. The four identification lines now come from the single shared
+    !! provenance block, so this test also requires that all four files carry
+    !! the SAME lines: any one output file must be self-sufficient.
+    subroutine test_convergence_header_identifies_system()
+        use fortuno_serial, only: check => serial_check
+        use output_writer
+        use lsda_types, only: system_params_t
+        use input_parser, only: input_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        ! Values chosen so that no two of the four can be confused with one
+        ! another, and so that the sign of U is visible.
+        sys_params%L = 7
+        sys_params%Nup = 5
+        sys_params%Ndown = 2
+        sys_params%U = -3.25_dp
+        sys_params%bc = 0
+
+        results%converged = .true.
+        results%n_iterations = 11
+        results%final_density_error = 1.0e-10_dp
+        results%final_potential_residual = 1.0e-9_dp
+        results%final_energy = -5.0_dp
+
+        allocate(results%density_up(7))
+        allocate(results%density_down(7))
+        allocate(results%eigvals(14))
+        allocate(results%history%density_norms(2))
+        allocate(results%history%energies(2))
+
+        results%density_up = 0.5_dp
+        results%density_down = 0.25_dp
+        results%eigvals = 0.0_dp
+        results%history%current_iter = 2
+        results%history%density_norms = [1.0e-5_dp, 1.0e-10_dp]
+        results%history%energies = [-4.8_dp, -5.0_dp]
+
+        inputs%output_prefix = 'test_convid'
+        inputs%save_density = .true.
+        inputs%save_eigenvalues = .true.
+        inputs%store_history = .true.
+        inputs%potential_type = 'uniform'
+
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results should succeed")
+
+        call check(file_contains('test_convid_convergence.dat', '# L = 7'), &
+                   "The convergence header must record the lattice size L")
+        call check(file_contains('test_convid_convergence.dat', '# Nup = 5'), &
+                   "The convergence header must record Nup")
+        call check(file_contains('test_convid_convergence.dat', '# Ndown = 2'), &
+                   "The convergence header must record Ndown")
+        call check(file_contains('test_convid_convergence.dat', '# U = -3.2500'), &
+                   "The convergence header must record U, sign included")
+
+        ! The same four lines must still reach the other three files, i.e. the
+        ! move into the shared block must not have dropped them anywhere.
+        call check(file_contains('test_convid_summary.txt', 'L = 7') .and. &
+                   file_contains('test_convid_summary.txt', 'Nup = 5') .and. &
+                   file_contains('test_convid_summary.txt', 'Ndown = 2') .and. &
+                   file_contains('test_convid_summary.txt', 'U = -3.2500'), &
+                   "The summary must still identify the system")
+        call check(file_contains('test_convid_density.dat', '# L = 7') .and. &
+                   file_contains('test_convid_density.dat', '# Nup = 5') .and. &
+                   file_contains('test_convid_density.dat', '# Ndown = 2') .and. &
+                   file_contains('test_convid_density.dat', '# U = -3.2500'), &
+                   "The density header must still identify the system")
+        call check(file_contains('test_convid_eigenvalues.dat', '# L = 7') .and. &
+                   file_contains('test_convid_eigenvalues.dat', '# Nup = 5') .and. &
+                   file_contains('test_convid_eigenvalues.dat', '# Ndown = 2') .and. &
+                   file_contains('test_convid_eigenvalues.dat', '# U = -3.2500'), &
+                   "The eigenvalue header must still identify the system")
+
+        call remove_file('test_convid_summary.txt')
+        call remove_file('test_convid_density.dat')
+        call remove_file('test_convid_eigenvalues.dat')
+        call remove_file('test_convid_convergence.dat')
+
+        deallocate(results%density_up)
+        deallocate(results%density_down)
+        deallocate(results%eigvals)
+        deallocate(results%history%density_norms)
+        deallocate(results%history%energies)
+    end subroutine test_convergence_header_identifies_system
+
+
+    !> A random_uniform run must not claim a gaussian distribution
+    !!
+    !! The provenance used to write `distribution` for both random potentials,
+    !! but the generator is chosen exclusively by potential_type
+    !! (potential_factory never reads `distribution`). Since that field defaults
+    !! to 'gaussian', a run declared as
+    !!
+    !!     potential_type = 'random_uniform'
+    !!
+    !! was correctly generated from the uniform generator while every one of its
+    !! output files stated "distribution = gaussian": an output file asserting
+    !! something objectively false about the calculation that produced it.
+    !!
+    !! The field is no longer written at all, because potential_type already
+    !! identifies the generator completely. The test therefore leaves
+    !! `distribution` at its default and requires that the word "gaussian"
+    !! appear NOWHERE in any of the four files of a uniform-disorder run, while
+    !! the generator itself remains identified.
+    subroutine test_random_uniform_no_false_distribution()
+        use fortuno_serial, only: check => serial_check
+        use output_writer
+        use lsda_types, only: system_params_t
+        use input_parser, only: input_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        sys_params%L = 3
+        sys_params%Nup = 2
+        sys_params%Ndown = 1
+        sys_params%U = 4.0_dp
+        sys_params%bc = 0
+
+        results%converged = .true.
+        results%n_iterations = 10
+        results%final_density_error = 1.0e-10_dp
+        results%final_potential_residual = 1.0e-9_dp
+        results%final_energy = -5.0_dp
+
+        allocate(results%density_up(3))
+        allocate(results%density_down(3))
+        allocate(results%eigvals(6))
+        allocate(results%history%density_norms(2))
+        allocate(results%history%energies(2))
+
+        results%density_up = [0.7_dp, 0.7_dp, 0.6_dp]
+        results%density_down = [0.3_dp, 0.3_dp, 0.4_dp]
+        results%eigvals = [-1.0_dp, 0.0_dp, 1.0_dp, -0.5_dp, 0.5_dp, 1.5_dp]
+        results%history%current_iter = 2
+        results%history%density_norms = [1.0e-5_dp, 1.0e-10_dp]
+        results%history%energies = [-4.8_dp, -5.0_dp]
+
+        inputs%output_prefix = 'test_unifdist'
+        inputs%save_density = .true.
+        inputs%save_eigenvalues = .true.
+        inputs%store_history = .true.
+        inputs%potential_type = 'random_uniform'
+        inputs%disorder_strength = 1.75_dp
+        inputs%pot_seed = 777
+        ! inputs%distribution deliberately left at its default, 'gaussian':
+        ! that default is exactly what used to be written here.
+
+        call write_results(results, sys_params, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "write_results (random_uniform) should succeed")
+
+        call check(.not. file_contains('test_unifdist_summary.txt', 'gaussian'), &
+                   "A uniform-disorder summary must not mention a gaussian distribution")
+        call check(.not. file_contains('test_unifdist_density.dat', 'gaussian'), &
+                   "A uniform-disorder density header must not mention gaussian")
+        call check(.not. file_contains('test_unifdist_eigenvalues.dat', 'gaussian'), &
+                   "A uniform-disorder eigenvalue header must not mention gaussian")
+        call check(.not. file_contains('test_unifdist_convergence.dat', 'gaussian'), &
+                   "A uniform-disorder convergence header must not mention gaussian")
+
+        call check(.not. file_contains('test_unifdist_summary.txt', 'distribution'), &
+                   "The unused `distribution` input must not be reported as provenance")
+
+        ! What is written instead must still pin the generator and the draw.
+        call check(file_contains('test_unifdist_summary.txt', &
+                                 'potential_type = random_uniform'), &
+                   "potential_type must identify the disorder generator")
+        call check(file_contains('test_unifdist_summary.txt', 'disorder_strength ='), &
+                   "The disorder strength must still be recorded")
+        call check(file_contains('test_unifdist_summary.txt', 'pot_seed = 777'), &
+                   "The seed fixing the realisation must still be recorded")
+
+        call remove_file('test_unifdist_summary.txt')
+        call remove_file('test_unifdist_density.dat')
+        call remove_file('test_unifdist_eigenvalues.dat')
+        call remove_file('test_unifdist_convergence.dat')
+
+        deallocate(results%density_up)
+        deallocate(results%density_down)
+        deallocate(results%eigvals)
+        deallocate(results%history%density_norms)
+        deallocate(results%history%energies)
+    end subroutine test_random_uniform_no_false_distribution
 
 
     !> Test density profile file format

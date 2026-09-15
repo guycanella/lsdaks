@@ -27,6 +27,14 @@ program lsdaks
     integer, allocatable :: imp_positions(:)
     character(len=256) :: table_file
     integer :: ierr, seed
+    !> Outcome of the SCF cycle, kept apart from `ierr`.
+    !!
+    !! `ierr` is reused (and overwritten) by write_results and by the cleanup
+    !! helper, so the SCF status has to survive in its own variable: without it
+    !! a run that ended in ERROR_CONVERGENCE_FAILED printed "NOT CONVERGED",
+    !! wrote its files and then exited with status 0, telling every script and
+    !! pipeline that a scientifically invalid result was a success.
+    integer :: scf_status
     logical :: table_exists
 
     ! Timing variables
@@ -86,13 +94,22 @@ program lsdaks
         print '(A)', "  Note: Using table for |U| (attractive interaction)"
     end if
     
-    call xc_lsda_init(xc_func, table_file, ierr)
+    call xc_lsda_init(xc_func, table_file, ierr, smoothing_width=inputs%xc_smoothing_width)
     if (ierr /= ERROR_SUCCESS) then
         print *, "ERROR: Failed to initialize XC functional"
         stop 1
     end if
-    
+
     print '(A)', "  ✓ XC functional initialized"
+    if (inputs%xc_smoothing_width > 0.0_dp) then
+        print '(A,F0.4)', "  Note: V_xc discontinuity at n = 1 linearly smoothed over half-width w = ", &
+                          inputs%xc_smoothing_width
+        print '(A)', "        (this departs from the C++ reference, which keeps the jump)"
+        ! compute_total_energy calls the smoothed get_vxc but the UNSMOOTHED
+        ! get_exc, so the two stop being a derivative pair as soon as w > 0.
+        print '(A)', "        E_xc is NOT smoothed: with w > 0, V_xc is not the functional derivative"
+        print '(A)', "        of the E_xc used in the total energy; the reported energy is not variational."
+    end if
 
     allocate(V_ext(sys_params%L))
 
@@ -182,15 +199,12 @@ program lsdaks
     
     print '(A)', ""
     
-    call init_scf_results(results, sys_params%L, scf_params%store_history, &
-                         scf_params%max_iter, ierr)
-    if (ierr /= ERROR_SUCCESS) then
-        print *, "ERROR: Failed to initialize SCF results"
-        call xc_lsda_destroy(xc_func)
-        deallocate(V_ext)
-        stop 1
-    end if
-    
+    ! NOTE: `results` is deliberately NOT initialized here. run_kohn_sham_scf_*
+    ! declares it intent(out) and owns its initialization end to end (reset on
+    ! entry, history allocated internally and only when store_history is set).
+    ! Calling init_scf_results here would allocate a convergence history that the
+    ! very next call discards.
+
     print '(A)', "=========================================="
     print '(A)', "  Starting Kohn-Sham SCF Cycle"
     print '(A)', "=========================================="
@@ -205,16 +219,21 @@ program lsdaks
     end if
     
     print '(A)', ""
-    
-    if (ierr /= ERROR_SUCCESS) then
-        if (ierr == ERROR_CONVERGENCE_FAILED) then
+
+    ! Preserve the SCF outcome before `ierr` is reused by the writers below.
+    scf_status = ierr
+
+    if (scf_status /= ERROR_SUCCESS) then
+        if (scf_status == ERROR_CONVERGENCE_FAILED) then
             print '(A)', "=========================================="
             print '(A)', "WARNING: SCF did not converge!"
             print '(A)', "=========================================="
             print '(A,I0)', "  Iterations performed: ", results%n_iterations
+            print '(A,ES12.4)', "  Final |ΔV| residual:  ", results%final_potential_residual
             print '(A,ES12.4)', "  Final density error:  ", results%final_density_error
             print '(A,F16.8)', "  Final energy:         ", results%final_energy
             print '(A)', ""
+            print '(A)', "The potential is NOT self-consistent; results are NOT converged."
             print '(A)', "Results may be unreliable."
             print '(A)', "Consider:"
             print '(A)', "  - Increasing max_iter"
@@ -222,7 +241,7 @@ program lsdaks
             print '(A)', "  - Checking system parameters"
             print '(A)', ""
         else
-            print *, "ERROR: SCF calculation failed with error code:", ierr
+            print *, "ERROR: SCF calculation failed with error code:", scf_status
             call cleanup_and_exit(xc_func, V_ext, results)
             stop 1
         end if
@@ -251,7 +270,18 @@ program lsdaks
     print '(A)', ""
     print '(A,F12.3,A)', "Elapsed CPU Time: ", elapsed_time, " seconds"
     print '(A)', ""
-    
+
+    ! A non-self-consistent run is a FAILED run, however complete its output
+    ! files look. The results were written on purpose (they are the best
+    ! available estimate and the user must be able to inspect them) and the
+    ! resources were released above, so the only thing left is to tell the
+    ! caller the truth through the exit status.
+    if (scf_status == ERROR_CONVERGENCE_FAILED) then
+        print '(A)', "Exiting with status 1: the SCF cycle did NOT converge."
+        print '(A)', ""
+        stop 1
+    end if
+
 contains
 
     subroutine print_banner(date_str, time_str)
@@ -328,9 +358,23 @@ contains
         
         print '(A)', "SCF Parameters:"
         print '(A,I0)', "  Max iterations:   ", scf_params%max_iter
-        print '(A,ES10.2)', "  Density tol:      ", scf_params%density_tol
+        print '(A,ES10.2)', "  Potential tol:    ", scf_params%potential_tol
         print '(A,ES10.2)', "  Energy tol:       ", scf_params%energy_tol
-        print '(A,F5.3)', "  Mixing alpha:     ", scf_params%mixing_alpha
+        ! density_tol is NOT a convergence criterion any more (T3): the SCF stops
+        ! on the potential residual plus energy stability. It is printed apart and
+        ! explicitly labelled so nobody expects to tighten/loosen convergence with it.
+        print '(A,ES10.2)', "  Density tol:      ", scf_params%density_tol
+        print '(A)', "    (diagnostic only - not a convergence criterion)"
+        if (scf_params%use_adaptive_mixing) then
+            print '(A,F5.3)', "  Mixing alpha:     ", scf_params%mixing_alpha
+            print '(A)', "    (initial value; adaptive mixing retunes it)"
+        else
+            print '(A,F5.3)', "  Mixing alpha:     ", scf_params%mixing_alpha
+        end if
+        print '(A,ES10.2)', "  XC smoothing w:   ", inputs%xc_smoothing_width
+        if (inputs%xc_smoothing_width > 0.0_dp) then
+            print '(A)', "    (V_xc discontinuity at n = 1 smoothed - NOT C++ parity)"
+        end if
         print '(A,L1)', "  Verbose:          ", scf_params%verbose
         print '(A)', "----------------------------------------"
     end subroutine print_configuration

@@ -28,6 +28,11 @@ contains
             test("validate_mixing_alpha_zero", test_validate_mixing_alpha_zero), &
             test("validate_mixing_alpha_large", test_validate_mixing_alpha_large), &
             test("validate_mixing_alpha_negative", test_validate_mixing_alpha_negative), &
+            test("validate_xc_smoothing_width", test_validate_xc_smoothing_width), &
+            test("validate_tolerances_positive", test_validate_tolerances_positive), &
+            test("validate_tolerances_non_finite", test_validate_tolerances_non_finite), &
+            test("validate_xc_smoothing_width_non_finite", &
+                 test_validate_xc_smoothing_width_non_finite), &
             test("convert_system_params_periodic", test_convert_system_params_periodic), &
             test("convert_system_params_open", test_convert_system_params_open), &
             test("convert_system_params_twisted", test_convert_system_params_twisted), &
@@ -501,6 +506,231 @@ contains
 
         call check(ierr == ERROR_INVALID_INPUT, "Negative mixing_alpha should fail")
     end subroutine test_validate_mixing_alpha_negative
+
+
+    !> Both convergence tolerances must be strictly positive
+    !!
+    !! The SCF stops when residual_V < potential_tol AND
+    !! |dE| < energy_tol*max(1, |E|). Both quantities are non-negative, so a
+    !! null or negative tolerance is unreachable by construction: the run would
+    !! burn the whole iteration budget and be reported as a convergence failure,
+    !! hiding the fact that the request itself was impossible. energy_tol in
+    !! particular was NOT validated at all, even though T3 promoted it to a
+    !! convergence criterion.
+    !!
+    !! Each boundary is probed one at a time, with everything else legal, so
+    !! neither branch can be deleted without a failure here. The exact zero is
+    !! included because `<= 0` and `< 0` differ precisely there.
+    subroutine test_validate_tolerances_positive()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        inputs%L = 10
+        inputs%Nup = 5
+        inputs%Ndown = 5
+        inputs%U = 4.0_dp
+        inputs%bc_type = 'periodic'
+        inputs%max_iter = 100
+        inputs%mixing_alpha = 0.3_dp
+
+        ! Baseline: the defaults are legal, so any rejection below comes from
+        ! the field under test.
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "Precondition: the default tolerances must be accepted")
+
+        inputs%potential_tol = 0.0_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "potential_tol = 0 must be rejected")
+
+        inputs%potential_tol = -1.0e-6_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "negative potential_tol must be rejected")
+
+        inputs%potential_tol = 1.0e-6_dp
+        inputs%energy_tol = 0.0_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "energy_tol = 0 must be rejected")
+
+        inputs%energy_tol = -1.0e-8_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "negative energy_tol must be rejected")
+
+        ! And the smallest positive values must still pass: the check is a sign
+        ! check, not a magnitude policy.
+        inputs%energy_tol = tiny(1.0_dp)
+        inputs%potential_tol = tiny(1.0_dp)
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "strictly positive tolerances must be accepted however small")
+    end subroutine test_validate_tolerances_positive
+
+    !> Non-finite convergence tolerances must be rejected at the input level
+    !!
+    !! The sign checks alone let NaN and +Infinity through:
+    !!   * NaN makes its convergence comparison always false, so the criterion is
+    !!     unreachable and the run only finds out after max_iter iterations;
+    !!   * +Infinity makes it always true for finite residuals and energies,
+    !!     which SWITCHES THAT CRITERION OFF. With potential_tol = +Inf the SCF
+    !!     would declare convergence on the energy alone, i.e. exactly the false
+    !!     convergence the potential-residual criterion was introduced to remove.
+    !! -Infinity is already caught by `<= 0`, and is asserted here to keep that
+    !! coverage explicit.
+    !!
+    !! Each field is probed alone with the other one legal, so deleting the
+    !! finiteness guard of either tolerance makes only its own assertions fail.
+    !! The special values come from ieee_value rather than from expressions like
+    !! 0.0/0.0, which may be constant-folded or trap depending on the flags.
+    subroutine test_validate_tolerances_non_finite()
+        use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, &
+                                                 ieee_positive_inf, ieee_negative_inf
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        type(input_params_t) :: inputs
+        integer :: ierr
+        real(dp) :: nan_v, pinf_v, ninf_v
+
+        nan_v = ieee_value(1.0_dp, ieee_quiet_nan)
+        pinf_v = ieee_value(1.0_dp, ieee_positive_inf)
+        ninf_v = ieee_value(1.0_dp, ieee_negative_inf)
+
+        inputs%L = 10
+        inputs%Nup = 5
+        inputs%Ndown = 5
+        inputs%U = 4.0_dp
+        inputs%bc_type = 'periodic'
+        inputs%max_iter = 100
+        inputs%mixing_alpha = 0.3_dp
+        inputs%potential_tol = 1.0e-6_dp
+        inputs%energy_tol = 1.0e-8_dp
+
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "Precondition: the finite tolerances must be accepted")
+
+        ! --- potential_tol ----------------------------------------------------
+        inputs%potential_tol = nan_v
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "NaN potential_tol must be rejected")
+
+        inputs%potential_tol = pinf_v
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "+Infinity potential_tol must be rejected")
+
+        inputs%potential_tol = ninf_v
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "-Infinity potential_tol must be rejected")
+
+        ! --- energy_tol -------------------------------------------------------
+        inputs%potential_tol = 1.0e-6_dp
+        inputs%energy_tol = nan_v
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "NaN energy_tol must be rejected")
+
+        inputs%energy_tol = pinf_v
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "+Infinity energy_tol must be rejected")
+
+        inputs%energy_tol = ninf_v
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "-Infinity energy_tol must be rejected")
+
+        ! Large but finite tolerances remain legal: this is a finiteness check,
+        ! not a magnitude policy.
+        inputs%potential_tol = huge(1.0_dp)
+        inputs%energy_tol = huge(1.0_dp)
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "finite tolerances must be accepted however large")
+    end subroutine test_validate_tolerances_non_finite
+
+    !> A NaN xc_smoothing_width must not survive the configuration path
+    !!
+    !! NaN passes both range comparisons and is then forwarded by app/main.f90
+    !! to xc_lsda_init, where get_vxc reads `w > 0` as false and silently takes
+    !! the unsmoothed branch: the user asks for smoothing and receives none.
+    !! Both infinities are already rejected by the range (+Inf >= 1, -Inf < 0)
+    !! and are asserted here so that any future widening of the range has to
+    !! revisit the finiteness question.
+    subroutine test_validate_xc_smoothing_width_non_finite()
+        use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, &
+                                                 ieee_positive_inf, ieee_negative_inf
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        inputs%L = 10
+        inputs%Nup = 5
+        inputs%Ndown = 5
+        inputs%U = 4.0_dp
+        inputs%bc_type = 'periodic'
+        inputs%max_iter = 100
+
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "Precondition: the default xc_smoothing_width must be accepted")
+
+        inputs%xc_smoothing_width = ieee_value(1.0_dp, ieee_quiet_nan)
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "NaN xc_smoothing_width must be rejected")
+
+        inputs%xc_smoothing_width = ieee_value(1.0_dp, ieee_positive_inf)
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "+Infinity xc_smoothing_width must be rejected")
+
+        inputs%xc_smoothing_width = ieee_value(1.0_dp, ieee_negative_inf)
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "-Infinity xc_smoothing_width must be rejected")
+    end subroutine test_validate_xc_smoothing_width_non_finite
+
+    !> Test validation of xc_smoothing_width
+    !!
+    !! The default (0) must be accepted, since it is the C++-parity setting, a
+    !! negative width is meaningless and a width >= 1 would push the smoothing
+    !! window outside the physical range of n.
+    subroutine test_validate_xc_smoothing_width()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        inputs%L = 10
+        inputs%Nup = 5
+        inputs%Ndown = 5
+        inputs%U = 4.0_dp
+        inputs%bc_type = 'periodic'
+        inputs%max_iter = 100
+
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "default xc_smoothing_width (0) must be accepted")
+
+        inputs%xc_smoothing_width = 0.05_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "a positive xc_smoothing_width below 1 must be accepted")
+
+        inputs%xc_smoothing_width = -0.01_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "negative xc_smoothing_width should fail")
+
+        inputs%xc_smoothing_width = 1.0_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "xc_smoothing_width >= 1 should fail")
+    end subroutine test_validate_xc_smoothing_width
 
 
     !> Test convert_to_system_params with periodic BC
