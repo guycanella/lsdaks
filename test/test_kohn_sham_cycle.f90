@@ -40,6 +40,7 @@ contains
                  test_validate_inputs_nonpositive_tolerances), &
             test("validate_inputs_non_finite_tolerances", &
                  test_validate_inputs_non_finite_tolerances), &
+            test("validate_xc_matches_system_u", test_validate_xc_matches_system_u), &
             test("scf_results_init_cleanup", test_scf_results_init_cleanup), &
             test("scf_results_init_propagates_history_error", &
                  test_scf_results_init_propagates_history_error), &
@@ -65,9 +66,324 @@ contains
             test("half_filling_warning_fires_when_oscillating", &
                  test_half_filling_warning_fires_when_oscillating), &
             test("half_filling_warning_silent_otherwise", &
-                 test_half_filling_warning_silent_otherwise) &
+                 test_half_filling_warning_silent_otherwise), &
+            test("scf_open_shell_converges_uniform", &
+                 test_scf_open_shell_converges_uniform), &
+            test("scf_open_shell_matches_cpp_energy", &
+                 test_scf_open_shell_matches_cpp_energy), &
+            test("scf_fully_polarised_channel", &
+                 test_scf_fully_polarised_channel), &
+            test("scf_full_band_attractive_u", &
+                 test_scf_full_band_attractive_u) &
         ])
     end function get_kohn_sham_tests
+
+    !> REGRESSION (T7): open degenerate Fermi shell must converge, and uniformly
+    !!
+    !! L = 8, N_up = N_down = 4, periodic BC, U = 2, V_ext = 0. In PBC the
+    !! levels are k = 2 pi m / 8 with degeneracies 1, 2, 2, 2, 1 (cumulative
+    !! 1, 3, 5, 7, 8), so N_sigma = 4 leaves the Fermi shell OPEN.
+    !!
+    !! Before fractional occupation this system did not converge at all: LAPACK
+    !! returns the real cos/sin combinations of the k = +-pi/2 pair, filling only
+    !! one of them with weight 1 creates a period-2 density wave which feeds back
+    !! into V_eff, and the cycle settles into a limit cycle (measured: 300
+    !! iterations, ||delta n|| = 1.18e-1). With the occupation shared over the
+    !! shell the very first iteration is already self-consistent.
+    subroutine test_scf_open_shell_converges_uniform()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
+                                    cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_PERIODIC
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 8
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+        character(len=256) :: table_file
+
+        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "Open shell SCF: XC init should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = 4
+        params%Ndown = 4
+        params%bc = BC_PERIODIC
+        params%U = 2.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 300
+        scf_params%energy_tol = 1.0e-10_dp
+        scf_params%potential_tol = 1.0e-8_dp
+        scf_params%mixing_alpha = 0.2_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .false.
+
+        V_ext = 0.0_dp
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_SUCCESS, &
+                   "Open shell SCF: L=8, N=4/4, PBC, U=2 must converge")
+        call check(results%converged, "Open shell SCF: results must be flagged converged")
+
+        if (allocated(results%density_up) .and. allocated(results%density_down)) then
+            call check(maxval(abs(results%density_up - 0.5_dp)) < 1.0e-10_dp, &
+                       "Open shell SCF: n_up must be uniform at N_up/L = 0.5")
+            call check(maxval(abs(results%density_down - 0.5_dp)) < 1.0e-10_dp, &
+                       "Open shell SCF: n_down must be uniform at N_down/L = 0.5")
+        else
+            call check(.false., "Open shell SCF: converged run must return densities")
+        end if
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_open_shell_converges_uniform
+
+    !> REGRESSION (T7): open shell energy against the C++ reference
+    !!
+    !! L = 10, N_up = N_down = 8, periodic BC, U = 4, V_ext = 0. The k = 2 pi m
+    !! / 10 levels have cumulative degeneracies 1, 3, 5, 7, 9, 10, so N_sigma = 8
+    !! is an open shell. The C++ reference (build/cpp/lsdaks_cpp) converges in 11
+    !! loops with REL_ERROR = 0 and reports
+    !!   GROUND-STATE_ENERGY_PER_SITE = 1.75880482
+    !! while the Fortran used to burn its whole iteration budget with
+    !! ||delta n|| = 9.07e-1.
+    !!
+    !! The tolerance is 1e-8. The C++ figure only carries 9 significant digits,
+    !! and the measured agreement is 3.3e-9 (Fortran 1.758804816658), so 1e-8 is
+    !! the tightest honest bound; anything looser (the 1e-4 used while the XC
+    !! interpolation was still bilinear) would no longer notice a broken corner
+    !! or empty-channel shortcut.
+    subroutine test_scf_open_shell_matches_cpp_energy()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
+                                    cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_PERIODIC
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 10
+        !> C++ reference value, measured with build/cpp/lsdaks_cpp
+        real(dp), parameter :: E_PER_SITE_CPP = 1.75880482_dp
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+        character(len=256) :: table_file
+
+        table_file = PROBE_TABLE  ! xc_table_u4.00.dat
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "Open shell energy: XC init should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = 8
+        params%Ndown = 8
+        params%bc = BC_PERIODIC
+        params%U = 4.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 300
+        scf_params%energy_tol = 1.0e-10_dp
+        scf_params%potential_tol = 1.0e-8_dp
+        scf_params%mixing_alpha = 0.05_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .false.
+
+        V_ext = 0.0_dp
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_SUCCESS, &
+                   "Open shell energy: L=10, N=8/8, PBC, U=4 must converge")
+
+        if (results%converged) then
+            call check(abs(results%final_energy / real(L, dp) - E_PER_SITE_CPP) < 1.0e-8_dp, &
+                       "Open shell energy: E/site must match the C++ 1.75880482 to 1e-8")
+            call check(maxval(abs(results%density_up - 0.8_dp)) < 1.0e-10_dp, &
+                       "Open shell energy: n_up must be uniform at 0.8 like the C++ density")
+        end if
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_open_shell_matches_cpp_energy
+
+    !> REGRESSION (T7): a fully polarised system must run, not be rejected
+    !!
+    !! L = 10, N_up = 5, N_down = 0, open BC, U = 4. validate_kohn_sham_cycle_inputs
+    !! has always accepted N_sigma = 0, but density_calculator rejected
+    !! n_elec <= 0, so the run died with ERROR_INVALID_INPUT downstream of a
+    !! successful validation.
+    !!
+    !! With an empty down channel there is no Hartree and no XC coupling left,
+    !! so the answer is the free-fermion one: E/L = -(1/L) sum_{j=1..5}
+    !! 2 cos(j pi / 11) = -0.602667418333 (the same value the C++ prints).
+    !!
+    !! The tolerance is 1e-10, i.e. the result must be the free-fermion value to
+    !! machine accuracy. Since the empty-channel shortcut of T18 the XC
+    !! functional contributes EXACTLY zero here (e_xc = 0 and V_xc . n = 0 at
+    !! every site), and the measured energy per site is -0.602667418333 against
+    !! the analytic -0.602667418333227. The previous 1e-3/1e-2 tolerances were
+    !! justified by a "small spurious XC contribution at n_down = 0" that no
+    !! longer exists: they were loose enough to accept the very bias
+    !! (e_xc(n, 0) ~ -8e-5 per site) that the shortcut removes.
+    subroutine test_scf_fully_polarised_channel()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
+                                    cleanup_scf_results
+        use lsda_constants, only: PI
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        integer, parameter :: L = 10, N_UP = 5
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L), e_exact
+        integer :: ierr, j
+        character(len=256) :: table_file
+
+        table_file = PROBE_TABLE  ! xc_table_u4.00.dat
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "Polarised SCF: XC init should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = N_UP
+        params%Ndown = 0
+        params%bc = BC_OPEN
+        params%U = 4.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 300
+        scf_params%energy_tol = 1.0e-10_dp
+        scf_params%potential_tol = 1.0e-8_dp
+        scf_params%mixing_alpha = 0.2_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .false.
+
+        V_ext = 0.0_dp
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr /= ERROR_INVALID_INPUT, &
+                   "Polarised SCF: N_down = 0 must not be rejected as invalid input")
+        call check(ierr == ERROR_SUCCESS, "Polarised SCF: N_down = 0 must converge")
+
+        if (results%converged) then
+            call check(all(abs(results%density_down) < 1.0e-12_dp), &
+                       "Polarised SCF: the empty channel must carry zero density")
+            call check(abs(sum(results%density_up) - real(N_UP, dp)) < 1.0e-10_dp, &
+                       "Polarised SCF: the filled channel must hold exactly N_up electrons")
+
+            ! Free fermions in a box of L sites: eps_j = -2 cos(j pi / (L+1)).
+            e_exact = 0.0_dp
+            do j = 1, N_UP
+                e_exact = e_exact - 2.0_dp * cos(real(j, dp) * PI / real(L + 1, dp))
+            end do
+            call check(abs(results%final_energy - e_exact) < 1.0e-10_dp, &
+                       "Polarised SCF: E must match the free-fermion value to 1e-10")
+            call check(abs(results%final_energy / real(L, dp) + 0.602667418333227_dp) < 1.0e-10_dp, &
+                       "Polarised SCF: E/site must match the analytic -0.602667418333227 to 1e-10")
+        end if
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_fully_polarised_channel
+
+    !> REGRESSION (B1): attractive twin of the completely full band
+    !!
+    !! L = 10, N_up = N_down = 10, periodic BC, U = -4. Exactly as in the
+    !! repulsive case of test_validate_double_occupancy_accepted, the band sum
+    !! is exhausted, so the kinetic energy vanishes and E/L = U = -4 exactly,
+    !! with e_xc(1, 1) = 0 and V_xc = 0.
+    !!
+    !! This is the case where the region logic is most fragile, and the
+    !! repulsive twin cannot see it: with U < 0 the Shiba transformation maps
+    !! n_up = 1 onto n_up' = 1 - n_up = 0, so the evaluation lands exactly on
+    !! the n = 1 particle-hole line and on the |m| = n edge of the physical
+    !! triangle. One ulp of roundoff in the density (n_up = 1 + 4.4e-16 is what
+    !! the diagonalization actually returns) is enough to push the point off
+    !! both boundaries. Before the boundary snapping of `snap_to_boundaries`
+    !! this run alternated between V_xc = 0 and V_xc = 1.6568542495 (the full
+    !! dexc_dndown_b0(4, 1)) from iteration to iteration, never converged
+    !! (30000 iterations) and returned E/L = -4.3828603 / -4.3990256; the
+    !! C++ reference converges in 16 loops onto -4.000000.
+    subroutine test_scf_full_band_attractive_u()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
+                                    cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_PERIODIC
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 10
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+        character(len=256) :: table_file
+
+        ! The table is tabulated for |U|; the attractive sign must be handed
+        ! over explicitly, otherwise no Shiba transformation is applied.
+        table_file = PROBE_TABLE  ! xc_table_u4.00.dat
+        call xc_lsda_init(xc_func, table_file, ierr, u_signed = -4.0_dp)
+        call check(ierr == ERROR_SUCCESS, "Attractive full band: XC init should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = L
+        params%Ndown = L
+        params%bc = BC_PERIODIC
+        params%U = -4.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 300
+        scf_params%energy_tol = 1.0e-10_dp
+        scf_params%potential_tol = 1.0e-8_dp
+        scf_params%mixing_alpha = 0.05_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .false.
+
+        V_ext = 0.0_dp
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_SUCCESS, &
+                   "Attractive full band: L=10, N=10/10, PBC, U=-4 must converge")
+        call check(results%converged, &
+                   "Attractive full band: results must be flagged as converged")
+
+        if (results%converged) then
+            call check(maxval(abs(results%density_up - 1.0_dp)) < 1.0e-10_dp, &
+                       "Attractive full band: n_up(i) = 1 on every site")
+            call check(maxval(abs(results%density_down - 1.0_dp)) < 1.0e-10_dp, &
+                       "Attractive full band: n_down(i) = 1 on every site")
+            call check(abs(results%final_energy / real(L, dp) - params%U) < 1.0e-12_dp, &
+                       "Attractive full band: E/L = U = -4 exactly")
+        end if
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_full_band_attractive_u
 
     !> Test total energy calculation with simple case
     !!
@@ -310,6 +626,21 @@ contains
             call check(maxval(abs(results%density_down - 1.0_dp)) < 1.0e-10_dp, &
                        "Fully filled spin-down channel must give n_down(i) = 1")
         end if
+
+        ! REGRESSION (T18): the completely full band is analytically trivial.
+        ! Every site is doubly occupied, so the kinetic energy vanishes (the band
+        ! sum is exhausted) and the only surviving term is the Hubbard one,
+        ! E/L = U exactly. The XC energy must NOT contribute: at (n_up, n_dw) =
+        ! (1, 1) the Region IV symmetry maps the point onto the EMPTY lattice
+        ! (0, 0), where e_xc and V_xc vanish.
+        !
+        ! The density assertions above cannot see this: they are unitarity
+        ! identities of the eigenvector matrix and hold for any XC term. Before
+        ! the empty-channel shortcut was applied to the MAPPED densities the
+        ! spline was extrapolated into the empty corner and this run returned
+        ! E/L = 4.0007185884, i.e. a spurious e_xc(1, 1) = 7.19e-4 per site.
+        call check(abs(results%final_energy / real(L, dp) - params%U) < 1.0e-12_dp, &
+                   "Completely full band must give E/L = U exactly")
 
         call cleanup_scf_results(results, ierr)
         call xc_lsda_destroy(xc_func)
@@ -790,6 +1121,67 @@ contains
 
         call xc_lsda_destroy(xc_func)
     end subroutine test_validate_inputs_non_finite_tolerances
+
+    !> The Hartree interaction and XC functional must describe the same U
+    !!
+    !! `system_params_t` and `xc_lsda_t` reach the public SCF entry points as
+    !! independent objects. A negative `params%U` paired with a positive-U XC
+    !! table used to run without complaint, combining an attractive Hartree
+    !! term with a repulsive functional. Both solver paths must reject a sign or
+    !! magnitude mismatch before allocating their convergence history.
+    subroutine test_validate_xc_matches_system_u()
+        use fortuno_serial, only: check => serial_check
+        use lsda_types, only: system_params_t
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, run_kohn_sham_scf_complex, &
+                                    scf_params_t, scf_results_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN, BC_TWISTED
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        integer, parameter :: L = 4
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+
+        call xc_lsda_init(xc_func, "data/tables/fortran_native/xc_table_u4.00.dat", &
+                          ierr, u_signed=4.0_dp)
+        call check(ierr == ERROR_SUCCESS, "XC consistency: initialization should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = 2
+        params%Ndown = 2
+        params%bc = BC_OPEN
+        params%U = -4.0_dp
+        params%phase = 0.0_dp
+        scf_params%max_iter = 1
+        scf_params%store_history = .true.
+        V_ext = 0.0_dp
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "XC consistency: real solver must reject opposite signs of U")
+        call check(.not. allocated(results%history%density_norms), &
+                   "XC consistency: real solver must reject before allocation")
+
+        params%bc = BC_TWISTED
+        call run_kohn_sham_scf_complex(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "XC consistency: complex solver must reject opposite signs of U")
+        call check(.not. allocated(results%history%density_norms), &
+                   "XC consistency: complex solver must reject before allocation")
+
+        params%bc = BC_OPEN
+        params%U = 2.0_dp
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "XC consistency: solver must reject different magnitudes of U")
+
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_validate_xc_matches_system_u
 
     !> Test SCF results initialization and cleanup
     subroutine test_scf_results_init_cleanup()
@@ -1398,9 +1790,10 @@ contains
         integer :: ierr, n_iter
         character(len=256) :: table_file
 
-        ! The table is indexed by |U|; U = -4 uses the U = 4 table (main.f90:67).
+        ! The table is indexed by |U|, but the attractive sign must be handed to
+        ! the functional explicitly so that the Shiba transformation is active.
         table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
-        call xc_lsda_init(xc_func, table_file, ierr)
+        call xc_lsda_init(xc_func, table_file, ierr, u_signed=-4.0_dp)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
         ! Same potential as input.txt, with the seed pinned for reproducibility
