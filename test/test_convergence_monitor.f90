@@ -27,9 +27,37 @@ contains
             test("convergence_check_custom_tolerance", test_convergence_check_custom_tolerance), &
             test("history_init_cleanup", test_history_init_cleanup), &
             test("history_update", test_history_update), &
-            test("history_bounds_checking", test_history_bounds_checking) &
+            test("history_bounds_checking", test_history_bounds_checking), &
+            test("history_default_initialized", test_history_default_initialized) &
         ])
     end function get_convergence_tests
+
+    !> An untouched convergence_history_t must be defined and obviously empty
+    !!
+    !! Since T5 the SCF cycle only calls init_convergence_history when
+    !! store_history is .true., so with the flag off the history component of an
+    !! intent(out) scf_results_t is never assigned. Without default initialisers
+    !! max_iter and current_iter would then be undefined, and any consumer that
+    !! looked at current_iter before checking allocated(...) would read garbage.
+    !! This test fails if the defaults are removed.
+    subroutine test_history_default_initialized()
+        use fortuno_serial, only: check => serial_check
+        use convergence_monitor, only: convergence_history_t, update_convergence_history
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(convergence_history_t) :: history
+        integer :: ierr
+
+        call check(history%max_iter == 0, "max_iter must default to 0")
+        call check(history%current_iter == 0, "current_iter must default to 0")
+        call check(.not. allocated(history%density_norms), "no arrays may be allocated yet")
+
+        ! With max_iter = 0 every iteration index is out of range, so an update
+        ! on an uninitialised history is rejected instead of writing anywhere.
+        call update_convergence_history(1, 1.0e-3_dp, -1.0_dp, history, ierr)
+        call check(ierr /= ERROR_SUCCESS, &
+                   "updating an uninitialised history must be rejected")
+    end subroutine test_history_default_initialized
 
     !> Test simple density difference calculation
     !!

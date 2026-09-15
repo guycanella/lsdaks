@@ -6,9 +6,11 @@
 !!
 !! Priority: Command line arguments override namelist values
 module input_parser
-    use lsda_constants, only: dp, ITER_MAX, SCF_DENSITY_TOL, SCF_ENERGY_TOL, MIX_ALPHA
+    use lsda_constants, only: dp, ITER_MAX, SCF_DENSITY_TOL, SCF_ENERGY_TOL, &
+                              SCF_POTENTIAL_TOL, MIX_ALPHA
     use lsda_types, only: system_params_t
     use kohn_sham_cycle, only: scf_params_t
+    use xc_lsda, only: XC_SMOOTHING_WIDTH_MAX
     use boundary_conditions, only: BC_OPEN, BC_PERIODIC, BC_TWISTED
     use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT, ERROR_FILE_NOT_FOUND
     implicit none
@@ -47,13 +49,19 @@ module input_parser
         
         ! SCF parameters
         integer :: max_iter = ITER_MAX
+        !> DIAGNOSTIC ONLY: ||Δn|| is reported but is no longer a convergence
+        !! criterion (it scales with the mixing weight). Changing it does not
+        !! tighten or loosen convergence; use potential_tol / energy_tol for that.
         real(dp) :: density_tol = SCF_DENSITY_TOL
         real(dp) :: energy_tol = SCF_ENERGY_TOL
+        real(dp) :: potential_tol = SCF_POTENTIAL_TOL  ! Convergence tol for the potential residual
         real(dp) :: mixing_alpha = MIX_ALPHA
         logical :: verbose = .true.
         logical :: store_history = .true.
         logical :: use_adaptive_mixing = .true.   ! Use adaptive mixing (C++ behavior)
-        
+        real(dp) :: xc_smoothing_width = 0.0_dp   ! Half-width of the linear smoothing of V_xc around n = 1
+                                                  ! (0 = off = exact C++ parity; must be < 1)
+
         ! Output parameters
         character(len=100) :: output_prefix = 'lsda_output'
         logical :: save_density = .true.
@@ -223,8 +231,14 @@ contains
         character(len=20) :: distribution
 
         ! SCF namelist variables
+        ! NOTE on /scf/: potential_tol and energy_tol are the convergence
+        ! criteria; density_tol is accepted for backwards compatibility and
+        ! reported, but it is DIAGNOSTIC ONLY and does not affect convergence.
+        ! mixing_alpha is the weight of the new potential, and also the starting
+        ! value of the adaptive controller when use_adaptive_mixing = .true.
         integer :: max_iter
-        real(dp) :: density_tol, energy_tol, mixing_alpha
+        real(dp) :: density_tol, energy_tol, potential_tol, mixing_alpha
+        real(dp) :: xc_smoothing_width
         logical :: verbose, store_history, use_adaptive_mixing
 
         ! Output namelist variables
@@ -238,8 +252,8 @@ contains
                              barrier_width, well_depth, well_width, &
                              position1, width1, position2, width2
 
-        namelist /scf/ max_iter, density_tol, energy_tol, mixing_alpha, &
-                       verbose, store_history, use_adaptive_mixing
+        namelist /scf/ max_iter, density_tol, energy_tol, potential_tol, mixing_alpha, &
+                       verbose, store_history, use_adaptive_mixing, xc_smoothing_width
 
         namelist /output/ output_prefix, save_density, save_eigenvalues, &
                                                             save_wavefunction
@@ -284,10 +298,12 @@ contains
         max_iter = inputs%max_iter
         density_tol = inputs%density_tol
         energy_tol = inputs%energy_tol
+        potential_tol = inputs%potential_tol
         mixing_alpha = inputs%mixing_alpha
         verbose = inputs%verbose
         store_history = inputs%store_history
         use_adaptive_mixing = inputs%use_adaptive_mixing
+        xc_smoothing_width = inputs%xc_smoothing_width
         
         output_prefix = inputs%output_prefix
         save_density = inputs%save_density
@@ -346,10 +362,12 @@ contains
         inputs%max_iter = max_iter
         inputs%density_tol = density_tol
         inputs%energy_tol = energy_tol
+        inputs%potential_tol = potential_tol
         inputs%mixing_alpha = mixing_alpha
         inputs%verbose = verbose
         inputs%store_history = store_history
         inputs%use_adaptive_mixing = use_adaptive_mixing
+        inputs%xc_smoothing_width = xc_smoothing_width
         
         inputs%output_prefix = output_prefix
         inputs%save_density = save_density
@@ -427,8 +445,34 @@ contains
             return
         end if
         
+        ! potential_tol and energy_tol are BOTH convergence criteria (the SCF
+        ! stops on residual_V < potential_tol AND |dE| < energy_tol*max(1,|E|)).
+        ! A null or negative tolerance can never be met, so the run would be
+        ! condemned to exhaust max_iter and report a convergence failure instead
+        ! of an invalid input.
+        if (inputs%potential_tol <= 0.0_dp) then
+            print *, "ERROR: potential_tol must be positive"
+            ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
+        if (inputs%energy_tol <= 0.0_dp) then
+            print *, "ERROR: energy_tol must be positive"
+            ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
         if (inputs%mixing_alpha <= 0.0_dp .or. inputs%mixing_alpha > 1.0_dp) then
             print *, "ERROR: mixing_alpha must be in (0, 1]"
+            ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
+        ! Smoothing of the V_xc discontinuity at n = 1: 0 disables it (exact C++
+        ! parity); the window [1-w, 1+w] must stay inside the physical range of n.
+        if (inputs%xc_smoothing_width < 0.0_dp .or. &
+            inputs%xc_smoothing_width >= XC_SMOOTHING_WIDTH_MAX) then
+            print *, "ERROR: xc_smoothing_width must be in [0, 1), got:", inputs%xc_smoothing_width
             ierr = ERROR_INVALID_INPUT
             return
         end if
@@ -478,6 +522,7 @@ contains
         scf_params%max_iter = inputs%max_iter
         scf_params%density_tol = inputs%density_tol
         scf_params%energy_tol = inputs%energy_tol
+        scf_params%potential_tol = inputs%potential_tol
         scf_params%mixing_alpha = inputs%mixing_alpha
         scf_params%verbose = inputs%verbose
         scf_params%store_history = inputs%store_history

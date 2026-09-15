@@ -22,11 +22,15 @@ module xc_lsda
     !> LSDA XC functional type containing splines for exc, vxc_up, vxc_down
     type, public :: xc_lsda_t
         real(dp) :: U = 0.0_dp                  !< Hubbard U parameter
+        real(dp) :: smoothing_width = 0.0_dp    !< Half-width w of the linear smoothing of V_xc around n = 1 (0 = off)
         type(spline2d_t) :: spl_exc             !< Spline for e_xc(n, m)
         type(spline2d_t) :: spl_vxc_up          !< Spline for V_xc^up(n, m)
         type(spline2d_t) :: spl_vxc_down        !< Spline for V_xc^dn(n, m)
         logical :: initialized = .false.        !< Initialization flag
     end type xc_lsda_t
+
+    !> Largest admissible smoothing half-width (the window must stay inside 0 < n < 2)
+    real(dp), parameter, public :: XC_SMOOTHING_WIDTH_MAX = 1.0_dp
 
     public :: xc_lsda_init
     public :: get_exc
@@ -36,6 +40,7 @@ module xc_lsda
     private :: determine_region
     private :: convert_to_nm
     private :: apply_symmetry_transform
+    private :: eval_vxc_branch
 
 contains
 
@@ -43,13 +48,21 @@ contains
     !!
     !! Loads table and constructs 2D splines for exc, vxc_up, vxc_down.
     !!
+    !! The optional `smoothing_width` activates the linear smoothing of the
+    !! V_xc discontinuity at n = 1 (see `get_vxc`). The default, 0, disables it
+    !! and reproduces the C++ reference exactly.
+    !!
     !! @param[out] xc         XC functional object
     !! @param[in]  table_file Path to table file (Fortran binary format)
     !! @param[out] ierr Error code (0 = success)
-    subroutine xc_lsda_init(xc, table_file, ierr)
+    !! @param[in]  smoothing_width Optional half-width w of the V_xc smoothing
+    !!                             window around n = 1; must satisfy
+    !!                             0 <= w < XC_SMOOTHING_WIDTH_MAX (default 0 = off)
+    subroutine xc_lsda_init(xc, table_file, ierr, smoothing_width)
         type(xc_lsda_t), intent(out) :: xc
         character(len=*), intent(in) :: table_file
         integer, intent(out) :: ierr
+        real(dp), intent(in), optional :: smoothing_width
 
         type(xc_table_t) :: table
         integer :: io_stat
@@ -57,6 +70,17 @@ contains
         integer :: i
 
         ierr = ERROR_SUCCESS
+
+        if (present(smoothing_width)) then
+            if (smoothing_width < 0.0_dp .or. smoothing_width >= XC_SMOOTHING_WIDTH_MAX) then
+                print *, "ERROR: xc smoothing width must be in [0, 1), got: ", smoothing_width
+                ierr = ERROR_INVALID_INPUT
+                return
+            end if
+            xc%smoothing_width = smoothing_width
+        else
+            xc%smoothing_width = 0.0_dp
+        end if
 
         call read_fortran_table(table_file, table, io_stat)
         if (io_stat /= 0) then
@@ -168,6 +192,19 @@ contains
     !!
     !! Returns V_xc^up and V_xc^dn using symmetries.
     !!
+    !! V_xc is genuinely discontinuous at n = n_up + n_dw = 1 (it is the
+    !! derivative of the BALDA Mott gap): the branch used for n > 1 carries an
+    !! overall minus sign, so the potential jumps by 2|v_base(1, m)| there
+    !! (1.287 for U = 4, m = 0). The C++ reference has the same jump and the
+    !! default configuration reproduces it exactly.
+    !!
+    !! If `xc%smoothing_width` (w) is positive, the jump is replaced, for
+    !! |n - 1| < w, by a straight line between the values on the two sides of
+    !! the discontinuity: V_xc is evaluated at n = 1 - w and n = 1 + w at fixed
+    !! magnetization m and linearly interpolated in n. The result is continuous
+    !! and coincides with the unsmoothed functional outside the window, at the
+    !! price of departing from the C++ reference inside it.
+    !!
     !! @param[in]  xc      Initialized XC functional
     !! @param[in]  n_up    Spin-up density (0 ≤ n_up ≤ 1)
     !! @param[in]  n_dw    Spin-down density (0 ≤ n_dw ≤ 1)
@@ -180,9 +217,9 @@ contains
         real(dp), intent(out) :: v_xc_up, v_xc_dw
         integer, intent(out) :: ierr
 
-        integer :: region
-        real(dp) :: n_up_map, n_dw_map, n, m
-        real(dp) :: v_up_base, v_dw_base
+        real(dp) :: n, m, w, t
+        real(dp) :: n_lo, n_hi, m_lo, m_hi
+        real(dp) :: v_lo_up, v_lo_dw, v_hi_up, v_hi_dw
 
         ! Check initialization
         if (.not. xc%initialized) then
@@ -220,6 +257,58 @@ contains
             return
         end if
 
+        call convert_to_nm(n_up, n_dw, n, m)
+        w = xc%smoothing_width
+
+        if (w > 0.0_dp .and. abs(n - 1.0_dp) < w) then
+            ! -----------------------------------------------------------------
+            ! Smoothed branch: linear interpolation in n, at fixed m, between
+            ! the two sides of the discontinuity.
+            !
+            ! The magnetization is clamped at each edge so that both mapped
+            ! densities stay inside [0, 1]: |m| <= n at n = 1 - w and
+            ! |m| <= 2 - n at n = 1 + w. This only bites for nearly fully
+            ! polarized sites, where the window edge would otherwise leave the
+            ! physical triangle.
+            ! -----------------------------------------------------------------
+            n_lo = 1.0_dp - w
+            n_hi = 1.0_dp + w
+            m_lo = max(-n_lo, min(n_lo, m))
+            m_hi = max(-(2.0_dp - n_hi), min(2.0_dp - n_hi, m))
+
+            call eval_vxc_branch(xc, 0.5_dp * (n_lo + m_lo), 0.5_dp * (n_lo - m_lo), v_lo_up, v_lo_dw)
+            call eval_vxc_branch(xc, 0.5_dp * (n_hi + m_hi), 0.5_dp * (n_hi - m_hi), v_hi_up, v_hi_dw)
+
+            t = (n - n_lo) / (2.0_dp * w)
+            v_xc_up = (1.0_dp - t) * v_lo_up + t * v_hi_up
+            v_xc_dw = (1.0_dp - t) * v_lo_dw + t * v_hi_dw
+        else
+            call eval_vxc_branch(xc, n_up, n_dw, v_xc_up, v_xc_dw)
+        end if
+
+        ierr = ERROR_SUCCESS
+    end subroutine get_vxc
+
+    !> Evaluate V_xc at (n_up, n_dw) on the unsmoothed functional
+    !!
+    !! Maps the point to Region I with the physical symmetries, evaluates the
+    !! tabulated splines and applies the region-specific sign/spin exchange.
+    !! This is the exact C++ behaviour and carries the discontinuity at n = 1.
+    !!
+    !! @param[in]  xc      Initialized XC functional
+    !! @param[in]  n_up    Spin-up density
+    !! @param[in]  n_dw    Spin-down density
+    !! @param[out] v_xc_up XC potential for spin-up
+    !! @param[out] v_xc_dw XC potential for spin-down
+    subroutine eval_vxc_branch(xc, n_up, n_dw, v_xc_up, v_xc_dw)
+        type(xc_lsda_t), intent(in) :: xc
+        real(dp), intent(in) :: n_up, n_dw
+        real(dp), intent(out) :: v_xc_up, v_xc_dw
+
+        integer :: region
+        real(dp) :: n_up_map, n_dw_map, n, m
+        real(dp) :: v_up_base, v_dw_base
+
         ! Determine region and apply symmetry
         region = determine_region(n_up, n_dw)
         call apply_symmetry_transform(region, n_up, n_dw, n_up_map, n_dw_map)
@@ -255,10 +344,12 @@ contains
             ! Region IV (m ≥ 0, n > 1): Combined
             v_xc_up = -v_dw_base
             v_xc_dw = -v_up_base
-        end select
 
-        ierr = ERROR_SUCCESS
-    end subroutine get_vxc
+        case default
+            v_xc_up = 0.0_dp
+            v_xc_dw = 0.0_dp
+        end select
+    end subroutine eval_vxc_branch
 
     !> Destroy XC functional and free memory
     !!
@@ -272,6 +363,7 @@ contains
 
         xc%initialized = .false.
         xc%U = 0.0_dp
+        xc%smoothing_width = 0.0_dp
     end subroutine xc_lsda_destroy
 
     !> Determine symmetry region for (n_up, n_dw)

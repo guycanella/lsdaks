@@ -22,9 +22,16 @@ module lsda_constants
     real(dp), parameter :: INITIAL_MIX = 0.95_dp          ! C++ mixing factor (keeps 95% old)
     real(dp), parameter :: MIX_ALPHA = 1.0_dp - INITIAL_MIX  ! Fortran mixing (5% new, 95% old)
 
+    ! Floor for the adaptive mixing weight. Below this value each SCF step moves
+    ! the effective potential by a negligible amount, so the cycle stops making
+    ! progress while ||delta_n|| keeps shrinking proportionally to alpha: that is
+    ! the false-convergence mechanism the potential residual criterion replaces.
+    real(dp), parameter :: MIX_ALPHA_MIN = 0.005_dp       ! Minimum admissible alpha
+
     real(dp), parameter :: NEWTON_TOL = 1.0e-10_dp        ! Newton convergence tol
     integer, parameter :: NEWTON_MAX_ITER = 50            ! Max Newton iterations
 
     real(dp), parameter :: SCF_ENERGY_TOL = 1.0e-8_dp     ! SCF energy convergence tol
     real(dp), parameter :: SCF_DENSITY_TOL = 1.0e-6_dp    ! SCF density convergence tol
+    real(dp), parameter :: SCF_POTENTIAL_TOL = 1.0e-6_dp  ! SCF potential residual convergence tol
 end module lsda_constants
