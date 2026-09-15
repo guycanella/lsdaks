@@ -25,7 +25,9 @@ contains
                  test_vxc_jump_at_half_filling_without_smoothing), &
             test("vxc_smoothing_removes_jump", test_vxc_smoothing_removes_jump), &
             test("vxc_smoothing_invalid_width_rejected", &
-                 test_vxc_smoothing_invalid_width_rejected) &
+                 test_vxc_smoothing_invalid_width_rejected), &
+            test("vxc_smoothing_nonfinite_width_rejected", &
+                 test_vxc_smoothing_nonfinite_width_rejected) &
         ])
     end function get_xc_lsda_tests
 
@@ -321,4 +323,52 @@ contains
 
         call xc_lsda_destroy(xc)
     end subroutine test_vxc_smoothing_invalid_width_rejected
+
+    !> A non-finite smoothing width must be rejected, NaN included
+    !!
+    !! NaN is the dangerous value here: it passes BOTH range comparisons
+    !! (`NaN < 0` and `NaN >= 1` are false), gets stored in xc%smoothing_width,
+    !! and then fails silently inside get_vxc, where `w > 0.0_dp` is also false
+    !! and the unsmoothed branch is taken. The caller asked for smoothing and
+    !! would get the discontinuous V_xc with no diagnostic at all. Without the
+    !! ieee_is_nan guard the first assertion below fails.
+    !!
+    !! The two infinities are covered as well to pin the claim that the range
+    !! checks already reject them (+Inf >= 1, -Inf < 0): if that range is ever
+    !! widened, these assertions force the finiteness question to be revisited.
+    !!
+    !! The NaN/Inf values come from ieee_value, never from arithmetic such as
+    !! 0.0/0.0, which the compiler may fold or trap depending on the flags.
+    subroutine test_vxc_smoothing_nonfinite_width_rejected()
+        use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, &
+                                                 ieee_positive_inf, ieee_negative_inf
+        use fortuno_serial, only: check => serial_check
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use lsda_constants, only: dp
+
+        type(xc_lsda_t) :: xc
+        integer :: status
+        character(len=256) :: test_file
+        real(dp) :: nan_w, pinf_w, ninf_w
+
+        test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+
+        nan_w = ieee_value(1.0_dp, ieee_quiet_nan)
+        pinf_w = ieee_value(1.0_dp, ieee_positive_inf)
+        ninf_w = ieee_value(1.0_dp, ieee_negative_inf)
+
+        call xc_lsda_init(xc, test_file, status, smoothing_width=nan_w)
+        call check(status /= 0, "NaN smoothing width must be rejected")
+        call check(.not. xc%initialized, "XC must stay uninitialized on a NaN width")
+
+        call xc_lsda_init(xc, test_file, status, smoothing_width=pinf_w)
+        call check(status /= 0, "+Infinity smoothing width must be rejected")
+        call check(.not. xc%initialized, "XC must stay uninitialized on a +Inf width")
+
+        call xc_lsda_init(xc, test_file, status, smoothing_width=ninf_w)
+        call check(status /= 0, "-Infinity smoothing width must be rejected")
+        call check(.not. xc%initialized, "XC must stay uninitialized on a -Inf width")
+
+        call xc_lsda_destroy(xc)
+    end subroutine test_vxc_smoothing_nonfinite_width_rejected
 end program test_xc_lsda

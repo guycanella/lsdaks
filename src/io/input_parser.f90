@@ -6,6 +6,7 @@
 !!
 !! Priority: Command line arguments override namelist values
 module input_parser
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite, ieee_is_nan
     use lsda_constants, only: dp, ITER_MAX, SCF_DENSITY_TOL, SCF_ENERGY_TOL, &
                               SCF_POTENTIAL_TOL, MIX_ALPHA
     use lsda_types, only: system_params_t
@@ -447,17 +448,21 @@ contains
         
         ! potential_tol and energy_tol are BOTH convergence criteria (the SCF
         ! stops on residual_V < potential_tol AND |dE| < energy_tol*max(1,|E|)).
-        ! A null or negative tolerance can never be met, so the run would be
+        ! A null, negative or NaN tolerance can never be met, so the run would be
         ! condemned to exhaust max_iter and report a convergence failure instead
-        ! of an invalid input.
-        if (inputs%potential_tol <= 0.0_dp) then
-            print *, "ERROR: potential_tol must be positive"
+        ! of an invalid input. An infinite tolerance is worse: its comparison is
+        ! always true for finite residuals/energies, which silently switches that
+        ! criterion off and lets the cycle declare convergence on the other one.
+        if (.not. ieee_is_finite(inputs%potential_tol) .or. &
+            inputs%potential_tol <= 0.0_dp) then
+            print *, "ERROR: potential_tol must be finite and positive, got:", inputs%potential_tol
             ierr = ERROR_INVALID_INPUT
             return
         end if
 
-        if (inputs%energy_tol <= 0.0_dp) then
-            print *, "ERROR: energy_tol must be positive"
+        if (.not. ieee_is_finite(inputs%energy_tol) .or. &
+            inputs%energy_tol <= 0.0_dp) then
+            print *, "ERROR: energy_tol must be finite and positive, got:", inputs%energy_tol
             ierr = ERROR_INVALID_INPUT
             return
         end if
@@ -470,7 +475,12 @@ contains
 
         ! Smoothing of the V_xc discontinuity at n = 1: 0 disables it (exact C++
         ! parity); the window [1-w, 1+w] must stay inside the physical range of n.
-        if (inputs%xc_smoothing_width < 0.0_dp .or. &
+        ! NaN would pass both range comparisons and then fail SILENTLY: get_vxc
+        ! evaluates `w > 0` as false and quietly takes the unsmoothed branch,
+        ! so the user asks for smoothing and gets none. Both infinities are
+        ! already rejected by the range checks (+Inf >= 1, -Inf < 0).
+        if (ieee_is_nan(inputs%xc_smoothing_width) .or. &
+            inputs%xc_smoothing_width < 0.0_dp .or. &
             inputs%xc_smoothing_width >= XC_SMOOTHING_WIDTH_MAX) then
             print *, "ERROR: xc_smoothing_width must be in [0, 1), got:", inputs%xc_smoothing_width
             ierr = ERROR_INVALID_INPUT

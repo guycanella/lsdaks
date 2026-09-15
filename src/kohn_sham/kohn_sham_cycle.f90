@@ -1,4 +1,5 @@
 module kohn_sham_cycle
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     use lsda_constants, only: dp, SCF_DENSITY_TOL, SCF_ENERGY_TOL, SCF_POTENTIAL_TOL, &
                               ITER_MAX, MIX_ALPHA
     use lsda_types, only: system_params_t
@@ -168,11 +169,13 @@ contains
     !! - External potential size matches system size: size(V_ext) = L
     !! - SCF max_iter > 0 (at least one iteration allowed)
     !! - Mixing parameter 0 < mixing_alpha <= 1 (valid range for linear mixing)
-    !! - potential_tol > 0 and energy_tol > 0. Both are convergence criteria
-    !!   (residual_V < potential_tol AND |dE| < energy_tol*max(1,|E|)), and a
-    !!   null or negative tolerance is unreachable: the cycle would burn the
-    !!   whole iteration budget and report ERROR_CONVERGENCE_FAILED instead of
-    !!   telling the caller that the request itself was impossible.
+    !! - potential_tol and energy_tol finite and > 0. Both are convergence
+    !!   criteria (residual_V < potential_tol AND |dE| < energy_tol*max(1,|E|)).
+    !!   A null, negative or NaN tolerance is unreachable: the cycle would burn
+    !!   the whole iteration budget and report ERROR_CONVERGENCE_FAILED instead
+    !!   of telling the caller that the request itself was impossible. An
+    !!   infinite tolerance is worse: it always passes, disabling that criterion
+    !!   and allowing a false convergence based on the other one alone.
     !!
     !! @param[in]  params     System parameters (L, Nup, Ndown, bc, U, phase)
     !! @param[in]  scf_params SCF control parameters (max_iter, tolerances, mixing_alpha)
@@ -209,14 +212,25 @@ contains
             return
         end if
 
-        ! Both convergence tolerances must be strictly positive: residual_V and
-        ! |E - E_prev| are non-negative, so a tolerance <= 0 can never be met.
-        if (scf_params%potential_tol <= 0.0_dp) then
+        ! Both convergence tolerances must be finite AND strictly positive:
+        !   * a tolerance <= 0 can never be met (residual_V and |E - E_prev| are
+        !     non-negative), so the cycle would burn the whole iteration budget;
+        !   * NaN makes its comparison always false, i.e. the same unreachable
+        !     criterion, but discovered only after max_iter iterations;
+        !   * +Infinity is the dangerous one: it makes its comparison always
+        !     true, silently DISABLING that criterion. With potential_tol = +Inf
+        !     convergence would be decided by the energy alone, which is exactly
+        !     the false convergence this criterion exists to rule out.
+        ! This is validated here as well as in input_parser because direct
+        ! callers of the public run_kohn_sham_scf_* entry points bypass the parser.
+        if (.not. ieee_is_finite(scf_params%potential_tol) .or. &
+            scf_params%potential_tol <= 0.0_dp) then
             ierr = ERROR_INVALID_INPUT
             return
         end if
 
-        if (scf_params%energy_tol <= 0.0_dp) then
+        if (.not. ieee_is_finite(scf_params%energy_tol) .or. &
+            scf_params%energy_tol <= 0.0_dp) then
             ierr = ERROR_INVALID_INPUT
             return
         end if

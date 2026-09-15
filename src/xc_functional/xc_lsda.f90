@@ -12,6 +12,7 @@
 !!   Region III (m < 0, n > 1): Particle-hole symmetry
 !!   Region IV  (m ≥ 0, n > 1): Combined symmetry
 module xc_lsda
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
     use lsda_constants, only: dp, U_SMALL
     use spline2d, only: spline2d_t, spline2d_init, spline2d_eval, spline2d_destroy
     use table_io, only: xc_table_t, read_fortran_table, deallocate_table
@@ -56,8 +57,11 @@ contains
     !! @param[in]  table_file Path to table file (Fortran binary format)
     !! @param[out] ierr Error code (0 = success)
     !! @param[in]  smoothing_width Optional half-width w of the V_xc smoothing
-    !!                             window around n = 1; must satisfy
-    !!                             0 <= w < XC_SMOOTHING_WIDTH_MAX (default 0 = off)
+    !!                             window around n = 1; must be a non-NaN value
+    !!                             with 0 <= w < XC_SMOOTHING_WIDTH_MAX
+    !!                             (default 0 = off). NaN is rejected with
+    !!                             ERROR_INVALID_INPUT because it would otherwise
+    !!                             disable the smoothing silently in `get_vxc`.
     subroutine xc_lsda_init(xc, table_file, ierr, smoothing_width)
         type(xc_lsda_t), intent(out) :: xc
         character(len=*), intent(in) :: table_file
@@ -72,7 +76,13 @@ contains
         ierr = ERROR_SUCCESS
 
         if (present(smoothing_width)) then
-            if (smoothing_width < 0.0_dp .or. smoothing_width >= XC_SMOOTHING_WIDTH_MAX) then
+            ! NaN passes both range comparisons, is stored, and then fails
+            ! SILENTLY: get_vxc evaluates `w > 0.0_dp` as false and takes the
+            ! unsmoothed branch without any warning. Both infinities are already
+            ! rejected by the range checks (+Inf >= 1 and -Inf < 0), so only NaN
+            ! needs an explicit test here.
+            if (ieee_is_nan(smoothing_width) .or. &
+                smoothing_width < 0.0_dp .or. smoothing_width >= XC_SMOOTHING_WIDTH_MAX) then
                 print *, "ERROR: xc smoothing width must be in [0, 1), got: ", smoothing_width
                 ierr = ERROR_INVALID_INPUT
                 return

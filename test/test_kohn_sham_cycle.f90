@@ -38,6 +38,8 @@ contains
             test("validate_inputs_invalid_mixing", test_validate_inputs_invalid_mixing), &
             test("validate_inputs_nonpositive_tolerances", &
                  test_validate_inputs_nonpositive_tolerances), &
+            test("validate_inputs_non_finite_tolerances", &
+                 test_validate_inputs_non_finite_tolerances), &
             test("scf_results_init_cleanup", test_scf_results_init_cleanup), &
             test("scf_results_init_propagates_history_error", &
                  test_scf_results_init_propagates_history_error), &
@@ -671,6 +673,123 @@ contains
 
         call xc_lsda_destroy(xc_func)
     end subroutine test_validate_inputs_nonpositive_tolerances
+
+    !> The SCF entry points must reject non-finite tolerances too
+    !!
+    !! The public run_kohn_sham_scf_* routines are reachable without going
+    !! through input_parser, so the shared validator is the last line of defence.
+    !! A sign check alone accepts NaN and +Infinity:
+    !!   * NaN makes `residual_V < potential_tol` (or the energy comparison)
+    !!     always false, i.e. an unreachable criterion discovered only after the
+    !!     whole iteration budget is spent;
+    !!   * +Infinity makes it always true, DISABLING that criterion. With
+    !!     potential_tol = +Inf the cycle would declare convergence on the energy
+    !!     alone - the very false convergence this criterion was added to stop.
+    !! -Infinity is already caught by `<= 0` and is asserted to keep it covered.
+    !!
+    !! Each branch is probed alone with the other tolerance legal, so removing
+    !! the finiteness guard of one tolerance fails only its own assertions.
+    !! store_history = .true. is the usual anchor: any run that reaches the SCF
+    !! body allocates the history, so an unallocated history proves the rejection
+    !! happened inside the validator.
+    subroutine test_validate_inputs_non_finite_tolerances()
+        use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, &
+                                                 ieee_positive_inf, ieee_negative_inf
+        use fortuno_serial, only: check => serial_check
+        use lsda_types, only: system_params_t
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, run_kohn_sham_scf_complex, &
+                                    scf_params_t, scf_results_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN, BC_TWISTED
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        integer, parameter :: L = 10
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        real(dp) :: nan_v, pinf_v, ninf_v
+        integer :: ierr
+        character(len=256) :: table_file
+
+        nan_v = ieee_value(1.0_dp, ieee_quiet_nan)
+        pinf_v = ieee_value(1.0_dp, ieee_positive_inf)
+        ninf_v = ieee_value(1.0_dp, ieee_negative_inf)
+
+        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC init should succeed")
+
+        params%L = L
+        params%Nup = 5
+        params%Ndown = 5
+        params%bc = BC_OPEN
+        params%U = 4.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 10
+        scf_params%density_tol = 1.0e-6_dp
+        scf_params%energy_tol = 1.0e-8_dp
+        scf_params%potential_tol = 1.0e-6_dp
+        scf_params%mixing_alpha = 0.3_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .true.
+
+        V_ext = 0.0_dp
+
+        ! --- potential_tol ----------------------------------------------------
+        scf_params%potential_tol = nan_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "NaN potential_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "NaN potential_tol must be rejected before any allocation")
+
+        scf_params%potential_tol = pinf_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "+Infinity potential_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "+Infinity potential_tol must be rejected before any allocation")
+
+        scf_params%potential_tol = ninf_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "-Infinity potential_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "-Infinity potential_tol must be rejected before any allocation")
+
+        ! --- energy_tol -------------------------------------------------------
+        scf_params%potential_tol = 1.0e-6_dp
+        scf_params%energy_tol = nan_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "NaN energy_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "NaN energy_tol must be rejected before any allocation")
+
+        scf_params%energy_tol = pinf_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "+Infinity energy_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "+Infinity energy_tol must be rejected before any allocation")
+
+        scf_params%energy_tol = ninf_v
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "-Infinity energy_tol must be rejected")
+        call check(.not. allocated(results%history%density_norms), &
+                   "-Infinity energy_tol must be rejected before any allocation")
+
+        ! The complex entry point shares the validator and must reject the same
+        ! inputs; the two loops are still duplicated code (T16).
+        params%bc = BC_TWISTED
+        scf_params%energy_tol = 1.0e-8_dp
+        scf_params%potential_tol = pinf_v
+        call run_kohn_sham_scf_complex(params, scf_params, V_ext, xc_func, results, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "the complex entry point must reject an infinite potential_tol too")
+        call check(.not. allocated(results%history%density_norms), &
+                   "the complex entry point must reject it before any allocation")
+
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_validate_inputs_non_finite_tolerances
 
     !> Test SCF results initialization and cleanup
     subroutine test_scf_results_init_cleanup()
