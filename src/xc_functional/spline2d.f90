@@ -342,15 +342,10 @@ contains
         real(dp) :: f_row
 
         integer :: ny
-        real(dp), allocatable :: y_tmp(:), f_tmp(:), d2y_tmp(:)
 
         ny = spl%n_y(i_x)
-        allocate(y_tmp(0:ny-1), f_tmp(0:ny-1), d2y_tmp(0:ny-1))
-        y_tmp = spl%y(1:ny, i_x)
-        f_tmp = spl%f(1:ny, i_x)
-        d2y_tmp = spl%d2f_dy2(1:ny, i_x)
-        f_row = spline1d_eval(y_tmp, f_tmp, d2y_tmp, ny-1, y)
-        deallocate(y_tmp, f_tmp, d2y_tmp)
+        f_row = spline1d_eval(spl%y(1:ny, i_x), spl%f(1:ny, i_x), &
+                              spl%d2f_dy2(1:ny, i_x), ny - 1, y)
     end function eval_row
 
     !> Evaluate 2D spline at point (x, y) with cubic interpolation in BOTH directions

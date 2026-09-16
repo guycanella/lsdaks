@@ -177,31 +177,6 @@ contains
 
     end subroutine test_exc_below_first_table_density
 
-    !> REGRESSION (T18): the empty-channel and corner shortcuts of the C++
-    !!
-    !! With one spin channel empty there is no double occupancy, so e_xc = 0 and
-    !! V_xc of the EMPTY channel's partner vanishes. The C++ reference
-    !! short-circuits on that at the top of every recursion level
-    !! (`original/spline2D.cc:474`, `:580`, `:677`), which the Fortran now
-    !! reproduces with `exc_recursive` / `vxc_up_recursive` / `vxc_dn_recursive`.
-    !!
-    !! Two assertions here are branch-specific, i.e. they fail on the previous
-    !! implementation:
-    !!  - `V_xc^dn(1, 0)`: the fully polarized half-filled point n = m = 1 is
-    !!    caught by the CORNER shortcut and is 0 in the C++. Without the shortcut
-    !!    the Fortran returned dexc_dndown_b0(4, 1) = -1.657.
-    !!  - `e_xc(0.5, 1e-15)`: inside the 1e-14 empty-channel band the C++ returns
-    !!    exactly 0, whereas interpolating from the synthetic node at n = m gives
-    !!    a non-zero O(1e-15) value.
-    !! The remaining assertions (e_xc(1, 1), V_xc(1, 1), e_xc(0.5, 0)) already
-    !! held after T8 as a side effect of the synthetic node landing exactly on
-    !! the query point; they are kept because they now hold BY CONSTRUCTION and
-    !! are the quantities the physics depends on (a full band must give E/L = U).
-    !!
-    !! The V_xc^dn(0.5, 0) assertion pins down a DELIBERATE divergence from the
-    !! text of T18, which asked for zero: the C++ returns dexc_dndownB0(u, mag)
-    !! there, because adding a spin-down electron to a polarized band does cost
-    !! correlation energy.
     !> REGRESSION (R10): e_xc and V_xc against hard-coded values OFF the nodes
     !!
     !! Every other test of this suite checks a symmetry, a sign, a shortcut or a
@@ -324,6 +299,31 @@ contains
         call xc_lsda_destroy(xc)
     end subroutine test_cpp_reference_values_off_nodes
 
+    !> REGRESSION (T18): the empty-channel and corner shortcuts of the C++
+    !!
+    !! With one spin channel empty there is no double occupancy, so e_xc = 0 and
+    !! V_xc of the EMPTY channel's partner vanishes. The C++ reference
+    !! short-circuits on that at the top of every recursion level
+    !! (`original/spline2D.cc:474`, `:580`, `:677`), which the Fortran now
+    !! reproduces with `exc_recursive` / `vxc_up_recursive` / `vxc_dn_recursive`.
+    !!
+    !! Two assertions here are branch-specific, i.e. they fail on the previous
+    !! implementation:
+    !!  - `V_xc^dn(1, 0)`: the fully polarized half-filled point n = m = 1 is
+    !!    caught by the CORNER shortcut and is 0 in the C++. Without the shortcut
+    !!    the Fortran returned dexc_dndown_b0(4, 1) = -1.657.
+    !!  - `e_xc(0.5, 1e-15)`: inside the 1e-14 empty-channel band the C++ returns
+    !!    exactly 0, whereas interpolating from the synthetic node at n = m gives
+    !!    a non-zero O(1e-15) value.
+    !! The remaining assertions (e_xc(1, 1), V_xc(1, 1), e_xc(0.5, 0)) already
+    !! held after T8 as a side effect of the synthetic node landing exactly on
+    !! the query point; they are kept because they now hold BY CONSTRUCTION and
+    !! are the quantities the physics depends on (a full band must give E/L = U).
+    !!
+    !! The V_xc^dn(0.5, 0) assertion pins down a DELIBERATE divergence from the
+    !! text of T18, which asked for zero: the C++ returns dexc_dndownB0(u, mag)
+    !! there, because adding a spin-down electron to a polarized band does cost
+    !! correlation energy.
     subroutine test_empty_channel_shortcuts()
         use fortuno_serial, only: check => serial_check
         use xc_lsda, only: xc_lsda_t, xc_lsda_init, get_exc, get_vxc, &
