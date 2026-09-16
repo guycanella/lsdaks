@@ -28,6 +28,13 @@ module lsda_constants
     ! the false-convergence mechanism the potential residual criterion replaces.
     real(dp), parameter :: MIX_ALPHA_MIN = 0.005_dp       ! Minimum admissible alpha
 
+    ! Half width of the line used to decide that two consecutive Kohn-Sham
+    ! eigenvalues belong to the same degenerate shell. Two neighbours closer
+    ! than DEG_TOL are treated as one level and share the occupation of the
+    ! open Fermi shell equally (see density_calculator::compute_occupations).
+    ! Same value as LINEWIDTH_ in the C++ reference (original/lsdaks.h:5).
+    real(dp), parameter :: DEG_TOL = 1.0e-10_dp           ! Degeneracy line width
+
     real(dp), parameter :: NEWTON_TOL = 1.0e-10_dp        ! Newton convergence tol
     integer, parameter :: NEWTON_MAX_ITER = 50            ! Max Newton iterations
 

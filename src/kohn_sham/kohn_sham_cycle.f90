@@ -1,15 +1,15 @@
 module kohn_sham_cycle
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     use lsda_constants, only: dp, SCF_DENSITY_TOL, SCF_ENERGY_TOL, SCF_POTENTIAL_TOL, &
-                              ITER_MAX, MIX_ALPHA
+                              ITER_MAX, MIX_ALPHA, DEG_TOL
     use lsda_types, only: system_params_t
     use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT, &
                            ERROR_CONVERGENCE_FAILED, ERROR_SIZE_MISMATCH
     use boundary_conditions, only: apply_boundary_conditions, apply_boundary_conditions_complex
     use hamiltonian_builder, only: build_hamiltonian, build_hamiltonian_complex
     use lapack_wrapper, only: diagonalize_symmetric_real, diagonalize_hermitian_complex
-    use density_calculator, only: compute_density_spin
-    use xc_lsda, only: xc_lsda_t, get_vxc, get_exc
+    use density_calculator, only: compute_density_spin, compute_occupations
+    use xc_lsda, only: xc_lsda_t, get_vxc, get_exc, XC_U_MATCH_TOL
     use convergence_monitor, only: compute_density_difference, &
                                     convergence_history_t, init_convergence_history, &
                                     update_convergence_history, cleanup_convergence_history, &
@@ -84,8 +84,16 @@ contains
     !!
     !! Note: ε_xc from tables is the TOTAL XC energy at each site, not per particle!
     !!
-    !! @param[in] eigvalues_up Spin-up eigenvalues (occupied ones)
-    !! @param[in] eigvalues_down Spin-down eigenvalues (occupied ones)
+    !! The band energy uses the SAME occupation numbers as the density. When
+    !! the Fermi shell is degenerate and only partially filled, occ_up/occ_down
+    !! (from density_calculator::compute_occupations) carry a fractional weight
+    !! for the open shell, exactly as the C++ reference does in `update_degen`
+    !! (`*next_egnd += weight*erg[level]`, original/lsdaks.cc:85-137). Summing
+    !! eigvals(1:n) with weight 1 instead would pair a fractionally occupied
+    !! density with an integer-occupied band energy - two different states.
+    !!
+    !! @param[in] eigvalues_up Spin-up eigenvalues (ascending)
+    !! @param[in] eigvalues_down Spin-down eigenvalues (ascending)
     !! @param[in] n_up Number of spin-up electrons
     !! @param[in] n_down Number of spin-down electrons
     !! @param[in] density_up Spin-up density (length L)
@@ -96,8 +104,12 @@ contains
     !! @param[in] L System size
     !! @param[out] total_energy Total energy
     !! @param[out] ierr Error code (0 = success)
+    !! @param[in] occ_up Optional spin-up occupations; when present (together
+    !!                   with occ_down) the band energy is Σ_j occ_j ε_j instead
+    !!                   of Σ_{j<=n_up} ε_j. Both must be supplied or neither.
+    !! @param[in] occ_down Optional spin-down occupations, see occ_up
     subroutine compute_total_energy(eigvals_up, eigvals_down, n_up, n_down, density_up, density_down, &
-                                                            V_ext, xc_func, U, L, total_energy, ierr)
+                                    V_ext, xc_func, U, L, total_energy, ierr, occ_up, occ_down)
         real(dp), intent(in) :: eigvals_up(:), eigvals_down(:)
         integer, intent(in) :: n_up, n_down
         real(dp), intent(in) :: density_up(:), density_down(:), V_ext(:)
@@ -106,13 +118,28 @@ contains
         integer, intent(in) :: L
         real(dp), intent(out) :: total_energy
         integer, intent(out) :: ierr
+        real(dp), intent(in), optional :: occ_up(:), occ_down(:)
 
         real(dp) :: E_band, E_hartree, E_xc_total, V_xc_correction
         real(dp) :: exc_val, V_xc_up, V_xc_down
         integer :: i
 
-        ! 1. Band energy (sum of occupied eigenvalues)
-        E_band = sum(eigvals_up(1:n_up)) + sum(eigvals_down(1:n_down))
+        ! 1. Band energy (occupation-weighted sum of eigenvalues)
+        if (present(occ_up) .neqv. present(occ_down)) then
+            ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
+        if (present(occ_up) .and. present(occ_down)) then
+            if (size(occ_up) > size(eigvals_up) .or. size(occ_down) > size(eigvals_down)) then
+                ierr = ERROR_SIZE_MISMATCH
+                return
+            end if
+            E_band = sum(occ_up * eigvals_up(1:size(occ_up))) + &
+                     sum(occ_down * eigvals_down(1:size(occ_down)))
+        else
+            E_band = sum(eigvals_up(1:n_up)) + sum(eigvals_down(1:n_down))
+        end if
 
         ! 2. Hartree energy: -U*Σ(n_up*n_down)
         !    Double-counting correction (matches C++ lsdaks.cc lines 676-679)
@@ -238,6 +265,33 @@ contains
         ierr = ERROR_SUCCESS
     end subroutine validate_kohn_sham_cycle_inputs
 
+    !> Validate that the XC functional belongs to the system being solved
+    !!
+    !! The table stores |U| while the initializer receives the sign separately.
+    !! Consequently, `params%U` and `xc_func%U` are two independent values at
+    !! this API boundary. Letting them disagree combines the Hartree term of one
+    !! interaction with the XC functional of another and produces a plausible
+    !! but physically meaningless result. Reject that state before allocating
+    !! any SCF workspace.
+    subroutine validate_xc_functional(params, xc_func, ierr)
+        type(system_params_t), intent(in) :: params
+        type(xc_lsda_t), intent(in) :: xc_func
+        integer, intent(out) :: ierr
+
+        if (.not. xc_func%initialized) then
+            ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
+        if (.not. ieee_is_finite(params%U) .or. .not. ieee_is_finite(xc_func%U) .or. &
+            abs(params%U - xc_func%U) > XC_U_MATCH_TOL) then
+            ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
+        ierr = ERROR_SUCCESS
+    end subroutine validate_xc_functional
+
     !> @brief Count sites sitting at half filling
     !!
     !! A site counts as half filled when |n_up(i) + n_down(i) - 1| < HALF_FILLING_TOL.
@@ -343,13 +397,16 @@ contains
                             V_xc_down(:), H_up(:,:), H_down(:,:), eigvals_up(:), &
                             eigvals_down(:), eigvecs_up(:,:), eigvecs_down(:,:), delta_n_up(:), delta_n_down(:), &
                             V_eff_up(:), V_eff_down(:), V_eff_up_calc(:), V_eff_down_calc(:), &
-                            V_zero(:)
+                            V_zero(:), occ_up(:), occ_down(:)
 
         call validate_kohn_sham_cycle_inputs(params, scf_params, V_ext, ierr)
 
         if (ierr /= ERROR_SUCCESS) then
             return
         end if
+
+        call validate_xc_functional(params, xc_func, ierr)
+        if (ierr /= ERROR_SUCCESS) return
 
         L = params%L
         Nup = params%Nup
@@ -358,10 +415,13 @@ contains
         allocate(n_up_in(L), n_down_in(L), n_up_out(L), n_down_out(L), V_xc_up(L), V_xc_down(L), &
                  H_up(L,L), H_down(L,L), eigvals_up(L), eigvals_down(L), &
                  eigvecs_up(L,L), eigvecs_down(L,L), delta_n_up(L), delta_n_down(L), &
-                 V_eff_up(L), V_eff_down(L), V_eff_up_calc(L), V_eff_down_calc(L), V_zero(L))
+                 V_eff_up(L), V_eff_down(L), V_eff_up_calc(L), V_eff_down_calc(L), V_zero(L), &
+                 occ_up(L), occ_down(L))
 
         ! Initialize zero array for Hamiltonian builder
         V_zero(:) = 0.0_dp
+        occ_up(:) = 0.0_dp
+        occ_down(:) = 0.0_dp
 
         ! The history is allocated here and only here: this routine owns the
         ! initialization of `results` (see the intent(out) note above), and the
@@ -556,9 +616,30 @@ contains
             end if
 
             ! ----------------------------------------------
+            ! 1d'. Occupation numbers, with fractional filling of an OPEN
+            !      degenerate Fermi shell (C++ `update_degen`). Must be done
+            !      before the density: filling the Nup lowest eigenvectors with
+            !      weight 1 would make the density depend on the arbitrary basis
+            !      LAPACK returned inside the degenerate subspace and drive the
+            !      SCF cycle into a limit cycle.
+            ! ----------------------------------------------
+            call compute_occupations(eigvals_up, params%Nup, DEG_TOL, occ_up, ierr)
+
+            if (ierr == ERROR_SUCCESS) then
+                call compute_occupations(eigvals_down, params%Ndown, DEG_TOL, occ_down, ierr)
+            end if
+
+            if (ierr /= ERROR_SUCCESS) then
+                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
+                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
+                       delta_n_down)
+                return
+            end if
+
+            ! ----------------------------------------------
             ! 1e. Compute new densities from eigenvectors
             ! ----------------------------------------------
-            call compute_density_spin(eigvecs_up, params%L, params%Nup, n_up_out, ierr)
+            call compute_density_spin(eigvecs_up, params%L, occ_up, n_up_out, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for density calculation Nup
@@ -568,7 +649,7 @@ contains
                 return
             end if
 
-            call compute_density_spin(eigvecs_down, params%L, params%Ndown, n_down_out, ierr)
+            call compute_density_spin(eigvecs_down, params%L, occ_down, n_down_out, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for density calculation Ndown
@@ -627,7 +708,8 @@ contains
             ! 1h. Compute total energy
             ! ------------------------
             call compute_total_energy(eigvals_up, eigvals_down, params%Nup, params%Ndown, n_up_out, n_down_out, &
-                                    V_ext, xc_func, params%U, params%L, total_energy, ierr)
+                                    V_ext, xc_func, params%U, params%L, total_energy, ierr, &
+                                    occ_up=occ_up, occ_down=occ_down)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for total energy calculation
@@ -650,14 +732,11 @@ contains
             ! once per run.
             !
             ! The n = 1 discontinuity is NOT the only source of a persistent
-            ! oscillation, and the warning says so: a partially filled,
-            ! degenerate Fermi shell (e.g. L = 8, N_up = N_down = 4 with PBC)
-            ! also fails to settle, because the density is built by filling the
-            ! n_elec lowest eigenvectors with weight 1, without distributing the
-            ! occupation over the degenerate level at the Fermi energy. That
-            ! failure mode is independent of n = 1 (it also fires away from half
-            ! filling) and smoothing V_xc does not cure it - it can make it
-            ! worse. Fractional occupation is deferred to T7.
+            ! oscillation, and the warning says so. The other one - a partially
+            ! filled, degenerate Fermi shell (e.g. L = 8, N_up = N_down = 4 with
+            ! PBC) - is now handled at its root by the fractional occupation of
+            ! step 1d', so a surviving oscillation here is much more likely to
+            ! be the V_xc jump at n = 1.
             ! ---------------------------------------------------------------
             if (has_prev_energy) then
                 delta_energy = total_energy - energy_prev
@@ -679,9 +758,6 @@ contains
                     print '(A,I0,A)', "  WARNING: ", n_half_filled, &
                         " site(s) at half filling (|n - 1| < 1.0e-3); V_xc is discontinuous"
                     print '(A)', "           at n = 1 and the total energy may oscillate."
-                    print '(A)', "           The oscillation may instead come from a partially filled," // &
-                                 " degenerate Fermi shell,"
-                    print '(A)', "           in which case smoothing V_xc does not help."
                     half_filling_warned = .true.
                 end if
             end if
@@ -856,7 +932,7 @@ contains
         real(dp), allocatable :: n_up_in(:), n_down_in(:), n_up_out(:), n_down_out(:), V_xc_up(:), &
                       V_xc_down(:), eigvals_up(:), eigvals_down(:), delta_n_up(:), delta_n_down(:), &
                       V_eff_up(:), V_eff_down(:), V_eff_up_calc(:), V_eff_down_calc(:), &
-                      V_zero(:)
+                      V_zero(:), occ_up(:), occ_down(:)
 
         complex(dp), allocatable :: H_up(:,:), H_down(:,:), eigvecs_up(:,:), eigvecs_down(:,:)
 
@@ -866,6 +942,9 @@ contains
             return
         end if
 
+        call validate_xc_functional(params, xc_func, ierr)
+        if (ierr /= ERROR_SUCCESS) return
+
         L = params%L
         Nup = params%Nup
         Ndown = params%Ndown
@@ -873,10 +952,13 @@ contains
         allocate(n_up_in(L), n_down_in(L), n_up_out(L), n_down_out(L), V_xc_up(L), V_xc_down(L), &
                  H_up(L,L), H_down(L,L), eigvals_up(L), eigvals_down(L), &
                  eigvecs_up(L,L), eigvecs_down(L,L), delta_n_up(L), delta_n_down(L), &
-                 V_eff_up(L), V_eff_down(L), V_eff_up_calc(L), V_eff_down_calc(L), V_zero(L))
+                 V_eff_up(L), V_eff_down(L), V_eff_up_calc(L), V_eff_down_calc(L), V_zero(L), &
+                 occ_up(L), occ_down(L))
 
         ! Initialize zero array for Hamiltonian builder
         V_zero(:) = 0.0_dp
+        occ_up(:) = 0.0_dp
+        occ_down(:) = 0.0_dp
 
         ! The history is allocated here and only here: this routine owns the
         ! initialization of `results` (see the intent(out) note above), and the
@@ -1071,9 +1153,30 @@ contains
             end if
 
             ! ----------------------------------------------
+            ! 1d'. Occupation numbers, with fractional filling of an OPEN
+            !      degenerate Fermi shell (C++ `update_degen`). Must be done
+            !      before the density: filling the Nup lowest eigenvectors with
+            !      weight 1 would make the density depend on the arbitrary basis
+            !      LAPACK returned inside the degenerate subspace and drive the
+            !      SCF cycle into a limit cycle.
+            ! ----------------------------------------------
+            call compute_occupations(eigvals_up, params%Nup, DEG_TOL, occ_up, ierr)
+
+            if (ierr == ERROR_SUCCESS) then
+                call compute_occupations(eigvals_down, params%Ndown, DEG_TOL, occ_down, ierr)
+            end if
+
+            if (ierr /= ERROR_SUCCESS) then
+                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
+                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
+                       delta_n_down)
+                return
+            end if
+
+            ! ----------------------------------------------
             ! 1e. Compute new densities from eigenvectors
             ! ----------------------------------------------
-            call compute_density_spin(eigvecs_up, params%L, params%Nup, n_up_out, ierr)
+            call compute_density_spin(eigvecs_up, params%L, occ_up, n_up_out, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for density calculation Nup
@@ -1083,7 +1186,7 @@ contains
                 return
             end if
 
-            call compute_density_spin(eigvecs_down, params%L, params%Ndown, n_down_out, ierr)
+            call compute_density_spin(eigvecs_down, params%L, occ_down, n_down_out, ierr)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for density calculation Ndown
@@ -1142,7 +1245,8 @@ contains
             ! 1h. Compute total energy
             ! ------------------------
             call compute_total_energy(eigvals_up, eigvals_down, params%Nup, params%Ndown, n_up_out, n_down_out, &
-                                    V_ext, xc_func, params%U, params%L, total_energy, ierr)
+                                    V_ext, xc_func, params%U, params%L, total_energy, ierr, &
+                                    occ_up=occ_up, occ_down=occ_down)
 
             if (ierr /= ERROR_SUCCESS) then
                 ! TODO: Proper error handling for total energy calculation
@@ -1165,14 +1269,11 @@ contains
             ! once per run.
             !
             ! The n = 1 discontinuity is NOT the only source of a persistent
-            ! oscillation, and the warning says so: a partially filled,
-            ! degenerate Fermi shell (e.g. L = 8, N_up = N_down = 4 with PBC)
-            ! also fails to settle, because the density is built by filling the
-            ! n_elec lowest eigenvectors with weight 1, without distributing the
-            ! occupation over the degenerate level at the Fermi energy. That
-            ! failure mode is independent of n = 1 (it also fires away from half
-            ! filling) and smoothing V_xc does not cure it - it can make it
-            ! worse. Fractional occupation is deferred to T7.
+            ! oscillation, and the warning says so. The other one - a partially
+            ! filled, degenerate Fermi shell (e.g. L = 8, N_up = N_down = 4 with
+            ! PBC) - is now handled at its root by the fractional occupation of
+            ! step 1d', so a surviving oscillation here is much more likely to
+            ! be the V_xc jump at n = 1.
             ! ---------------------------------------------------------------
             if (has_prev_energy) then
                 delta_energy = total_energy - energy_prev
@@ -1194,9 +1295,6 @@ contains
                     print '(A,I0,A)', "  WARNING: ", n_half_filled, &
                         " site(s) at half filling (|n - 1| < 1.0e-3); V_xc is discontinuous"
                     print '(A)', "           at n = 1 and the total energy may oscillate."
-                    print '(A)', "           The oscillation may instead come from a partially filled," // &
-                                 " degenerate Fermi shell,"
-                    print '(A)', "           in which case smoothing V_xc does not help."
                     half_filling_warned = .true.
                 end if
             end if

@@ -92,9 +92,14 @@ program lsdaks
     print '(A,A)', "Loading XC table: ", trim(table_file)
     if (sys_params%U < 0.0_dp) then
         print '(A)', "  Note: Using table for |U| (attractive interaction)"
+        print '(A)', "        The sign of U enters via the Shiba transformation in the XC functional"
     end if
-    
-    call xc_lsda_init(xc_func, table_file, ierr, smoothing_width=inputs%xc_smoothing_width)
+
+    ! The signed U must be handed over explicitly: the table file only carries
+    ! |U|, so without it the attractive run would silently use the repulsive
+    ! functional (the Shiba transformation would never trigger).
+    call xc_lsda_init(xc_func, table_file, ierr, smoothing_width=inputs%xc_smoothing_width, &
+                      u_signed=sys_params%U)
     if (ierr /= ERROR_SUCCESS) then
         print *, "ERROR: Failed to initialize XC functional"
         stop 1

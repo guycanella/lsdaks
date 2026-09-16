@@ -1,3 +1,23 @@
+!> Two-dimensional cubic spline interpolation on a row-wise irregular grid
+!!
+!! The grid is a stack of rows: row `i` sits at abscissa `x(i)` and carries its
+!! own y-grid `y(1:n_y(i), i)`. This is the layout of the Bethe Ansatz XC
+!! tables, where the magnetization grid of each density row spans m ∈ [0, n]
+!! and therefore changes from row to row.
+!!
+!! Interpolation is **cubic in both directions** (it used to be cubic in y and
+!! merely linear in x):
+!!  1. `spline2d_init` pre-computes, for every row, the second derivatives of
+!!     the cubic spline in the y direction.
+!!  2. `spline2d_eval` evaluates those row splines at the requested y, which
+!!     produces a 1D data set (x(i), f_i), and then builds a *clamped* cubic
+!!     spline through it and evaluates it at the requested x.
+!!
+!! The x-direction spline is assembled at every call, exactly as in the C++
+!! reference (`original/spline2D.cc`, functions `exc_value`, `Vxc_up_value`
+!! and `Vxc_dn_value`). That reference also restricts the x window to the rows
+!! that actually bracket the requested y and prepends one synthetic node; both
+!! features are available through the optional arguments of `spline2d_eval`.
 module spline2d
     use lsda_constants, only: dp
     implicit none
@@ -23,6 +43,7 @@ module spline2d
     private :: spline1d_coeff
     private :: spline1d_eval
     private :: find_interval
+    private :: eval_row
 
 contains
     !> Compute cubic spline coefficients (second derivatives) for 1D data
@@ -127,17 +148,44 @@ contains
     !! Constructs cubic spline interpolation for irregular 2D grid.
     !! For each fixed x_i, computes spline coefficients in y direction.
     !!
+    !! The boundary condition of the row splines is selectable. The default,
+    !! `'natural'`, sets the second derivative to zero at both ends of every
+    !! row. The C++ reference (`original/spline2D.cc`, `build_spline_data`)
+    !! instead clamps them: the two V_xc tables get the secants of the first and
+    !! last interval, and the e_xc table gets the physically known derivatives
+    !! (zero at m = 0 by spin symmetry, and the analytic slope of the fully
+    !! polarized line at m = n). Passing `row_bc = 'clamped'` reproduces that;
+    !! `dy_first` / `dy_last` override the secant of the corresponding end.
+    !!
     !! @param[out] spl      Spline object to initialize
     !! @param[in]  x_grid   Grid points in x direction (n)
     !! @param[in]  y_grid   Grid points in y direction (m), shape (n_y_max, n_x)
     !! @param[in]  f_values Function values on grid, shape (n_y_max, n_x)
     !! @param[in]  n_y_pts  Number of valid y points for each x, shape (n_x)
-    subroutine spline2d_init(spl, x_grid, y_grid, f_values, n_y_pts)
+    !! @param[in]  row_bc   Optional row boundary condition, `'natural'`
+    !!                      (default) or `'clamped'`
+    !! @param[in]  dy_first Optional prescribed df/dy at the FIRST y point of
+    !!                      each row, shape (n_x); only used with
+    !!                      `row_bc = 'clamped'` (default: first secant)
+    !! @param[in]  dy_last  Optional prescribed df/dy at the LAST y point of
+    !!                      each row, shape (n_x); only used with
+    !!                      `row_bc = 'clamped'` (default: last secant)
+    subroutine spline2d_init(spl, x_grid, y_grid, f_values, n_y_pts, row_bc, dy_first, dy_last)
         type(spline2d_t), intent(out) :: spl
         real(dp), intent(in) :: x_grid(:), y_grid(:,:), f_values(:,:)
         integer, intent(in) :: n_y_pts(:)
+        character(len=*), intent(in), optional :: row_bc
+        real(dp), intent(in), optional :: dy_first(:), dy_last(:)
+
+        !> Two y nodes closer than this are treated as coincident
+        real(dp), parameter :: Y_DEGENERATE_TOL = 1.0e-15_dp
 
         integer :: i, nx, ny_max, ny
+        character(len=32) :: bc
+        real(dp) :: dy0, dyn
+
+        bc = 'natural'
+        if (present(row_bc)) bc = row_bc
 
         nx = size(x_grid)
         ny_max = size(y_grid, 1)
@@ -166,7 +214,25 @@ contains
                     y_temp = spl%y(1:ny, i)
                     f_temp = spl%f(1:ny, i)
 
-                    call spline1d_coeff(y_temp, f_temp, ny-1, d2y_temp, 'natural', 0.0_dp, 0.0_dp)
+                    if (trim(bc) == 'clamped') then
+                        ! Default: the secants of the extreme intervals; a
+                        ! degenerate interval (padded row) falls back to a flat
+                        ! end instead of dividing by zero.
+                        dy0 = 0.0_dp
+                        if (abs(y_temp(1) - y_temp(0)) > Y_DEGENERATE_TOL) &
+                            dy0 = (f_temp(1) - f_temp(0)) / (y_temp(1) - y_temp(0))
+
+                        dyn = 0.0_dp
+                        if (abs(y_temp(ny-1) - y_temp(ny-2)) > Y_DEGENERATE_TOL) &
+                            dyn = (f_temp(ny-1) - f_temp(ny-2)) / (y_temp(ny-1) - y_temp(ny-2))
+
+                        if (present(dy_first)) dy0 = dy_first(i)
+                        if (present(dy_last)) dyn = dy_last(i)
+
+                        call spline1d_coeff(y_temp, f_temp, ny-1, d2y_temp, 'clamped', dy0, dyn)
+                    else
+                        call spline1d_coeff(y_temp, f_temp, ny-1, d2y_temp, 'natural', 0.0_dp, 0.0_dp)
+                    end if
 
                     spl%d2f_dy2(1:ny, i) = d2y_temp
                 end block
@@ -259,23 +325,82 @@ contains
                     ((b**3 - b) * h**2 / 6.0_dp) * d2y(i+1)
     end function spline1d_eval
 
-    !> Evaluate 2D spline at point (x, y)
+    !> Evaluate the y-direction spline of one row
     !!
-    !! Uses separable interpolation:
-    !! 1. Find x interval: x_i <= x <= x_{i+1}
-    !! 2. Evaluate 1D spline at (x_i, y) and (x_{i+1}, y)
-    !! 3. Linearly interpolate between these values in x direction
+    !! Evaluates the pre-computed cubic spline of row `i_x` at the point `y`.
+    !! Outside the row's y range the polynomial of the extreme interval is
+    !! continued (same behaviour as `spline3` in the C++ reference).
     !!
-    !! @param[in] spl Initialized spline object
-    !! @param[in] x   X-coordinate (density n)
-    !! @param[in] y   Y-coordinate (magnetization m)
-    !! @return        Interpolated value f(x, y)
-    function spline2d_eval(spl, x, y) result(f_interp)
+    !! @param[in] spl  Initialized spline object
+    !! @param[in] i_x  Row index (1 ≤ i_x ≤ spl%n_x)
+    !! @param[in] y    Y-coordinate
+    !! @return         Interpolated value f(x(i_x), y)
+    function eval_row(spl, i_x, y) result(f_row)
+        type(spline2d_t), intent(in) :: spl
+        integer, intent(in) :: i_x
+        real(dp), intent(in) :: y
+        real(dp) :: f_row
+
+        integer :: ny
+
+        ny = spl%n_y(i_x)
+        f_row = spline1d_eval(spl%y(1:ny, i_x), spl%f(1:ny, i_x), &
+                              spl%d2f_dy2(1:ny, i_x), ny - 1, y)
+    end function eval_row
+
+    !> Evaluate 2D spline at point (x, y) with cubic interpolation in BOTH directions
+    !!
+    !! Algorithm:
+    !! 1. Select the window of rows used in the x direction (see below).
+    !! 2. Evaluate the y-direction spline of every row of the window at `y`,
+    !!    producing the 1D data set (x_i, f_i).
+    !! 3. Build a *clamped* cubic spline through that data set and evaluate it
+    !!    at `x`.
+    !!
+    !! Without the optional arguments the window is the whole set of rows and
+    !! both prescribed end derivatives are the corresponding secants; this is
+    !! the general-purpose bicubic interpolation.
+    !!
+    !! With `node0_value` present the routine reproduces literally the scheme
+    !! of the C++ reference for the XC tables:
+    !! - the window starts at the last row whose abscissa is still ≥ `y`
+    !!   (found by the same linear scan as the original), and runs to the last
+    !!   tabulated row; the window therefore *grows* as `y` decreases;
+    !! - a synthetic node (x = y, f = `node0_value`) is prepended. In the XC
+    !!   tables x is the total density n and y is the magnetization m, so
+    !!   x = y is the fully polarized line n_dn = 0, whose value is known
+    !!   analytically. Because n ≥ |m| always holds, this node also removes
+    !!   any extrapolation below the first tabulated density;
+    !! - if the window contains a single tabulated row the original falls back
+    !!   to linear interpolation; pass `allow_linear_branch = .false.` to
+    !!   suppress that fallback (the C++ `Vxc_dn_value` has no such branch).
+    !!
+    !! @param[in] spl                 Initialized spline object
+    !! @param[in] x                   X-coordinate (density n)
+    !! @param[in] y                   Y-coordinate (magnetization m)
+    !! @param[in] node0_value         Optional value of the synthetic node placed
+    !!                                at x = y; its presence also activates the
+    !!                                restricted row window
+    !! @param[in] dfdx_first          Optional prescribed df/dx at the first node
+    !!                                (default: the secant of the first interval)
+    !! @param[in] allow_linear_branch Optional flag (default .true.) enabling the
+    !!                                linear fallback for a single-row window
+    !! @return                        Interpolated value f(x, y)
+    function spline2d_eval(spl, x, y, node0_value, dfdx_first, allow_linear_branch) result(f_interp)
         type(spline2d_t), intent(in) :: spl
         real(dp), intent(in) :: x, y
-        real(dp) :: f_interp, f_left, f_right, t
+        real(dp), intent(in), optional :: node0_value
+        real(dp), intent(in), optional :: dfdx_first
+        logical, intent(in), optional :: allow_linear_branch
+        real(dp) :: f_interp
 
-        integer :: i_x
+        !> Two abscissae closer than this are treated as coincident
+        real(dp), parameter :: X_DEGENERATE_TOL = 1.0e-15_dp
+
+        real(dp), allocatable :: x_loc(:), f_loc(:), d2_loc(:)
+        real(dp) :: dy_ini, dy_fim
+        integer :: i, i_in, i_first, num_n, offset
+        logical :: linear_ok, with_node0
 
         if (.not. spl%initialized) then
             print *, "ERROR: spline2d not initialized!"
@@ -283,57 +408,65 @@ contains
             return
         end if
 
-        i_x = find_interval(spl%x, spl%n_x, x)
+        linear_ok = .true.
+        if (present(allow_linear_branch)) linear_ok = allow_linear_branch
 
-        ! Convert 0-based index to 1-based for Fortran arrays
-        i_x = i_x + 1
+        with_node0 = present(node0_value)
 
-        if (spl%n_x == 1) then
-            ! Single x point - evaluate 1D spline in y direction
-            block
-                integer :: ny1
-                real(dp) :: y_tmp(0:spl%n_y(1)-1), f_tmp(0:spl%n_y(1)-1), d2y_tmp(0:spl%n_y(1)-1)
-                ny1 = spl%n_y(1)
-                y_tmp = spl%y(1:ny1, 1)
-                f_tmp = spl%f(1:ny1, 1)
-                d2y_tmp = spl%d2f_dy2(1:ny1, 1)
-                f_interp = spline1d_eval(y_tmp, f_tmp, d2y_tmp, ny1-1, y)
-            end block
-            return
+        if (with_node0) then
+            ! Same scan as the C++ reference: advance to the first row with
+            ! x(i) >= y, then step one row back.
+            i_in = 1
+            do while (spl%x(i_in) < y .and. i_in < spl%n_x)
+                i_in = i_in + 1
+            end do
+            i_in = i_in - 1
+            i_first = i_in + 1
+
+            ! If `y` coincides with a tabulated abscissa the synthetic node
+            ! would duplicate the first row and every secant would divide by
+            ! zero (the C++ reference divides by zero here). Drop the synthetic
+            ! node instead: it carries no information in that limit.
+            if (abs(spl%x(i_first) - y) < X_DEGENERATE_TOL) with_node0 = .false.
+        else
+            i_first = 1
         end if
 
-        ! Clamp i_x to valid range
-        if (i_x < 1) i_x = 1
-        if (i_x >= spl%n_x) i_x = spl%n_x - 1
+        if (with_node0) then
+            num_n = spl%n_x - i_first + 1
+            offset = 1
+        else
+            num_n = spl%n_x - i_first
+            offset = 0
+        end if
 
-        ! Evaluate at left endpoint (i_x)
-        block
-            integer :: ny_left
-            real(dp), allocatable :: y_tmp(:), f_tmp(:), d2y_tmp(:)
-            ny_left = spl%n_y(i_x)
-            allocate(y_tmp(0:ny_left-1), f_tmp(0:ny_left-1), d2y_tmp(0:ny_left-1))
-            y_tmp = spl%y(1:ny_left, i_x)
-            f_tmp = spl%f(1:ny_left, i_x)
-            d2y_tmp = spl%d2f_dy2(1:ny_left, i_x)
-            f_left = spline1d_eval(y_tmp, f_tmp, d2y_tmp, ny_left-1, y)
-            deallocate(y_tmp, f_tmp, d2y_tmp)
-        end block
+        allocate(x_loc(0:num_n), f_loc(0:num_n), d2_loc(0:num_n))
 
-        ! Evaluate at right endpoint (i_x+1)
-        block
-            integer :: ny_right
-            real(dp), allocatable :: y_tmp(:), f_tmp(:), d2y_tmp(:)
-            ny_right = spl%n_y(i_x+1)
-            allocate(y_tmp(0:ny_right-1), f_tmp(0:ny_right-1), d2y_tmp(0:ny_right-1))
-            y_tmp = spl%y(1:ny_right, i_x+1)
-            f_tmp = spl%f(1:ny_right, i_x+1)
-            d2y_tmp = spl%d2f_dy2(1:ny_right, i_x+1)
-            f_right = spline1d_eval(y_tmp, f_tmp, d2y_tmp, ny_right-1, y)
-            deallocate(y_tmp, f_tmp, d2y_tmp)
-        end block
+        if (with_node0) then
+            x_loc(0) = y
+            f_loc(0) = node0_value
+        end if
 
-        t = (x - spl%x(i_x)) / (spl%x(i_x+1) - spl%x(i_x))
-        f_interp = (1.0_dp - t) * f_left + t * f_right
+        do i = offset, num_n
+            x_loc(i) = spl%x(i_first + i - offset)
+            f_loc(i) = eval_row(spl, i_first + i - offset, y)
+        end do
+
+        if (num_n < 1) then
+            ! Single node: nothing to interpolate in x
+            f_interp = f_loc(0)
+        else if (num_n == 1 .and. linear_ok) then
+            f_interp = f_loc(0) + (f_loc(1) - f_loc(0)) / (x_loc(1) - x_loc(0)) * (x - x_loc(0))
+        else
+            dy_ini = (f_loc(1) - f_loc(0)) / (x_loc(1) - x_loc(0))
+            if (present(dfdx_first)) dy_ini = dfdx_first
+            dy_fim = (f_loc(num_n) - f_loc(num_n-1)) / (x_loc(num_n) - x_loc(num_n-1))
+
+            call spline1d_coeff(x_loc, f_loc, num_n, d2_loc, 'clamped', dy_ini, dy_fim)
+            f_interp = spline1d_eval(x_loc, f_loc, d2_loc, num_n, x)
+        end if
+
+        deallocate(x_loc, f_loc, d2_loc)
     end function spline2d_eval
 
     !> Clean up spline object

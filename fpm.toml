@@ -61,11 +61,6 @@ source-dir = "test"
 main = "test_boundary_conditions.f90"
 
 [[test]]
-name = "test_degeneracy_handler"
-source-dir = "test"
-main = "test_degeneracy_handler.f90"
-
-[[test]]
 name = "test_errors"
 source-dir = "test"
 main = "test_errors.f90"
