@@ -36,7 +36,28 @@ contains
             test("convert_system_params_periodic", test_convert_system_params_periodic), &
             test("convert_system_params_open", test_convert_system_params_open), &
             test("convert_system_params_twisted", test_convert_system_params_twisted), &
-            test("convert_scf_params", test_convert_scf_params) &
+            test("convert_scf_params", test_convert_scf_params), &
+            test("validate_phase_units_of_pi", test_validate_phase_units_of_pi), &
+            test("parse_int_list_commas", test_parse_int_list_commas), &
+            test("parse_int_list_blanks", test_parse_int_list_blanks), &
+            test("parse_int_list_empty", test_parse_int_list_empty), &
+            test("parse_int_list_separators", test_parse_int_list_separators), &
+            test("parse_int_list_not_a_number", test_parse_int_list_not_a_number), &
+            test("parse_int_list_out_of_range", test_parse_int_list_out_of_range), &
+            test("parse_int_list_duplicates", test_parse_int_list_duplicates), &
+            test("barrier_single_bounds_exact_width", test_barrier_single_bounds_exact_width), &
+            test("namelist_new_keys", test_namelist_new_keys), &
+            test("namelist_spring_constant", test_namelist_spring_constant), &
+            test("namelist_unknown_key", test_namelist_unknown_key), &
+            test("namelist_malformed_value", test_namelist_malformed_value), &
+            test("namelist_missing_group", test_namelist_missing_group), &
+            test("namelist_obsolete_distribution", test_namelist_obsolete_distribution), &
+            test("namelist_no_trailing_newline", test_namelist_no_trailing_newline), &
+            test("namelist_no_closing_slash", test_namelist_no_closing_slash), &
+            test("namelist_dollar_group_form", test_namelist_dollar_group_form), &
+            test("namelist_imp_positions_overflow", test_namelist_imp_positions_overflow), &
+            test("namelist_group_gate_matches_reader", &
+                 test_namelist_group_gate_matches_reader) &
         ])
     end function get_input_parser_tests
 
@@ -739,7 +760,7 @@ contains
         use input_parser
         use lsda_types, only: system_params_t
         use boundary_conditions, only: BC_PERIODIC
-        use lsda_constants, only: dp
+        use lsda_constants, only: dp, PI
         use lsda_errors, only: ERROR_SUCCESS
 
         type(input_params_t) :: inputs
@@ -761,7 +782,13 @@ contains
         call check(sys_params%Ndown == 6, "Ndown should match")
         call check(abs(sys_params%U - 5.5_dp) < 1.0e-10_dp, "U should match")
         call check(sys_params%bc == BC_PERIODIC, "BC should be PERIODIC")
-        call check(abs(sys_params%phase - 0.5_dp) < 1.0e-10_dp, "Phase should match")
+        ! The unit conversion (units of pi -> radians) is unconditional: the
+        ! phase is simply unused under periodic BC. Asserting the converted
+        ! value here, rather than the raw input, keeps this test from pinning
+        ! the copy-verbatim behaviour that made system_params_t%phase arrive in
+        ! the wrong unit (see test_convert_system_params_twisted).
+        call check(abs(sys_params%phase - 0.5_dp * PI) < 1.0e-10_dp, &
+                   "Phase should be converted to radians even when unused")
     end subroutine test_convert_system_params_periodic
 
 
@@ -793,12 +820,27 @@ contains
 
 
     !> Test convert_to_system_params with twisted BC
+    !!
+    !! The conversion of the twist angle from units of π (the input) to radians
+    !! (the unit of `system_params_t%phase`, the one the Hamiltonian builder and
+    !! validate_bc_parameters work in) happens HERE, inside the converter.
+    !!
+    !! It used to be applied by the caller, in app/main.f90, right after this
+    !! routine returned: the converter handed back a `system_params_t` whose
+    !! `phase` was in the wrong unit for every one of its consumers, and the
+    !! contract only closed because there happened to be a single caller. This
+    !! test previously pinned that state (it asserted phase = 1.0 for an input
+    !! of 1.0, i.e. no conversion at all), which is why it is updated rather
+    !! than added to: the old expectation encoded the trap. Any new executable,
+    !! example or test converting the inputs and feeding the result to the KS
+    !! cycle would have run with θ = phase rad instead of θ = phase·π, and
+    !! nothing downstream can tell 0.5 from 1.5708.
     subroutine test_convert_system_params_twisted()
         use fortuno_serial, only: check => serial_check
         use input_parser
         use lsda_types, only: system_params_t
         use boundary_conditions, only: BC_TWISTED
-        use lsda_constants, only: dp
+        use lsda_constants, only: dp, PI
         use lsda_errors, only: ERROR_SUCCESS
 
         type(input_params_t) :: inputs
@@ -816,7 +858,14 @@ contains
 
         call check(ierr == ERROR_SUCCESS, "Conversion should succeed")
         call check(sys_params%bc == BC_TWISTED, "BC should be TWISTED")
-        call check(abs(sys_params%phase - 1.0_dp) < 1.0e-10_dp, "Phase should match")
+        call check(abs(sys_params%phase - PI) < 1.0e-10_dp, &
+                   "phase = 1 (in units of pi) must come back as pi radians")
+
+        ! A second value, so the check cannot be satisfied by a constant.
+        inputs%phase = 0.5_dp
+        call convert_to_system_params(inputs, sys_params, ierr)
+        call check(abs(sys_params%phase - 0.5_dp * PI) < 1.0e-10_dp, &
+                   "phase = 0.5 (in units of pi) must come back as pi/2 radians")
     end subroutine test_convert_system_params_twisted
 
 
@@ -849,5 +898,870 @@ contains
         call check(.not. scf_params%verbose, "verbose should be false")
         call check(.not. scf_params%store_history, "store_history should be false")
     end subroutine test_convert_scf_params
+
+
+    !> The twist phase is an input in units of pi and its range is [0, 2)
+    !!
+    !! Physics: the Aharonov-Bohm phase enters the Hamiltonian as e^{i theta}
+    !! with theta = phase*pi radians, so the whole physically distinct range of
+    !! the twist is phase in [0, 2). Anything outside it is either redundant or
+    !! rejected by validate_bc_parameters deep inside the Hamiltonian builder,
+    !! where the error message can no longer name the input that caused it.
+    !!
+    !! Regression: before the unit convention was fixed, `phase` was consumed as
+    !! if it were already in radians and no range check existed at input level,
+    !! so `phase = 2.5` (= 2.5 pi) travelled all the way to the diagonalization.
+    subroutine test_validate_phase_units_of_pi()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        inputs = input_params_t()
+        inputs%L = 10
+        inputs%Nup = 5
+        inputs%Ndown = 5
+        inputs%bc_type = 'twisted'
+
+        inputs%phase = 0.5_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "phase = 0.5 pi must be accepted")
+
+        inputs%phase = 0.0_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "phase = 0 must be accepted (reduces to periodic)")
+
+        inputs%phase = 1.999_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "phase just below 2 pi must be accepted")
+
+        inputs%phase = 2.0_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "phase = 2 (= 2 pi) must be rejected")
+
+        inputs%phase = -0.1_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "negative phase must be rejected")
+
+        ! Under open/periodic BC the phase is unused and must not gate the run.
+        inputs%bc_type = 'periodic'
+        inputs%phase = 7.0_dp
+        call validate_inputs(inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "phase is irrelevant without twisted BC")
+    end subroutine test_validate_phase_units_of_pi
+
+
+    !> A comma separated list of impurity sites is parsed in order
+    subroutine test_parse_int_list_commas()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, allocatable :: values(:)
+        integer :: ierr
+
+        call parse_int_list('10, 25,40 ,55', 60, values, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "A well formed list must be accepted")
+        call check(allocated(values), "values must be allocated on success")
+        call check(size(values) == 4, "All four sites must be parsed")
+        call check(all(values == [10, 25, 40, 55]), "Sites must keep the order given")
+    end subroutine test_parse_int_list_commas
+
+
+    !> Blanks alone also separate sites
+    subroutine test_parse_int_list_blanks()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, allocatable :: values(:)
+        integer :: ierr
+
+        call parse_int_list('  3   7  ', 10, values, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "Blank separated sites must be accepted")
+        call check(size(values) == 2, "Two sites must be parsed")
+        call check(all(values == [3, 7]), "Values must match")
+    end subroutine test_parse_int_list_blanks
+
+
+    !> An empty list is an error, not an empty impurity set
+    !!
+    !! Silently accepting it would run a clean system under the name of a
+    !! disordered one.
+    subroutine test_parse_int_list_empty()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        integer, allocatable :: values(:)
+        integer :: ierr
+
+        call parse_int_list('', 10, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "An empty string must be rejected")
+        call check(.not. allocated(values), "Nothing must be returned on error")
+
+        call parse_int_list('     ', 10, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A blank-only string must be rejected")
+    end subroutine test_parse_int_list_empty
+
+
+    !> Empty fields (repeated, leading or trailing commas) are errors
+    !!
+    !! Regression: a tolerant parser would read '10,,25' as two sites and
+    !! '10,25,' as two sites as well, which is indistinguishable from the
+    !! intended list - until the typo hides a site the user believed was there.
+    subroutine test_parse_int_list_separators()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        integer, allocatable :: values(:)
+        integer :: ierr
+
+        call parse_int_list('10,,25', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "Two consecutive commas must be rejected")
+
+        call parse_int_list(',10,25', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A leading comma must be rejected")
+
+        call parse_int_list('10,25,', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A trailing comma must be rejected")
+
+        call parse_int_list('10, , 25', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "An empty field must be rejected")
+    end subroutine test_parse_int_list_separators
+
+
+    !> Non integer tokens are errors, never partially read numbers
+    !!
+    !! Regression: list-directed READ accepts '1.5' (as 1) and stops at the
+    !! first bad character of '12a' (as 12), so a typo would be accepted as a
+    !! different, perfectly plausible lattice site.
+    subroutine test_parse_int_list_not_a_number()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        integer, allocatable :: values(:)
+        integer :: ierr
+
+        call parse_int_list('10, abc', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A word must be rejected")
+
+        call parse_int_list('12a', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A trailing letter must be rejected")
+
+        call parse_int_list('1.5', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A real number must be rejected")
+
+        call parse_int_list('-', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A lone sign must be rejected")
+    end subroutine test_parse_int_list_not_a_number
+
+
+    !> Sites outside [1, L] are errors
+    subroutine test_parse_int_list_out_of_range()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT, ERROR_SUCCESS
+
+        integer, allocatable :: values(:)
+        integer :: ierr
+
+        call parse_int_list('0', 10, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "Site 0 must be rejected (1-indexed lattice)")
+
+        call parse_int_list('11', 10, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A site beyond L must be rejected")
+
+        call parse_int_list('-3', 10, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A negative site must be rejected")
+
+        call parse_int_list('1, 10', 10, values, ierr)
+        call check(ierr == ERROR_SUCCESS, "Both ends of the lattice must be accepted")
+    end subroutine test_parse_int_list_out_of_range
+
+
+    !> A repeated site is an error
+    !!
+    !! potential_impurity_multiple ADDS overlapping amplitudes, so '10, 10'
+    !! would silently produce an impurity of strength 2*V0 on one site.
+    subroutine test_parse_int_list_duplicates()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        integer, allocatable :: values(:)
+        integer :: ierr
+
+        call parse_int_list('10, 25, 10', 30, values, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, "A repeated site must be rejected")
+    end subroutine test_parse_int_list_duplicates
+
+
+    !> A single barrier covers EXACTLY `width` sites, even and odd alike
+    !!
+    !! Regression: the executable used to compute the barrier as
+    !! [position - width/2, position + width/2] with integer division on both
+    !! sides, which spans 2*(width/2)+1 sites: right for odd widths, but
+    !! width+1 sites for even ones. Since the transmission through a barrier
+    !! decays exponentially with its width, one extra site is a physics error.
+    subroutine test_barrier_single_bounds_exact_width()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+
+        integer :: i_start, i_end
+
+        call barrier_single_bounds(50, 5, i_start, i_end)
+        call check(i_end - i_start + 1 == 5, "An odd width must give exactly 5 sites")
+        call check(i_start == 48 .and. i_end == 52, "An odd barrier must be centred on the site")
+
+        call barrier_single_bounds(50, 4, i_start, i_end)
+        call check(i_end - i_start + 1 == 4, "An even width must give exactly 4 sites (not 5)")
+        call check(i_start == 48 .and. i_end == 51, "An even barrier keeps the centre inside")
+
+        call barrier_single_bounds(50, 1, i_start, i_end)
+        call check(i_start == 50 .and. i_end == 50, "Width 1 must be the single centre site")
+
+        call barrier_single_bounds(10, 20, i_start, i_end)
+        call check(i_end - i_start + 1 == 20, "A wide even barrier must give exactly 20 sites")
+    end subroutine test_barrier_single_bounds_exact_width
+
+
+    !> The namelist carries the keys the new potential/table dispatch needs
+    !!
+    !! Regression: quasiperiodic had no keys at all (the potential was
+    !! unreachable from the executable) and the table directory was hard-wired
+    !! relative to the working directory.
+    subroutine test_namelist_new_keys()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        character(len=*), parameter :: fname = 'test_namelist_new_keys.txt'
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&system"
+        write(io_unit, '(A)') "  L = 8"
+        write(io_unit, '(A)') "  Nup = 4"
+        write(io_unit, '(A)') "  Ndown = 4"
+        write(io_unit, '(A)') "  table_dir = '/tmp/lsdaks_tables'"
+        write(io_unit, '(A)') "/"
+        write(io_unit, '(A)') "&potential"
+        write(io_unit, '(A)') "  potential_type = 'quasiperiodic'"
+        write(io_unit, '(A)') "  aah_lambda = 2.5"
+        write(io_unit, '(A)') "  aah_beta = 0.25"
+        write(io_unit, '(A)') "  aah_phi = 1.25"
+        write(io_unit, '(A)') "  imp_positions_str = '2, 5'"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "The namelist must be read")
+        call check(trim(inputs%table_dir) == '/tmp/lsdaks_tables', "table_dir must be read")
+        call check(abs(inputs%aah_lambda - 2.5_dp) < 1.0e-12_dp, "aah_lambda must be read")
+        call check(abs(inputs%aah_beta - 0.25_dp) < 1.0e-12_dp, "aah_beta must be read")
+        call check(abs(inputs%aah_phi - 1.25_dp) < 1.0e-12_dp, "aah_phi must be read")
+        call check(trim(inputs%imp_positions_str) == '2, 5', "imp_positions_str must be read")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_new_keys
+
+
+    !> `spring_constant` must reach input_params_t from the &potential group
+    !!
+    !! Regression for the namelist half of Bug #5 ("Harmonic Parameter Not
+    !! Passed"). The field existed in input_params_t and app/main.f90 handed it
+    !! to the harmonic generator, but it was never listed in the
+    !! `namelist /potential/` declaration, so
+    !!
+    !!     &potential
+    !!       potential_type = 'harmonic'
+    !!       spring_constant = 0.02
+    !!     /
+    !!
+    !! ran with the default k = 0.001 - a trap twenty times shallower than the
+    !! one requested - and, with iostat ignored, said nothing. That made the
+    !! harmonic trap impossible to compare against the C++ reference: the
+    !! discrepancy looked exactly like a physics bug.
+    !!
+    !! Without the fix this test fails twice over: `spring_constant` would stay
+    !! at its default AND (now that iostat is checked) the read would abort on
+    !! an unmatched key.
+    subroutine test_namelist_spring_constant()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        character(len=*), parameter :: fname = 'test_namelist_spring.txt'
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&potential"
+        write(io_unit, '(A)') "  potential_type = 'harmonic'"
+        write(io_unit, '(A)') "  spring_constant = 0.02"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "spring_constant must be an accepted key")
+        call check(abs(inputs%spring_constant - 0.02_dp) < 1.0e-12_dp, &
+                   "spring_constant must be read from the namelist, not left at 0.001")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_spring_constant
+
+
+    !> An unknown key must abort the read instead of being ignored
+    !!
+    !! Regression for the ignored `iostat`: the four namelist reads used to
+    !! discard their status, so a misspelled key left its parameter silently at
+    !! the default and the run completed with plausible numbers for a system
+    !! nobody had asked for. Without the fix, ierr comes back ERROR_SUCCESS.
+    subroutine test_namelist_unknown_key()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        character(len=*), parameter :: fname = 'test_namelist_bad_key.txt'
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&system"
+        write(io_unit, '(A)') "  L = 12"
+        write(io_unit, '(A)') "  no_such_key = 3"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "An unknown namelist key must be rejected, not silently ignored")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_unknown_key
+
+
+    !> A malformed value must abort the read
+    !!
+    !! gfortran reports a malformed namelist value as iostat = -1 / "End of
+    !! file", the SAME status as a group that is not in the file at all, so
+    !! testing `iostat > 0` alone is not enough. The parser separates the two by
+    !! scanning the file for the group header; this test is what pins that
+    !! behaviour, and it fails if the check is reduced to `iostat > 0`.
+    subroutine test_namelist_malformed_value()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        character(len=*), parameter :: fname = 'test_namelist_bad_value.txt'
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&system"
+        write(io_unit, '(A)') "  L = 12"
+        write(io_unit, '(A)') "  U = 1.2.3"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "A malformed value must be rejected even though gfortran calls it EOF")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_malformed_value
+
+
+    !> A group that is simply absent is legitimate and must only warn
+    !!
+    !! The four groups are optional by design (input_minimal.txt has &system
+    !! only). Rejecting an absent group would break every short input file, so
+    !! the error handling has to stop at the broken ones.
+    subroutine test_namelist_missing_group()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp, MIX_ALPHA
+        use lsda_errors, only: ERROR_SUCCESS
+
+        character(len=*), parameter :: fname = 'test_namelist_no_group.txt'
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&system"
+        write(io_unit, '(A)') "  L = 12"
+        write(io_unit, '(A)') "  Nup = 6"
+        write(io_unit, '(A)') "  Ndown = 6"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, &
+                   "An input file with only &system must still be accepted")
+        call check(inputs%L == 12, "The group that IS present must be applied")
+        call check(trim(inputs%potential_type) == 'uniform', &
+                   "The absent groups must keep their defaults")
+        call check(abs(inputs%mixing_alpha - MIX_ALPHA) < 1.0e-12_dp, &
+                   "An absent &scf must leave the mixing weight at its default")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_missing_group
+
+
+    !> The removed key `distribution` must be rejected, not accepted
+    !!
+    !! `distribution` was a &potential key that nothing ever read: the disorder
+    !! generator is selected by potential_type alone. It was removed, which by
+    !! construction turns an old input file into one carrying an unknown key -
+    !! and that must be reported (with the migration hint printed by
+    !! print_namelist_hint), not absorbed.
+    subroutine test_namelist_obsolete_distribution()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        character(len=*), parameter :: fname = 'test_namelist_obsolete.txt'
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&potential"
+        write(io_unit, '(A)') "  potential_type = 'random_uniform'"
+        write(io_unit, '(A)') "  distribution = 'gaussian'"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "The removed key 'distribution' must be reported, not ignored")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_obsolete_distribution
+
+
+    !> An input file whose last line is not newline-terminated must be accepted
+    !!
+    !! Regression. gfortran returns iostat = -1 / "End of file" for the namelist
+    !! group that closes an unterminated last line, even though every value in
+    !! that group was assigned correctly. Since the parser (rightly) treats
+    !! "end-of-file with the group header present" as a broken group, a
+    !! perfectly valid file whose last byte is the closing '/' was rejected with
+    !! the same message as a malformed value. That hit `input.txt`, the most
+    !! documented way of running the code (`fpm run lsdaks` with no arguments),
+    !! and four of the six files in examples/, none of which any unit test
+    !! covered.
+    !!
+    !! The file is written in stream mode on purpose: `write(unit,'(A)')` always
+    !! terminates the record, so the bug cannot be reproduced with a formatted
+    !! write.
+    !!
+    !! The check on `output_prefix` matters: &output is the LAST group, the one
+    !! whose read reaches end-of-file, so it proves the values were not just
+    !! tolerated but actually applied.
+    subroutine test_namelist_no_trailing_newline()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        character(len=*), parameter :: fname = 'test_namelist_no_newline.txt'
+        character(len=*), parameter :: NL = new_line('a')
+        character(len=*), parameter :: contents = &
+            "&system" // NL // &
+            "  L = 14" // NL // &
+            "  Nup = 7" // NL // &
+            "  Ndown = 7" // NL // &
+            "  U = 2.5" // NL // &
+            "/" // NL // &
+            "&output" // NL // &
+            "  output_prefix = 'no_newline_run'" // NL // &
+            "/"
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write', &
+             access='stream', form='unformatted')
+        write(io_unit) contents
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, &
+                   "A file whose last line has no newline must still be accepted")
+        call check(inputs%L == 14, "L must be read from a file with no final newline")
+        call check(abs(inputs%U - 2.5_dp) < 1.0e-12_dp, &
+                   "U must be read from a file with no final newline")
+        call check(trim(inputs%output_prefix) == 'no_newline_run', &
+                   "The last group, the one that ends at EOF, must be applied too")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_no_trailing_newline
+
+
+    !> A group with no closing '/' must still be rejected
+    !!
+    !! Sibling of test_namelist_no_trailing_newline: tolerating the missing final
+    !! newline must not be done by tolerating end-of-file in general. This is the
+    !! case that only end-of-file can reveal - the group header is in the file,
+    !! the keys are well formed, and the terminator is missing - so if the
+    !! end-of-file branch is ever weakened to "accept whatever was read", this
+    !! test fails while the one above keeps passing.
+    subroutine test_namelist_no_closing_slash()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        character(len=*), parameter :: fname = 'test_namelist_no_slash.txt'
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&system"
+        write(io_unit, '(A)') "  L = 12"
+        write(io_unit, '(A)') "  Nup = 6"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "A namelist group with no closing '/' must be rejected")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_no_closing_slash
+
+
+    !> The legacy `$group ... $end` form must be read, not silently defaulted
+    !!
+    !! Regression, and the worst kind: gfortran accepts the legacy header
+    !! character (measured: `$system / L = 42 / $end` returns iostat = 0 with
+    !! every value assigned), but `namelist_group_present` recognised only '&'.
+    !! Once that function started GATING the read, a file written in the '$'
+    !! form stopped being read at all: the group was reported as absent and
+    !! every one of its keys went back to the default - L, Nup, Ndown, U and bc
+    !! quietly replaced by 10/5/5/4.0/'periodic'. The run then completes and
+    !! prints plausible numbers for a system nobody asked for, which is exactly
+    !! the failure mode the iostat checking was introduced to remove.
+    !!
+    !! Without the fix every value check below fails (the defaults are read
+    !! instead), while `ierr` still comes back ERROR_SUCCESS - hence the checks
+    !! are on the values, not on the status.
+    subroutine test_namelist_dollar_group_form()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        character(len=*), parameter :: fname = 'test_namelist_dollar.txt'
+        type(input_params_t) :: inputs
+        integer :: io_unit, ierr
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "$system"
+        write(io_unit, '(A)') "  L = 16"
+        write(io_unit, '(A)') "  Nup = 8"
+        write(io_unit, '(A)') "  Ndown = 8"
+        write(io_unit, '(A)') "  U = 3.0"
+        write(io_unit, '(A)') "  bc = 'open'"
+        write(io_unit, '(A)') "$end"
+        write(io_unit, '(A)') "$output"
+        write(io_unit, '(A)') "  output_prefix = 'dollar_run'"
+        write(io_unit, '(A)') "$end"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "A file in the '$' form must be accepted")
+        call check(inputs%L == 16, "L must be read from a '$system' group")
+        call check(inputs%Nup == 8, "Nup must be read from a '$system' group")
+        call check(inputs%Ndown == 8, "Ndown must be read from a '$system' group")
+        call check(abs(inputs%U - 3.0_dp) < 1.0e-12_dp, &
+                   "U must be read from a '$system' group, not left at the default 4.0")
+        call check(trim(inputs%bc_type) == 'open', &
+                   "bc must be read from a '$system' group, not left at 'periodic'")
+        call check(trim(inputs%output_prefix) == 'dollar_run', &
+                   "A second '$' group must be read too")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_dollar_group_form
+
+
+    !> A list of impurity sites too long for its field must be rejected
+    !!
+    !! `imp_positions_str` is a `character(len=500)` and gfortran truncates a
+    !! longer namelist value SILENTLY (measured: iostat = 0, the tail simply
+    !! dropped). For a list of impurity positions that is the most expensive
+    !! kind of input error: the run goes on with fewer impurities than asked
+    !! for and produces a perfectly plausible result for a different system.
+    !! parse_int_list is deliberately strict with every other malformed list
+    !! (empty field, non-integer token, out of range, repeated site), so
+    !! tolerating the loss of a tail by field size was incoherent.
+    !!
+    !! Without the guard `read_namelist_file` returns ERROR_SUCCESS here and
+    !! `imp_positions_str` holds a truncated - and syntactically valid - list.
+    subroutine test_namelist_imp_positions_overflow()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT, ERROR_SUCCESS
+
+        character(len=*), parameter :: fname = 'test_namelist_imp_overflow.txt'
+        type(input_params_t) :: inputs
+        character(len=:), allocatable :: long_list
+        character(len=8) :: num
+        integer :: io_unit, ierr, k
+
+        ! 201 sites of 3 digits each ("100, 101, ...") is well past 500 chars.
+        long_list = '100'
+        do k = 101, 300
+            write(num, '(I0)') k
+            long_list = long_list // ', ' // trim(num)
+        end do
+
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&potential"
+        write(io_unit, '(A)') "  potential_type = 'impurity_multiple'"
+        write(io_unit, '(A)') "  imp_positions_str = '" // trim(long_list) // "'"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "A truncated imp_positions_str must be rejected, not silently shortened")
+
+        ! A list that fits must keep working.
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&potential"
+        write(io_unit, '(A)') "  imp_positions_str = '10, 25, 40'"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "A list that fits the field must be accepted")
+        call check(trim(inputs%imp_positions_str) == '10, 25, 40', &
+                   "A list that fits the field must be read verbatim")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_imp_positions_overflow
+
+
+    !> The presence gate must never disagree with what `read(nml=)` really does
+    !!
+    !! `namelist_group_present` decides, BEFORE the read, whether a group is in
+    !! the file; a group it misses is not read at all and keeps every default in
+    !! silence. That makes a divergence between the gate and the actual reader
+    !! invisible in a run, so the only way to catch one is to put the two side
+    !! by side on the same records - which is what this battery does. Each case
+    !! asserts two things:
+    !!
+    !! 1. the gate returns the verdict the case documents;
+    !! 2. whenever the READER assigned the sentinel value, the gate said
+    !!    "present". This is the implication that matters, and it is checked
+    !!    mechanically for every case rather than being reasoned about by hand:
+    !!    the '$' form was accepted by the reader and missed by the gate, and a
+    !!    hand-written argument that "the header is always '&'" is precisely
+    !!    what let it through.
+    !!
+    !! The converse implication is deliberately NOT asserted: a gate false
+    !! positive is harmless (the read of an absent group from an internal file
+    !! returns iostat = 0 and changes nothing), and it is what a broken group
+    !! legitimately looks like - present in the file, rejected by the reader.
+    subroutine test_namelist_group_gate_matches_reader()
+        character, parameter :: TAB = char(9)
+        character, parameter :: CR = char(13)
+        character(len=900) :: r(4)
+
+        ! Tab before the header: adjustl() does not move a tab, so a gate that
+        ! only looked at the first character would miss this.
+        r = ''
+        r(1) = TAB // '&gsys'; r(2) = '  L = 42'; r(3) = '/'
+        call check_gate_vs_reader(r(1:3), 'gsys', .true., 'tab before the header')
+
+        ! Group names are case-insensitive for the reader; the gate folds too.
+        r = ''
+        r(1) = '&GSYS'; r(2) = '  L = 42'; r(3) = '/'
+        call check_gate_vs_reader(r(1:3), 'gsys', .true., 'uppercase header')
+
+        r = ''
+        r(1) = '&GsYs'; r(2) = '  L = 42'; r(3) = '/'
+        call check_gate_vs_reader(r(1:3), 'gsys', .true., 'mixed case header')
+
+        ! Header away from the start of the line, with and without other text.
+        r = ''
+        r(1) = '    &gsys L = 42 /'
+        call check_gate_vs_reader(r(1:1), 'gsys', .true., 'header after blanks')
+
+        r = ''
+        r(1) = 'junk &gsys L = 42 /'
+        call check_gate_vs_reader(r(1:1), 'gsys', .true., 'header after other text')
+
+        ! Two groups on one line: both must be found.
+        r = ''
+        r(1) = '&gsys L = 42 / &gout M = 7 /'
+        call check_gate_vs_reader(r(1:1), 'gsys', .true., 'two groups on a line (first)')
+        call check_gate_vs_reader(r(1:1), 'gout', .true., 'two groups on a line (second)')
+
+        ! A header inside a quoted VALUE is not a header: the reader ignores it
+        ! and so must the gate, or an absent group would abort the run.
+        r = ''
+        r(1) = '&gsys'; r(2) = "  s = '&gout'"; r(3) = '  L = 42'; r(4) = '/'
+        call check_gate_vs_reader(r(1:4), 'gout', .false., 'header inside single quotes')
+        call check_gate_vs_reader(r(1:4), 'gsys', .true., 'the group around a quoted header')
+
+        r = ''
+        r(1) = '&gsys'; r(2) = '  s = "&gout"'; r(3) = '  L = 42'; r(4) = '/'
+        call check_gate_vs_reader(r(1:4), 'gout', .false., 'header inside double quotes')
+
+        ! A header after a comment marker is prose.
+        r = ''
+        r(1) = '&gsys'; r(2) = '  L = 42'; r(3) = '/'; r(4) = '! &gout M = 7 /'
+        call check_gate_vs_reader(r(1:4), 'gout', .false., 'header after !')
+
+        ! The legacy '$' form, in both its spellings. THIS is the case the gate
+        ! used to miss while the reader accepted it.
+        r = ''
+        r(1) = '$gsys'; r(2) = '  L = 42'; r(3) = '$end'
+        call check_gate_vs_reader(r(1:3), 'gsys', .true., 'legacy $group ... $end')
+
+        r = ''
+        r(1) = '$gsys'; r(2) = '  L = 42'; r(3) = '/'
+        call check_gate_vs_reader(r(1:3), 'gsys', .true., 'legacy $group closed by /')
+
+        ! '$end' is a terminator, never a group name.
+        r = ''
+        r(1) = '$gsys'; r(2) = '  L = 42'; r(3) = '$end'
+        call check_gate_vs_reader(r(1:3), 'end', .false., '$end is not a group named end')
+
+        ! A blank (or a tab) between the header character and the name is NOT a
+        ! header for the reader - it assigns nothing - so the gate must agree.
+        r = ''
+        r(1) = '& gsys'; r(2) = '  L = 42'; r(3) = '/'
+        call check_gate_vs_reader(r(1:3), 'gsys', .false., 'blank between & and the name')
+
+        r = ''
+        r(1) = '&' // TAB // 'gsys'; r(2) = '  L = 42'; r(3) = '/'
+        call check_gate_vs_reader(r(1:3), 'gsys', .false., 'tab between & and the name')
+
+        ! A record that still carries the CR of a CRLF file: the reader accepts
+        ! it, so the gate must not be thrown off by the trailing control byte.
+        r = ''
+        r(1) = '&gsys' // CR; r(2) = '  L = 42' // CR; r(3) = '/' // CR
+        call check_gate_vs_reader(r(1:3), 'gsys', .true., 'CRLF records')
+
+        ! A UTF-8 BOM in front of the header: the reader skips it.
+        r = ''
+        r(1) = char(239) // char(187) // char(191) // '&gsys'
+        r(2) = '  L = 42'; r(3) = '/'
+        call check_gate_vs_reader(r(1:3), 'gsys', .true., 'UTF-8 BOM before the header')
+
+        ! A line longer than the 512-character chunk of read_input_records.
+        r = ''
+        r(1) = repeat(' ', 700) // '&gsys L = 42 /'
+        call check_gate_vs_reader(r(1:1), 'gsys', .true., 'header past column 512')
+
+        ! An empty file is a single blank record (read_input_records guarantees
+        ! it): no group, and the absent-group note is the right outcome.
+        r = ''
+        call check_gate_vs_reader(r(1:1), 'gsys', .false., 'empty file')
+
+        r = ''
+        r(1) = '! nothing here'; r(2) = '!  nor here'
+        call check_gate_vs_reader(r(1:2), 'gsys', .false., 'file with comments only')
+
+        ! Header in the last record with no body and no terminator: the group IS
+        ! there and the reader fails on it (iostat = -1), which is what must be
+        ! reported as a broken group instead of an absent one.
+        r = ''
+        r(1) = '&gsys'; r(2) = '  L = 42'; r(3) = '/'; r(4) = '&gout'
+        call check_gate_vs_reader(r(1:4), 'gout', .true., 'header at the end, unterminated')
+    end subroutine test_namelist_group_gate_matches_reader
+
+
+    !> One case of the battery above: gate verdict vs. what the reader did
+    !!
+    !! The namelist groups are declared here, next to the variables they
+    !! describe, so that the very same records are handed to
+    !! `namelist_group_present` and to `read(records, nml=...)`.
+    !!
+    !! @param[in] records     Records to test (as read_input_records would yield)
+    !! @param[in] group       Group to look for ('gsys', 'gout' or anything else)
+    !! @param[in] expect_gate Verdict the gate must return for this case
+    !! @param[in] label       Description used in the failure messages
+    subroutine check_gate_vs_reader(records, group, expect_gate, label)
+        use fortuno_serial, only: check => serial_check
+        use input_parser, only: namelist_group_present
+
+        character(len=*), intent(in) :: records(:)
+        character(len=*), intent(in) :: group
+        logical, intent(in) :: expect_gate
+        character(len=*), intent(in) :: label
+
+        integer :: L, M, io_stat
+        character(len=40) :: s
+        logical :: gate, assigned
+
+        namelist /gsys/ L, s
+        namelist /gout/ M
+
+        gate = namelist_group_present(records, group)
+
+        L = -1
+        M = -1
+        s = ''
+        io_stat = 0
+        assigned = .false.
+
+        if (group == 'gsys') then
+            read(records, nml=gsys, iostat=io_stat)
+            assigned = (L == 42)
+        else if (group == 'gout') then
+            read(records, nml=gout, iostat=io_stat)
+            assigned = (M == 7)
+        end if
+
+        call check(gate .eqv. expect_gate, &
+                   "gate verdict for &" // group // " (" // label // ")")
+        call check(.not. assigned .or. gate, &
+                   "the reader assigned &" // group // " but the gate called it absent (" // &
+                   label // ")")
+    end subroutine check_gate_vs_reader
 
 end program test_input_parser

@@ -74,7 +74,9 @@ contains
             test("scf_fully_polarised_channel", &
                  test_scf_fully_polarised_channel), &
             test("scf_full_band_attractive_u", &
-                 test_scf_full_band_attractive_u) &
+                 test_scf_full_band_attractive_u), &
+            test("scf_failure_exposes_final_state", &
+                 test_scf_failure_exposes_final_state) &
         ])
     end function get_kohn_sham_tests
 
@@ -2290,5 +2292,111 @@ contains
                                                   -311.0_dp, 1.0e-8_dp), &
                    "a settled energy must not warn, however many sites sit at n = 1")
     end subroutine test_half_filling_warning_silent_otherwise
+
+    !> REGRESSION (T9): the failure path must expose the final state, not nothing
+    !!
+    !! On ERROR_CONVERGENCE_FAILED the cycle used to fill final_energy,
+    !! final_density_error and final_potential_residual while leaving
+    !! density_up, density_down and eigvals UNALLOCATED. The failure is the
+    !! diagnostically interesting case, and any consumer that read
+    !! results%density_up after that error code dereferenced an unallocated
+    !! array - the output writer silently skipped the density and eigenvalue
+    !! files, and a less careful caller segfaulted.
+    !!
+    !! max_iter = 1 is a non-convergence that does not depend on the physics:
+    !! declaring self-consistency requires a previous energy to compare against,
+    !! so the first iteration can never converge, whatever the system.
+    !!
+    !! Both loops are probed: the real one and the complex one, which are
+    !! separate copies of the same algorithm and have to stay in step.
+    subroutine test_scf_failure_exposes_final_state()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, run_kohn_sham_scf_complex, &
+                                    scf_params_t, scf_results_t, cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN, BC_TWISTED
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_CONVERGENCE_FAILED
+
+        integer, parameter :: L = 8
+        integer, parameter :: NUP = 3
+        integer, parameter :: NDOWN = 2
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+
+        call xc_lsda_init(xc_func, PROBE_TABLE, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC init should succeed")
+
+        params%L = L
+        params%Nup = NUP
+        params%Ndown = NDOWN
+        params%bc = BC_OPEN
+        params%U = PROBE_U
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 1  ! Cannot converge: no previous energy exists.
+        scf_params%potential_tol = 1.0e-8_dp
+        scf_params%energy_tol = 1.0e-10_dp
+        scf_params%mixing_alpha = 0.3_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .true.
+
+        V_ext = 0.0_dp
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_CONVERGENCE_FAILED, &
+                   "real loop: one iteration must report convergence failure")
+        call check(.not. results%converged, "real loop: converged flag must be .false.")
+        call check(allocated(results%density_up), &
+                   "real loop: density_up must be available after a failed SCF")
+        call check(allocated(results%density_down), &
+                   "real loop: density_down must be available after a failed SCF")
+        call check(allocated(results%eigvals), &
+                   "real loop: eigvals must be available after a failed SCF")
+
+        if (allocated(results%density_up)) then
+            call check(size(results%density_up) == L, "real loop: density_up has L entries")
+            call check(abs(sum(results%density_up) - real(NUP, dp)) < 1.0e-10_dp, &
+                       "real loop: the exposed density must still integrate to N_up")
+        end if
+        if (allocated(results%density_down)) then
+            call check(abs(sum(results%density_down) - real(NDOWN, dp)) < 1.0e-10_dp, &
+                       "real loop: the exposed density must still integrate to N_down")
+        end if
+        if (allocated(results%eigvals)) then
+            call check(size(results%eigvals) == 2 * L, &
+                       "real loop: eigvals holds both spin channels")
+        end if
+
+        call cleanup_scf_results(results, ierr)
+
+        ! Same contract for the complex (twisted BC) copy of the loop.
+        params%bc = BC_TWISTED
+        params%phase = 0.5_dp
+
+        call run_kohn_sham_scf_complex(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_CONVERGENCE_FAILED, &
+                   "complex loop: one iteration must report convergence failure")
+        call check(allocated(results%density_up), &
+                   "complex loop: density_up must be available after a failed SCF")
+        call check(allocated(results%density_down), &
+                   "complex loop: density_down must be available after a failed SCF")
+        call check(allocated(results%eigvals), &
+                   "complex loop: eigvals must be available after a failed SCF")
+
+        if (allocated(results%eigvals)) then
+            call check(size(results%eigvals) == 2 * L, &
+                       "complex loop: eigvals holds both spin channels")
+        end if
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_failure_exposes_final_state
 
 end program test_kohn_sham_cycle

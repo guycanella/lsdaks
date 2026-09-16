@@ -1,4 +1,10 @@
-!> Atoms in a harmonic trap
+!> Atoms in a harmonic trap: V(i) = k*(i - (L+1)/2)^2
+!!
+!! The trap strength is `spring_constant`, NOT `V0`. This example used to set
+!! V0 = 0.1 and the run silently used the default k = 0.001, i.e. a trap 100
+!! times shallower than advertised. The trap is always centred on (L+1)/2 by
+!! construction (see src/potentials/potential_harmonic.f90), so there is no
+!! centre parameter to set.
 
 &system
   L = 30
@@ -10,8 +16,7 @@
 
 &potential
   potential_type = 'harmonic'
-  V0 = 0.1                  ! Spring constant k
-  pot_center = 15.0         ! Center of trap
+  spring_constant = 0.02    ! Trap strength k
 /
 
 &scf

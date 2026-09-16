@@ -11,3 +11,7 @@ CLAUDE.md
 NEXT_STEPS_REPORT.md
 PROGRESS.md
 original/
+.aider*
+.codex/
+.opencode/
+AGENTS.md

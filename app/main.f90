@@ -3,7 +3,7 @@
 !! LSDAKS: Local Spin Density Approximation - Kohn-Sham solver
 !! for the 1D Hubbard model using Bethe Ansatz-based XC functionals.
 program lsdaks
-    use lsda_constants, only: dp, PI
+    use lsda_constants, only: dp
     use lsda_types, only: system_params_t
     use lsda_errors, only: ERROR_SUCCESS, ERROR_FILE_NOT_FOUND, ERROR_CONVERGENCE_FAILED
     use input_parser
@@ -11,7 +11,9 @@ program lsdaks
     use kohn_sham_cycle
     use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
     use potential_factory, only: create_potential
-    use potential_impurity, only: potential_impurity_single, potential_impurity_random
+    use potential_seed, only: resolve_random_seed
+    use potential_impurity, only: potential_impurity_single, potential_impurity_random, &
+                                  potential_impurity_multiple
     use boundary_conditions, only: BC_OPEN, BC_PERIODIC, BC_TWISTED
     implicit none
     
@@ -24,9 +26,14 @@ program lsdaks
 
     real(dp), allocatable :: V_ext(:)
     real(dp), allocatable :: pot_params(:)
+    real(dp), allocatable :: imp_amplitudes(:)
     integer, allocatable :: imp_positions(:)
     character(len=256) :: table_file
+    !> Directory where the XC table was actually found (or the first candidate
+    !! that was tried, when no table exists).
+    character(len=256) :: resolved_table_dir
     integer :: ierr, seed
+    integer :: i_start, i_end
     !> Outcome of the SCF cycle, kept apart from `ierr`.
     !!
     !! `ierr` is reused (and overwritten) by write_results and by the cleanup
@@ -35,6 +42,10 @@ program lsdaks
     !! wrote its files and then exited with status 0, telling every script and
     !! pipeline that a scientifically invalid result was a success.
     integer :: scf_status
+    !> Outcome of write_results, kept apart from `ierr` for the same reason as
+    !! `scf_status`: `ierr` is overwritten by the cleanup helper before the exit
+    !! status is decided.
+    integer :: write_status
     logical :: table_exists
 
     ! Timing variables
@@ -62,18 +73,27 @@ program lsdaks
         stop 1
     end if
     
+    ! convert_to_system_params is the SINGLE point where the twist angle changes
+    ! unit: `inputs%phase` is in units of π (the user-facing convention,
+    ! identical to the C++ reference) and `sys_params%phase` comes back in
+    ! radians, the unit apply_boundary_conditions_complex and
+    ! validate_bc_parameters expect. The multiplication used to be applied here,
+    ! by the caller, which meant the converter returned a system_params_t in the
+    ! wrong unit for every one of its consumers and only this one call site
+    ! repaired it.
     call convert_to_system_params(inputs, sys_params, ierr)
     if (ierr /= ERROR_SUCCESS) then
         print *, "ERROR: Failed to convert system parameters"
         stop 1
     end if
-    
+
     call convert_to_scf_params(inputs, scf_params)
     call print_configuration(inputs, sys_params, scf_params)
-    
+
     ! Check XC table using |U| (tables are symmetric)
-    call check_xc_table(abs(sys_params%U), table_file, table_exists)
-    
+    call check_xc_table(abs(sys_params%U), inputs%table_dir, table_file, &
+                        resolved_table_dir, table_exists)
+
     if (.not. table_exists) then
         print '(A)', ""
         print '(A)', "=========================================="
@@ -84,7 +104,9 @@ program lsdaks
         print '(A)', "Please generate the XC table first using:"
         print '(A,F0.2)', "  fpm run generate_xc_table -- --U ", abs(sys_params%U)
         print '(A)', ""
-        call print_available_tables()
+        print '(A,A)', "  Looked for: ", trim(table_file)
+        print '(A)', ""
+        call print_available_tables(resolved_table_dir)
         stop 1
     end if
     
@@ -122,8 +144,16 @@ program lsdaks
     select case (trim(inputs%potential_type))
     
     case ('impurity')
-        ! Random impurities with concentration
-        seed = inputs%pot_seed
+        ! Random impurities with concentration.
+        !
+        ! The seed is resolved HERE, not inside the generator: with
+        ! pot_seed < 0 the generator would call random_seed() and never say
+        ! what it drew, leaving the realisation - and therefore the whole
+        ! result - unrecoverable. resolve_random_seed draws it explicitly so
+        ! that the same integer can be printed, written to the provenance of
+        ! every output file and fed back as pot_seed to replay the run.
+        call resolve_random_seed(inputs%pot_seed, seed)
+        inputs%effective_seed = seed
         call potential_impurity_random(inputs%V0, inputs%concentration, sys_params%L, &
                                        seed, V_ext, imp_positions, ierr)
         
@@ -138,7 +168,8 @@ program lsdaks
         print '(A,F0.1,A)', "    Concentration: ", inputs%concentration, "%"
         print '(A,I0,A)', "    Number of impurities: ", size(imp_positions), " sites"
         print '(A,F0.4)', "    Impurity strength: V0 = ", inputs%V0
-        
+        call print_effective_seed(inputs%pot_seed, seed)
+
         deallocate(imp_positions)
     
     case ('impurity_single')
@@ -156,7 +187,43 @@ program lsdaks
         print '(A,A)', "  ✓ External potential created: single impurity"
         print '(A,I0)', "    Position: site ", nint(inputs%pot_center)
         print '(A,F0.4)', "    Strength: V0 = ", inputs%V0
-    
+
+    case ('impurity_multiple')
+        ! Several impurities of equal amplitude V0 at the sites listed in
+        ! imp_positions_str. Called directly (not through the factory) for the
+        ! same reason as the two cases above: the number of impurities is not
+        ! expressible in the fixed-size parameter array the factory takes.
+        call parse_int_list(inputs%imp_positions_str, sys_params%L, imp_positions, ierr)
+
+        if (ierr /= ERROR_SUCCESS) then
+            print *, "ERROR: invalid imp_positions_str for potential_type = 'impurity_multiple'"
+            call xc_lsda_destroy(xc_func)
+            deallocate(V_ext)
+            stop 1
+        end if
+
+        allocate(imp_amplitudes(size(imp_positions)))
+        imp_amplitudes = inputs%V0
+
+        call potential_impurity_multiple(imp_amplitudes, imp_positions, sys_params%L, V_ext, ierr)
+
+        if (ierr /= ERROR_SUCCESS) then
+            print *, "ERROR: Failed to create multiple impurity potential"
+            deallocate(imp_amplitudes)
+            deallocate(imp_positions)
+            call xc_lsda_destroy(xc_func)
+            deallocate(V_ext)
+            stop 1
+        end if
+
+        print '(A)', "  ✓ External potential created: multiple impurities"
+        print '(A,I0)', "    Number of impurities: ", size(imp_positions)
+        print '(A,A)', "    Sites: ", trim(inputs%imp_positions_str)
+        print '(A,A)', "    Strength: V0 = ", trim(real_str(inputs%V0, 4))
+
+        deallocate(imp_amplitudes)
+        deallocate(imp_positions)
+
     case default
         ! Use factory for other potential types
         select case (trim(inputs%potential_type))
@@ -172,9 +239,12 @@ program lsdaks
         case ("barrier_single")
             allocate(pot_params(3))
             pot_params(1) = inputs%V0
-            ! Use position and width from namelist
-            pot_params(2) = real(inputs%position - inputs%width/2, dp)
-            pot_params(3) = real(inputs%position + inputs%width/2, dp)
+            ! Exactly `width` sites, for even and odd widths alike. The old
+            ! expression `position +/- width/2` used integer division on both
+            ! sides and covered width+1 sites whenever width was even.
+            call barrier_single_bounds(inputs%position, inputs%width, i_start, i_end)
+            pot_params(2) = real(i_start, dp)
+            pot_params(3) = real(i_end, dp)
         case ("barrier_double")
             allocate(pot_params(4))
             ! Matches C++ double_barrier(Na, Vb, Lb, Vwell, Lwell, v_ext)
@@ -182,24 +252,59 @@ program lsdaks
             pot_params(2) = inputs%barrier_width ! L_bar: barrier width
             pot_params(3) = inputs%well_depth    ! V_well: well potential (typically negative)
             pot_params(4) = inputs%well_width    ! L_well: well width
+        case ("quasiperiodic")
+            ! Aubry-André-Harper: V(i) = lambda*cos(2*pi*beta*i + phi).
+            ! Without this case the type fell into the default below, which
+            ! passes a single parameter, and create_potential rejected it with
+            ! ERROR_INVALID_INPUT: the potential was unreachable from the
+            ! executable even though it is implemented and advertised.
+            allocate(pot_params(3))
+            pot_params(1) = inputs%aah_lambda
+            pot_params(2) = inputs%aah_beta
+            pot_params(3) = inputs%aah_phi
         case default
             allocate(pot_params(1))
             pot_params(1) = inputs%V0
         end select
 
-        seed = inputs%pot_seed
+        ! Same explicit resolution as in the 'impurity' branch above: the
+        ! factory forwards the seed to the random generators, which would
+        ! otherwise draw an unrecorded one whenever pot_seed < 0. Resolving it
+        ! for every type (not only the stochastic ones) keeps this single line
+        ! honest: `seed` is always the integer that was actually used.
+        call resolve_random_seed(inputs%pot_seed, seed)
+        inputs%effective_seed = seed
 
         call create_potential(inputs%potential_type, pot_params, sys_params%L, seed, V_ext, ierr)
         deallocate(pot_params)
 
         if (ierr /= ERROR_SUCCESS) then
-            print *, "ERROR: Failed to create external potential"
+            print *, "ERROR: Failed to create external potential of type '", &
+                     trim(inputs%potential_type), "'"
+            print '(A)', "  Supported potential_type values:"
+            print '(A)', "    uniform, harmonic, quasiperiodic,"
+            print '(A)', "    impurity, impurity_single, impurity_multiple,"
+            print '(A)', "    random_uniform, random_gaussian,"
+            print '(A)', "    barrier_single, barrier_double"
             call xc_lsda_destroy(xc_func)
             deallocate(V_ext)
             stop 1
         end if
-        
+
         print '(A,A)', "  ✓ External potential created: ", trim(inputs%potential_type)
+        if (trim(inputs%potential_type) == "harmonic") then
+            print '(A,A)', "    spring_constant (k): ", trim(real_str(inputs%spring_constant, 6))
+        end if
+        if (trim(inputs%potential_type) == "random_uniform" .or. &
+            trim(inputs%potential_type) == "random_gaussian") then
+            print '(A,A)', "    disorder_strength: ", trim(real_str(inputs%disorder_strength, 6))
+            call print_effective_seed(inputs%pot_seed, seed)
+        end if
+        if (trim(inputs%potential_type) == "quasiperiodic") then
+            print '(A,A)', "    lambda: ", trim(real_str(inputs%aah_lambda, 4))
+            print '(A,A)', "    beta:   ", trim(real_str(inputs%aah_beta, 6))
+            print '(A,A)', "    phi:    ", trim(real_str(inputs%aah_phi, 4))
+        end if
     end select
     
     print '(A)', ""
@@ -258,10 +363,16 @@ program lsdaks
     print '(A)', ""
     
     call write_results(results, sys_params, inputs, ierr)
-    if (ierr /= ERROR_SUCCESS) then
-        print *, "WARNING: Some output files could not be written"
+    ! Preserve the writing outcome too: `ierr` is reused by cleanup_and_exit
+    ! below, and a run whose results never reached the disk must not report
+    ! success. A valid calculation whose record was lost is, for every script
+    ! and pipeline downstream, indistinguishable from a calculation that was
+    ! never performed - unless the exit status says so.
+    write_status = ierr
+    if (write_status /= ERROR_SUCCESS) then
+        print '(A)', "ERROR: some output files could not be written."
     end if
-    
+
     call cleanup_and_exit(xc_func, V_ext, results)
 
     ! End timing
@@ -287,7 +398,62 @@ program lsdaks
         stop 1
     end if
 
+    ! A converged calculation whose output could not be written is also a failed
+    ! run: the numbers are gone and only the exit status can say so.
+    if (write_status /= ERROR_SUCCESS) then
+        print '(A)', "Exiting with status 1: the results could NOT be written to disk."
+        print '(A)', ""
+        stop 1
+    end if
+
 contains
+
+    !> Decimal text of a real, unpadded but with a guaranteed leading zero
+    !!
+    !! The `F0.d` edit descriptor produces the value with no padding, which is
+    !! what these messages want, but gfortran writes it WITHOUT the integer zero
+    !! when the magnitude is below one: `0.001` comes out as ".001000". The
+    !! project prints "0.2000", not ".2000", and several of the values reported
+    !! here are routinely below one (the harmonic k, the AAH beta), so the zero
+    !! is restored explicitly instead of padding the field.
+    !!
+    !! @param[in] x        Value to format
+    !! @param[in] decimals Number of digits after the decimal point
+    !! @return    Left-justified text of `x`, trailing-blank padded
+    function real_str(x, decimals) result(str)
+        real(dp), intent(in) :: x
+        integer, intent(in) :: decimals
+        character(len=40) :: str
+        character(len=16) :: fmt
+
+        write(fmt, '(A,I0,A)') '(F0.', decimals, ')'
+        write(str, fmt) x
+
+        if (str(1:1) == '.') then
+            str = '0' // trim(str)
+        else if (len_trim(str) >= 2) then
+            if (str(1:2) == '-.') str = '-0' // trim(str(2:))
+        end if
+    end function real_str
+
+    !> Report the seed that actually produced the disorder realisation
+    !!
+    !! Printed for the stochastic potentials only. When the user asked for a
+    !! drawn seed (`pot_seed < 0`) the message also states how to replay the
+    !! run, because that is the whole point of capturing the value: the same
+    !! integer appears in the provenance header of every output file.
+    !!
+    !! @param[in] requested Seed as given in the input (< 0 means "draw one")
+    !! @param[in] effective Seed actually handed to the generator
+    subroutine print_effective_seed(requested, effective)
+        integer, intent(in) :: requested, effective
+
+        print '(A,I0)', "    Random seed (effective): ", effective
+        if (requested < 0) then
+            print '(A,I0,A)', "      (drawn from the system clock; set pot_seed = ", &
+                              effective, " to reproduce this realisation)"
+        end if
+    end subroutine print_effective_seed
 
     subroutine print_banner(date_str, time_str)
         character(len=*), intent(in) :: date_str, time_str
@@ -345,8 +511,19 @@ contains
             print '(A,A)', "  BC:               ", trim(inputs%bc_type)
         end select
         if (sys_params%bc == BC_TWISTED) then
-            print '(A,F0.4,A)', "  Phase:            ", sys_params%phase, " π"
+            ! Printed in BOTH units on purpose: the input is in units of π (like
+            ! the C++ reference, which also reports phase/pi) while the
+            ! Hamiltonian uses radians, and the old line printed the radian
+            ! field with a "π" suffix.
+            ! F6.4 / F8.6 rather than F0.4 / F0.6: the project prints "0.2000",
+            ! not ".2000", and the phase is the one configuration value that is
+            ! almost always below 1 (it is bounded by 2), so the edit descriptor
+            ! with no leading zero would drop it on essentially every twisted
+            ! run. The widths are enough for the validated range [0, 2).
+            print '(A,F6.4,A,F8.6,A)', "  Phase:            ", inputs%phase, " π  (= ", &
+                                       sys_params%phase, " rad)"
         end if
+        print '(A,A)', "  XC table dir:     ", trim(inputs%table_dir)
         print '(A)', ""
         
         print '(A)', "Potential:"
@@ -384,65 +561,150 @@ contains
         print '(A)', "----------------------------------------"
     end subroutine print_configuration
 
-    !> Check if XC table exists for given U (uses |U|)
-    subroutine check_xc_table(U, table_file, exists)
+    !> Locate the XC table for a given U (uses |U|, the tables are symmetric)
+    !!
+    !! The table directory is no longer hard-wired relative to the working
+    !! directory: the executable must be usable from anywhere. Two candidates
+    !! are tried, in order:
+    !!
+    !! 1. `table_dir` (the `table_dir` key of the `&system` namelist, default
+    !!    `data/tables/fortran_native`);
+    !! 2. the directory named by the environment variable `LSDAKS_TABLE_DIR`,
+    !!    when it is set and non-blank.
+    !!
+    !! @param[in]  U            Hubbard interaction (the sign is ignored)
+    !! @param[in]  table_dir    Preferred table directory
+    !! @param[out] table_file   Path of the table (existing one if found, else
+    !!                          the path that was tried first)
+    !! @param[out] resolved_dir Directory the returned path belongs to
+    !! @param[out] exists       .true. if the table was found
+    subroutine check_xc_table(U, table_dir, table_file, resolved_dir, exists)
         real(dp), intent(in) :: U
+        character(len=*), intent(in) :: table_dir
         character(len=*), intent(out) :: table_file
+        character(len=*), intent(out) :: resolved_dir
         logical, intent(out) :: exists
-        
-        write(table_file, '(A,F0.2,A)') 'data/tables/fortran_native/xc_table_u', abs(U), '.dat'
-        
+
+        character(len=256) :: env_dir, candidate
+        integer :: env_len, env_status
+
+        ! Candidate 1: the configured directory.
+        resolved_dir = adjustl(table_dir)
+        call xc_table_path(resolved_dir, U, table_file)
         inquire(file=table_file, exist=exists)
+        if (exists) return
+
+        ! Candidate 2: the environment variable.
+        call get_environment_variable('LSDAKS_TABLE_DIR', env_dir, env_len, env_status)
+        if (env_status == 0 .and. env_len > 0) then
+            candidate = adjustl(env_dir)
+            call xc_table_path(candidate, U, table_file)
+            inquire(file=table_file, exist=exists)
+            if (exists) then
+                resolved_dir = candidate
+                return
+            end if
+        end if
+
+        ! Nothing found: report the first candidate, which is the one the user
+        ! configured and therefore the one worth naming in the error message.
+        resolved_dir = adjustl(table_dir)
+        call xc_table_path(resolved_dir, U, table_file)
+        exists = .false.
     end subroutine check_xc_table
 
-    !> Print list of ACTUALLY available XC tables (scan directory)
-    subroutine print_available_tables()
-        character(len=256) :: table_dir, filename, command
-        integer :: io_stat, io_unit, i, n_found
+    !> Build the path of the XC table of a given |U| inside a directory
+    !!
+    !! @param[in]  dir   Directory (with or without trailing '/')
+    !! @param[in]  U     Hubbard interaction (the sign is ignored)
+    !! @param[out] path  `<dir>/xc_table_u<|U|>.dat`
+    subroutine xc_table_path(dir, U, path)
+        character(len=*), intent(in) :: dir
+        real(dp), intent(in) :: U
+        character(len=*), intent(out) :: path
+
+        ! trim() around pathsep: a blank separator must contribute zero
+        ! characters, otherwise the path would carry a stray space.
+        write(path, '(A,A,A,F0.2,A)') trim(dir), trim(pathsep(dir)), 'xc_table_u', abs(U), '.dat'
+    end subroutine xc_table_path
+
+    !> '/' unless the directory already ends with one (or is empty)
+    !!
+    !! @param[in] dir Directory name
+    !! @return    the separator to insert between `dir` and a file name
+    function pathsep(dir) result(sep)
+        character(len=*), intent(in) :: dir
+        character(len=1) :: sep
+        integer :: n
+
+        n = len_trim(dir)
+        if (n == 0) then
+            sep = ' '
+        else if (dir(n:n) == '/') then
+            sep = ' '
+        else
+            sep = '/'
+        end if
+    end function pathsep
+
+    !> Print the XC tables that are ACTUALLY available in a directory
+    !!
+    !! The previous version probed only the integers 1..20 and the values
+    !! x.10, so every table whose name ends in another hundredth - all the
+    !! x.90 tables shipped in data/tables/fortran_native, for instance - was
+    !! reported as missing. The scan now covers the whole grid of two-decimal
+    !! values in (0, U_SCAN_MAX], which is the only naming the writer can
+    !! produce (the file name is formatted with F0.2).
+    !!
+    !! A real directory listing (execute_command_line + `ls`) was rejected on
+    !! purpose: it would need a shell, a writable temporary file and a parser
+    !! for its output, all on the error path of a failed run. Probing the
+    !! finite set of representable names is pure Fortran and deterministic.
+    !!
+    !! @param[in] table_dir Directory to scan
+    subroutine print_available_tables(table_dir)
+        character(len=*), intent(in) :: table_dir
+        !> Largest |U| probed. Tables above this are not listed (they are still
+        !! usable: check_xc_table looks the requested one up directly).
+        integer, parameter :: U_SCAN_MAX = 40
+        !> Probing step, in hundredths: the file names carry two decimals.
+        integer, parameter :: N_PROBES = U_SCAN_MAX * 100
+        character(len=256) :: filename
+        integer :: i, n_found
         real(dp) :: U_value
         real(dp), allocatable :: found_U(:)
         logical :: exists
-        character(len=10) :: U_str
-        
-        table_dir = 'data/tables/fortran_native/'
-        
+
         inquire(file=trim(table_dir), exist=exists)
         if (.not. exists) then
-            print '(A)', "Table directory not found: ", trim(table_dir)
+            print '(A,A)', "Table directory not found: ", trim(table_dir)
             print '(A)', ""
             print '(A)', "Please create the directory and generate tables using:"
-            print '(A)', "  mkdir -p data/tables/fortran_native"
+            print '(A,A)', "  mkdir -p ", trim(table_dir)
             print '(A)', "  fpm run generate_xc_table -- --U <value>"
+            print '(A)', ""
+            print '(A)', "You can also point the code at an existing directory with the"
+            print '(A)', "table_dir key of the &system namelist or with LSDAKS_TABLE_DIR."
             return
         end if
-        
+
         print '(A)', "Scanning for available XC tables in:"
         print '(A,A)', "  ", trim(table_dir)
         print '(A)', ""
-        
-        allocate(found_U(100))  ! Max 100 tables
+
+        allocate(found_U(N_PROBES))
         n_found = 0
-        
-        do i = 1, 20
-            U_value = real(i, dp)
-            write(filename, '(A,A,F0.2,A)') trim(table_dir), 'xc_table_u', U_value, '.dat'
+
+        do i = 1, N_PROBES
+            U_value = real(i, dp) / 100.0_dp
+            call xc_table_path(table_dir, U_value, filename)
             inquire(file=filename, exist=exists)
             if (exists) then
                 n_found = n_found + 1
                 found_U(n_found) = U_value
             end if
         end do
-        
-        do i = 1, 20
-            U_value = real(i, dp) + 0.1_dp
-            write(filename, '(A,A,F0.2,A)') trim(table_dir), 'xc_table_u', U_value, '.dat'
-            inquire(file=filename, exist=exists)
-            if (exists) then
-                n_found = n_found + 1
-                found_U(n_found) = U_value
-            end if
-        end do
-        
+
         if (n_found == 0) then
             print '(A)', "No XC tables found!"
             print '(A)', ""

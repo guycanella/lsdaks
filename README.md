@@ -400,9 +400,9 @@ The code supports 10 types of external potentials `V_ext(i)`:
 ```fortran
 &potential
   potential_type = 'quasiperiodic'
-  aah_strength = 2.0     ! Potential strength λ
-  aah_frequency = 0.618  ! Frequency ω (typically (√5-1)/2)
-  aah_phase = 0.0        ! Phase φ
+  aah_lambda = 2.0  ! Potential strength λ
+  aah_beta = 0.618  ! Frequency β (typically (√5-1)/2)
+  aah_phi = 0.0     ! Phase φ, in radians
 /
 ```
 - **Formula**: `V(i) = λ cos(2π ω i + φ)`

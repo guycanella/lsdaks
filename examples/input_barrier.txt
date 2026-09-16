@@ -1,4 +1,10 @@
-!> Electrons tunneling through a barrier
+!> Electrons tunneling through a single rectangular barrier
+!!
+!! `potential_type` must name one of the implemented generators. This example
+!! used to say 'barrier', which does not exist, and the run aborted.
+!! The single barrier covers exactly `width` sites centred on `position`
+!! (1-indexed), with height V0. For the barrier-well-barrier geometry use
+!! potential_type = 'barrier_double' with barrier_width, well_depth, well_width.
 
 &system
   L = 40
@@ -9,10 +15,10 @@
 /
 
 &potential
-  potential_type = 'barrier'
+  potential_type = 'barrier_single'
   V0 = 5.0                  ! Barrier height
-  pot_center = 20.0         ! Barrier position
-  pot_width = 4.0           ! Barrier width
+  position = 20             ! Barrier centre (lattice site, 1-indexed)
+  width = 4                 ! Barrier width, in sites
 /
 
 &scf

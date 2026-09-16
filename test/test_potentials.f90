@@ -35,7 +35,13 @@ contains
             test("quasiperiodic_localization", test_quasiperiodic_localization), &
             test("factory_uniform", test_factory_uniform), &
             test("factory_harmonic", test_factory_harmonic), &
-            test("factory_invalid_type", test_factory_invalid_type) &
+            test("factory_invalid_type", test_factory_invalid_type), &
+            test("seed_explicit_is_reproducible", test_seed_explicit_is_reproducible), &
+            test("seed_drawn_is_recoverable", test_seed_drawn_is_recoverable), &
+            test("seed_passthrough_and_range", test_seed_passthrough_and_range), &
+            test("box_muller_finite_at_u1_zero", test_box_muller_finite_at_u1_zero), &
+            test("random_gaussian_is_finite", test_random_gaussian_is_finite), &
+            test("random_zero_amplitude_no_disorder", test_random_zero_amplitude_no_disorder) &
         ])
     end function get_potential_tests
 
@@ -734,5 +740,218 @@ contains
 
         call check(ierr == ERROR_INVALID_INPUT, "Invalid type should fail")
     end subroutine test_factory_invalid_type
+
+
+    !> The same explicit seed must give the same disorder realisation
+    !!
+    !! The baseline of reproducibility: if this failed, recording the seed would
+    !! be worthless. Both stochastic generators are checked, since each one
+    !! seeds the generator itself.
+    subroutine test_seed_explicit_is_reproducible()
+        use fortuno_serial, only: check => serial_check
+        use potential_random, only: potential_random_uniform, potential_random_gaussian
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 24
+        integer, parameter :: SEED = 20260916
+        real(dp) :: V1(L), V2(L)
+        integer :: ierr1, ierr2
+
+        call potential_random_uniform(1.5_dp, L, SEED, V1, ierr1)
+        call potential_random_uniform(1.5_dp, L, SEED, V2, ierr2)
+
+        call check(ierr1 == ERROR_SUCCESS .and. ierr2 == ERROR_SUCCESS, &
+                   "Both uniform-disorder draws must succeed")
+        call check(all(abs(V1 - V2) < 1.0e-15_dp), &
+                   "The same seed must give the same uniform realisation")
+
+        call potential_random_gaussian(0.8_dp, L, SEED, V1, ierr1)
+        call potential_random_gaussian(0.8_dp, L, SEED, V2, ierr2)
+
+        call check(ierr1 == ERROR_SUCCESS .and. ierr2 == ERROR_SUCCESS, &
+                   "Both gaussian-disorder draws must succeed")
+        call check(all(abs(V1 - V2) < 1.0e-15_dp), &
+                   "The same seed must give the same gaussian realisation")
+    end subroutine test_seed_explicit_is_reproducible
+
+
+    !> A run that asked for pot_seed = -1 must still be replayable
+    !!
+    !! This is the test that gives the effective-seed machinery its value, and
+    !! it is a regression for the irreproducibility hole: `pot_seed < 0` used to
+    !! reach the generator as-is, which called `random_seed()` and threw away
+    !! what it drew. Two identical invocations of the same input file gave
+    !! different ground-state energies (E/site = -3.204508987 vs -3.220780358)
+    !! and there was no way to get either back.
+    !!
+    !! Here the sentinel is resolved into a concrete seed FIRST, exactly as
+    !! app/main.f90 now does, the realisation is generated from it, and the very
+    !! same integer - which is what lands in the provenance header of every
+    !! output file - is fed back to reproduce the realisation bit for bit.
+    subroutine test_seed_drawn_is_recoverable()
+        use fortuno_serial, only: check => serial_check
+        use potential_seed, only: resolve_random_seed
+        use potential_random, only: potential_random_uniform
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 32
+        real(dp) :: V_run(L), V_replay(L)
+        integer :: effective, replay_effective, ierr
+
+        ! The run: the user asked for "any realisation".
+        call resolve_random_seed(-1, effective)
+        call check(effective >= 0, &
+                   "A drawn seed must be non-negative, or the generator would redraw it")
+
+        call potential_random_uniform(2.0_dp, L, effective, V_run, ierr)
+        call check(ierr == ERROR_SUCCESS, "The disorder must be generated")
+
+        ! The replay: the recorded effective_seed is given back as pot_seed.
+        call resolve_random_seed(effective, replay_effective)
+        call check(replay_effective == effective, &
+                   "Feeding the recorded seed back must not draw a new one")
+
+        call potential_random_uniform(2.0_dp, L, replay_effective, V_replay, ierr)
+        call check(ierr == ERROR_SUCCESS, "The replay must succeed")
+
+        call check(all(abs(V_run - V_replay) < 1.0e-15_dp), &
+                   "The recorded effective seed must reproduce the realisation exactly")
+        ! A realisation of 32 sites with W = 2 that is identically zero would
+        ! make the comparison above vacuous.
+        call check(any(abs(V_run) > 1.0e-12_dp), &
+                   "The realisation must actually be disordered")
+    end subroutine test_seed_drawn_is_recoverable
+
+
+    !> resolve_random_seed passes non-negative seeds through and bounds draws
+    subroutine test_seed_passthrough_and_range()
+        use fortuno_serial, only: check => serial_check
+        use potential_seed, only: resolve_random_seed
+
+        integer :: s, s1, s2
+
+        call resolve_random_seed(0, s)
+        call check(s == 0, "Seed 0 is explicit and must be kept")
+
+        call resolve_random_seed(987654321, s)
+        call check(s == 987654321, "An explicit seed must be passed through unchanged")
+
+        ! Two successive draws must differ even when the clock does not advance
+        ! between them: otherwise two potentials of the same run would share a
+        ! realisation while claiming independence.
+        call resolve_random_seed(-1, s1)
+        call resolve_random_seed(-7, s2)
+        call check(s1 >= 0 .and. s2 >= 0, "Drawn seeds must be non-negative")
+        call check(s1 /= s2, "Successive draws must not collide")
+    end subroutine test_seed_passthrough_and_range
+
+
+    !> The Box-Muller transform must stay finite at the boundary u1 = 0
+    !!
+    !! Regression for the log(0) hole in the gaussian disorder. `random_number`
+    !! samples [0, 1) - closed on the left - so u1 = 0 is a value the generator
+    !! is allowed to return. The previous radial factor `sqrt(-2*log(u1))` then
+    !! evaluated log(0) = -Inf and produced an infinite potential on two sites,
+    !! which only showed up much later as ERROR_NOT_A_NUMBER coming out of
+    !! validate_hamiltonian_inputs.
+    !!
+    !! The corner is hit on purpose here, by calling the transform directly with
+    !! u1 = 0 exactly, instead of hoping the generator emits it: a probabilistic
+    !! test would pass by luck with either formula. With `log(u1)` the first two
+    !! checks below fail immediately.
+    subroutine test_box_muller_finite_at_u1_zero()
+        use fortuno_serial, only: check => serial_check
+        use potential_random, only: box_muller_pair
+        use lsda_constants, only: dp
+        use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+
+        real(dp) :: z1, z2, s1, s2
+
+        ! The offending boundary value, exactly.
+        call box_muller_pair(0.0_dp, 0.25_dp, z1, z2)
+        call check(ieee_is_finite(z1), "Box-Muller must be finite for u1 = 0 (first deviate)")
+        call check(ieee_is_finite(z2), "Box-Muller must be finite for u1 = 0 (second deviate)")
+
+        ! At u1 = 0 the radius is sqrt(-2*log(1)) = 0, so both deviates are the
+        ! centre of the distribution. This pins the value, not just finiteness.
+        call check(abs(z1) < TOL .and. abs(z2) < TOL, &
+                   "u1 = 0 must map to the centre of the gaussian, not to infinity")
+
+        ! The other end of the interval: u1 just below 1 is the tail, still finite.
+        call box_muller_pair(1.0_dp - epsilon(1.0_dp), 0.75_dp, z1, z2)
+        call check(ieee_is_finite(z1) .and. ieee_is_finite(z2), &
+                   "Box-Muller must be finite for u1 arbitrarily close to 1")
+
+        ! The transform is still a Box-Muller transform: the pair lies on the
+        ! circle of radius sqrt(-2*log(1-u1)).
+        call box_muller_pair(0.5_dp, 0.3_dp, z1, z2)
+        call check(abs(z1**2 + z2**2 - (-2.0_dp * log(0.5_dp))) < TOL, &
+                   "The deviate pair must lie on the Box-Muller radius")
+
+        ! And it is pure: the same arguments give the same result.
+        call box_muller_pair(0.123_dp, 0.456_dp, s1, s2)
+        call box_muller_pair(0.123_dp, 0.456_dp, z1, z2)
+        call check(abs(z1 - s1) < TOL .and. abs(z2 - s2) < TOL, &
+                   "box_muller_pair must be deterministic in its arguments")
+    end subroutine test_box_muller_finite_at_u1_zero
+
+
+    !> Gaussian disorder must be finite for every site and every seed
+    !!
+    !! End-to-end counterpart of the test above: the finite transform must
+    !! actually be the one used by the generator. Several seeds and an odd L
+    !! (so that the last Box-Muller pair is half-discarded) are swept.
+    subroutine test_random_gaussian_is_finite()
+        use fortuno_serial, only: check => serial_check
+        use potential_random, only: potential_random_gaussian
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+        use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+
+        integer, parameter :: L = 257
+        real(dp) :: V(L)
+        integer :: ierr, k
+
+        do k = 1, 20
+            call potential_random_gaussian(1.0_dp, L, k, V, ierr)
+            call check(ierr == ERROR_SUCCESS, "Gaussian disorder must be generated")
+            call check(all(ieee_is_finite(V)), &
+                       "Every site of the gaussian disorder must be finite")
+        end do
+    end subroutine test_random_gaussian_is_finite
+
+
+    !> Zero amplitude means no disorder; negative amplitude is an input error
+    !!
+    !! Guards the tolerance-based zero test that replaced `W == 0.0_dp` and
+    !! `sigma == 0.0_dp`: the "no disorder" shortcut must still trigger at zero,
+    !! and a negative width or standard deviation must remain an error rather
+    !! than be swallowed as "no disorder".
+    subroutine test_random_zero_amplitude_no_disorder()
+        use fortuno_serial, only: check => serial_check
+        use potential_random, only: potential_random_uniform, potential_random_gaussian
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_NEGATIVE_VALUE
+
+        integer, parameter :: L = 16
+        real(dp) :: V(L)
+        integer :: ierr
+
+        call potential_random_uniform(0.0_dp, L, 1, V, ierr)
+        call check(ierr == ERROR_SUCCESS, "W = 0 is a valid (disorder-free) request")
+        call check(all(abs(V) < TOL), "W = 0 must give an identically zero potential")
+
+        call potential_random_gaussian(0.0_dp, L, 1, V, ierr)
+        call check(ierr == ERROR_SUCCESS, "sigma = 0 is a valid (disorder-free) request")
+        call check(all(abs(V) < TOL), "sigma = 0 must give an identically zero potential")
+
+        call potential_random_uniform(-1.0_dp, L, 1, V, ierr)
+        call check(ierr == ERROR_NEGATIVE_VALUE, "A negative width must be rejected")
+
+        call potential_random_gaussian(-1.0_dp, L, 1, V, ierr)
+        call check(ierr == ERROR_NEGATIVE_VALUE, "A negative sigma must be rejected")
+    end subroutine test_random_zero_amplitude_no_disorder
 
 end program test_potentials
