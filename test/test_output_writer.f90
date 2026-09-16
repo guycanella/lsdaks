@@ -31,10 +31,16 @@ contains
                  test_outputs_record_external_potential_provenance), &
             test("provenance_records_type_specific_params", &
                  test_provenance_records_type_specific_params), &
+            test("quasiperiodic_provenance_records_generator_params", &
+                 test_quasiperiodic_provenance_records_generator_params), &
             test("convergence_header_identifies_system", &
                  test_convergence_header_identifies_system), &
             test("random_uniform_provenance_states_no_false_distribution", &
-                 test_random_uniform_no_false_distribution) &
+                 test_random_uniform_no_false_distribution), &
+            test("not_converged_run_writes_all_files", &
+                 test_not_converged_run_writes_all_files), &
+            test("energy_per_site_uses_system_size", &
+                 test_energy_per_site_uses_system_size) &
         ])
     end function get_output_writer_tests
 
@@ -556,6 +562,169 @@ contains
     end subroutine test_write_results_density_disabled
 
 
+    !> REGRESSION (T9): a non-convergent run gets the SAME files as a convergent one
+    !!
+    !! The failure path of the SCF cycle used to leave results%density_up,
+    !! density_down and eigvals UNALLOCATED while still filling final_energy, so
+    !! write_density_profile and write_eigenvalues took their "not available"
+    !! branch and produced nothing. The run that most needs its density and its
+    !! spectrum inspected - the one that did not converge - was the only one that
+    !! did not get them on disk.
+    !!
+    !! The summary must also state the outcome in a machine-readable field:
+    !! "SCF: NOT CONVERGED" contains the word CONVERGED, so grepping for the
+    !! convergent case matches the divergent one too; `converged = F` cannot.
+    subroutine test_not_converged_run_writes_all_files()
+        use fortuno_serial, only: check => serial_check
+        use output_writer
+        use lsda_types, only: system_params_t
+        use input_parser, only: input_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        type(input_params_t) :: inputs
+        integer :: ierr
+        logical :: has_summary, has_density, has_eigvals, has_history
+
+        sys_params%L = 4
+        sys_params%Nup = 2
+        sys_params%Ndown = 2
+        sys_params%U = 4.0_dp
+        sys_params%bc = 1
+
+        ! Exactly the state the SCF cycle returns together with
+        ! ERROR_CONVERGENCE_FAILED: converged = .false., the iteration budget
+        ! exhausted, and the last available density / spectrum / energy.
+        results%converged = .false.
+        results%n_iterations = 200
+        results%final_density_error = 3.0e-2_dp
+        results%final_potential_residual = 5.0e-2_dp
+        results%final_energy = -8.0_dp
+
+        allocate(results%density_up(4))
+        allocate(results%density_down(4))
+        allocate(results%eigvals(8))
+        allocate(results%history%density_norms(2))
+        allocate(results%history%energies(2))
+
+        results%density_up = [0.6_dp, 0.4_dp, 0.4_dp, 0.6_dp]
+        results%density_down = [0.4_dp, 0.6_dp, 0.6_dp, 0.4_dp]
+        results%eigvals = [-2.0_dp, -1.0_dp, 1.0_dp, 2.0_dp, &
+                           -2.0_dp, -1.0_dp, 1.0_dp, 2.0_dp]
+        results%history%current_iter = 2
+        results%history%density_norms = [5.0e-2_dp, 3.0e-2_dp]
+        results%history%energies = [-7.9_dp, -8.0_dp]
+
+        inputs%output_prefix = 'test_t9_notconv'
+        inputs%save_density = .true.
+        inputs%save_eigenvalues = .true.
+        inputs%store_history = .true.
+
+        call write_results(results, sys_params, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, &
+                   "write_results must succeed for a non-convergent run")
+
+        inquire(file='test_t9_notconv_summary.txt', exist=has_summary)
+        inquire(file='test_t9_notconv_density.dat', exist=has_density)
+        inquire(file='test_t9_notconv_eigenvalues.dat', exist=has_eigvals)
+        inquire(file='test_t9_notconv_convergence.dat', exist=has_history)
+
+        call check(has_summary, "A non-convergent run must still write its summary")
+        call check(has_density, "A non-convergent run must still write its density profile")
+        call check(has_eigvals, "A non-convergent run must still write its eigenvalues")
+        call check(has_history, "A non-convergent run must still write its history")
+
+        if (has_summary) then
+            call check(file_contains('test_t9_notconv_summary.txt', 'converged = F'), &
+                       "The summary must carry a machine-readable converged = F field")
+            call check(file_contains('test_t9_notconv_summary.txt', 'SCF: NOT CONVERGED'), &
+                       "The summary must state NOT CONVERGED in words as well")
+        end if
+
+        call remove_file('test_t9_notconv_summary.txt')
+        call remove_file('test_t9_notconv_density.dat')
+        call remove_file('test_t9_notconv_eigenvalues.dat')
+        call remove_file('test_t9_notconv_convergence.dat')
+
+        deallocate(results%density_up)
+        deallocate(results%density_down)
+        deallocate(results%eigvals)
+        deallocate(results%history%density_norms)
+        deallocate(results%history%energies)
+    end subroutine test_not_converged_run_writes_all_files
+
+
+    !> REGRESSION (T9): the energy per site is the total energy divided by L
+    !!
+    !! `results%final_energy` is the TOTAL energy. The summary used to divide it
+    !! by `size(results%density_up)` and, when that array was absent, printed the
+    !! TOTAL energy verbatim under the label "Final Energy per site" - wrong by a
+    !! factor of L, with nothing in the file to reveal it. In the summary FILE the
+    !! label did not mention "per site" at all, so the same number was reported
+    !! under two different meanings in two different files of the same run.
+    !!
+    !! The test sets L = 4 and E_total = -8, so the two numbers (-8 and -2) cannot
+    !! be confused, and deliberately leaves density_up UNALLOCATED, which is the
+    !! configuration in which the divisor used to disappear entirely.
+    subroutine test_energy_per_site_uses_system_size()
+        use fortuno_serial, only: check => serial_check
+        use output_writer
+        use lsda_types, only: system_params_t
+        use input_parser, only: input_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        type(input_params_t) :: inputs
+        integer :: ierr
+        logical :: has_summary
+
+        sys_params%L = 4
+        sys_params%Nup = 2
+        sys_params%Ndown = 2
+        sys_params%U = 4.0_dp
+        sys_params%bc = 1
+
+        results%converged = .true.
+        results%n_iterations = 12
+        results%final_density_error = 1.0e-10_dp
+        results%final_potential_residual = 1.0e-10_dp
+        results%final_energy = -8.0_dp
+        ! density_up / density_down deliberately NOT allocated.
+
+        inputs%output_prefix = 'test_t9_energy'
+        inputs%save_density = .false.
+        inputs%save_eigenvalues = .false.
+        inputs%store_history = .false.
+
+        call write_summary(results, sys_params, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "write_summary should succeed")
+
+        inquire(file='test_t9_energy_summary.txt', exist=has_summary)
+        call check(has_summary, "Summary file should exist")
+
+        if (has_summary) then
+            call check(file_contains('test_t9_energy_summary.txt', 'Final Total Energy:'), &
+                       "The summary must report the total energy under its own label")
+            call check(file_contains('test_t9_energy_summary.txt', '-8.000000000000'), &
+                       "The reported total energy must be E_total = -8")
+            call check(file_contains('test_t9_energy_summary.txt', 'Final Energy per site:'), &
+                       "The summary must label the per-site energy as such")
+            call check(file_contains('test_t9_energy_summary.txt', '-2.000000000000'), &
+                       "The per-site energy must be E_total / L = -8 / 4 = -2")
+        end if
+
+        call remove_file('test_t9_energy_summary.txt')
+    end subroutine test_energy_per_site_uses_system_size
+
+
     !> Every output file must carry xc_smoothing_width and potential_tol
     !!
     !! A run with the V_xc discontinuity smoothed (w > 0) uses a MODIFIED XC
@@ -704,11 +873,13 @@ contains
     !! the reference case of this phase IS a disordered run, that was the worst
     !! remaining traceability hole.
     !!
-    !! Two runs are written: one with a pinned seed (fully reproducible) and one
-    !! with pot_seed = -1. The second must record the sentinel AS GIVEN and say
-    !! out loud that the realisation came from the clock; capturing the seed that
-    !! was actually drawn requires changing the potential generators and is out
-    !! of scope here.
+    !! Two runs are written: one with a pinned seed and one with pot_seed = -1.
+    !! Both must record the seed AS GIVEN (sentinel included) and, next to it,
+    !! the `effective_seed` that was actually handed to the generator. The second
+    !! one used to be flagged "NOT reproducible", which was true while the drawn
+    !! seed was thrown away; now that app/main.f90 resolves the seed explicitly
+    !! (resolve_random_seed) the file must instead tell the reader which integer
+    !! to put in pot_seed to replay the realisation.
     subroutine test_outputs_record_external_potential_provenance()
         use fortuno_serial, only: check => serial_check
         use output_writer
@@ -766,6 +937,7 @@ contains
         ! --- Reproducible run: the seed pins the disorder realisation ---------
         inputs%output_prefix = 'test_potprov_seed'
         inputs%pot_seed = 12345
+        inputs%effective_seed = 12345
         call write_results(results, sys_params, inputs, ierr)
         call check(ierr == ERROR_SUCCESS, "write_results (pinned seed) should succeed")
 
@@ -819,19 +991,30 @@ contains
 
         call check(.not. file_contains('test_potprov_seed_summary.txt', 'NOT reproducible'), &
                    "A pinned seed must NOT be flagged as irreproducible")
+        call check(file_contains('test_potprov_seed_summary.txt', 'effective_seed = 12345'), &
+                   "A pinned seed is also the effective seed, and must be recorded as such")
 
-        ! --- Clock-seeded run: recorded as given, and flagged -----------------
+        ! --- Clock-seeded run: the drawn seed is what identifies it -----------
+        ! Regression for the irreproducibility hole: with pot_seed = -1 the file
+        ! must now carry the integer that was actually used (effective_seed) and
+        ! the instruction to feed it back. Before this, the block recorded only
+        ! the sentinel -1, which identifies no realisation at all.
         inputs%output_prefix = 'test_potprov_noseed'
         inputs%pot_seed = -1
+        inputs%effective_seed = 987654
         call write_results(results, sys_params, inputs, ierr)
         call check(ierr == ERROR_SUCCESS, "write_results (clock seed) should succeed")
 
         call check(file_contains('test_potprov_noseed_summary.txt', 'pot_seed = -1'), &
                    "pot_seed must be recorded exactly as given, sentinel included")
-        call check(file_contains('test_potprov_noseed_summary.txt', 'NOT reproducible'), &
-                   "A clock-seeded disorder realisation must be flagged as irreproducible")
-        call check(file_contains('test_potprov_noseed_density.dat', 'NOT reproducible'), &
-                   "The density header must carry the irreproducibility flag too")
+        call check(file_contains('test_potprov_noseed_summary.txt', 'effective_seed = 987654'), &
+                   "The seed actually drawn must be recorded next to the sentinel")
+        call check(file_contains('test_potprov_noseed_summary.txt', 'set pot_seed = 987654'), &
+                   "The summary must say how to replay the clock-seeded realisation")
+        call check(file_contains('test_potprov_noseed_density.dat', 'effective_seed = 987654'), &
+                   "The density header must carry the effective seed too")
+        call check(.not. file_contains('test_potprov_noseed_summary.txt', 'NOT reproducible'), &
+                   "A clock-seeded run IS reproducible once the drawn seed is recorded")
 
         call remove_file('test_potprov_seed_summary.txt')
         call remove_file('test_potprov_seed_density.dat')
@@ -848,6 +1031,57 @@ contains
         deallocate(results%history%density_norms)
         deallocate(results%history%energies)
     end subroutine test_outputs_record_external_potential_provenance
+
+
+    !> AAH provenance must contain the three parameters actually used to form V(i)
+    subroutine test_quasiperiodic_provenance_records_generator_params()
+        use fortuno_serial, only: check => serial_check
+        use output_writer
+        use lsda_types, only: system_params_t
+        use input_parser, only: input_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        type(input_params_t) :: inputs
+        integer :: ierr
+
+        sys_params%L = 4
+        sys_params%Nup = 2
+        sys_params%Ndown = 2
+        sys_params%U = 4.0_dp
+        results%converged = .true.
+        results%n_iterations = 1
+        results%final_energy = -4.0_dp
+
+        inputs%output_prefix = 'test_prov_aah'
+        inputs%potential_type = 'quasiperiodic'
+        inputs%aah_lambda = 2.5_dp
+        inputs%aah_beta = 0.25_dp
+        inputs%aah_phi = 1.25_dp
+        ! A deliberately unrelated legacy field: it must not be claimed as an
+        ! AAH parameter in the output.
+        inputs%pot_width = 99.0_dp
+        inputs%save_density = .false.
+        inputs%save_eigenvalues = .false.
+        inputs%store_history = .false.
+
+        call write_results(results, sys_params, inputs, ierr)
+
+        call check(ierr == ERROR_SUCCESS, "write_results for AAH should succeed")
+        call check(file_contains('test_prov_aah_summary.txt', 'aah_lambda =     2.500000'), &
+                   "AAH provenance must record lambda")
+        call check(file_contains('test_prov_aah_summary.txt', 'aah_beta =     0.250000'), &
+                   "AAH provenance must record beta")
+        call check(file_contains('test_prov_aah_summary.txt', 'aah_phi =     1.250000'), &
+                   "AAH provenance must record phi")
+        call check(.not. file_contains('test_prov_aah_summary.txt', 'pot_width ='), &
+                   "AAH provenance must not record irrelevant pot_width")
+
+        call remove_file('test_prov_aah_summary.txt')
+    end subroutine test_quasiperiodic_provenance_records_generator_params
 
 
     !> The provenance must record the parameters of the potential ACTUALLY used
@@ -1052,10 +1286,10 @@ contains
     !! something objectively false about the calculation that produced it.
     !!
     !! The field is no longer written at all, because potential_type already
-    !! identifies the generator completely. The test therefore leaves
-    !! `distribution` at its default and requires that the word "gaussian"
-    !! appear NOWHERE in any of the four files of a uniform-disorder run, while
-    !! the generator itself remains identified.
+    !! identifies the generator completely; the `distribution` input key has
+    !! since been removed from the namelist as well. The test requires that the
+    !! word "gaussian" appear NOWHERE in any of the four files of a
+    !! uniform-disorder run, while the generator itself remains identified.
     subroutine test_random_uniform_no_false_distribution()
         use fortuno_serial, only: check => serial_check
         use output_writer
@@ -1102,8 +1336,8 @@ contains
         inputs%potential_type = 'random_uniform'
         inputs%disorder_strength = 1.75_dp
         inputs%pot_seed = 777
-        ! inputs%distribution deliberately left at its default, 'gaussian':
-        ! that default is exactly what used to be written here.
+        ! There is no `distribution` field to set any more; its old default,
+        ! 'gaussian', is exactly what used to be written here.
 
         call write_results(results, sys_params, inputs, ierr)
         call check(ierr == ERROR_SUCCESS, "write_results (random_uniform) should succeed")
