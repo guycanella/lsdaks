@@ -646,10 +646,18 @@ contains
         records = ''
 
         ! Second pass: each record fits in one element, so a plain advancing
-        ! read transfers it whole.
+        ! read transfers it whole.  A failed read here means the contents no
+        ! longer match the record count established in the first pass; leaving
+        ! the remaining entries blank would make later namelist groups look
+        ! absent and silently retain their defaults.
         do k = 1, n_rec
             read(io_unit, '(A)', iostat=io_stat) records(k)
-            if (io_stat /= 0) exit
+            if (io_stat /= 0) then
+                print *, "ERROR: Could not read file: ", trim(filename)
+                close(io_unit)
+                ierr = ERROR_INVALID_INPUT
+                return
+            end if
         end do
 
         close(io_unit)

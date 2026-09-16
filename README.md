@@ -375,12 +375,16 @@ The code supports 10 types of external potentials `V_ext(i)`:
 ```fortran
 &potential
   potential_type = 'barrier_single'
-  barrier_height = 5.0
-  barrier_start = 40
-  barrier_end = 60
+  V0 = 5.0       ! Barrier height
+  position = 50  ! Reference site (1-indexed)
+  width = 4      ! Number of covered sites
 /
 ```
 - **Formula**: `V(i) = V_b` if `i_start ≤ i ≤ i_end`, else `V(i) = 0`
+- **Placement**: an odd width is centred on `position`. For an even width,
+  the covered interval is `[position - width/2, position + width/2 - 1]`;
+  e.g. `position = 50`, `width = 4` covers sites 48–51, with `position` as
+  the right-hand one of the two central sites.
 - **Use case**: Quantum tunneling, scattering
 
 ### 9. Double Barrier (Quantum Well)
@@ -405,7 +409,7 @@ The code supports 10 types of external potentials `V_ext(i)`:
   aah_phi = 0.0     ! Phase φ, in radians
 /
 ```
-- **Formula**: `V(i) = λ cos(2π ω i + φ)`
+- **Formula**: `V(i) = λ cos(2π β i + φ)`
 - **Use case**: Anderson localization transition, topological physics
 
 ## Input Format
@@ -469,7 +473,8 @@ SCF Convergence:
   Status:           ✓ CONVERGED
   Iterations:       127
   Final |Δn|:       8.3421E-07
-  Final Energy:     -45.234567890123
+  Final Total Energy:    -45.234567890123
+  Final Energy per site:   -0.452345678901
 
 Density Check:
   ∫n_up dx:         50.000000
