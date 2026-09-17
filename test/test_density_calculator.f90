@@ -235,7 +235,9 @@ contains
                 gap = DEG_TOL_UPPER
             end select
 
-            delta = 1.0e-3_dp * width
+            ! At the lower anchor keep the two samples positive and on opposite
+            ! sides of DEG_TOL; the input spectrum must remain ascending.
+            delta = min(1.0e-3_dp * width, 0.1_dp * gap)
 
             eigvals = [-1.0_dp, 0.0_dp, gap - delta, 1.0_dp]
             call compute_occupations(eigvals, 2, DEG_TOL, occ_a, ierr)
