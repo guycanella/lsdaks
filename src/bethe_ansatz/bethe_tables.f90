@@ -1,22 +1,23 @@
 !> Module for generating exchange-correlation functional tables
 !!
 !! This module provides functionality to generate XC tables by:
-!! 1. Computing E_xc = E_BA - E_0 for grid points (n, m, U)
-!! 2. Computing V_xc via numerical derivatives
+!! 1. Computing E_xc = E_BA - E_0 - U n_up n_down for grid points (n, m, U)
+!! 2. Computing V_xc from discrete particle-number derivatives
 !! 3. Using continuation method for efficient U sweeps
 !! 4. OpenMP parallelization for grid point calculations
 module bethe_tables
-    use lsda_constants, only: dp, TWOPI, U_SMALL
+    use lsda_constants, only: dp, PI, TWOPI, U_SMALL
     use bethe_equations, only: initialize_quantum_numbers, compute_energy, compute_residual
     use nonlinear_solvers, only: solve_newton
-    use table_io, only: xc_table_t, write_fortran_table
+    use table_io, only: xc_table_t, write_fortran_table, count_nonfinite_entries
+    use lsda_errors, only: ERROR_NOT_A_NUMBER
     use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, ieee_is_nan
     implicit none
     private
 
     type, public :: grid_params_t
         real(dp) :: n_min = 0.1_dp       !< Minimum density
-        real(dp) :: n_max = 2.0_dp       !< Maximum density
+        real(dp) :: n_max = 1.0_dp       !< Maximum density (particle-hole extension is in spline2d)
         integer :: n_points = 50         !< Number of density points
         integer :: m_points = 51         !< Number of magnetization points (per n)
         integer :: L = 100               !< System size
@@ -67,10 +68,13 @@ contains
         end do
     end function compute_E0
 
-    !> Compute exchange-correlation energy: E_xc = E_BA - E_0
+    !> Compute exchange-correlation energy: E_xc = E_BA - E_0 - U n_up n_down
     !!
-    !! Solves Bethe Ansatz equations to get E_BA, then subtracts E_0.
-    !! Returns energy per site for extensivity.
+    !! Solves the lattice Lieb-Wu equations for all charge rapidities and then
+    !! subtracts the non-interacting and Hartree terms.  Above half filling,
+    !! particle-hole symmetry maps the solve to the complementary densities.
+    !! The returned quantity is the per-site XC energy expected by the LSDA SCF
+    !! implementation.
     !!
     !! @param[in] n_up  Spin-up density
     !! @param[in] n_dw  Spin-down density
@@ -82,8 +86,8 @@ contains
         integer, intent(in) :: L
         real(dp) :: E_xc
         
-        integer :: Nup, Ndn, M
-        real(dp) :: E0, E_BA
+        integer :: Nup, Ndn, Ncharge, M, solver_status
+        real(dp) :: E0, E_BA, solver_n_up, solver_n_dn
         real(dp), allocatable :: x(:), k(:), F(:)
         real(dp), allocatable :: quantum_I(:), quantum_J(:)
         logical :: converged
@@ -93,28 +97,50 @@ contains
             return
         end if
 
-        Nup = nint(n_up * real(L, dp))
-        Ndn = nint(n_dn * real(L, dp))
-        M = Ndn
-
-        allocate(x(Nup + M))  ! Combined array for solver (k + Lambda)
-        allocate(k(Nup))
-        allocate(F(Nup + M))
-        allocate(quantum_I(Nup), quantum_J(M))
-
-        call initialize_quantum_numbers(Nup, M, quantum_I, quantum_J)
-        
-        x(1:Nup) = TWOPI * quantum_I / real(L, dp)
-        if (M > 0) then
-            x(Nup+1:Nup+M) = 0.0_dp
+        ! Particle-hole symmetry gives e_xc(n_up, n_dn) =
+        ! e_xc(1-n_up, 1-n_dn).  Solving the complementary state avoids the
+        ! ill-conditioned over-half-filled finite system used by derivatives
+        ! at the n = 1 edge of the tabulated domain.
+        solver_n_up = n_up
+        solver_n_dn = n_dn
+        if (n_up + n_dn > 1.0_dp) then
+            solver_n_up = 1.0_dp - n_up
+            solver_n_dn = 1.0_dp - n_dn
         end if
 
-        call solve_newton(x, quantum_I, quantum_J, L, U, converged)
+        Nup = nint(solver_n_up * real(L, dp))
+        Ndn = nint(solver_n_dn * real(L, dp))
+        Ncharge = Nup + Ndn
+        ! The Lieb-Wu spin rapidities describe the minority species.  The
+        ! energy is invariant under exchanging spin labels, whereas choosing
+        ! Ndn blindly makes M exceed Ncharge/2 for the negative-m side of the
+        ! table and drives the Newton system into a singular, nonphysical
+        ! sector.
+        M = min(Nup, Ndn)
+
+        if (Ncharge == 0) then
+            E_xc = 0.0_dp
+            return
+        end if
+
+        allocate(x(Ncharge + M))  ! Combined array for solver (k + Lambda)
+        allocate(k(Ncharge))
+        allocate(F(Ncharge + M))
+        allocate(quantum_I(Ncharge), quantum_J(M))
+
+        call initialize_quantum_numbers(Ncharge, M, quantum_I, quantum_J)
+        
+        x(1:Ncharge) = TWOPI * quantum_I / real(L, dp)
+        if (M > 0) then
+            x(Ncharge+1:Ncharge+M) = 0.0_dp
+        end if
+
+        call solve_newton(x, quantum_I, quantum_J, L, U, converged, solver_status)
 
         if (.not. converged) then
-            F = compute_residual(x(1:Nup), x(Nup+1:Nup+M), quantum_I, quantum_J, L, U)
+            F = compute_residual(x(1:Ncharge), x(Ncharge+1:Ncharge+M), quantum_I, quantum_J, L, U)
 
-            if (norm2(F) > 1.0e-8_dp) then
+            if (solver_status /= 0 .or. norm2(F) > 1.0e-8_dp) then
                 E_xc = ieee_value(E_xc, ieee_quiet_nan)
                 deallocate(x, k, quantum_I, quantum_J, F)
                 return
@@ -123,18 +149,23 @@ contains
             deallocate(F)
         end if
         
-        k = x(1:Nup)
+        k = x(1:Ncharge)
         E_BA = compute_energy(k)
-        E0 = compute_E0(n_up, n_dn, L)
-        E_xc = (E_BA - E0) / real(L, dp)
+        ! The XC tables represent the thermodynamic functional.  Use the
+        ! analytic free-gas energy density rather than its finite-L shell sum.
+        E0 = -2.0_dp * (sin(PI * n_up) + sin(PI * n_dn)) / PI
+        E_xc = E_BA / real(L, dp) - E0 - U * solver_n_up * solver_n_dn
 
         deallocate(x, k, quantum_I, quantum_J)
     end function compute_E_xc
 
     !> Compute XC potentials via numerical derivatives (central finite differences)
     !!
-    !! V_xc_up = ∂E_xc/∂n_up, V_xc_dw = ∂E_xc/∂n_dw
-    !! Uses 2nd-order central differences with δn ~ 1e-4
+    !! V_xc_up = ∂e_xc/∂n_up, V_xc_dw = ∂e_xc/∂n_dw.
+    !! The derivative is evaluated over one particle at fixed L, so the
+    !! density step is 1/L and is not lost to the integer particle mapping.
+    !! At the n=1 grid edge, the lower-density one-sided derivative avoids an
+    !! over-half-filled Lieb-Wu solve.
     !!
     !! @param[in] n_up    Spin-up density
     !! @param[in] n_dw    Spin-down density
@@ -152,24 +183,44 @@ contains
         real(dp) :: E_xc_up_plus, E_xc_up_minus
         real(dp) :: E_xc_dw_plus, E_xc_dw_minus
 
-        delta_n = 1.0e-4_dp
+        delta_n = 1.0_dp / real(L, dp)
 
         ! Derivative with respect to n_up
-        E_xc_up_plus = compute_E_xc(n_up + delta_n, n_dw, U, L)
-        E_xc_up_minus = compute_E_xc(n_up - delta_n, n_dw, U, L)
+        if (n_up >= delta_n .and. n_up <= 1.0_dp - delta_n .and. &
+            n_up + n_dw <= 1.0_dp - delta_n) then
+            E_xc_up_plus = compute_E_xc(n_up + delta_n, n_dw, U, L)
+            E_xc_up_minus = compute_E_xc(n_up - delta_n, n_dw, U, L)
+            v_xc%v_xc_up = (E_xc_up_plus - E_xc_up_minus) / (2.0_dp * delta_n)
+        else if (n_up < delta_n) then
+            E_xc_up_plus = compute_E_xc(n_up + delta_n, n_dw, U, L)
+            E_xc_up_minus = compute_E_xc(n_up, n_dw, U, L)
+            v_xc%v_xc_up = (E_xc_up_plus - E_xc_up_minus) / delta_n
+        else
+            E_xc_up_plus = compute_E_xc(n_up, n_dw, U, L)
+            E_xc_up_minus = compute_E_xc(n_up - delta_n, n_dw, U, L)
+            v_xc%v_xc_up = (E_xc_up_plus - E_xc_up_minus) / delta_n
+        end if
         if (ieee_is_nan(E_xc_up_plus) .or. ieee_is_nan(E_xc_up_minus)) then
             v_xc%v_xc_up = ieee_value(0.0_dp, ieee_quiet_nan)
-        else
-            v_xc%v_xc_up = (E_xc_up_plus - E_xc_up_minus) / (2.0_dp * delta_n)
         end if
 
         ! Derivative with respect to n_dw
-        E_xc_dw_plus = compute_E_xc(n_up, n_dw + delta_n, U, L)
-        E_xc_dw_minus = compute_E_xc(n_up, n_dw - delta_n, U, L)
+        if (n_dw >= delta_n .and. n_dw <= 1.0_dp - delta_n .and. &
+            n_up + n_dw <= 1.0_dp - delta_n) then
+            E_xc_dw_plus = compute_E_xc(n_up, n_dw + delta_n, U, L)
+            E_xc_dw_minus = compute_E_xc(n_up, n_dw - delta_n, U, L)
+            v_xc%v_xc_down = (E_xc_dw_plus - E_xc_dw_minus) / (2.0_dp * delta_n)
+        else if (n_dw < delta_n) then
+            E_xc_dw_plus = compute_E_xc(n_up, n_dw + delta_n, U, L)
+            E_xc_dw_minus = compute_E_xc(n_up, n_dw, U, L)
+            v_xc%v_xc_down = (E_xc_dw_plus - E_xc_dw_minus) / delta_n
+        else
+            E_xc_dw_plus = compute_E_xc(n_up, n_dw, U, L)
+            E_xc_dw_minus = compute_E_xc(n_up, n_dw - delta_n, U, L)
+            v_xc%v_xc_down = (E_xc_dw_plus - E_xc_dw_minus) / delta_n
+        end if
         if (ieee_is_nan(E_xc_dw_plus) .or. ieee_is_nan(E_xc_dw_minus)) then
             v_xc%v_xc_down = ieee_value(0.0_dp, ieee_quiet_nan)
-        else
-            v_xc%v_xc_down = (E_xc_dw_plus - E_xc_dw_minus) / (2.0_dp * delta_n)
         end if
     end function compute_V_xc_numerical
 
@@ -211,7 +262,11 @@ contains
         table%vxc_up = ieee_value(0.0_dp, ieee_quiet_nan)
         table%vxc_down = ieee_value(0.0_dp, ieee_quiet_nan)
         
-        delta_n = (params%n_max - params%n_min) / real(params%n_points - 1, dp)
+        if (params%n_points > 1) then
+            delta_n = (params%n_max - params%n_min) / real(params%n_points - 1, dp)
+        else
+            delta_n = 0.0_dp
+        end if
         
         !$OMP PARALLEL DO PRIVATE(i, j, n, m, n_up, n_dw, delta_m, v_xc, actual_m_points) &
         !$OMP SHARED(table, params, U, delta_n) SCHEDULE(dynamic)
@@ -227,16 +282,15 @@ contains
             end if
             
             do j = 1, actual_m_points
-                m = -n + real(j - 1, dp) * delta_m
+                if (actual_m_points == 1) then
+                    m = 0.0_dp
+                else
+                    m = -n + real(j - 1, dp) * delta_m
+                end if
                 table%m_grid(j, i) = m
                 
                 n_up = 0.5_dp * (n + m)
                 n_dw = 0.5_dp * (n - m)
-                
-                if (n_up < 0.0_dp .or. n_up > 1.0_dp .or. &
-                    n_dw < 0.0_dp .or. n_dw > 1.0_dp) then
-                    cycle
-                end if
                 
                 table%exc(j, i) = compute_E_xc(n_up, n_dw, U, params%L)
 
@@ -266,7 +320,7 @@ contains
         character(len=*), intent(in) :: output_dir
         integer, intent(out) :: status
         
-        integer :: k, n_U, io_stat
+        integer :: k, n_U, io_stat, n_bad_exc, n_bad_up, n_bad_dn
         real(dp) :: U_current
         type(xc_table_t) :: table
         character(len=256) :: filename
@@ -289,15 +343,28 @@ contains
             print '(A,I0,A,I0,A,F6.2)', "Processing U(", k, "/", n_U, ") = ", U_current
             
             call generate_xc_table(U_current, params, table, status)
-            
+
             if (status /= 0) then
                 print '(A,F6.2)', "  ERROR: Failed to generate table for U = ", U_current
                 return
             end if
-            
+
+            ! write_fortran_table refuses non-finite tables as well; the check
+            ! is repeated here to name the offending quantity and stop the sweep
+            ! before any later U is attempted.
+            call count_nonfinite_entries(table, n_bad_exc, n_bad_up, n_bad_dn)
+            if (n_bad_exc + n_bad_up + n_bad_dn > 0) then
+                print '(A,F6.2,A)', "  ERROR: Table for U = ", U_current, &
+                    " contains non-finite entries; not written."
+                print '(A,I0,A,I0,A,I0)', "         non-finite: exc = ", n_bad_exc, &
+                    ", Vxc_up = ", n_bad_up, ", Vxc_down = ", n_bad_dn
+                status = ERROR_NOT_A_NUMBER
+                return
+            end if
+
             write(U_str, '(F6.2)') U_current
             U_str = adjustl(U_str)
-            filename = trim(output_dir) // "/lsda_hub_u" // trim(U_str) // ".dat"
+            filename = trim(output_dir) // "/xc_table_u" // trim(U_str) // ".dat"
             
             call write_fortran_table(filename, table, io_stat)
             

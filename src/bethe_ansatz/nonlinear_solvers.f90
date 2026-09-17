@@ -11,6 +11,8 @@
 !! @note All solvers use double precision (real64) arithmetic
 module nonlinear_solvers
     use lsda_constants, only: dp, TWOPI, U_SMALL, NEWTON_TOL, NEWTON_MAX_ITER
+    use lsda_errors, only: ERROR_SUCCESS, ERROR_SIZE_MISMATCH, ERROR_SINGULAR_MATRIX, &
+                           ERROR_LAPACK_INVALID_ARG, ERROR_CONVERGENCE_FAILED
     use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
     use bethe_equations
     implicit none
@@ -48,10 +50,11 @@ contains
     !!
     !! @param[in]  A  Coefficient matrix (N×N, must be square and non-singular)
     !! @param[out] x  Solution vector (N)
-    !! @param[in]  b  Right-hand side vector (N)
+    !! @param[in]  b     Right-hand side vector (N)
+    !! @param[out] ierr  Error status from the linear solve
     !!
     !! @note A and b are not modified (copies are used internally)
-    !! @note Stops execution if matrix is singular or dimensions are incompatible
+    !! @note Returns an error code if the matrix is singular or dimensions are incompatible.
     !!
     !! Algorithm:
     !! 1. Validate dimensions (A square, b and x compatible)
@@ -60,9 +63,10 @@ contains
     !! 4. Check INFO flag (0=success, >0=singular, <0=invalid argument)
     !!
     !! @see LAPACK DGESV documentation: https://netlib.org/lapack/explore-html/
-    subroutine solve_linear_system(A, x, b)
+    subroutine solve_linear_system(A, x, b, ierr)
         real(dp), intent(in) :: A(:,:), b(:)
         real(dp), intent(out) :: x(:)
+        integer, intent(out) :: ierr
 
         integer :: N, LDA, LDB, INFO, NRHS
         integer, allocatable :: IPIV(:)
@@ -70,13 +74,16 @@ contains
         real(dp), allocatable :: A_copy(:,:), b_copy(:)
 
         N = size(A, 1)
+        ierr = ERROR_SUCCESS
         
         if (size(A, 1) /= size(A, 2)) then
-            error stop "solve_linear_system: A must be square!"
+            ierr = ERROR_SIZE_MISMATCH
+            return
         end if
         
         if (size(b) /= N .or. size(x) /= N) then
-            error stop "solve_linear_system: incompatible dimensions!"
+            ierr = ERROR_SIZE_MISMATCH
+            return
         end if
 
         ! LAPACK parameters
@@ -98,13 +105,9 @@ contains
             x = b_copy
             
         else if (info > 0) then
-            ! Singular matrix (there is no unique solution)
-            write(*, '(A,I0,A)') "ERROR: Matrix is singular (pivot ", info, " is zero)"
-            error stop "solve_linear_system: singular matrix!"
+            ierr = ERROR_SINGULAR_MATRIX
         else
-            ! info < 0: invalid argument
-            write(*, '(A,I0,A)') "ERROR: Invalid argument ", -info, " in DGESV"
-            error stop "solve_linear_system: LAPACK error!"
+            ierr = ERROR_LAPACK_INVALID_ARG
         end if
 
         deallocate(A_copy, b_copy, IPIV)
@@ -207,6 +210,7 @@ contains
     !! @param[in]    L         Number of lattice sites
     !! @param[in]    U         Hubbard interaction strength
     !! @param[out]   converged .true. if converged, .false. otherwise
+    !! @param[out]   ierr      Error status from a linear solve or convergence failure
     !!
     !! Algorithm:
     !! 1. Special case U≈0: return analytical solution k_j = 2π·I_j/L, Λ=0
@@ -228,12 +232,13 @@ contains
     !! @note Prints warnings if stagnation or non-convergence detected
     !!
     !! @see compute_residual, compute_jacobian, solve_linear_system, line_search
-    subroutine solve_newton(x, I, J, L, U, converged)
+    subroutine solve_newton(x, I, J, L, U, converged, ierr)
         real(dp), intent(inout) :: x(:)
         real(dp), intent(in) :: I(:), J(:)
         integer, intent(in) :: L
         real(dp), intent(in) :: U
         logical, intent(out) :: converged
+        integer, intent(out) :: ierr
 
         integer :: Nup, M, iter
         real(dp), allocatable :: k(:), Lambda(:), F(:), Jacobian(:,:), dx(:), neg_F(:)
@@ -247,6 +252,7 @@ contains
         allocate(Jacobian(Nup + M, Nup + M))
 
         converged = .false.
+        ierr = ERROR_SUCCESS
 
         if (abs(U) < U_SMALL) then
             ! Analytical solution for U=0 (free Fermi gas)
@@ -273,11 +279,17 @@ contains
             Jacobian = compute_jacobian(k, Lambda, L, U)
 
             neg_F = -F
-            call solve_linear_system(Jacobian, dx, neg_F)
+            call solve_linear_system(Jacobian, dx, neg_F, ierr)
+            if (ierr /= ERROR_SUCCESS) return
 
             alpha = line_search(x, dx, F, I, J, L, U)
 
             x = x + alpha * dx
+
+            k = x(1:Nup)
+            Lambda = x(Nup+1:)
+            F = compute_residual(k, Lambda, I, J, L, U)
+            norm_F = NORM2(F)
 
             if (NORM2(dx) / (MAX(1.0_dp, NORM2(x))) < NEWTON_TOL) then
                 if (norm_F > NEWTON_TOL) then
@@ -293,9 +305,14 @@ contains
             end if
         end do
 
+        if (.not. converged .and. norm_F < 1.0e-8_dp) then
+            converged = .true.
+        end if
+
         if (.not. converged) then
             print *, "Warning: Newton did not converge in", NEWTON_MAX_ITER, "iterations."
             print *, "  Final residual norm:", norm_F
+            ierr = ERROR_CONVERGENCE_FAILED
         end if
 
         deallocate(F, Jacobian, dx, neg_F, k, Lambda)

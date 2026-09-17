@@ -96,7 +96,7 @@ contains
 
         real(dp), allocatable :: x(:), x_guess(:), dxdU(:), k(:)
         real(dp) :: U, dU, dU_old
-        integer :: Nup, M, site, n_points
+        integer :: Nup, M, site, n_points, solver_status
         logical :: converged
 
         Nup = size(I)
@@ -123,7 +123,7 @@ contains
             x_guess(Nup + 1:Nup + M) = 0.0_dp
 
             x = x_guess
-            call solve_newton(x, I, J, L, U, converged)
+            call solve_newton(x, I, J, L, U, converged, solver_status)
         end if
 
         solutions(:, 1) = x
@@ -135,7 +135,7 @@ contains
         U = U_values(2)
         x_guess = solutions(:, 1)
         x = x_guess
-        call solve_newton(x, I, J, L, U, converged)
+        call solve_newton(x, I, J, L, U, converged, solver_status)
 
         solutions(:, 2) = x
         k = x(1:Nup)
@@ -153,7 +153,7 @@ contains
 
             ! CORRETOR
             x = x_guess
-            call solve_newton(x, I, J, L, U, converged)
+            call solve_newton(x, I, J, L, U, converged, solver_status)
 
             solutions(:, site) = x
             k = x(1:Nup)
@@ -202,7 +202,7 @@ contains
 
         real(dp), allocatable :: x(:), x_guess(:), dxdU(:), k(:)
         real(dp) :: U, dU, dU_old
-        integer :: Nup, M, site, n_points
+        integer :: Nup, M, site, n_points, solver_status
         logical :: converged
 
         Nup = size(I)
@@ -229,7 +229,7 @@ contains
             x_guess(Nup + 1:Nup + M) = 0.0_dp
 
             x = x_guess
-            call solve_newton(x, I, J, L, U, converged)
+            call solve_newton(x, I, J, L, U, converged, solver_status)
         end if
 
         solutions(:, n_points) = x
@@ -241,7 +241,7 @@ contains
         U = U_values(n_points - 1)
         x_guess = solutions(:, n_points)
         x = x_guess
-        call solve_newton(x, I, J, L, U, converged)
+        call solve_newton(x, I, J, L, U, converged, solver_status)
 
         solutions(:, n_points - 1) = x
         k = x(1:Nup)
@@ -259,7 +259,7 @@ contains
 
             ! CORRETOR
             x = x_guess
-            call solve_newton(x, I, J, L, U, converged)
+            call solve_newton(x, I, J, L, U, converged, solver_status)
 
             solutions(:, site) = x
             k = x(1:Nup)

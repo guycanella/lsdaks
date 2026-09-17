@@ -2,6 +2,7 @@
 program test_bethe_tables
     use fortuno_serial, only: execute_serial_cmd_app
     use lsda_constants, only: dp
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     implicit none
 
     real(dp), parameter :: TOL = 1.0e-9_dp
@@ -18,6 +19,11 @@ contains
             test("compute_E0_half_filling", test_compute_E0_half_filling), &
             test("compute_E0_polarized", test_compute_E0_polarized), &
             test("compute_E_xc_U0", test_compute_E_xc_U0), &
+            test("compute_E_xc_half_filling_u4", test_compute_E_xc_half_filling_u4), &
+            test("compute_V_xc_half_filling_u4", test_compute_V_xc_half_filling_u4), &
+            test("compute_E_xc_above_half_filling_u4", test_compute_E_xc_above_half_filling_u4), &
+            test("compute_E_xc_particle_hole_u4", test_compute_E_xc_particle_hole_u4), &
+            test("compute_E_xc_spin_exchange_u4", test_compute_E_xc_spin_exchange_u4), &
             test("compute_V_xc_symmetric", test_compute_V_xc_symmetric), &
             test("grid_params_defaults", test_grid_params_defaults), &
             test("generate_small_table", test_generate_small_table) &
@@ -89,6 +95,124 @@ contains
         
     end subroutine test_compute_E_xc_U0
 
+    !> Regression test for the finite-size U=4 half-filled Lieb-Wu solution.
+    !!
+    !! The reference is the C++ U=4 table value after the Hartree contribution
+    !! has been removed.  It fails if charge scattering uses k instead of sin(k),
+    !! if only one spin population is used for charge roots, or if Hartree remains.
+    subroutine test_compute_E_xc_half_filling_u4()
+        use fortuno_serial, only: check => serial_check
+        use bethe_tables, only: compute_E_xc, generate_xc_table, grid_params_t
+        use lsda_constants, only: dp
+        use table_io, only: xc_table_t
+
+        real(dp), parameter :: CPP_EXC = -0.300489823_dp
+        real(dp) :: E_xc
+        integer :: status
+        type(grid_params_t) :: params
+        type(xc_table_t) :: table
+
+        E_xc = compute_E_xc(0.5_dp, 0.5_dp, 4.0_dp, 100)
+        call check(abs(E_xc - CPP_EXC) < 1.0e-4_dp, &
+                   "U=4 half-filled E_xc must match the C++ reference table")
+
+        params%n_min = 1.0_dp
+        params%n_max = 1.0_dp
+        params%n_points = 1
+        params%m_points = 1
+        params%L = 100
+        call generate_xc_table(4.0_dp, params, table, status)
+        call check(status == 0, "U=4 reference table point should generate")
+        call check(abs(table%exc(1, 1) - CPP_EXC) < 1.0e-4_dp, &
+                   "Generated U=4 table must match the C++ reference table")
+
+        deallocate(table%n_grid, table%m_grid, table%exc, table%vxc_up, table%vxc_down)
+    end subroutine test_compute_E_xc_half_filling_u4
+
+    !> Regression test for finite and symmetric U=4 potentials at half filling.
+    !!
+    !! The discrete derivative must use the one-sided lower-density derivative
+    !! at n=1, rather than attempting a Newton solve above half filling.
+    subroutine test_compute_V_xc_half_filling_u4()
+        use fortuno_serial, only: check => serial_check
+        use bethe_tables, only: compute_V_xc_numerical, xc_potentials_t
+        use lsda_constants, only: dp
+
+        type(xc_potentials_t) :: v_xc
+
+        v_xc = compute_V_xc_numerical(0.5_dp, 0.5_dp, 4.0_dp, 100)
+
+        call check(ieee_is_finite(v_xc%v_xc_up), &
+                   "U=4 half-filled V_xc_up must be finite")
+        call check(ieee_is_finite(v_xc%v_xc_down), &
+                   "U=4 half-filled V_xc_down must be finite")
+        call check(abs(v_xc%v_xc_up - v_xc%v_xc_down) < 1.0e-10_dp, &
+                   "U=4 half-filled V_xc must preserve spin symmetry")
+    end subroutine test_compute_V_xc_half_filling_u4
+
+    !> Regression test for particle-hole evaluation above half filling.
+    !!
+    !! The energies and potentials must remain finite when a finite-difference
+    !! derivative evaluates a density above the n=1 table boundary.
+    subroutine test_compute_E_xc_above_half_filling_u4()
+        use fortuno_serial, only: check => serial_check
+        use bethe_tables, only: compute_E_xc, compute_V_xc_numerical, xc_potentials_t
+        use lsda_constants, only: dp
+
+        real(dp) :: e_xc
+        type(xc_potentials_t) :: v_xc
+
+        e_xc = compute_E_xc(0.75_dp, 0.75_dp, 4.0_dp, 20)
+        v_xc = compute_V_xc_numerical(0.75_dp, 0.75_dp, 4.0_dp, 20)
+
+        call check(ieee_is_finite(e_xc), "Above-half-filled U=4 E_xc must be finite")
+        call check(ieee_is_finite(v_xc%v_xc_up), &
+                   "Above-half-filled U=4 V_xc_up must be finite")
+        call check(ieee_is_finite(v_xc%v_xc_down), &
+                   "Above-half-filled U=4 V_xc_down must be finite")
+    end subroutine test_compute_E_xc_above_half_filling_u4
+
+    !> Regression test for particle-hole symmetry of the XC energy.
+    !!
+    !! The Lieb-Wu solve above half filling is performed at complementary
+    !! densities, so the Hartree term must use those same mapped densities.
+    subroutine test_compute_E_xc_particle_hole_u4()
+        use fortuno_serial, only: check => serial_check
+        use bethe_tables, only: compute_E_xc
+        use lsda_constants, only: dp
+
+        real(dp) :: e_xc, e_xc_complement
+
+        e_xc = compute_E_xc(0.75_dp, 0.75_dp, 4.0_dp, 20)
+        e_xc_complement = compute_E_xc(0.25_dp, 0.25_dp, 4.0_dp, 20)
+
+        call check(abs(e_xc - e_xc_complement) < 1.0e-12_dp, &
+                   "E_xc must obey particle-hole symmetry above half filling")
+    end subroutine test_compute_E_xc_particle_hole_u4
+
+    !> Regression test for the minority-spin rapidity convention.
+    !!
+    !! The negative-m half of a table swaps which physical spin is the
+    !! minority.  Both labelings must solve the same Lieb-Wu state and return
+    !! a finite, spin-exchange-symmetric energy.
+    subroutine test_compute_E_xc_spin_exchange_u4()
+        use fortuno_serial, only: check => serial_check
+        use bethe_tables, only: compute_E_xc
+        use lsda_constants, only: dp
+
+        real(dp) :: e_xc_up, e_xc_down
+
+        e_xc_up = compute_E_xc(0.1_dp, 0.7_dp, 4.0_dp, 20)
+        e_xc_down = compute_E_xc(0.7_dp, 0.1_dp, 4.0_dp, 20)
+
+        call check(ieee_is_finite(e_xc_up), &
+                   "Negative-m state must not enter an invalid Bethe sector")
+        call check(ieee_is_finite(e_xc_down), &
+                   "Positive-m state must produce a finite XC energy")
+        call check(abs(e_xc_up - e_xc_down) < 1.0e-12_dp, &
+                   "XC energy must be invariant under spin exchange")
+    end subroutine test_compute_E_xc_spin_exchange_u4
+
     !> Test V_xc symmetry: for n_up = n_dw, V_xc_up = V_xc_dw
     subroutine test_compute_V_xc_symmetric()
         use fortuno_serial, only: check => serial_check
@@ -122,7 +246,7 @@ contains
         
         ! Check defaults
         call check(ABS(params%n_min - 0.1_dp) < TOL, "Default n_min should be 0.1")
-        call check(ABS(params%n_max - 2.0_dp) < TOL, "Default n_max should be 2.0")
+        call check(ABS(params%n_max - 1.0_dp) < TOL, "Default n_max should be 1.0")
         call check(params%n_points == 50, "Default n_points should be 50")
         call check(params%m_points == 51, "Default m_points should be 51")
         call check(params%L == 100, "Default L should be 100")

@@ -4,7 +4,8 @@ module table_io
     use lsda_constants, only: dp
     use lsda_errors, only: ERROR_SUCCESS, ERROR_FILE_NOT_FOUND, &
                                     ERROR_FILE_READ, ERROR_FILE_WRITE, &
-                                    ERROR_INVALID_INPUT
+                                    ERROR_INVALID_INPUT, ERROR_NOT_A_NUMBER
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     implicit none
     private
 
@@ -12,6 +13,7 @@ module table_io
     public :: read_cpp_table, write_fortran_table, read_fortran_table
     public :: deallocate_table, print_table_info
     public :: extract_U_from_filename
+    public :: count_nonfinite_entries
 
     integer, parameter :: MAX_LINE_LEN = 256
 
@@ -230,14 +232,48 @@ contains
 
     end subroutine extract_U_from_filename
     
+    !> Count the non-finite entries (NaN or ±Inf) in each data array of a table.
+    !!
+    !! Unallocated arrays count as zero. Used by `write_fortran_table` to refuse
+    !! persisting an invalid table, and by the generators to report which
+    !! quantity failed.
+    !!
+    !! @param[in]  table  XC table
+    !! @param[out] n_exc  Non-finite entries in `exc`
+    !! @param[out] n_up   Non-finite entries in `vxc_up`
+    !! @param[out] n_dn   Non-finite entries in `vxc_down`
+    subroutine count_nonfinite_entries(table, n_exc, n_up, n_dn)
+        type(xc_table_t), intent(in) :: table
+        integer, intent(out) :: n_exc, n_up, n_dn
+
+        n_exc = 0
+        n_up = 0
+        n_dn = 0
+        if (allocated(table%exc))      n_exc = count(.not. ieee_is_finite(table%exc))
+        if (allocated(table%vxc_up))   n_up  = count(.not. ieee_is_finite(table%vxc_up))
+        if (allocated(table%vxc_down)) n_dn  = count(.not. ieee_is_finite(table%vxc_down))
+    end subroutine count_nonfinite_entries
+
+    !> Write a table in the native binary format.
+    !!
+    !! Refuses to write, returning `ERROR_NOT_A_NUMBER` and creating no file,
+    !! when any entry of `exc`, `vxc_up` or `vxc_down` is NaN or ±Inf. A table
+    !! with holes would otherwise be read back by the SCF and the spline would
+    !! spread the invalid values over whole rows.
     subroutine write_fortran_table(filename, table, ierr)
         character(len=*), intent(in) :: filename
         type(xc_table_t), intent(in) :: table
         integer, intent(out) :: ierr
-        integer :: unit, io_stat
+        integer :: unit, io_stat, n_bad_exc, n_bad_up, n_bad_dn
 
         if (.not. allocated(table%n_grid)) then
             ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
+        call count_nonfinite_entries(table, n_bad_exc, n_bad_up, n_bad_dn)
+        if (n_bad_exc + n_bad_up + n_bad_dn > 0) then
+            ierr = ERROR_NOT_A_NUMBER
             return
         end if
 

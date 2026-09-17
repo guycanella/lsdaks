@@ -35,9 +35,96 @@ contains
             test("missing_file", test_missing_file), &
             test("missing_file_roundtrip_is_safe", test_missing_file_roundtrip_is_safe), &
             test("deallocate_table", test_deallocate_table), &
-            test("multiple_tables", test_multiple_tables) &
+            test("multiple_tables", test_multiple_tables), &
+            test("write_rejects_nonfinite", test_write_rejects_nonfinite) &
         ])
     end function get_table_io_tests
+
+    ! write_fortran_table must refuse a table with a NaN or an Inf anywhere in
+    ! exc/vxc_up/vxc_down: no file, ERROR_NOT_A_NUMBER. Each array is probed
+    ! separately, with +Inf, -Inf and NaN, so that a check on ieee_is_nan alone
+    ! (which lets ±Inf through) fails this test.
+    subroutine test_write_rejects_nonfinite()
+        use fortuno_serial, only: check => serial_check
+        use table_io
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_NOT_A_NUMBER, ERROR_SUCCESS
+        use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, &
+            ieee_positive_inf, ieee_negative_inf
+
+        character(len=*), parameter :: bin_file = "build/test_tmp/nonfinite_table_u4.00.dat"
+        type(xc_table_t) :: table
+        real(dp) :: bad(3)
+        integer :: status, n_exc, n_up, n_dn, which_array, which_value
+        logical :: exists
+
+        bad(1) = ieee_value(0.0_dp, ieee_quiet_nan)
+        bad(2) = ieee_value(0.0_dp, ieee_positive_inf)
+        bad(3) = ieee_value(0.0_dp, ieee_negative_inf)
+
+        call ensure_scratch_dir()
+        call remove_file(bin_file)
+
+        do which_array = 1, 3
+            do which_value = 1, 3
+                call make_finite_table(table)
+                select case (which_array)
+                case (1); table%exc(2, 2)      = bad(which_value)
+                case (2); table%vxc_up(1, 3)   = bad(which_value)
+                case (3); table%vxc_down(3, 1) = bad(which_value)
+                end select
+
+                call count_nonfinite_entries(table, n_exc, n_up, n_dn)
+                call check(n_exc + n_up + n_dn == 1, &
+                    "exactly one non-finite entry should be counted")
+                call check(merge(n_exc, merge(n_up, n_dn, which_array == 2), which_array == 1) == 1, &
+                    "the non-finite entry should be attributed to the right array")
+
+                call write_fortran_table(bin_file, table, status)
+                call check(status == ERROR_NOT_A_NUMBER, &
+                    "write_fortran_table must return ERROR_NOT_A_NUMBER for a non-finite table")
+                inquire(file=bin_file, exist=exists)
+                call check(.not. exists, "no file may be created for a non-finite table")
+
+                call deallocate_table(table)
+                call remove_file(bin_file)
+            end do
+        end do
+
+        ! Control: the same table with every entry finite is written.
+        call make_finite_table(table)
+        call count_nonfinite_entries(table, n_exc, n_up, n_dn)
+        call check(n_exc + n_up + n_dn == 0, "a finite table has no non-finite entries")
+        call write_fortran_table(bin_file, table, status)
+        call check(status == ERROR_SUCCESS, "a finite table must be written")
+        inquire(file=bin_file, exist=exists)
+        call check(exists, "the finite table file must exist")
+        call deallocate_table(table)
+        call remove_file(bin_file)
+    end subroutine test_write_rejects_nonfinite
+
+    ! A tiny 3x3 table with arbitrary finite values.
+    subroutine make_finite_table(table)
+        use table_io, only: xc_table_t
+        use lsda_constants, only: dp
+        type(xc_table_t), intent(out) :: table
+        integer :: i, j
+
+        table%U = 4.0_dp
+        table%n_points_n = 3
+        table%n_points_m = 3
+        allocate(table%n_grid(3), table%m_grid(3, 3))
+        allocate(table%exc(3, 3), table%vxc_up(3, 3), table%vxc_down(3, 3))
+        do i = 1, 3
+            table%n_grid(i) = 0.25_dp * real(i, dp)
+            do j = 1, 3
+                table%m_grid(j, i) = table%n_grid(i) * real(j - 2, dp)
+                table%exc(j, i) = -0.1_dp * real(i + j, dp)
+                table%vxc_up(j, i) = 0.01_dp * real(i - j, dp)
+                table%vxc_down(j, i) = 0.02_dp * real(j - i, dp)
+            end do
+        end do
+    end subroutine make_finite_table
 
 
     ! ------------------------------------------------------------------

@@ -29,13 +29,15 @@ contains
         use lsda_constants, only: dp
         
         real(dp) :: A(2,2), b(2), x(2), x_expected(2)
+        integer :: ierr
         
         A = reshape([2.0_dp, 1.0_dp, 1.0_dp, 3.0_dp], [2, 2])
         b = [5.0_dp, 7.0_dp]
         x_expected = [1.6_dp, 1.8_dp]
         
-        call solve_linear_system(A, x, b)
+        call solve_linear_system(A, x, b, ierr)
         
+        call check(ierr == 0, "2x2 solve should succeed")
         call check(abs(x(1) - x_expected(1)) < 1.0e-12_dp)
         call check(abs(x(2) - x_expected(2)) < 1.0e-12_dp)
     end subroutine
@@ -46,13 +48,15 @@ contains
         use lsda_constants, only: dp
 
         real(dp) :: A(2,2), b(2), x(2)
+        integer :: ierr
 
         ! If A = I (identity), then x must be equal to b
         A = reshape([1.0_dp, 0.0_dp, 0.0_dp, 1.0_dp], [2, 2])
         b = [3.0_dp, 7.0_dp]
         
-        call solve_linear_system(A, x, b)
+        call solve_linear_system(A, x, b, ierr)
         
+        call check(ierr == 0, "identity solve should succeed")
         call check(abs(x(1) - b(1)) < 1.0e-14_dp)
         call check(abs(x(2) - b(2)) < 1.0e-14_dp)
     end subroutine
@@ -65,6 +69,7 @@ contains
         real(dp) :: A(2,2), A_original(2,2)
         real(dp) :: b(2), b_original(2)
         real(dp) :: x(2)
+        integer :: ierr
         
         A = reshape([2.0_dp, 1.0_dp, 1.0_dp, 3.0_dp], [2, 2])
         b = [5.0_dp, 7.0_dp]
@@ -72,8 +77,9 @@ contains
         A_original = A
         b_original = b
         
-        call solve_linear_system(A, x, b)
+        call solve_linear_system(A, x, b, ierr)
 
+        call check(ierr == 0, "solve should succeed")
         ! Check that A and b have not changed
         call check(all(abs(A - A_original) < 1.0e-14_dp))
         call check(all(abs(b - b_original) < 1.0e-14_dp))
@@ -83,7 +89,7 @@ contains
         use fortuno_serial, only: check => serial_check
         use nonlinear_solvers, only: line_search
         use bethe_equations, only: initialize_quantum_numbers, compute_residual
-        use lsda_constants, only: dp, TWOPI
+        use lsda_constants, only: dp
         
         integer :: Nup, M, L
         real(dp) :: U, alpha
@@ -159,6 +165,7 @@ contains
         real(dp) :: U
         real(dp), allocatable :: I(:), J(:), x(:), k(:), Lambda(:), F(:)
         logical :: converged
+        integer :: ierr
         
         ! System: 3 up, 2 down, L=10, U=0
         Nup = 3
@@ -175,7 +182,7 @@ contains
         x(1:Nup) = TWOPI * I / real(L, dp)
         x(Nup+1:) = 0.0_dp
         
-        call solve_newton(x, I, J, L, U, converged)
+        call solve_newton(x, I, J, L, U, converged, ierr)
         call check(converged, "Newton should converge for U=0")
         
         k = x(1:Nup)
@@ -200,6 +207,7 @@ contains
         real(dp) :: U
         real(dp), allocatable :: I(:), J(:), x(:), F(:), k(:), Lambda(:)
         logical :: converged
+        integer :: ierr
         
         Nup = 2
         M = 1
@@ -214,7 +222,7 @@ contains
         x(1:Nup) = TWOPI * I / real(L, dp)
         x(Nup+1:) = 0.0_dp
         
-        call solve_newton(x, I, J, L, U, converged)
+        call solve_newton(x, I, J, L, U, converged, ierr)
         call check(converged, "Newton should converge for small system")
         
         k = x(1:Nup)
@@ -236,6 +244,7 @@ contains
         real(dp) :: U
         real(dp), allocatable :: I(:), J(:), x(:)
         logical :: converged
+        integer :: ierr
         
         Nup = 3
         M = 2
@@ -249,7 +258,7 @@ contains
         x(1:Nup) = TWOPI * I / real(L, dp)
         x(Nup+1:) = 0.0_dp
         
-        call solve_newton(x, I, J, L, U, converged)
+        call solve_newton(x, I, J, L, U, converged, ierr)
         call check(converged .eqv. .true., "Converged flag should be true")
         
         deallocate(I, J, x)
@@ -267,6 +276,7 @@ contains
         real(dp), allocatable :: I(:), J(:), x(:), k(:), Lambda(:), F_initial(:), F_final(:)
         real(dp) :: norm_initial, norm_final
         logical :: converged
+        integer :: ierr
         
         Nup = 3
         M = 2
@@ -287,7 +297,7 @@ contains
         F_initial = compute_residual(k, Lambda, I, J, L, U)
         norm_initial = norm2(F_initial)
         
-        call solve_newton(x, I, J, L, U, converged)
+        call solve_newton(x, I, J, L, U, converged, ierr)
         
         k = x(1:Nup)
         Lambda = x(Nup+1:)
