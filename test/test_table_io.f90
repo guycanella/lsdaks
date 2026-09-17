@@ -62,6 +62,7 @@ contains
         bad(2) = ieee_value(0.0_dp, ieee_positive_inf)
         bad(3) = ieee_value(0.0_dp, ieee_negative_inf)
 
+        call ensure_scratch_dir()
         call remove_file(bin_file)
 
         do which_array = 1, 3

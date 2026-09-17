@@ -286,6 +286,11 @@ contains
 
             x = x + alpha * dx
 
+            k = x(1:Nup)
+            Lambda = x(Nup+1:)
+            F = compute_residual(k, Lambda, I, J, L, U)
+            norm_F = NORM2(F)
+
             if (NORM2(dx) / (MAX(1.0_dp, NORM2(x))) < NEWTON_TOL) then
                 if (norm_F > NEWTON_TOL) then
                     ! Stagnated without converging

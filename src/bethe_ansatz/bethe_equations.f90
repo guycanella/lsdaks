@@ -282,13 +282,17 @@ contains
     !! \[ J_{j,N_\uparrow+\beta} = -\frac{1}{L} \cdot \frac{8U}{U^2 + 16(\sin k_j - \Lambda_\beta)^2} \]
     !!
     !! **Block C** (M × N↑):
-    !! \[ J_{N_\uparrow+\alpha,i} = \frac{4U\cos k_i}{U^2 + 4(\Lambda_\alpha - \sin k_i)^2} \]
+    !! \[ J_{N_\uparrow+\alpha,i} =
+    !!   \frac{8U\cos k_i}{U^2 + 16(\Lambda_\alpha - \sin k_i)^2} \]
     !!
     !! **Block D** (M × M):
-    !! \[ J_{N_\uparrow+\alpha,N_\uparrow+\gamma} = \begin{cases}
-    !!   -\sum_j \frac{4U}{U^2 + 4(\Lambda_\alpha - \sin k_j)^2} + \sum_{\beta \neq \alpha} \frac{2U}{U^2 + (\Lambda_\alpha - \Lambda_\beta)^2} & \text{if } \gamma = \alpha \\
-    !!   -\frac{2U}{U^2 + (\Lambda_\alpha - \Lambda_\gamma)^2} & \text{if } \gamma \neq \alpha
-    !! \end{cases} \]
+    !! \[ J_{N_\uparrow+\alpha,N_\uparrow+\alpha} =
+    !!   -\sum_j \frac{8U}{U^2 + 16(\Lambda_\alpha - \sin k_j)^2}
+    !!   + \sum_{\beta \neq \alpha}
+    !!     \frac{4U}{U^2 + 4(\Lambda_\alpha - \Lambda_\beta)^2} \]
+    !! \[ J_{N_\uparrow+\alpha,N_\uparrow+\gamma} =
+    !!   -\frac{4U}{U^2 + 4(\Lambda_\alpha - \Lambda_\gamma)^2},
+    !!   \quad \gamma \neq \alpha \]
     !!
     !! @param[in] k       Charge rapidities (size N↑)
     !! @param[in] Lambda  Spin rapidities (size M = N↓)

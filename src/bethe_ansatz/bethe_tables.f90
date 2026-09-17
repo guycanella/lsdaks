@@ -154,7 +154,7 @@ contains
         ! The XC tables represent the thermodynamic functional.  Use the
         ! analytic free-gas energy density rather than its finite-L shell sum.
         E0 = -2.0_dp * (sin(PI * n_up) + sin(PI * n_dn)) / PI
-        E_xc = E_BA / real(L, dp) - E0 - U * n_up * n_dn
+        E_xc = E_BA / real(L, dp) - E0 - U * solver_n_up * solver_n_dn
 
         deallocate(x, k, quantum_I, quantum_J)
     end function compute_E_xc
