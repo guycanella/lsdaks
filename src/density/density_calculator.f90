@@ -1,6 +1,6 @@
 module density_calculator
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
-    use lsda_constants, only: dp
+    use lsda_constants, only: dp, DEG_TOL_UPPER
     use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT, &
                            ERROR_SIZE_MISMATCH, ERROR_UNPHYSICAL_DENSITY
     implicit none
@@ -22,7 +22,7 @@ module density_calculator
     end interface compute_density_spin
 
 contains
-    !> @brief Occupation numbers of the Kohn-Sham levels at T = 0
+    !> @brief Zero-temperature Aufbau occupations with continuous near-degeneracy smearing
     !!
     !! Fills the `n_elec` lowest levels, but shares the occupation of an OPEN
     !! (partially filled) degenerate shell equally among its members, instead
@@ -30,51 +30,93 @@ contains
     !!
     !! Why this matters: when level `n_elec` is degenerate with level
     !! `n_elec + 1` (PBC with a ±k pair and even N_σ, antiperiodic BC at θ = π,
-    !! accidental degeneracies), integer occupation makes the density depend on
+    !! accidental degeneracies, tunnel-split doublets in a trap whose core is
+    !! a band insulator), integer occupation makes the density depend on
     !! whichever arbitrary basis LAPACK happened to return inside the degenerate
     !! subspace. With PBC and a uniform potential LAPACK returns the real
     !! cos/sin combinations of the k = ±m pair, and occupying only one of them
     !! creates a spurious period-2 density wave which feeds back into V_eff and
     !! turns the SCF cycle into a limit cycle that never converges.
     !!
-    !! The shell is located exactly as the C++ reference does it
-    !! (`update_degen`, original/lsdaks.cc:85-137): starting at `n_elec`, the
-    !! window is widened while CONSECUTIVE NEIGHBOURS are closer than `deg_tol`.
-    !! This is deliberately *not* the (simpler) criterion
-    !! |eigvals(j) - eigvals(n_elec)| < deg_tol: the two agree on exact
-    !! degeneracies but differ when the spectrum has a cascade of nearby levels,
-    !! and the C++ behaviour is the one we must reproduce.
+    !! **Shell detection.** The shell is located along the same CONSECUTIVE
+    !! NEIGHBOUR chain as the C++ reference (`update_degen`,
+    !! original/lsdaks.cc:85-137): starting at `n_elec`, the chain is extended
+    !! link by link while neighbours are close. This is deliberately *not* the
+    !! (simpler) criterion |eigvals(j) - eigvals(n_elec)| < deg_tol: the two
+    !! agree on exact degeneracies but differ on a cascade of nearby levels.
     !!
-    !!   occ(j) = 1                                   for j < level_min
-    !!   occ(j) = (n_elec - (level_min - 1)) / g      for level_min <= j <= level_max
-    !!   occ(j) = 0                                   for j > level_max
+    !! **Deliberate divergence from the C++ (T20).** The C++ decides each link
+    !! with a HARD step, `|e(j+1) - e(j)| < LINEWIDTH_ = 1e-10`. That makes the
+    !! Kohn-Sham map n[V_eff] DISCONTINUOUS: a gap fluctuating around 1e-10 by
+    !! roundoff flips a doublet at the Fermi level between (1/2, 1/2) and
+    !! (1, 0). When LAPACK returns the doublet in a LOCALISED basis (the two
+    !! arms of a harmonic trap separated by a filled core), that flip moves a
+    !! whole electron from one arm to the other, breaks the reflection symmetry
+    !! n(i) = n(L+1-i), and the SCF cycle has no fixed point to converge to.
+    !! Here each link carries a CONTINUOUS weight.  Thus this is an effective
+    !! C¹ smearing over the finite energy interval [DEG_TOL, DEG_TOL_UPPER],
+    !! rather than a strictly sharp T = 0 occupation at every finite gap.
     !!
-    !! with g = level_max - level_min + 1 the shell degeneracy. Note the partial
-    !! weight is UNIFORM over the whole block, and that sum(occ) = n_elec holds
-    !! algebraically: no renormalisation of the density is needed afterwards.
+    !!   s(Δ) = 1                       for Δ <  deg_tol
+    !!   s(Δ) = (1 - x)^2 (1 + 2x)      for deg_tol <= Δ < deg_tol_hi,
+    !!                                  x = (Δ - deg_tol)/(deg_tol_hi - deg_tol)
+    !!   s(Δ) = 0                       for Δ >= deg_tol_hi
     !!
-    !! Unlike the C++ original, the window search is clamped to the available
-    !! spectrum: `level_min - 1 >= 1` and `level_max + 1 <= size(eigvals)`. The
-    !! C++ reads erg[0] / erg[num_eigen+1] out of bounds and relies on the
-    !! `num_eigen = min(Ne + 5, Na)` slack to make it harmless.
+    !! (a C¹ smoothstep, zero slope at both edges), and level j is connected to
+    !! the Fermi level with the product w_j of the link weights between them
+    !! (w_{n_elec} = 1). The integer (Aufbau) filling f0_j = 1 for j <= n_elec,
+    !! 0 otherwise, is then redistributed inside the shell:
+    !!
+    !!   occ(j) = (1 - w_j) f0_j + w_j P / W,   P = Σ_k w_k f0_k,  W = Σ_k w_k
+    !!
+    !! i.e. every level pools a fraction w_j of its Aufbau charge and takes back
+    !! the share w_j / W of the pool. Properties (in exact arithmetic):
+    !!   * Σ_j occ(j) = n_elec algebraically (no renormalisation needed);
+    !!   * 0 <= occ(j) <= 1 (convex combination of f0_j and P/W, both in [0,1]);
+    !!   * occ is a continuous function of the eigenvalues;
+    !!   * when every w_j is 0 or 1 - all gaps either below deg_tol or above
+    !!     deg_tol_hi, which is the case for every exact degeneracy - the
+    !!     result is bit-for-bit IDENTICAL to the C++ block rule
+    !!       occ(j) = 1 for j < level_min, (n_elec - level_min + 1)/g inside
+    !!       the block of size g, 0 above,
+    !!     so all C++-parity results are unchanged.
+    !! The density built from these occupations is the trace of the projector
+    !! on the shell times the shared weight when the gap closes, which is
+    !! invariant under the basis LAPACK picks inside the shell: the localised
+    !! doublet and the symmetric doublet give the same density. Fixing the
+    !! detection (not the basis) is therefore what removes the discontinuity.
+    !!
+    !! Unlike the C++ original, the chain is clamped to the available
+    !! spectrum: the C++ reads erg[0] / erg[num_eigen+1] out of bounds and
+    !! relies on the `num_eigen = min(Ne + 5, Na)` slack to make it harmless.
     !!
     !! `n_elec == 0` (a fully polarised channel) is handled explicitly: all
     !! occupations are zero and `eigvals` is never indexed.
     !!
-    !! @param[in]  eigvals Eigenvalues in ASCENDING order (length >= n_elec)
-    !! @param[in]  n_elec  Number of electrons in this spin channel (>= 0)
-    !! @param[in]  deg_tol Degeneracy line width (use DEG_TOL = 1.0e-10)
-    !! @param[out] occ     Occupation of each level, same length as eigvals
-    !! @param[out] ierr    Error code (0 = success)
-    subroutine compute_occupations(eigvals, n_elec, deg_tol, occ, ierr)
+    !! @param[in]  eigvals       Eigenvalues in ASCENDING order (length >= n_elec)
+    !! @param[in]  n_elec        Number of electrons in this spin channel (>= 0)
+    !! @param[in]  deg_tol       Degeneracy line width below which two neighbours
+    !!                           are fully degenerate (use DEG_TOL = 1.0e-10)
+    !! @param[out] occ           Occupation of each level, same length as eigvals
+    !! @param[out] ierr          Error code (0 = success)
+    !! @param[in]  deg_tol_hi    Optional upper edge of the continuous transition
+    !!                           (>= deg_tol). Default: max(DEG_TOL_UPPER, deg_tol).
+    !!                           Passing deg_tol_hi = deg_tol recovers the hard
+    !!                           C++ step exactly. (Named deg_tol_hi, not
+    !!                           deg_tol_upper: Fortran is case-insensitive and a
+    !!                           dummy called deg_tol_upper would shadow the
+    !!                           constant DEG_TOL_UPPER.)
+    subroutine compute_occupations(eigvals, n_elec, deg_tol, occ, ierr, deg_tol_hi)
         real(dp), intent(in) :: eigvals(:)
         integer, intent(in) :: n_elec
         real(dp), intent(in) :: deg_tol
         real(dp), intent(out) :: occ(:)
         integer, intent(out) :: ierr
+        real(dp), intent(in), optional :: deg_tol_hi
 
-        integer :: n_levels, level_min, level_max
-        real(dp) :: g, partial_fill
+        integer :: n_levels, j
+        real(dp) :: tol_hi, pool, weight_sum, shared
+        real(dp) :: w(size(eigvals))
 
         n_levels = size(eigvals)
 
@@ -86,6 +128,16 @@ contains
         if (.not. ieee_is_finite(deg_tol) .or. deg_tol < 0.0_dp) then
             ierr = ERROR_INVALID_INPUT
             return
+        end if
+
+        if (present(deg_tol_hi)) then
+            if (.not. ieee_is_finite(deg_tol_hi) .or. deg_tol_hi < deg_tol) then
+                ierr = ERROR_INVALID_INPUT
+                return
+            end if
+            tol_hi = deg_tol_hi
+        else
+            tol_hi = max(DEG_TOL_UPPER, deg_tol)
         end if
 
         if (size(occ) /= n_levels) then
@@ -100,26 +152,63 @@ contains
         ! must not be touched (the C++ does touch it; see the note above).
         if (n_elec == 0) return
 
-        ! Widen the Fermi shell downwards while consecutive neighbours coincide.
-        level_min = n_elec
-        do while (level_min > 1)
-            if (abs(eigvals(level_min) - eigvals(level_min - 1)) >= deg_tol) exit
-            level_min = level_min - 1
+        ! Connection weight of every level to the Fermi level: the product of
+        ! the link weights along the chain of consecutive neighbours. The chain
+        ! stops as soon as a link is fully open (weight 0); beyond it w = 0.
+        w(:) = 0.0_dp
+        w(n_elec) = 1.0_dp
+
+        do j = n_elec - 1, 1, -1
+            w(j) = w(j + 1) * link_weight(eigvals(j + 1) - eigvals(j), deg_tol, tol_hi)
+            if (w(j) <= 0.0_dp) exit
         end do
 
-        ! ... and upwards.
-        level_max = n_elec
-        do while (level_max < n_levels)
-            if (abs(eigvals(level_max + 1) - eigvals(level_max)) >= deg_tol) exit
-            level_max = level_max + 1
+        do j = n_elec + 1, n_levels
+            w(j) = w(j - 1) * link_weight(eigvals(j) - eigvals(j - 1), deg_tol, tol_hi)
+            if (w(j) <= 0.0_dp) exit
         end do
 
-        g = real(level_max - level_min + 1, dp)
-        partial_fill = real(n_elec - (level_min - 1), dp) / g
+        ! Pool the Aufbau charge of the connected levels (f0 = 1 for j <= n_elec)
+        ! and hand it back in proportion to the connection weights. W >= 1
+        ! always, because w(n_elec) = 1.
+        pool = sum(w(1:n_elec))
+        weight_sum = sum(w(1:n_levels))
+        shared = pool / weight_sum
 
-        if (level_min > 1) occ(1:level_min - 1) = 1.0_dp
-        occ(level_min:level_max) = partial_fill
+        ! Written in convex-combination form so w = 1 returns `shared`
+        ! bit-for-bit, matching the C++ block rule for exact degeneracies.
+        occ(1:n_elec) = (1.0_dp - w(1:n_elec)) + w(1:n_elec) * shared
+        if (n_elec < n_levels) occ(n_elec + 1:n_levels) = w(n_elec + 1:n_levels) * shared
     end subroutine compute_occupations
+
+    !> @brief Continuous "same shell" weight of two consecutive levels
+    !!
+    !! Returns 1 for a gap below `tol_lo`, 0 for a gap at or above `tol_hi`,
+    !! and the C¹ smoothstep (1 - x)^2 (1 + 2x), x = (Δ - tol_lo)/(tol_hi -
+    !! tol_lo), in between. With tol_hi <= tol_lo it degenerates to the hard
+    !! step of the C++ (`|Δ| < LINEWIDTH_`).
+    !!
+    !! @param[in] delta  Gap between the two levels (sign irrelevant)
+    !! @param[in] tol_lo Gap below which the levels are fully degenerate
+    !! @param[in] tol_hi Gap at or above which the levels are fully split
+    !! @return           Weight in [0, 1]
+    pure function link_weight(delta, tol_lo, tol_hi) result(s)
+        real(dp), intent(in) :: delta, tol_lo, tol_hi
+        real(dp) :: s
+
+        real(dp) :: gap, x
+
+        gap = abs(delta)
+
+        if (gap < tol_lo) then
+            s = 1.0_dp
+        else if (gap >= tol_hi) then
+            s = 0.0_dp
+        else
+            x = (gap - tol_lo) / (tol_hi - tol_lo)
+            s = (1.0_dp - x)**2 * (1.0_dp + 2.0_dp * x)
+        end if
+    end function link_weight
 
     !> @brief Compute density from real eigenvectors, integer occupation
     !!

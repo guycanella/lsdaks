@@ -26,6 +26,10 @@ contains
             test("occupations_consecutive_window", test_occupations_consecutive_window), &
             test("occupations_spectrum_edges", test_occupations_spectrum_edges), &
             test("occupations_invalid_input", test_occupations_invalid_input), &
+            test("occupations_continuous_in_gap", test_occupations_continuous_in_gap), &
+            test("occupations_doublet_sum_and_bounds", test_occupations_doublet_sum_and_bounds), &
+            test("occupations_hard_step_on_request", test_occupations_hard_step_on_request), &
+            test("double_well_density_continuous", test_double_well_density_continuous), &
             test("open_shell_density_is_uniform", test_open_shell_density_is_uniform), &
             test("open_shell_density_complex", test_open_shell_density_complex), &
             test("empty_channel_density_is_zero", test_empty_channel_density_is_zero) &
@@ -197,6 +201,254 @@ contains
         call check(ierr == ERROR_SIZE_MISMATCH, &
                    "Validation: occ must have the same length as eigvals")
     end subroutine test_occupations_invalid_input
+
+    !> REGRESSION (T20): occupations are a CONTINUOUS function of the gap
+    !!
+    !! Spectrum -1, 0, Δ, 1 with N = 2: the Fermi level sits on the (2, 3)
+    !! pair. With the C++ hard step occ(2) jumps from 1/2 to 1 (and occ(3)
+    !! from 1/2 to 0) as Δ crosses DEG_TOL, a discontinuity of 0.5 in the
+    !! Kohn-Sham map. With the continuous link weight the jump is bounded by
+    !! the slope of the smoothstep times the step in Δ: for a step
+    !! δ = 1e-3 (DEG_TOL_UPPER - DEG_TOL) the change is < 2e-3, and it goes to
+    !! zero as δ does (a second, 10x smaller step gives a 10x smaller change).
+    !! Both edges (DEG_TOL and DEG_TOL_UPPER) are probed, because those are
+    !! exactly where a hard step, or a merely piecewise-linear one, breaks.
+    subroutine test_occupations_continuous_in_gap()
+        use fortuno_serial, only: check => serial_check
+        use density_calculator, only: compute_occupations
+        use lsda_constants, only: DEG_TOL, DEG_TOL_UPPER
+        use lsda_errors, only: ERROR_SUCCESS
+        integer, parameter :: n_levels = 4
+        real(dp), parameter :: width = DEG_TOL_UPPER - DEG_TOL
+        real(dp) :: eigvals(n_levels), occ_a(n_levels), occ_b(n_levels), occ_c(n_levels)
+        real(dp) :: gap, delta, jump_big, jump_small
+        integer :: ierr, k
+
+        ! Three anchor gaps: the lower edge, the middle, the upper edge.
+        do k = 1, 3
+            select case (k)
+            case (1)
+                gap = DEG_TOL
+            case (2)
+                gap = DEG_TOL + 0.5_dp * width
+            case default
+                gap = DEG_TOL_UPPER
+            end select
+
+            delta = 1.0e-3_dp * width
+
+            eigvals = [-1.0_dp, 0.0_dp, gap - delta, 1.0_dp]
+            call compute_occupations(eigvals, 2, DEG_TOL, occ_a, ierr)
+            call check(ierr == ERROR_SUCCESS, "Continuity: gap - delta should succeed")
+
+            eigvals = [-1.0_dp, 0.0_dp, gap + delta, 1.0_dp]
+            call compute_occupations(eigvals, 2, DEG_TOL, occ_b, ierr)
+            call check(ierr == ERROR_SUCCESS, "Continuity: gap + delta should succeed")
+
+            jump_big = maxval(abs(occ_b - occ_a))
+            call check(jump_big < 2.0_dp * delta / width * 1.5_dp + 1.0e-14_dp, &
+                       "Continuity: occupations must not jump across the anchor gap")
+            call check(jump_big < 0.1_dp, &
+                       "Continuity: no 0.5 step in occ(2)/occ(3) (the hard-step signature)")
+
+            ! Shrinking the step shrinks the change (no hidden discontinuity).
+            eigvals = [-1.0_dp, 0.0_dp, gap + 0.1_dp * delta, 1.0_dp]
+            call compute_occupations(eigvals, 2, DEG_TOL, occ_c, ierr)
+            call check(ierr == ERROR_SUCCESS, "Continuity: gap + delta/10 should succeed")
+            eigvals = [-1.0_dp, 0.0_dp, gap - 0.1_dp * delta, 1.0_dp]
+            call compute_occupations(eigvals, 2, DEG_TOL, occ_a, ierr)
+            jump_small = maxval(abs(occ_c - occ_a))
+            call check(jump_small <= 0.2_dp * jump_big + 1.0e-14_dp, &
+                       "Continuity: a 10x smaller step in the gap gives a smaller change")
+        end do
+
+        ! The two limits are the C++ values: fully shared well below DEG_TOL,
+        ! integer filling well above DEG_TOL_UPPER.
+        eigvals = [-1.0_dp, 0.0_dp, 0.1_dp * DEG_TOL, 1.0_dp]
+        call compute_occupations(eigvals, 2, DEG_TOL, occ_a, ierr)
+        call check(abs(occ_a(2) - 0.5_dp) < TOL .and. abs(occ_a(3) - 0.5_dp) < TOL, &
+                   "Continuity: gap << DEG_TOL shares the electron equally")
+
+        eigvals = [-1.0_dp, 0.0_dp, 10.0_dp * DEG_TOL_UPPER, 1.0_dp]
+        call compute_occupations(eigvals, 2, DEG_TOL, occ_a, ierr)
+        call check(abs(occ_a(2) - 1.0_dp) < TOL .and. abs(occ_a(3)) < TOL, &
+                   "Continuity: gap >> DEG_TOL_UPPER gives integer filling")
+    end subroutine test_occupations_continuous_in_gap
+
+    !> REGRESSION (T20): sum(occ) = N and 0 <= occ <= 1 for every partial link
+    !!
+    !! Doublets and longer chains with gaps INSIDE the transition window, where
+    !! the weights are genuinely fractional: the pooling formula must conserve
+    !! the particle number exactly (no renormalisation) and never leave the
+    !! physical range. Also probes a partially-connected level BELOW the Fermi
+    !! level (closed-shell side), which must stay fully occupied when the shell
+    !! above it is closed.
+    subroutine test_occupations_doublet_sum_and_bounds()
+        use fortuno_serial, only: check => serial_check
+        use density_calculator, only: compute_occupations
+        use lsda_constants, only: DEG_TOL, DEG_TOL_UPPER
+        use lsda_errors, only: ERROR_SUCCESS
+        integer, parameter :: n_levels = 7
+        real(dp) :: eigvals(n_levels), occ(n_levels)
+        real(dp) :: g1, g2, g3
+        integer :: ierr, k, n_elec
+
+        do k = 1, 5
+            ! Gaps spread across the window: 1%, 25%, 50%, 75%, 99% of the way.
+            g1 = DEG_TOL + real(k, dp) * 0.2_dp * (DEG_TOL_UPPER - DEG_TOL) * 0.99_dp
+            g2 = DEG_TOL + 0.37_dp * (DEG_TOL_UPPER - DEG_TOL)
+            g3 = 0.5_dp * DEG_TOL
+
+            ! Chain 3-4-5-6 with mixed links (partial, exact, partial), N = 4:
+            ! the Fermi level is inside the chain.
+            eigvals = [-2.0_dp, -1.0_dp, 0.0_dp, g1, g1 + g3, g1 + g3 + g2, 1.0_dp]
+            do n_elec = 3, 6
+                call compute_occupations(eigvals, n_elec, DEG_TOL, occ, ierr)
+                call check(ierr == ERROR_SUCCESS, "Doublet sums: computation should succeed")
+                call check(abs(sum(occ) - real(n_elec, dp)) < 1.0e-12_dp, &
+                           "Doublet sums: sum(occ) must equal N exactly for partial links")
+                call check(all(occ >= -1.0e-14_dp) .and. all(occ <= 1.0_dp + 1.0e-14_dp), &
+                           "Doublet sums: 0 <= occ <= 1 for partial links")
+                call check(abs(occ(1) - 1.0_dp) < TOL .and. abs(occ(7)) < TOL, &
+                           "Doublet sums: far levels keep their Aufbau filling")
+            end do
+        end do
+
+        ! Closed-shell side: N = 3, levels 2 and 3 partially linked, level 4
+        ! far away. A partially connected pair that is COMPLETELY filled must
+        ! stay at occ = 1 (pool = weight sum), like the hard rule.
+        eigvals = [-2.0_dp, 0.0_dp, 0.3_dp * DEG_TOL_UPPER, 1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp]
+        call compute_occupations(eigvals, 3, DEG_TOL, occ, ierr)
+        call check(ierr == ERROR_SUCCESS, "Doublet sums: closed side should succeed")
+        call check(all(abs(occ(1:3) - 1.0_dp) < 1.0e-14_dp) .and. all(abs(occ(4:7)) < 1.0e-14_dp), &
+                   "Doublet sums: a filled, partially linked pair stays at occ = 1")
+    end subroutine test_occupations_doublet_sum_and_bounds
+
+    !> deg_tol_hi = deg_tol recovers the C++ hard step; deg_tol_hi < deg_tol is rejected
+    !!
+    !! The optional upper edge exists so that the C++ rule can be reproduced
+    !! on demand (and so that the tests can contrast the two). With the edges
+    !! coincident a gap of 1.5*DEG_TOL is split (integer filling) exactly as
+    !! `update_degen` would decide, while the default continuous rule still
+    !! shares almost equally there (x = 5e-11/1e-6, s ~ 1).
+    subroutine test_occupations_hard_step_on_request()
+        use fortuno_serial, only: check => serial_check
+        use density_calculator, only: compute_occupations
+        use lsda_constants, only: DEG_TOL
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
+        integer, parameter :: n_levels = 4
+        real(dp) :: eigvals(n_levels), occ(n_levels)
+        integer :: ierr
+
+        eigvals = [-1.0_dp, 0.0_dp, 1.5_dp * DEG_TOL, 1.0_dp]
+
+        call compute_occupations(eigvals, 2, DEG_TOL, occ, ierr, deg_tol_hi=DEG_TOL)
+        call check(ierr == ERROR_SUCCESS, "Hard step: coincident edges should succeed")
+        call check(abs(occ(2) - 1.0_dp) < TOL .and. abs(occ(3)) < TOL, &
+                   "Hard step: gap = 1.5*DEG_TOL is split, integer filling like the C++")
+
+        call compute_occupations(eigvals, 2, DEG_TOL, occ, ierr)
+        call check(abs(occ(2) - 0.5_dp) < 1.0e-6_dp .and. abs(occ(3) - 0.5_dp) < 1.0e-6_dp, &
+                   "Hard step: the default continuous rule shares (almost) equally at 1.5*DEG_TOL")
+
+        call compute_occupations(eigvals, 2, DEG_TOL, occ, ierr, deg_tol_hi=0.5_dp * DEG_TOL)
+        call check(ierr == ERROR_INVALID_INPUT, "Hard step: deg_tol_hi < deg_tol must be rejected")
+    end subroutine test_occupations_hard_step_on_request
+
+    !> REGRESSION (T20): localised doublet, real LAPACK eigenvectors
+    !!
+    !! Symmetric double well on L = 9 open sites: V = 0 on 1..3 and 7..9,
+    !! V = B = 20 on the barrier 4..6. One electron. The two lowest levels are
+    !! the tunnel-split doublet with g0 = e2 - e1 ~ 5e-5, and an antisymmetric
+    !! tilt eps (left wells -eps/2, right wells +eps/2) opens the gap and
+    !! LOCALISES the eigenvectors. Working with deg_tol = 1.2*g0 (the routine's
+    !! own scale, so that no exponential fine tuning of B is needed) the gap
+    !! crosses deg_tol at a finite eps*.
+    !!
+    !! With the C++ hard step (deg_tol_hi = deg_tol) the density asymmetry
+    !! max|n(i) - n(L+1-i)| jumps from ~1e-8 to ~0.27 between two tilts that
+    !! differ by 0.1%: this is the discontinuity that put a whole electron in
+    !! one arm of the harmonic trap. With the continuous rule the asymmetry
+    !! stays continuous across the same crossing (change < 1e-6). The gap
+    !! crossing is located numerically and asserted as a precondition.
+    subroutine test_double_well_density_continuous()
+        use fortuno_serial, only: check => serial_check
+        use density_calculator, only: compute_occupations, compute_density_spin
+        use hamiltonian_builder, only: build_hamiltonian
+        use boundary_conditions, only: BC_OPEN
+        use lapack_wrapper, only: diagonalize_symmetric_real
+        use lsda_errors, only: ERROR_SUCCESS
+        integer, parameter :: L = 9, n_steps = 40
+        real(dp), parameter :: barrier = 20.0_dp
+        real(dp) :: V(L), V_zero(L), H(L, L), eigvals(L), eigvecs(L, L), occ(L), dens(L)
+        real(dp) :: g0, tol, eps_star, eps, asym_hard(0:n_steps), asym_cont(0:n_steps)
+        real(dp) :: gap_at(0:n_steps)
+        integer :: ierr, k, k_cross
+
+        V_zero = 0.0_dp
+
+        ! Unperturbed doublet.
+        V = 0.0_dp
+        V(4:6) = barrier
+        call build_hamiltonian(L, V, V_zero, BC_OPEN, 0.0_dp, H, ierr)
+        call check(ierr == ERROR_SUCCESS, "Double well: Hamiltonian build should succeed")
+        call diagonalize_symmetric_real(H, L, eigvals, eigvecs, ierr)
+        call check(ierr == ERROR_SUCCESS, "Double well: diagonalization should succeed")
+
+        g0 = eigvals(2) - eigvals(1)
+        call check(g0 > 1.0e-6_dp .and. g0 < 1.0e-3_dp, &
+                   "Double well: tunnel splitting must be resolvable but small (precondition)")
+        call check(eigvals(3) - eigvals(2) > 0.1_dp, &
+                   "Double well: the doublet must be isolated from level 3 (precondition)")
+
+        tol = 1.2_dp * g0
+        eps_star = sqrt(tol**2 - g0**2)
+
+        ! Sweep the tilt through the crossing gap(eps) = tol.
+        do k = 0, n_steps
+            eps = eps_star * (0.8_dp + 0.4_dp * real(k, dp) / real(n_steps, dp))
+            V = 0.0_dp
+            V(4:6) = barrier
+            V(1:3) = -0.5_dp * eps
+            V(7:9) = 0.5_dp * eps
+            call build_hamiltonian(L, V, V_zero, BC_OPEN, 0.0_dp, H, ierr)
+            call diagonalize_symmetric_real(H, L, eigvals, eigvecs, ierr)
+            gap_at(k) = eigvals(2) - eigvals(1)
+
+            call compute_occupations(eigvals, 1, tol, occ, ierr, deg_tol_hi=tol)
+            call compute_density_spin(eigvecs, L, occ, dens, ierr)
+            asym_hard(k) = maxval(abs(dens - dens(L:1:-1)))
+
+            call compute_occupations(eigvals, 1, tol, occ, ierr, deg_tol_hi=1.0e4_dp * tol)
+            call compute_density_spin(eigvecs, L, occ, dens, ierr)
+            asym_cont(k) = maxval(abs(dens - dens(L:1:-1)))
+            call check(abs(sum(dens) - 1.0_dp) < 1.0e-12_dp, &
+                       "Double well: particle number conserved with continuous occupations")
+        end do
+
+        ! Locate the first step at which the gap reaches tol.
+        k_cross = -1
+        do k = 1, n_steps
+            if (gap_at(k - 1) < tol .and. gap_at(k) >= tol) then
+                k_cross = k
+                exit
+            end if
+        end do
+        call check(k_cross >= 1, "Double well: the gap must cross deg_tol inside the sweep (precondition)")
+        if (k_cross < 1) return
+
+        ! Teeth: the hard step jumps by O(0.1) across the crossing.
+        call check(asym_hard(k_cross) - asym_hard(k_cross - 1) > 0.1_dp, &
+                   "Double well: the hard step moves O(0.1) electron across the barrier at the crossing")
+
+        ! The continuous rule does not.
+        call check(abs(asym_cont(k_cross) - asym_cont(k_cross - 1)) < 1.0e-6_dp, &
+                   "Double well: the continuous rule has no jump at the crossing")
+        call check(maxval(abs(asym_cont(1:n_steps) - asym_cont(0:n_steps - 1))) < 1.0e-6_dp, &
+                   "Double well: the continuous asymmetry is continuous over the whole sweep")
+        call check(maxval(asym_cont) < 1.0e-6_dp, &
+                   "Double well: far below deg_tol_hi the doublet is shared and the density symmetric")
+    end subroutine test_double_well_density_continuous
 
     !> REGRESSION (T7): open degenerate shell must give a uniform density
     !!

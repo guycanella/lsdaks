@@ -132,8 +132,9 @@ program lsdaks
         print '(A,F0.4)', "  Note: V_xc discontinuity at n = 1 linearly smoothed over half-width w = ", &
                           inputs%xc_smoothing_width
         print '(A)', "        (this departs from the C++ reference, which keeps the jump)"
-        ! compute_total_energy calls the smoothed get_vxc but the UNSMOOTHED
-        ! get_exc, so the two stop being a derivative pair as soon as w > 0.
+        ! The smoothed V_xc enters compute_total_energy only through the
+        ! diagonalised V_eff; the E_xc term is the UNSMOOTHED get_exc, so the
+        ! two stop being a derivative pair as soon as w > 0.
         print '(A)', "        E_xc is NOT smoothed: with w > 0, V_xc is not the functional derivative"
         print '(A)', "        of the E_xc used in the total energy; the reported energy is not variational."
     end if

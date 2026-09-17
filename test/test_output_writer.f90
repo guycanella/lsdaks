@@ -823,8 +823,9 @@ contains
         call check(file_contains('test_prov_w05_convergence.dat', 'MODIFIED'), &
                    "The convergence header must carry the modified-functional warning")
 
-        ! The decisive line: E_xc is NOT smoothed. compute_total_energy calls the
-        ! smoothed get_vxc and the unsmoothed get_exc, so with w > 0 the pair
+        ! The decisive line: E_xc is NOT smoothed. The smoothed V_xc reaches
+        ! compute_total_energy only through the diagonalised V_eff, while E_xc
+        ! is the unsmoothed get_exc, so with w > 0 the pair
         ! stops being (functional, derivative): the density the cycle converges
         ! to, n_w, is the stationary point of the SMOOTHED problem, not of the
         ! functional being evaluated. The reported energy is nevertheless a clean
