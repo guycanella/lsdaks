@@ -309,7 +309,7 @@ contains
         use bethe_equations
         implicit none
         
-        integer :: Nup, M, L, i, j
+        integer :: Nup, M, L, j
         real(dp) :: U, h
         real(dp), allocatable :: k(:), Lambda(:), I_qn(:), J_qn(:)
         real(dp), allocatable :: J_analytical(:,:), J_numerical(:,:)
@@ -381,7 +381,7 @@ contains
         k = TWOPI * I_qn / real(L, dp)
         Lambda = 0.0_dp
         
-        dFdU_analytical = compute_dFdU(k, Lambda, I_qn, J_qn, L, U)
+        dFdU_analytical = compute_dFdU(k, Lambda, L, U)
         
         F_plus = compute_residual(k, Lambda, I_qn, J_qn, L, U + h)
         F_minus = compute_residual(k, Lambda, I_qn, J_qn, L, U - h)
@@ -400,11 +400,11 @@ contains
     subroutine test_compute_energy_U0()
         use fortuno_serial, only: check => serial_check
         use bethe_equations, only: initialize_quantum_numbers, compute_energy
-        use lsda_constants, only: dp, TWOPI, PI
+        use lsda_constants, only: dp, TWOPI
         
         integer :: Nup, L
         real(dp), allocatable :: I(:), J_dummy(:), k(:)
-        real(dp) :: E, E_per_site, E_expected
+        real(dp) :: E, E_per_site
         
         Nup = 9
         L = 10

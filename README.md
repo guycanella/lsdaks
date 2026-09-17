@@ -198,7 +198,7 @@ lsdaks/
 ├── app/                          # Executable programs
 │   ├── main.f90                  # Main LSDA solver
 │   ├── convert_tables.f90        # XC table format converter
-│   └── generate_table.f90        # Generate XC tables via Bethe Ansatz
+│   └── generate_table.f90        # Generate XC tables via Bethe Ansatz (EXPERIMENTAL, see below)
 │
 ├── src/                          # Source code
 │   ├── types/                    # Core data structures
@@ -287,6 +287,20 @@ lsdaks/
 ├── PROJECT_CONTEXT.md            # Detailed technical docs (Portuguese)
 └── README.md                     # This file
 ```
+
+### XC Tables and the Table Generator (experimental)
+
+The SCF reads pre-computed exchange-correlation tables from `data/tables/fortran_native/`
+(25 values of U, converted from the C++ reference; Hartree already subtracted). These are the
+only tables validated for production runs.
+
+`generate_xc_table` is **experimental**. It solves the finite-L Lieb-Wu equations for
+discrete Bethe roots (L = 100) and derives V_xc by one-particle differences. In its current
+state the Newton solver fails to converge on part of the (n, m) grid, and the finite-L V_xc
+carries an O(1/L) error relative to the thermodynamic-limit reference tables. The executable
+refuses to write a table containing non-finite entries and exits with status 1. Do not feed
+its output to an SCF run without validating it against a reference table first. The
+thermodynamic-limit rewrite is tracked as phase 4.5 (T21) in `NEXT_STEPS_REPORT.md`.
 
 ## External Potentials
 

@@ -25,7 +25,13 @@
 #   5. a genuinely ABSENT namelist group is accepted, with a note (the four
 #      groups are optional; only a broken one is an error);
 #   6. a run that converges but cannot write its output files exits non-zero
-#      (a valid calculation whose record was lost must not report success).
+#      (a valid calculation whose record was lost must not report success);
+#   7. generate_xc_table never leaves an invalid table behind: either it exits
+#      0 and the file it wrote has no NaN/Inf, or it exits non-zero and wrote
+#      nothing. Phrased as an invariant rather than "must fail" so it stays
+#      valid when the generator is completed (phase 4.5, T21); today the
+#      finite-L solver does not converge on part of the U=4 grid and the
+#      executable must take the second branch.
 #
 # The executable is launched from a throwaway directory, including the pass
 # that consumes the examples byte-for-byte.  Thus their committed output_prefix
@@ -309,6 +315,57 @@ elif ! grep -q "could NOT be written" "${WORK_DIR}/unwritable.log"; then
     fail "the lost output must be reported explicitly" "${WORK_DIR}/unwritable.log"
 else
     pass "converged run with unwritable output exits non-zero"
+fi
+
+printf '\n== the table generator must not persist an invalid table ==\n'
+
+# 7. Invariant: (exit 0 and a finite table) or (exit non-zero and no file).
+#    The generator's grid is fixed (50 x 51, U=4 takes a few seconds), so the
+#    check runs it for real instead of relying on a unit-level stub.
+GEN_REL="$(fpm run generate_xc_table --runner echo | tail -n 1)"
+case "${GEN_REL}" in
+    /*) GENERATOR="${GEN_REL}" ;;
+    *)  GENERATOR="${PROJECT_DIR}/${GEN_REL}" ;;
+esac
+GEN_DIR="${WORK_DIR}/gen"
+mkdir -p "${GEN_DIR}"
+if [ ! -x "${GENERATOR}" ]; then
+    fail "cannot locate the generate_xc_table executable"
+else
+    "${GENERATOR}" --U 4.0 --output "${GEN_DIR}" > "${WORK_DIR}/generator.log" 2>&1
+    status=$?
+    GEN_FILE="${GEN_DIR}/xc_table_u4.00.dat"
+    if [ "${status}" -eq 0 ]; then
+        if [ ! -f "${GEN_FILE}" ]; then
+            fail "generator exited 0 but wrote no table" "${WORK_DIR}/generator.log"
+        # The table is an unformatted stream (see table_io::write_fortran_table):
+        # U, the two grid sizes, n_grid, m_grid, then exc, vxc_up, vxc_down as
+        # raw little-endian doubles. Decode the three data arrays and look for
+        # NaN or ±Inf.
+        elif python3 - "${GEN_FILE}" <<'PY'
+import struct, sys
+data = open(sys.argv[1], "rb").read()
+# header: U (f8), n_points_n, n_points_m (i4, i4)
+nn, nm = struct.unpack_from("<ii", data, 8)
+off = 16 + 8 * nn + 8 * nn * nm            # skip n_grid and m_grid
+vals = struct.unpack_from("<%dd" % (3 * nn * nm), data, off)
+bad = sum(1 for v in vals if v != v or v in (float("inf"), float("-inf")))
+sys.exit(1 if bad else 0)
+PY
+        then
+            pass "generator exited 0 and the table it wrote is finite"
+        else
+            fail "generator exited 0 but the table contains NaN/Inf" "${WORK_DIR}/generator.log"
+        fi
+    else
+        if [ -e "${GEN_FILE}" ]; then
+            fail "generator exited non-zero but left a table behind" "${WORK_DIR}/generator.log"
+        elif ! grep -q "non-finite" "${WORK_DIR}/generator.log"; then
+            fail "generator failure must be reported as non-finite entries" "${WORK_DIR}/generator.log"
+        else
+            pass "generator exited non-zero with a non-finite table and wrote nothing"
+        fi
+    fi
 fi
 
 printf '\n%d checks, %d failures\n\n' "${CHECKS}" "${FAILURES}"
