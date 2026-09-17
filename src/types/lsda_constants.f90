@@ -35,6 +35,17 @@ module lsda_constants
     ! Same value as LINEWIDTH_ in the C++ reference (original/lsdaks.h:5).
     real(dp), parameter :: DEG_TOL = 1.0e-10_dp           ! Degeneracy line width
 
+    ! Upper edge of the CONTINUOUS degeneracy detection (T20). Two neighbours
+    ! closer than DEG_TOL are fully degenerate (link weight 1); farther apart
+    ! than DEG_TOL_UPPER they are fully split (weight 0); in between the weight
+    ! goes smoothly from 1 to 0, so the occupation numbers, the density and
+    ! the band energy are continuous functions of the spectrum. The C++ uses a
+    ! hard step at LINEWIDTH_ = 1e-10 (see compute_occupations for why that is
+    ! a deliberate divergence). This is an ABSOLUTE energy width in units of t,
+    ! not a relative tolerance: in very large PBC systems (roughly L >= 1e4),
+    ! physically distinct levels can fall inside this transition interval.
+    real(dp), parameter :: DEG_TOL_UPPER = 1.0e-6_dp      ! Degeneracy transition upper edge
+
     real(dp), parameter :: NEWTON_TOL = 1.0e-10_dp        ! Newton convergence tol
     integer, parameter :: NEWTON_MAX_ITER = 50            ! Max Newton iterations
 

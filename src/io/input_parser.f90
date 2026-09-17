@@ -119,8 +119,20 @@ module input_parser
         logical :: verbose = .true.
         logical :: store_history = .true.
         logical :: use_adaptive_mixing = .true.   ! Use adaptive mixing (C++ behavior)
-        real(dp) :: xc_smoothing_width = 0.0_dp   ! Half-width of the linear smoothing of V_xc around n = 1
-                                                  ! (0 = off = exact C++ parity; must be < 1)
+        !> Half-width w of the linear smoothing of V_xc around n = 1 (0 = off;
+        !! must be < 1).
+        !!
+        !! POLICY (T20): the default is and stays 0, i.e. the exact BALDA
+        !! functional of the C++ reference, including its discontinuity at
+        !! n = 1. Smoothing is an explicit opt-in and is reported in the
+        !! output header. Reason: w > 0 CHANGES THE FUNCTIONAL, not only the
+        !! numerics - E/L moves by ~0.7% between w = 0.05 and w = 0.2 - so
+        !! any self-consistent reference (the phase-2 harmonic-trap target in
+        !! particular) must be produced with the original functional. Cases
+        !! that only converge with w > 0 (a Mott plateau sitting on n = 1 in
+        !! a trap or a double-barrier well) are documented per case, never
+        !! made the default.
+        real(dp) :: xc_smoothing_width = 0.0_dp
 
         ! Output parameters
         character(len=100) :: output_prefix = 'lsda_output'

@@ -46,8 +46,9 @@ contains
     !!     explicit loss-of-parity warning is emitted whenever w > 0. The
     !!     warning also states that E_xc is NOT smoothed, i.e. that with w > 0
     !!     V_xc is no longer the functional derivative of the E_xc entering the
-    !!     reported total energy (compute_total_energy calls the smoothed
-    !!     `get_vxc` and the unsmoothed `get_exc`), so the reported energy is
+    !!     reported total energy (the smoothed V_xc reaches compute_total_energy
+    !!     only through the diagonalised V_eff, while E_xc is the unsmoothed
+    !!     `get_exc`), so the reported energy is
     !!     not variational. The energy reported is a clean evaluation of the
     !!     UNSMOOTHED functional at the converged density n_w. WHERE THAT
     !!     FUNCTIONAL IS DIFFERENTIABLE, n_0 is a stationary point of it and

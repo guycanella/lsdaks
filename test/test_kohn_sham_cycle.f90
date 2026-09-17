@@ -30,6 +30,8 @@ contains
 
         tests = test_list([ &
             test("compute_total_energy_simple", test_compute_total_energy_simple), &
+            test("total_energy_cancels_effective_potential_shift", &
+                 test_total_energy_cancels_effective_potential_shift), &
             test("compute_total_energy_half_filling", test_compute_total_energy_half_filling), &
             test("validate_double_occupancy_accepted", test_validate_double_occupancy_accepted), &
             test("validate_inputs_invalid_L", test_validate_inputs_invalid_L), &
@@ -76,7 +78,9 @@ contains
             test("scf_full_band_attractive_u", &
                  test_scf_full_band_attractive_u), &
             test("scf_failure_exposes_final_state", &
-                 test_scf_failure_exposes_final_state) &
+                 test_scf_failure_exposes_final_state), &
+            test("scf_trap_doublet_stays_symmetric", &
+                 test_scf_trap_doublet_stays_symmetric) &
         ])
     end function get_kohn_sham_tests
 
@@ -149,6 +153,103 @@ contains
         call cleanup_scf_results(results, ierr)
         call xc_lsda_destroy(xc_func)
     end subroutine test_scf_open_shell_converges_uniform
+
+    !> REGRESSION (T20): harmonic trap whose Fermi level sits on a tunnel doublet
+    !!
+    !! L = 20, N_up = N_down = 13, open BC, U = 4, V = 0.7 (i - 10.5)^2,
+    !! xc_smoothing_width = 0 (the exact BALDA functional). The trap core is a
+    !! band insulator (n = 2 on sites 7..14), so the classically allowed region
+    !! splits into two arms separated by a filled core and the arm levels come
+    !! in tunnel-split doublets with a gap far below DEG_TOL. With N_sigma = 13
+    !! the last electron of each spin channel falls on such a doublet and
+    !! LAPACK returns it in a localised (left arm / right arm) basis.
+    !!
+    !! The equal sharing of the doublet is what keeps n(i) = n(L+1-i); any
+    !! binary decision on the gap - or integer filling of a localised member -
+    !! moves a whole electron into one arm and the cycle never settles. The
+    !! test asserts the doublet (precondition, from the returned spectrum),
+    !! the convergence with w = 0, the reflection symmetry to 1e-8 and the
+    !! particle number. Measured: 130 iterations at alpha_0 = 0.1, asymmetry
+    !! at roundoff.
+    subroutine test_scf_trap_doublet_stays_symmetric()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
+                                    cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use lsda_constants, only: DEG_TOL
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use boundary_conditions, only: BC_OPEN
+        use potential_harmonic, only: apply_potential_harmonic
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 20, N_SIGMA = 13
+        real(dp), parameter :: SPRING = 0.7_dp
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L), n_tot(L), asym
+        integer :: ierr
+        character(len=256) :: table_file
+
+        table_file = PROBE_TABLE  ! xc_table_u4.00.dat
+        call xc_lsda_init(xc_func, table_file, ierr)
+        call check(ierr == ERROR_SUCCESS, "Trap doublet: XC init should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        call apply_potential_harmonic(SPRING, L, V_ext, ierr)
+        call check(ierr == ERROR_SUCCESS, "Trap doublet: harmonic potential should succeed")
+
+        params%L = L
+        params%Nup = N_SIGMA
+        params%Ndown = N_SIGMA
+        params%bc = BC_OPEN
+        params%U = 4.0_dp
+        params%phase = 0.0_dp
+
+        scf_params%max_iter = 600
+        scf_params%energy_tol = 1.0e-10_dp
+        scf_params%potential_tol = 1.0e-8_dp
+        scf_params%mixing_alpha = 0.1_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .false.
+
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_SUCCESS, &
+                   "Trap doublet: L=20, N=13/13, OBC, U=4, k=0.7, w=0 must converge")
+        call check(results%converged, "Trap doublet: results must be flagged converged")
+
+        if (allocated(results%eigvals)) then
+            ! Precondition: the Fermi level of each channel is on a doublet.
+            call check(abs(results%eigvals(N_SIGMA + 1) - results%eigvals(N_SIGMA)) < DEG_TOL, &
+                       "Trap doublet: levels 13 and 14 (up) must be degenerate below DEG_TOL")
+            call check(abs(results%eigvals(L + N_SIGMA + 1) - results%eigvals(L + N_SIGMA)) < DEG_TOL, &
+                       "Trap doublet: levels 13 and 14 (down) must be degenerate below DEG_TOL")
+            call check(results%eigvals(N_SIGMA) - results%eigvals(N_SIGMA - 1) > 1.0e-3_dp, &
+                       "Trap doublet: the doublet must be isolated from level 12 (precondition)")
+        else
+            call check(.false., "Trap doublet: converged run must return eigenvalues")
+        end if
+
+        if (allocated(results%density_up) .and. allocated(results%density_down)) then
+            n_tot = results%density_up + results%density_down
+            asym = maxval(abs(n_tot - n_tot(L:1:-1)))
+            call check(asym < 1.0e-8_dp, &
+                       "Trap doublet: n(i) = n(L+1-i) to 1e-8 with the doublet shared")
+            call check(maxval(abs(results%density_up - results%density_up(L:1:-1))) < 1.0e-8_dp, &
+                       "Trap doublet: n_up alone is also reflection symmetric")
+            call check(abs(sum(n_tot) - real(2 * N_SIGMA, dp)) < 1.0e-10_dp, &
+                       "Trap doublet: particle number conserved")
+            call check(maxval(n_tot) > 1.99_dp, &
+                       "Trap doublet: the core must be a band insulator (n = 2), else no arms")
+        else
+            call check(.false., "Trap doublet: converged run must return densities")
+        end if
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_trap_doublet_stays_symmetric
 
     !> REGRESSION (T7): open shell energy against the C++ reference
     !!
@@ -389,16 +490,17 @@ contains
 
     !> Test total energy calculation with simple case
     !!
-    !! Physics: E_tot = Σε_j - U·Σn↑n↓ + E_xc - ∫V_xc·n
-    !! The Hartree term -U·Σn↑n↓ removes the double counting of U·n_other that
-    !! the eigenvalues already carry (C++ lsdaks.cc:675-679); the V_xc term does
-    !! the same for the XC potential.
+    !! Physics: E_tot = Σε_j - Σ(V_eff - V_ext)·n + U·Σn↑n↓ + E_xc
+    !! The subtraction of (V_eff - V_ext)·n removes the Hartree and XC
+    !! potentials that the eigenvalues already carry (C++ lsdaks.cc:675-679);
+    !! the physical Hartree energy and E_xc are then added explicitly.
     !!
-    !! The decisive assertion is differential: since U enters compute_total_energy
-    !! only through E_hartree (the XC functional is fixed by the table, not by the
-    !! U argument), E(U=2) - E(U=0) must be exactly -2·Σn↑n↓ = -1.25. This pins
-    !! both the magnitude and the sign of the new U argument; a wrong sign would
-    !! give +1.25 and a dropped/mis-passed U would give 0.
+    !! The decisive assertion is differential: with a fixed, supplied V_eff, U
+    !! enters compute_total_energy only through the explicit Hartree term (the
+    !! XC functional is fixed by the table, not by the U argument), so
+    !! E(U=2) - E(U=0) must be exactly +2·Σn↑n↓ = +1.25. This pins both the
+    !! magnitude and the sign of the U argument; a wrong sign would give -1.25
+    !! and a dropped/mis-passed U would give 0.
     subroutine test_compute_total_energy_simple()
         use fortuno_serial, only: check => serial_check
         use kohn_sham_cycle, only: compute_total_energy
@@ -407,7 +509,7 @@ contains
 
         integer, parameter :: L = 10
         real(dp) :: eigvals_up(5), eigvals_down(5)
-        real(dp) :: n_up(L), n_down(L), V_ext(L)
+        real(dp) :: n_up(L), n_down(L), V_ext(L), V_eff_up(L), V_eff_down(L)
         type(xc_lsda_t) :: xc_func
         real(dp) :: total_energy, energy_u0, hartree_sum
         integer :: ierr, i
@@ -423,6 +525,8 @@ contains
             n_up(i) = 0.25_dp
             n_down(i) = 0.25_dp
             V_ext(i) = 0.0_dp
+            V_eff_up(i) = 0.0_dp
+            V_eff_down(i) = 0.0_dp
         end do
 
         ! Simple eigenvalues (5 occupied levels per spin)
@@ -431,7 +535,7 @@ contains
 
         ! U = 2.0 matches the XC table loaded above (xc_table_u2.00.dat)
         call compute_total_energy(eigvals_up, eigvals_down, 5, 5, n_up, n_down, &
-                                  V_ext, xc_func, 2.0_dp, L, total_energy, ierr)
+                                  V_ext, V_eff_up, V_eff_down, xc_func, 2.0_dp, L, total_energy, ierr)
 
         call check(ierr == ERROR_SUCCESS, "Energy calculation should succeed")
         call check(total_energy == total_energy, "Energy should be valid number")
@@ -439,22 +543,71 @@ contains
         ! Same call with U = 0: identical band energy, identical XC (same table),
         ! only the Hartree term disappears.
         call compute_total_energy(eigvals_up, eigvals_down, 5, 5, n_up, n_down, &
-                                  V_ext, xc_func, 0.0_dp, L, energy_u0, ierr)
+                                  V_ext, V_eff_up, V_eff_down, xc_func, 0.0_dp, L, energy_u0, ierr)
         call check(ierr == ERROR_SUCCESS, "Energy calculation at U=0 should succeed")
 
-        ! Σ n_up*n_down = 10 * 0.25 * 0.25 = 0.625  =>  E(U=2) - E(U=0) = -1.25
+        ! With the same supplied V_eff, the explicit physical Hartree term is
+        ! +U*Σn_up*n_down. (A self-consistent V_eff would move the band energy
+        ! and its subtraction cancels that shift.)
         hartree_sum = sum(n_up * n_down)
         call check(abs(hartree_sum - 0.625_dp) < TOL, "Precondition: Σn_up*n_down = 0.625")
-        call check(abs((total_energy - energy_u0) + 2.0_dp * hartree_sum) < 1.0e-12_dp, &
-                   "E(U=2) - E(U=0) must equal -U*Σn_up*n_down = -1.25")
+        call check(abs((total_energy - energy_u0) - 2.0_dp * hartree_sum) < 1.0e-12_dp, &
+                   "E(U=2) - E(U=0) must equal +U*Σn_up*n_down = 1.25")
 
-        ! Band energy alone is exactly -10, so at U=0 the whole remainder is the
-        ! XC double-counting correction; it must stay small compared to the band.
+        ! Band energy alone is exactly -10 and V_eff = V_ext = 0, so at U=0 the
+        ! whole remainder is Σε_xc; it must stay small compared to the band.
         call check(abs(energy_u0 + 10.0_dp) < 2.0_dp, &
                    "At U=0 the energy must sit close to the band energy -10")
 
         call xc_lsda_destroy(xc_func)
     end subroutine test_compute_total_energy_simple
+
+
+    !> T19: the band-energy shift from V_eff must cancel its double counting
+    subroutine test_total_energy_cancels_effective_potential_shift()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: compute_total_energy
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 10
+        real(dp), parameter :: SHIFT = 0.75_dp
+        real(dp) :: eigvals_up(5), eigvals_down(5), n_up(L), n_down(L), V_ext(L)
+        real(dp) :: V_eff_up(L), V_eff_down(L), energy_ref, energy_shifted
+        type(xc_lsda_t) :: xc_func
+        integer :: ierr
+
+        call xc_lsda_init(xc_func, 'data/tables/fortran_native/xc_table_u2.00.dat', ierr)
+        call check(ierr == ERROR_SUCCESS, 'T19: XC init should succeed')
+        if (ierr /= ERROR_SUCCESS) return
+
+        eigvals_up = [-2.0_dp, -1.5_dp, -1.0_dp, -0.5_dp, 0.0_dp]
+        eigvals_down = eigvals_up
+        ! Five occupied orbitals per spin on ten sites: each density must sum
+        ! to five for the band-energy and potential shifts to represent one
+        ! common Kohn-Sham state.
+        n_up = 0.5_dp
+        n_down = 0.5_dp
+        V_ext = 0.0_dp
+        V_eff_up = 0.0_dp
+        V_eff_down = 0.0_dp
+
+        call compute_total_energy(eigvals_up, eigvals_down, 5, 5, n_up, n_down, V_ext, &
+                                  V_eff_up, V_eff_down, xc_func, 2.0_dp, L, energy_ref, ierr)
+        call check(ierr == ERROR_SUCCESS, 'T19: reference energy should succeed')
+
+        eigvals_up = eigvals_up + SHIFT
+        eigvals_down = eigvals_down + SHIFT
+        V_eff_up = SHIFT
+        V_eff_down = SHIFT
+        call compute_total_energy(eigvals_up, eigvals_down, 5, 5, n_up, n_down, V_ext, &
+                                  V_eff_up, V_eff_down, xc_func, 2.0_dp, L, energy_shifted, ierr)
+        call check(ierr == ERROR_SUCCESS, 'T19: shifted energy should succeed')
+        call check(abs(energy_shifted - energy_ref) < 1.0e-12_dp, &
+                   'T19: a uniform V_eff shift must cancel from the total energy')
+
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_total_energy_cancels_effective_potential_shift
 
     !> Test total energy for half-filling case
     !!
@@ -468,7 +621,7 @@ contains
 
         integer, parameter :: L = 8
         real(dp) :: eigvals_up(L), eigvals_down(L)
-        real(dp) :: n_up(L), n_down(L), V_ext(L)
+        real(dp) :: n_up(L), n_down(L), V_ext(L), V_eff_up(L), V_eff_down(L)
         type(xc_lsda_t) :: xc_func
         real(dp) :: total_energy
         integer :: ierr, i
@@ -483,6 +636,8 @@ contains
             n_up(i) = 0.5_dp
             n_down(i) = 0.5_dp
             V_ext(i) = 0.0_dp
+            V_eff_up(i) = 0.0_dp
+            V_eff_down(i) = 0.0_dp
         end do
 
         ! The lowest L/2 eigenvalues are occupied in each spin channel
@@ -491,7 +646,7 @@ contains
 
         ! U = 4.0 matches the XC table loaded above (xc_table_u4.00.dat)
         call compute_total_energy(eigvals_up, eigvals_down, L / 2, L / 2, n_up, n_down, &
-                                  V_ext, xc_func, 4.0_dp, L, total_energy, ierr)
+                                  V_ext, V_eff_up, V_eff_down, xc_func, 4.0_dp, L, total_energy, ierr)
 
         call check(ierr == ERROR_SUCCESS, "Energy calculation should succeed")
         call check(total_energy == total_energy, "Energy should be valid")
@@ -643,6 +798,23 @@ contains
         ! E/L = 4.0007185884, i.e. a spurious e_xc(1, 1) = 7.19e-4 per site.
         call check(abs(results%final_energy / real(L, dp) - params%U) < 1.0e-12_dp, &
                    "Completely full band must give E/L = U exactly")
+
+        ! REGRESSION (T19): the energy must be a functional of n_out at EVERY
+        ! iteration, not only at the fixed point. The band is full from the
+        ! first diagonalisation on, so E/L = U must already hold at iteration 1
+        ! whatever V_eff the mixing started from. Rebuilding the double-counting
+        ! correction from V_xc(n_out) instead of the diagonalised V_eff leaves
+        ! the spurious term -Σ(V_calc - V_eff)·n, which this assertion sees.
+        call check(allocated(results%history%energies), &
+                   "T19: energy history must be stored for the full-band run")
+        if (allocated(results%history%energies)) then
+            call check(results%history%current_iter >= 1, &
+                       "T19: at least one iteration must be recorded")
+            if (results%history%current_iter >= 1) then
+                call check(abs(results%history%energies(1) / real(L, dp) - params%U) < 1.0e-12_dp, &
+                           "T19: E/L = U must hold already at the first SCF iteration")
+            end if
+        end if
 
         call cleanup_scf_results(results, ierr)
         call xc_lsda_destroy(xc_func)

@@ -454,6 +454,27 @@ Input files use Fortran namelists (case-insensitive, order-independent):
 - **Mixing convention**: `α = 0.05` means 5% new, 95% old (conservative)
 - **Twisted BC**: `phase` in units of π (e.g., `phase = 0.5` → π/2)
 - **Adaptive mixing**: Automatically adjusts `α` when convergence stalls
+- **XC smoothing** (`xc_smoothing_width = w` in `&scf`, default `0`): replaces
+  the BALDA discontinuity of `V_xc` at `n = 1` by a linear ramp of half-width
+  `w`. The default stays `0` (exact C++ functional) because `w > 0` changes the
+  functional itself (about 0.7% in `E/L` between `w = 0.05` and `w = 0.2`), so
+  reference results must be produced with `w = 0`. Use it as an explicit,
+  per-case opt-in for systems whose density sits on `n = 1` (Mott plateau in a
+  trap, double-barrier well); it is echoed in the output header when active.
+- **Near-degenerate Fermi levels** (deliberate divergence from the C++):
+  two consecutive Kohn-Sham levels closer than `DEG_TOL = 1e-10` share the
+  open-shell occupation equally, exactly as the C++ `update_degen` does; but
+  between `1e-10` and `DEG_TOL_UPPER = 1e-6` the sharing fades out with a C¹
+  weight instead of switching off abruptly (`compute_occupations`). This is an
+  effective smearing over that `~1e-6 t` interval, not a strictly sharp
+  zero-temperature occupation at every finite gap. Particle number is
+  conserved algebraically (up to floating-point rounding), `0 <= occ <= 1`,
+  and every exact degeneracy gives the C++ result bit-for-bit. The upper edge
+  is absolute: in very large PBC systems (roughly `L >= 1e4`), distinct levels
+  can enter the transition interval. A tunnel doublet returned by LAPACK in a
+  localised basis can therefore no longer flip a whole electron into one arm of
+  a symmetric trap as the gap fluctuates around `1e-10`, so `n(i) = n(L+1-i)`
+  is preserved.
 
 ## Output Files
 
