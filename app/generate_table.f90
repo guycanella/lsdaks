@@ -128,7 +128,7 @@ program generate_xc_table_app
         .or. params%quad%n_lambda < 4 .or. params%quad%n_omega < 4 &
         .or. .not. ieee_is_finite(params%quad%tol) .or. params%quad%tol <= 0.0_dp &
         .or. .not. ieee_is_finite(params%delta_n) .or. params%delta_n <= 0.0_dp) then
-        print '(A)', "ERROR: U, grid sizes, quadrature orders and tolerances must be finite and positive"
+        print '(A)', "ERROR: U must be finite; grid sizes, quadrature orders and tolerances must be positive"
         stop 1
     end if
 

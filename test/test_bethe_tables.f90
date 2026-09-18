@@ -371,6 +371,7 @@ contains
         call generate_xc_table(4.0_dp, params, table, status)
         call check(status == ERROR_INVALID_INPUT, "NaN quadrature tolerance must be rejected")
 
+        params = grid_params_t()
         call generate_xc_table(ieee_value(0.0_dp, ieee_quiet_nan), params, table, status)
         call check(status == ERROR_INVALID_INPUT, "NaN U must be rejected")
     end subroutine test_invalid_density_grid_bounds
