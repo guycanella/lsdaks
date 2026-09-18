@@ -14,7 +14,8 @@
 !! ```
 !! generate_xc_table --U <value> [--output <dir>] [--n-points N] [--m-points M]
 !!                   [--m-grade G] [--n-grade-low A] [--n-grade-high B]
-!!                   [--n-k N] [--n-lambda N] [--tol T] [--delta-n H] [--force]
+!!                   [--m-frac-min F] [--n-min N] [--n-k N] [--n-lambda N]
+!!                   [--n-omega N] [--tol T] [--delta-n H] [--force]
 !! ```
 !!
 !! @note The grid defaults were chosen by measuring the post-spline deviation
@@ -132,9 +133,13 @@ program generate_xc_table_app
 
     if (params%m_grade <= 0.0_dp .or. params%m_grade > 1.0_dp &
         .or. params%m_frac_min <= 0.0_dp .or. params%m_frac_min >= 1.0_dp &
-        .or. params%n_grade_low < 1.0_dp .or. params%n_grade_high < 1.0_dp) then
+        .or. params%n_grade_low < 1.0_dp .or. params%n_grade_high < 1.0_dp &
+        .or. .not. ieee_is_finite(params%n_min) .or. .not. ieee_is_finite(params%n_max) &
+        .or. params%n_min <= 0.0_dp .or. params%n_min > params%n_max &
+        .or. (params%n_points > 1 .and. params%n_min >= params%n_max)) then
         print '(A)', "ERROR: --m-grade and --m-frac-min must be in (0, 1]; " // &
-                     "--n-grade-low and --n-grade-high must be >= 1"
+                     "--n-grade-low and --n-grade-high must be >= 1; " // &
+                     "--n-min must satisfy 0 < n_min <= n_max (strict for multi-point grids)"
         stop 1
     end if
 

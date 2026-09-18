@@ -28,7 +28,7 @@ module bethe_tables
     use lieb_wu_integral, only: lw_quad_t, lw_seed_t, lieb_wu_exc
     use table_io, only: xc_table_t, write_fortran_table, count_nonfinite_entries
     use lsda_errors, only: ERROR_SUCCESS, ERROR_NOT_A_NUMBER, ERROR_INVALID_INPUT
-    use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, ieee_is_nan
+    use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, ieee_is_nan, ieee_is_finite
     implicit none
     private
 
@@ -541,7 +541,10 @@ contains
 
         if (params%m_frac_min <= 0.0_dp .or. params%m_frac_min >= 1.0_dp &
             .or. params%m_grade <= 0.0_dp .or. params%m_grade > 1.0_dp &
-            .or. params%n_grade_low < 1.0_dp .or. params%n_grade_high < 1.0_dp) then
+            .or. params%n_grade_low < 1.0_dp .or. params%n_grade_high < 1.0_dp &
+            .or. .not. ieee_is_finite(params%n_min) .or. .not. ieee_is_finite(params%n_max) &
+            .or. params%n_min <= 0.0_dp .or. params%n_min > params%n_max &
+            .or. (params%n_points > 1 .and. params%n_min >= params%n_max)) then
             status = ERROR_INVALID_INPUT
             return
         end if

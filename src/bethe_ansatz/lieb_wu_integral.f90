@@ -115,6 +115,10 @@ module lieb_wu_integral
     real(dp), parameter :: N_MINORITY_TOL = 1.0e-14_dp
     !> Distance from `n = 1` within which `Q = pi` is used without inversion.
     real(dp), parameter :: N_FULL_TOL = 1.0e-13_dp
+    !> Input-grid overshoot accepted before the caller's boundary clamp.
+    !! This is wider than N_FULL_TOL because graded grids can produce a
+    !! reproducible n = 1 + O(1e-9) endpoint through arithmetic roundoff.
+    real(dp), parameter :: N_INPUT_TOL = 1.0e-8_dp
     !> Smallest admissible `B`; below it `sigma` is numerically zero.
     real(dp), parameter :: B_MIN = 1.0e-10_dp
     !> Maximum number of dyadic `Lambda` panels.
@@ -916,7 +920,7 @@ contains
             return
         end if
         if (n_up < -N_MINORITY_TOL .or. n_dn < -N_MINORITY_TOL &
-            .or. n_up > 1.0_dp + N_FULL_TOL .or. n_dn > 1.0_dp + N_FULL_TOL) then
+            .or. n_up > 1.0_dp + N_INPUT_TOL .or. n_dn > 1.0_dp + N_INPUT_TOL) then
             ierr = ERROR_INVALID_INPUT
             return
         end if

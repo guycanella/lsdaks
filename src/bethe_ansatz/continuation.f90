@@ -340,7 +340,10 @@ contains
 
             ! PREDITOR - see the forward sweep: a rejected point holds NaN.
             if (have_two .and. converged_flags(site + 1) .and. converged_flags(site + 2)) then
-                dxdU = estimate_dxdU(solutions(:, site + 2), solutions(:, site + 1), dU_old)
+                ! The arguments are ordered by increasing U so that dxdU is
+                ! the physical dx/dU; the subtraction below then extrapolates
+                ! from U(site+1) towards the lower-U point.
+                dxdU = estimate_dxdU(solutions(:, site + 1), solutions(:, site + 2), dU_old)
                 x_guess = solutions(:, site + 1) - dU * dxdU
             else if (have_good) then
                 x_guess = x_good

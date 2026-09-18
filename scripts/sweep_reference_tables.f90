@@ -30,12 +30,13 @@ program sweep_reference_tables
     type(grid_params_t) :: params
     type(xc_table_t) :: ref, gen
     type(xc_lsda_t) :: xc
-    integer :: nargs, k, i, j, ierr, n_eval, n_bad_exc, n_bad_vxc
+    integer :: nargs, k, i, j, ierr, n_eval, n_bad_exc, n_bad_vxc, n_skipped
     integer :: i_worst, j_worst, i_worst_v, j_worst_v
     integer(8) :: c0, c1, rate
     real(dp) :: U, n, m, n_up, n_dw, exc, vup, vdn, gen_wall
     real(dp) :: d_exc, d_up, d_dn, w_exc, w_up, w_dn, n_worst, m_worst
     real(dp) :: n_worst_v, m_worst_v
+    logical :: failed_any
 
     nargs = command_argument_count()
     if (nargs < 2) then
@@ -44,6 +45,7 @@ program sweep_reference_tables
     end if
 
     call get_command_argument(1, scratch)
+    failed_any = .false.
 
     print '(A)', "| U | worst |d exc| | worst |d Vxc_up| | worst |d Vxc_down| " // &
                  "| at (n, m) | nodes > tol (exc / Vxc) | nodes | gen wall [s] |"
@@ -88,6 +90,7 @@ program sweep_reference_tables
         n_eval = 0
         n_bad_exc = 0
         n_bad_vxc = 0
+        n_skipped = 0
         i_worst = 1
         j_worst = 1
         i_worst_v = 1
@@ -105,9 +108,15 @@ program sweep_reference_tables
                 n_dw = 0.5_dp * (n - m)
 
                 call get_exc(xc, n_up, n_dw, exc, ierr)
-                if (ierr /= ERROR_SUCCESS) cycle
+                if (ierr /= ERROR_SUCCESS) then
+                    n_skipped = n_skipped + 1
+                    cycle
+                end if
                 call get_vxc(xc, n_up, n_dw, vup, vdn, ierr)
-                if (ierr /= ERROR_SUCCESS) cycle
+                if (ierr /= ERROR_SUCCESS) then
+                    n_skipped = n_skipped + 1
+                    cycle
+                end if
 
                 d_exc = abs(exc - ref%exc(j, i))
                 d_up = abs(vup - ref%vxc_up(j, i))
@@ -142,10 +151,17 @@ program sweep_reference_tables
             " | exc (", n_worst, ", ", m_worst, ") / Vxc (", n_worst_v, ", ", &
             m_worst_v, ") | ", n_bad_exc, " / ", n_bad_vxc, " | ", n_eval, &
             " | ", gen_wall, " |"
+        print '(A,I0)', "  skipped nodes: ", n_skipped
+        if (n_bad_exc > 0 .or. n_bad_vxc > 0 .or. n_skipped > 0) failed_any = .true.
 
         call xc_lsda_destroy(xc)
         call deallocate_table(gen)
         call deallocate_table(ref)
     end do
+
+    if (failed_any) then
+        print '(A)', "Validation failed: tolerance violations or skipped nodes were found."
+        stop 1
+    end if
 
 end program sweep_reference_tables

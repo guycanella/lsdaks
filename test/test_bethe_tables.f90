@@ -33,6 +33,7 @@ contains
             test("compute_E_xc_spin_exchange_u4", test_compute_E_xc_spin_exchange_u4), &
             test("compute_V_xc_symmetric", test_compute_V_xc_symmetric), &
             test("grid_params_defaults", test_grid_params_defaults), &
+            test("invalid_density_grid_bounds", test_invalid_density_grid_bounds), &
             test("generate_small_table", test_generate_small_table) &
         ])
     end function get_bethe_tables_tests
@@ -333,6 +334,28 @@ contains
         call check(params%delta_n > 0.0_dp, "Default finite-difference step must be positive")
         
     end subroutine test_grid_params_defaults
+
+    !> The table generator must reject nonphysical density axes before solving.
+    subroutine test_invalid_density_grid_bounds()
+        use fortuno_serial, only: check => serial_check
+        use bethe_tables, only: grid_params_t, generate_xc_table
+        use table_io, only: xc_table_t
+        use lsda_errors, only: ERROR_INVALID_INPUT
+
+        type(grid_params_t) :: params
+        type(xc_table_t) :: table
+        integer :: status
+
+        params%n_min = 0.0_dp
+        call generate_xc_table(4.0_dp, params, table, status)
+        call check(status == ERROR_INVALID_INPUT, "n_min = 0 must be rejected")
+
+        params = grid_params_t()
+        params%n_min = 0.8_dp
+        params%n_max = 0.7_dp
+        call generate_xc_table(4.0_dp, params, table, status)
+        call check(status == ERROR_INVALID_INPUT, "a reversed density axis must be rejected")
+    end subroutine test_invalid_density_grid_bounds
 
     !> Regression test: the `de/dn = -de/dm` identity holds only on `m = n`.
     !!

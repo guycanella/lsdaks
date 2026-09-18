@@ -45,6 +45,7 @@ contains
         tests = test_list([ &
             test("half_filling_closed_form", test_half_filling_closed_form), &
             test("weak_coupling_limit", test_weak_coupling_limit), &
+            test("density_input_roundoff", test_density_input_roundoff), &
             test("strong_coupling_spinless", test_strong_coupling_spinless), &
             test("full_polarization_zero_exc", test_full_polarization_zero_exc), &
             test("particle_hole_and_spin_symmetry", test_particle_hole_and_spin_symmetry), &
@@ -135,6 +136,22 @@ contains
         call check(ierr /= ERROR_SUCCESS, &
                    "U below the quadrature floor must be rejected, not guessed")
     end subroutine test_weak_coupling_limit
+
+    !> Small positive overshoots from a graded n=1 endpoint are accepted by
+    !! the integral solver and then handled by the particle-hole clamp.
+    subroutine test_density_input_roundoff()
+        use fortuno_serial, only: check => serial_check
+
+        type(lw_quad_t) :: quad
+        real(dp) :: exc
+        integer :: ierr
+
+        call lieb_wu_exc(1.0_dp + 2.0e-9_dp, 0.0_dp, 4.0_dp, quad, exc, ierr)
+        call check(ierr == ERROR_SUCCESS, &
+                   "small positive density-grid overshoot must be accepted")
+        call check(abs(exc) < 1.0e-10_dp, &
+                   "the overshoot must map to the fully polarized zero-XC edge")
+    end subroutine test_density_input_roundoff
 
     !> `U -> infinity` maps the unpolarized state onto spinless fermions.
     subroutine test_strong_coupling_spinless()
@@ -263,7 +280,9 @@ contains
                    "default quadrature must be converged to 1e-12")
 
         call lieb_wu_exc(0.35_dp, 0.25_dp, 0.5_dp, quad, exc_default, ierr)
+        call check(ierr == ERROR_SUCCESS, "default quadrature must solve at U = 0.5")
         call lieb_wu_exc(0.35_dp, 0.25_dp, 0.5_dp, fine, exc_fine, ierr)
+        call check(ierr == ERROR_SUCCESS, "fine quadrature must solve at U = 0.5")
         call check(abs(exc_default - exc_fine) < 1.0e-10_dp, &
                    "default quadrature must be converged at the lowest allowed U")
     end subroutine test_quadrature_convergence
