@@ -124,16 +124,19 @@ program generate_xc_table_app
         stop 1
     end if
 
-    if (params%n_points < 1 .or. params%m_points < 1 .or. params%quad%n_k < 4 &
+    if (.not. ieee_is_finite(U) .or. params%n_points < 1 .or. params%m_points < 1 .or. params%quad%n_k < 4 &
         .or. params%quad%n_lambda < 4 .or. params%quad%n_omega < 4 &
-        .or. params%quad%tol <= 0.0_dp .or. params%delta_n <= 0.0_dp) then
-        print '(A)', "ERROR: grid sizes, quadrature orders and tolerances must be positive"
+        .or. .not. ieee_is_finite(params%quad%tol) .or. params%quad%tol <= 0.0_dp &
+        .or. .not. ieee_is_finite(params%delta_n) .or. params%delta_n <= 0.0_dp) then
+        print '(A)', "ERROR: U, grid sizes, quadrature orders and tolerances must be finite and positive"
         stop 1
     end if
 
     if (params%m_grade <= 0.0_dp .or. params%m_grade > 1.0_dp &
         .or. params%m_frac_min <= 0.0_dp .or. params%m_frac_min >= 1.0_dp &
         .or. params%n_grade_low < 1.0_dp .or. params%n_grade_high < 1.0_dp &
+        .or. .not. ieee_is_finite(params%m_frac_min) .or. .not. ieee_is_finite(params%m_grade) &
+        .or. .not. ieee_is_finite(params%n_grade_low) .or. .not. ieee_is_finite(params%n_grade_high) &
         .or. .not. ieee_is_finite(params%n_min) .or. .not. ieee_is_finite(params%n_max) &
         .or. params%n_min <= 0.0_dp .or. params%n_min > params%n_max &
         .or. (params%n_points > 1 .and. params%n_min >= params%n_max)) then

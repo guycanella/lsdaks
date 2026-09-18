@@ -534,12 +534,18 @@ contains
 
         status = ERROR_SUCCESS
 
-        if (abs(U) < U_TABLE_MIN) then
+        if (.not. ieee_is_finite(U) .or. abs(U) < U_TABLE_MIN) then
             status = ERROR_INVALID_INPUT
             return
         end if
 
-        if (params%m_frac_min <= 0.0_dp .or. params%m_frac_min >= 1.0_dp &
+        if (params%n_points < 1 .or. params%m_points < 1 .or. params%quad%n_k < 4 &
+            .or. params%quad%n_lambda < 4 .or. params%quad%n_omega < 4 &
+            .or. .not. ieee_is_finite(params%quad%tol) .or. params%quad%tol <= 0.0_dp &
+            .or. .not. ieee_is_finite(params%delta_n) .or. params%delta_n <= 0.0_dp &
+            .or. .not. ieee_is_finite(params%m_frac_min) .or. .not. ieee_is_finite(params%m_grade) &
+            .or. .not. ieee_is_finite(params%n_grade_low) .or. .not. ieee_is_finite(params%n_grade_high) &
+            .or. params%m_frac_min <= 0.0_dp .or. params%m_frac_min >= 1.0_dp &
             .or. params%m_grade <= 0.0_dp .or. params%m_grade > 1.0_dp &
             .or. params%n_grade_low < 1.0_dp .or. params%n_grade_high < 1.0_dp &
             .or. .not. ieee_is_finite(params%n_min) .or. .not. ieee_is_finite(params%n_max) &

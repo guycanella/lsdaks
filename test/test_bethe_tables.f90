@@ -2,7 +2,7 @@
 program test_bethe_tables
     use fortuno_serial, only: execute_serial_cmd_app
     use lsda_constants, only: dp
-    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite, ieee_value, ieee_quiet_nan
     implicit none
 
     real(dp), parameter :: TOL = 1.0e-9_dp
@@ -355,6 +355,24 @@ contains
         params%n_max = 0.7_dp
         call generate_xc_table(4.0_dp, params, table, status)
         call check(status == ERROR_INVALID_INPUT, "a reversed density axis must be rejected")
+
+        params = grid_params_t()
+        params%delta_n = 0.0_dp
+        call generate_xc_table(4.0_dp, params, table, status)
+        call check(status == ERROR_INVALID_INPUT, "delta_n = 0 must be rejected")
+
+        params = grid_params_t()
+        params%m_grade = ieee_value(0.0_dp, ieee_quiet_nan)
+        call generate_xc_table(4.0_dp, params, table, status)
+        call check(status == ERROR_INVALID_INPUT, "NaN m_grade must be rejected")
+
+        params = grid_params_t()
+        params%quad%tol = ieee_value(0.0_dp, ieee_quiet_nan)
+        call generate_xc_table(4.0_dp, params, table, status)
+        call check(status == ERROR_INVALID_INPUT, "NaN quadrature tolerance must be rejected")
+
+        call generate_xc_table(ieee_value(0.0_dp, ieee_quiet_nan), params, table, status)
+        call check(status == ERROR_INVALID_INPUT, "NaN U must be rejected")
     end subroutine test_invalid_density_grid_bounds
 
     !> Regression test: the `de/dn = -de/dm` identity holds only on `m = n`.
