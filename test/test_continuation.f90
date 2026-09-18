@@ -15,9 +15,102 @@ contains
             test("sweep_forward_3pts", test_sweep_forward_3pts), &
             test("sweep_forward_all_converge", test_sweep_forward_all_converge), &
             test("sweep_backward_3pts", test_sweep_backward_3pts), &
-            test("sweep_bidirectional_consistency", test_bidirectional_consistency) &
+            test("sweep_bidirectional_consistency", test_bidirectional_consistency), &
+            test("merge_sweeps_masks_failures", test_merge_sweeps_masks_failures) &
         ])
     end function
+
+
+    !> Regression test for the forward/backward merge.
+    !!
+    !! `store_point` writes NaN at a point a sweep failed to solve.  The merge
+    !! used to be an unconditional average, which had two consequences:
+    !!
+    !! 1. a point the forward sweep solved perfectly came out as NaN just
+    !!    because the backward sweep failed at the same `U`;
+    !! 2. `maxval(abs(E_fwd - E_bwd))` became NaN, and `NaN > 1e-6` is
+    !!    `.false.` in IEEE arithmetic, so the forward/backward consistency
+    !!    warning - the only cross-check in the module - never fired again for
+    !!    the rest of the sweep.  A genuine disagreement at another point was
+    !!    therefore reported as consistent.
+    !!
+    !! Both halves are checked here on synthetic sweeps, because driving
+    !! `solve_newton` into failure from a test is not practical.
+    subroutine test_merge_sweeps_masks_failures()
+        use fortuno_serial, only: check => serial_check
+        use lsda_constants, only: dp
+        use continuation, only: merge_sweeps
+        use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, ieee_is_nan
+
+        integer, parameter :: NP = 3, NX = 2
+        real(dp) :: sol_fwd(NX, NP), sol_bwd(NX, NP), E_fwd(NP), E_bwd(NP)
+        real(dp) :: solutions(NX, NP), energies(NP), max_diff, nan
+        logical :: flags_fwd(NP), flags_bwd(NP), flags(NP), inconsistent
+
+        nan = ieee_value(0.0_dp, ieee_quiet_nan)
+
+        ! Point 1: both directions fine and in agreement.
+        ! Point 2: the backward sweep failed; the forward value is good.
+        ! Point 3: both fine but disagreeing well above the 1e-6 tolerance.
+        sol_fwd(:, 1) = [1.0_dp, 2.0_dp]
+        sol_bwd(:, 1) = [1.0_dp, 2.0_dp]
+        E_fwd(1) = -3.0_dp
+        E_bwd(1) = -3.0_dp
+
+        sol_fwd(:, 2) = [5.0_dp, 6.0_dp]
+        sol_bwd(:, 2) = nan
+        E_fwd(2) = -7.0_dp
+        E_bwd(2) = nan
+
+        sol_fwd(:, 3) = [9.0_dp, 10.0_dp]
+        sol_bwd(:, 3) = [9.0_dp, 10.0_dp]
+        E_fwd(3) = -11.0_dp
+        E_bwd(3) = -11.001_dp
+
+        flags_fwd = [.true., .true., .true.]
+        flags_bwd = [.true., .false., .true.]
+
+        call merge_sweeps(sol_fwd, E_fwd, flags_fwd, sol_bwd, E_bwd, flags_bwd, &
+                          solutions, energies, flags, max_diff, inconsistent)
+
+        ! (a) the good forward point survives the backward failure
+        call check(.not. ieee_is_nan(energies(2)), &
+                   "a point solved by one direction must not be poisoned by the other")
+        call check(abs(energies(2) + 7.0_dp) < 1.0e-14_dp, &
+                   "the surviving direction must be copied through unchanged")
+        call check(all(abs(solutions(:, 2) - sol_fwd(:, 2)) < 1.0e-14_dp), &
+                   "the surviving solution vector must be copied through unchanged")
+
+        ! (b) the inconsistency warning still fires despite the NaN point
+        call check(inconsistent, &
+                   "forward/backward disagreement must be reported even when " // &
+                   "another point failed")
+        call check(abs(max_diff - 1.0e-3_dp) < 1.0e-12_dp, &
+                   "max_diff must be measured over the cross-checked points only")
+
+        ! averaging and flags on the fully cross-checked points
+        call check(abs(energies(1) + 3.0_dp) < 1.0e-14_dp, &
+                   "cross-checked points must be averaged")
+        call check(flags(1) .and. flags(3) .and. .not. flags(2), &
+                   "only points accepted by both directions count as converged")
+
+        ! (c) a NaN that escapes the mask must fire the warning **on its own**.
+        ! Point 3 is brought back into agreement, so the NaN at point 2 is the
+        ! only evidence left; and it sits *before* point 3 in the loop, which
+        ! is what a non-sticky `max_diff` cannot survive (the NaN it stored is
+        ! overwritten by the next finite difference, because `.not. (diff <=
+        ! NaN)` is `.true.`).  Without the accumulated NaN flag this check
+        ! reports max_diff = 0 and inconsistent = .false.
+        flags_bwd(2) = .true.
+        E_bwd(3) = -11.0_dp
+        call merge_sweeps(sol_fwd, E_fwd, flags_fwd, sol_bwd, E_bwd, flags_bwd, &
+                          solutions, energies, flags, max_diff, inconsistent)
+        call check(inconsistent, &
+                   "a NaN energy difference must fire the warning even when " // &
+                   "every other point agrees")
+        call check(ieee_is_nan(energies(2)), &
+                   "a point averaged with a NaN must stay NaN, not be reported clean")
+    end subroutine
 
 
     subroutine test_estimate_dxdU_simple()

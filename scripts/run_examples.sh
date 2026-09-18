@@ -320,8 +320,11 @@ fi
 printf '\n== the table generator must not persist an invalid table ==\n'
 
 # 7. Invariant: (exit 0 and a finite table) or (exit non-zero and no file).
-#    The generator's grid is fixed (50 x 51, U=4 takes a few seconds), so the
-#    check runs it for real instead of relying on a unit-level stub.
+#    The check runs the generator for real instead of relying on a unit-level
+#    stub, but on an explicit small grid: the default is 75 x 202 since phase
+#    4.5 and takes ~50 s even in release with OpenMP (minutes in the debug
+#    profile this script uses), while the invariant under test is about the
+#    write path and does not depend on the grid size.
 GEN_REL="$(fpm run generate_xc_table --runner echo | tail -n 1)"
 case "${GEN_REL}" in
     /*) GENERATOR="${GEN_REL}" ;;
@@ -332,7 +335,8 @@ mkdir -p "${GEN_DIR}"
 if [ ! -x "${GENERATOR}" ]; then
     fail "cannot locate the generate_xc_table executable"
 else
-    "${GENERATOR}" --U 4.0 --output "${GEN_DIR}" > "${WORK_DIR}/generator.log" 2>&1
+    "${GENERATOR}" --U 4.0 --output "${GEN_DIR}" --n-points 8 --m-points 8 \
+        > "${WORK_DIR}/generator.log" 2>&1
     status=$?
     GEN_FILE="${GEN_DIR}/xc_table_u4.00.dat"
     if [ "${status}" -eq 0 ]; then

@@ -1,3 +1,14 @@
+!> Discrete (finite-L) Lieb-Wu equations for the 1D Hubbard model.
+!!
+!! @warning **Finite-size validation tool, not production.** Since phase 4.5
+!!          the XC table generator solves the thermodynamic-limit integral
+!!          equations in `lieb_wu_integral`, which carry no `O(1/L)` error.
+!!          This module solves for the individual rapidities of a ring of `L`
+!!          sites and is kept only to cross-check the integral-equation
+!!          results against explicit finite-L solutions.
+!!          Known open issue: the parity of the quantum numbers and the
+!!          degenerate initial guess for the spin rapidities are wrong for
+!!          part of the parameter range.
 module bethe_equations
     use lsda_constants, only: dp, PI, TWOPI, U_SMALL
     implicit none

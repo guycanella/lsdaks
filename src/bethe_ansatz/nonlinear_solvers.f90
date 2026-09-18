@@ -1,5 +1,12 @@
 !> Nonlinear solvers for the Bethe Ansatz equations
 !!
+!! @warning **Finite-size validation tool, not production.** Since phase 4.5
+!!          the XC table generator solves the thermodynamic-limit integral
+!!          equations in `lieb_wu_integral`; this module is only used to
+!!          cross-check those results against explicit finite-L solutions.
+!!          Callers must validate both `converged` and `solver_status` before
+!!          using a returned vector.
+!!
 !! This module provides robust numerical methods to solve the nonlinear system
 !! F(x) = 0 arising from the Lieb-Wu equations of the 1D Hubbard model.
 !!
