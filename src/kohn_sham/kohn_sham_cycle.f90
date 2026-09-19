@@ -679,32 +679,6 @@ contains
                 end do
             end if
 
-            ! The open-boundary complex loop has a real tridiagonal operator
-            ! too, so it shares the DSTEVR path used by the real loop.
-            if (params%bc /= BC_OPEN) then
-            call build_hamiltonian_complex(params%L, V_eff_up, V_zero, params%bc, params%phase, H_up, ierr)
-
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for Hamiltonian Nup build
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
-                return
-            end if
-            end if
-
-            if (params%bc /= BC_OPEN) then
-                call build_hamiltonian_complex(params%L, V_eff_down, V_zero, params%bc, params%phase, H_down, ierr)
-
-                if (ierr /= ERROR_SUCCESS) then
-                    ! TODO: Proper error handling for Hamiltonian Ndown build
-                    deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                           H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                           delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
-                    return
-                end if
-            end if
-
             ! ---------------------------------
             ! 1d. Diagonalize both Hamiltonians
             !
@@ -718,6 +692,28 @@ contains
             ! conserves N while doing it, so it would never surface on its own.
             ! ---------------------------------
             shell_window: do
+            ! ZHEEVR overwrites the referenced triangle of its input.  A Fermi
+            ! shell retry therefore needs a fresh dense Hamiltonian for each
+            ! attempt; otherwise it would diagonalize LAPACK work data rather
+            ! than the effective potential of this SCF iteration.
+            if (params%bc /= BC_OPEN) then
+                call build_hamiltonian_complex(params%L, V_eff_up, V_zero, params%bc, params%phase, H_up, ierr)
+                if (ierr /= ERROR_SUCCESS) then
+                    deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
+                           H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
+                           delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
+                    return
+                end if
+
+                call build_hamiltonian_complex(params%L, V_eff_down, V_zero, params%bc, params%phase, H_down, ierr)
+                if (ierr /= ERROR_SUCCESS) then
+                    deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
+                           H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
+                           delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
+                    return
+                end if
+            end if
+
             if (params%bc == BC_OPEN) then
                 ! The DSTEVR fast path bypasses the dense Hamiltonian builder,
                 ! so validate its diagonal explicitly before handing it to LAPACK.

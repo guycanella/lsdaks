@@ -171,6 +171,15 @@ contains
 
         real(dp), allocatable :: real_vectors(:,:)
 
+        ! Validate the caller's complex destination before allocating a
+        ! workspace or invoking DSTEVR.  The delegated real routine validates
+        ! `real_vectors`, not this array; without this check the promotion
+        ! assignment below can write beyond a malformed actual argument.
+        if (size(eigvecs, 1) /= L .or. size(eigvecs, 2) < n_vec) then
+            ierr = ERROR_SIZE_MISMATCH
+            return
+        end if
+
         if (.not. allocated(workspace%real_vectors) .or. size(workspace%real_vectors, 1) /= L .or. &
             size(workspace%real_vectors, 2) /= n_vec) then
             if (allocated(workspace%real_vectors)) deallocate(workspace%real_vectors)

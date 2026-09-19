@@ -539,7 +539,7 @@ Density Check:
    ...
 ```
 
-**The file holds fewer than `L` records per spin, and the count varies.** The SCF
+**The file holds up to `L` records per spin, and the count varies.** The SCF
 diagonalizes only the occupied levels plus a small buffer for the Fermi shell,
 so the levels above that window are never computed and are not written. A file
 with, say, 55 spin-up records for `L = 1000` is complete, not truncated: read
