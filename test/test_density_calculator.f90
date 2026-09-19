@@ -29,12 +29,55 @@ contains
             test("occupations_continuous_in_gap", test_occupations_continuous_in_gap), &
             test("occupations_doublet_sum_and_bounds", test_occupations_doublet_sum_and_bounds), &
             test("occupations_hard_step_on_request", test_occupations_hard_step_on_request), &
+            test("occupations_report_unclosed_shell", test_occupations_report_unclosed_shell), &
             test("double_well_density_continuous", test_double_well_density_continuous), &
             test("open_shell_density_is_uniform", test_open_shell_density_is_uniform), &
             test("open_shell_density_complex", test_open_shell_density_complex), &
             test("empty_channel_density_is_zero", test_empty_channel_density_is_zero) &
         ])
     end function get_density_tests
+
+    !> A shell that runs off the top of a PARTIAL spectrum must be reported.
+    !!
+    !! After T14 the SCF diagonalizes only `N + 5` levels, so the degenerate
+    !! chain that `compute_occupations` walks upward from the Fermi level can
+    !! reach the last supplied eigenvalue while still open. The charge is then
+    !! shared over fewer levels than the shell really has: `weight_sum` is short,
+    !! `shared = pool / weight_sum` is too large, and the occupations inside the
+    !! shell are wrong. Nothing else catches it, because `sum(occ)` is still
+    !! exactly `N`. Hence the flag: the caller grows the window and asks again.
+    subroutine test_occupations_report_unclosed_shell()
+        use fortuno_serial, only: check => serial_check
+        use density_calculator, only: compute_occupations
+        use lsda_constants, only: DEG_TOL
+        use lsda_errors, only: ERROR_SUCCESS
+        integer, parameter :: n_levels = 4
+        real(dp) :: eigvals(n_levels), occ(n_levels)
+        integer :: ierr
+        logical :: shell_open
+
+        ! Four levels degenerate to well inside DEG_TOL, one electron: the chain
+        ! never breaks, so it is still open at level 4 - there may be a fifth.
+        eigvals = [-1.0_dp, -1.0_dp + 1.0e-14_dp, -1.0_dp + 2.0e-14_dp, -1.0_dp + 3.0e-14_dp]
+        call compute_occupations(eigvals, 1, DEG_TOL, occ, ierr, shell_open=shell_open)
+        call check(ierr == ERROR_SUCCESS, "Unclosed shell: computation should succeed")
+        call check(shell_open, "a chain still open at the last level must be reported")
+        call check(abs(sum(occ) - 1.0_dp) < TOL, &
+                   "charge is conserved even when the shell is truncated, which is why " // &
+                   "the flag is the only signal")
+
+        ! Same spectrum with the top level pushed far away: the chain breaks at
+        ! level 4, the shell is contained, and nothing needs to grow.
+        eigvals(4) = 1.0_dp
+        call compute_occupations(eigvals, 1, DEG_TOL, occ, ierr, shell_open=shell_open)
+        call check(ierr == ERROR_SUCCESS, "Closed shell: computation should succeed")
+        call check(.not. shell_open, "a chain broken before the last level must not be reported")
+
+        ! The occupations of the two cases differ, which is exactly the error the
+        ! flag prevents from passing silently: 1/4 each against 1/3 each.
+        call check(abs(occ(1) - 1.0_dp / 3.0_dp) < TOL, &
+                   "the contained shell shares the electron over three levels, not four")
+    end subroutine test_occupations_report_unclosed_shell
 
     !> Closed Fermi shell: occupations are plain integers
     !!

@@ -17,6 +17,7 @@ contains
             test("write_density_profile", test_write_density_profile), &
             test("write_density_not_allocated", test_write_density_not_allocated), &
             test("write_eigenvalues", test_write_eigenvalues), &
+            test("write_eigenvalues_only_computed_levels", test_write_eigenvalues_only_computed_levels), &
             test("write_eigenvalues_not_allocated", test_write_eigenvalues_not_allocated), &
             test("write_convergence_history", test_write_convergence_history), &
             test("write_convergence_not_allocated", test_write_convergence_not_allocated), &
@@ -341,6 +342,51 @@ contains
 
         deallocate(results%eigvals)
     end subroutine test_write_eigenvalues
+
+
+    !> Regression: only eigenvalues actually computed by the SCF are written.
+    !!
+    !! A partial diagonalization must not make absent high-energy levels appear
+    !! as zero-valued eigenvalues in the output file.
+    subroutine test_write_eigenvalues_only_computed_levels()
+        use fortuno_serial, only: check => serial_check
+        use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan
+        use output_writer, only: write_eigenvalues
+        use lsda_types, only: system_params_t
+        use kohn_sham_cycle, only: scf_results_t
+        use lsda_constants, only: dp
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(scf_results_t) :: results
+        type(system_params_t) :: sys_params
+        integer :: ierr, io_unit, io_stat, n_data, i
+        character(len=256) :: line
+
+        sys_params%L = 20
+        sys_params%Nup = 4
+        sys_params%Ndown = 4
+        allocate(results%eigvals(40))
+        results%eigvals = ieee_value(0.0_dp, ieee_quiet_nan)
+        results%eigvals(1:5) = [(real(i, dp), i = 1, 5)]
+        results%eigvals(21:25) = [(real(i, dp), i = 6, 10)]
+
+        call write_eigenvalues(results, sys_params, 'test_eig_partial', ierr)
+        call check(ierr == ERROR_SUCCESS, "partial eigenvalue output should succeed")
+
+        n_data = 0
+        open(newunit=io_unit, file='test_eig_partial_eigenvalues.dat', status='old', iostat=io_stat)
+        call check(io_stat == 0, "partial eigenvalue file should open")
+        if (io_stat == 0) then
+            do
+                read(io_unit, '(A)', iostat=io_stat) line
+                if (io_stat /= 0) exit
+                if (line(1:1) /= '#') n_data = n_data + 1
+            end do
+            close(io_unit, status='delete')
+        end if
+        call check(n_data == 10, "writer must emit exactly the computed eigenvalues")
+        deallocate(results%eigvals)
+    end subroutine test_write_eigenvalues_only_computed_levels
 
 
     !> Test write_eigenvalues when eigenvalues not allocated

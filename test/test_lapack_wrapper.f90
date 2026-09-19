@@ -25,6 +25,9 @@ contains
             test("diag_real_diagonal_matrix", test_diag_real_diagonal_matrix), &
             test("diag_real_symmetric_2x2", test_diag_real_symmetric_2x2), &
             test("diag_real_tridiagonal", test_diag_real_tridiagonal), &
+            test("diag_open_tridiagonal_partial_l200", test_diag_open_tridiagonal_partial_l200), &
+            test("diag_open_tridiagonal_complex_rejects_short_destination", &
+                 test_diag_open_tridiagonal_complex_rejects_short_destination), &
             test("diag_real_eigenvalue_order", test_diag_real_eigenvalue_order), &
             test("diag_real_eigenvector_normalization", test_diag_real_eigenvector_normalization), &
             test("diag_real_eigenvector_orthogonality", test_diag_real_eigenvector_orthogonality), &
@@ -252,6 +255,51 @@ contains
         call check(all(eigvals >= -2.0_dp - TOL), "All eigenvalues >= -2")
         call check(all(eigvals <= 2.0_dp + TOL), "All eigenvalues <= 2")
     end subroutine test_diag_real_tridiagonal
+
+    !> Verify the open-chain MRRR path against the exact free-fermion spectrum.
+    !!
+    !! This is a regression test for partial diagonalization: it exercises a
+    !! 200-site system but requests only the lowest occupied shell and buffer.
+    !! A dense full-spectrum path does not exercise the DSTEVR implementation.
+    subroutine test_diag_open_tridiagonal_partial_l200()
+        use fortuno_serial, only: check => serial_check
+        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace
+        integer, parameter :: L = 200, N_VEC = 37
+        real(dp) :: potential(L), eigvals(N_VEC), eigvecs(L,N_VEC), exact
+        type(diag_workspace_t) :: workspace
+        integer :: ierr, n
+
+        potential = 0.0_dp
+        call diagonalize_open_tridiagonal(potential, L, N_VEC, eigvals, eigvecs, workspace, ierr)
+        call check(ierr == 0, "DSTEVR partial open-chain diagonalization should succeed")
+        do n = 1, N_VEC
+            exact = -2.0_dp * cos(real(n, dp) * PI / real(L + 1, dp))
+            call check(abs(eigvals(n) - exact) < 1.0e-12_dp, &
+                       "DSTEVR eigenvalue should match the L=200 analytical spectrum")
+        end do
+        call cleanup_diag_workspace(workspace)
+    end subroutine test_diag_open_tridiagonal_partial_l200
+
+    !> The complex OBC adapter must reject a destination that cannot hold the
+    !! requested eigenvectors before it calls DSTEVR or promotes the results.
+    subroutine test_diag_open_tridiagonal_complex_rejects_short_destination()
+        use fortuno_serial, only: check => serial_check
+        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal_complex, cleanup_diag_workspace
+        use lsda_errors, only: ERROR_SIZE_MISMATCH
+        integer, parameter :: L = 8, N_VEC = 3
+        real(dp) :: potential(L), eigvals(N_VEC)
+        complex(dp) :: eigvecs(L - 1, N_VEC)
+        type(diag_workspace_t) :: workspace
+        integer :: ierr
+
+        potential = 0.0_dp
+        call diagonalize_open_tridiagonal_complex(potential, L, N_VEC, eigvals, eigvecs, workspace, ierr)
+        call check(ierr == ERROR_SIZE_MISMATCH, &
+                   "Complex OBC adapter must reject an eigenvector destination with fewer than L rows")
+        call check(.not. allocated(workspace%real_vectors), &
+                   "Invalid complex destination must fail before allocating the real workspace")
+        call cleanup_diag_workspace(workspace)
+    end subroutine test_diag_open_tridiagonal_complex_rejects_short_destination
 
     !> Test that eigenvalues are returned in ascending order
     !!

@@ -161,7 +161,7 @@ fpm build --profile release --flag "-O3 -march=native"
 2. Run the calculation:
 
 ```bash
-fpm run lsdaks -- --input input.txt
+fpm run --profile release --flag "-O3 -march=native" lsdaks -- --input input.txt
 ```
 
 3. Results are saved to:
@@ -538,6 +538,15 @@ Density Check:
     51      up    0.1234567890E+00     no
    ...
 ```
+
+**The file holds up to `L` records per spin, and the count varies.** The SCF
+diagonalizes only the occupied levels plus a small buffer for the Fermi shell,
+so the levels above that window are never computed and are not written. A file
+with, say, 55 spin-up records for `L = 1000` is complete, not truncated: read
+whatever records are present and treat the missing levels as *not computed*
+rather than as missing data or a short write. The record count also varies with
+the filling and, when a near-degenerate shell forces the window to grow, between
+runs of the same system.
 
 ### 4. Convergence History (`lsda_output_convergence.dat`)
 ```
