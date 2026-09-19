@@ -161,7 +161,7 @@ fpm build --profile release --flag "-O3 -march=native"
 2. Run the calculation:
 
 ```bash
-fpm run lsdaks -- --input input.txt
+fpm run --profile release --flag "-O3 -march=native" lsdaks -- --input input.txt
 ```
 
 3. Results are saved to:

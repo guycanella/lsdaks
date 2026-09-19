@@ -20,12 +20,13 @@
 !! features are available through the optional arguments of `spline2d_eval`.
 module spline2d
     use lsda_constants, only: dp
+    use lsda_errors, only: ERROR_SUCCESS, ERROR_NOT_INITIALIZED
     implicit none
     private
 
     type, public :: spline2d_t
-          integer :: n_x                        !< Number of points in x (n) direction
-          integer :: n_y_max                    !< Maximum number of points in y (m) direction
+          integer :: n_x = 0                    !< Number of points in x (n) direction
+          integer :: n_y_max = 0                !< Maximum number of points in y (m) direction
           real(dp), allocatable :: x(:)         !< Grid points in x direction: x(n_x)
           real(dp), allocatable :: y(:,:)       !< Grid points in y direction: y(n_y, n_x) - varies with x!
           real(dp), allocatable :: f(:,:)       !< Function values: f(n_y, n_x)
@@ -385,28 +386,39 @@ contains
     !!                                (default: the secant of the first interval)
     !! @param[in] allow_linear_branch Optional flag (default .true.) enabling the
     !!                                linear fallback for a single-row window
-    !! @return                        Interpolated value f(x, y)
-    function spline2d_eval(spl, x, y, node0_value, dfdx_first, allow_linear_branch) result(f_interp)
+    !! @param[out] ierr               Optional status: ERROR_SUCCESS or
+    !!                                ERROR_NOT_INITIALIZED
+    !! @return                        Interpolated value f(x, y), or zero on error
+    function spline2d_eval(spl, x, y, node0_value, dfdx_first, allow_linear_branch, ierr) result(f_interp)
         type(spline2d_t), intent(in) :: spl
         real(dp), intent(in) :: x, y
         real(dp), intent(in), optional :: node0_value
         real(dp), intent(in), optional :: dfdx_first
         logical, intent(in), optional :: allow_linear_branch
+        integer, intent(out), optional :: ierr
         real(dp) :: f_interp
 
         !> Two abscissae closer than this are treated as coincident
         real(dp), parameter :: X_DEGENERATE_TOL = 1.0e-15_dp
 
-        real(dp), allocatable :: x_loc(:), f_loc(:), d2_loc(:)
         real(dp) :: dy_ini, dy_fim
         integer :: i, i_in, i_first, num_n, offset
         logical :: linear_ok, with_node0
 
+        if (present(ierr)) ierr = ERROR_SUCCESS
+
         if (.not. spl%initialized) then
-            print *, "ERROR: spline2d not initialized!"
             f_interp = 0.0_dp
+            if (present(ierr)) ierr = ERROR_NOT_INITIALIZED
             return
         end if
+
+        block
+            ! These work arrays are declared only after initialization is
+            ! known. Specification expressions of automatic arrays are
+            ! evaluated on block entry, so an uninitialized spline cannot use
+            ! an indeterminate n_x before the guard above executes.
+            real(dp) :: x_loc(0:spl%n_x), f_loc(0:spl%n_x), d2_loc(0:spl%n_x)
 
         linear_ok = .true.
         if (present(allow_linear_branch)) linear_ok = allow_linear_branch
@@ -440,8 +452,6 @@ contains
             offset = 0
         end if
 
-        allocate(x_loc(0:num_n), f_loc(0:num_n), d2_loc(0:num_n))
-
         if (with_node0) then
             x_loc(0) = y
             f_loc(0) = node0_value
@@ -465,8 +475,7 @@ contains
             call spline1d_coeff(x_loc, f_loc, num_n, d2_loc, 'clamped', dy_ini, dy_fim)
             f_interp = spline1d_eval(x_loc, f_loc, d2_loc, num_n, x)
         end if
-
-        deallocate(x_loc, f_loc, d2_loc)
+        end block
     end function spline2d_eval
 
     !> Clean up spline object

@@ -77,6 +77,9 @@ contains
                  test_scf_fully_polarised_channel), &
             test("scf_full_band_attractive_u", &
                  test_scf_full_band_attractive_u), &
+            test("scf_reuses_output_xc_cache", test_scf_reuses_output_xc_cache), &
+            test("xc_cache_preserves_half_filling_discontinuity", &
+                 test_xc_cache_preserves_half_filling_discontinuity), &
             test("scf_failure_exposes_final_state", &
                  test_scf_failure_exposes_final_state), &
             test("scf_trap_doublet_stays_symmetric", &
@@ -2479,8 +2482,112 @@ contains
     !! declaring self-consistency requires a previous energy to compare against,
     !! so the first iteration can never converge, whatever the system.
     !!
-    !! Both loops are probed: the real one and the complex one, which are
-    !! separate copies of the same algorithm and have to stay in step.
+    !! Both public APIs are probed: real and complex calls share the same SCF
+    !! loop but select different diagonalization backends when required.
+    !> REGRESSION (T15): output XC values must become the next input cache.
+    !!
+    !! A two-iteration, deliberately non-converged SCF needs exactly one
+    !! initial `get_vxc` call per site and then one `get_vxc` plus one
+    !! `get_exc` call per site per iteration.  Reintroducing the former input
+    !! V_xc evaluation adds L calls and fails this test.
+    subroutine test_scf_reuses_output_xc_cache()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, cleanup_scf_results
+        use lsda_types, only: system_params_t
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy, &
+                           reset_xc_evaluation_count, get_xc_evaluation_count
+        use boundary_conditions, only: BC_OPEN
+        use lsda_errors, only: ERROR_SUCCESS, ERROR_CONVERGENCE_FAILED
+
+        integer, parameter :: L = 8
+        type(system_params_t) :: params
+        type(scf_params_t) :: scf_params
+        type(scf_results_t) :: results
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: V_ext(L)
+        integer :: ierr
+
+        call xc_lsda_init(xc_func, PROBE_TABLE, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC cache: initialization should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        params%L = L
+        params%Nup = 3
+        params%Ndown = 2
+        params%bc = BC_OPEN
+        params%U = PROBE_U
+        params%phase = 0.0_dp
+        scf_params%max_iter = 2
+        scf_params%potential_tol = 1.0e-14_dp
+        scf_params%energy_tol = 1.0e-14_dp
+        scf_params%mixing_alpha = 0.2_dp
+        scf_params%verbose = .false.
+        scf_params%store_history = .false.
+        V_ext = 0.0_dp
+
+        V_ext(1) = 0.1_dp  ! Deliberately break reflection symmetry for the count.
+        call reset_xc_evaluation_count()
+        call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_CONVERGENCE_FAILED, "XC cache: two iterations should not converge")
+        call check(get_xc_evaluation_count() == 5 * L, &
+                   "XC cache: initial Vxc plus one Vxc/exc pair per output density")
+
+        call cleanup_scf_results(results, ierr)
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_scf_reuses_output_xc_cache
+
+    !> Reflection-related sites must retain their own XC values near n = 1.
+    !!
+    !! Total densities 1 - 2e-12 and 1 + 2e-12 differ by only 4e-12, which
+    !! is below the former reflection-cache threshold of 1e-10. They are,
+    !! however, outside the XC region-boundary tolerance (1e-12) and lie on
+    !! opposite sides of the physical Mott discontinuity. Mirroring the first
+    !! site's cache entry onto the second would replace its physical branch.
+    subroutine test_xc_cache_preserves_half_filling_discontinuity()
+        use fortuno_serial, only: check => serial_check
+        use kohn_sham_cycle, only: populate_xc_output_cache
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy, get_vxc, get_exc
+        use lsda_errors, only: ERROR_SUCCESS
+
+        integer, parameter :: L = 2
+        real(dp), parameter :: OFFSET = 2.0e-12_dp
+        type(xc_lsda_t) :: xc_func
+        real(dp) :: density_up(L), density_down(L)
+        real(dp) :: v_xc_up(L), v_xc_down(L), e_xc(L)
+        real(dp) :: v_xc_up_ref(L), v_xc_down_ref(L), e_xc_ref(L)
+        integer :: i, ierr
+
+        call xc_lsda_init(xc_func, PROBE_TABLE, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC cusp cache: initialization should succeed")
+        if (ierr /= ERROR_SUCCESS) return
+
+        density_up = 0.5_dp
+        density_down = [0.5_dp - OFFSET, 0.5_dp + OFFSET]
+
+        call populate_xc_output_cache(xc_func, density_up, density_down, v_xc_up, v_xc_down, e_xc, ierr)
+        call check(ierr == ERROR_SUCCESS, "XC cusp cache: cache population should succeed")
+
+        do i = 1, L
+            call get_vxc(xc_func, density_up(i), density_down(i), v_xc_up_ref(i), v_xc_down_ref(i), ierr)
+            if (ierr == ERROR_SUCCESS) call get_exc(xc_func, density_up(i), density_down(i), e_xc_ref(i), ierr)
+            call check(ierr == ERROR_SUCCESS, "XC cusp cache: independent XC evaluation should succeed")
+        end do
+
+        if (ierr == ERROR_SUCCESS) then
+            call check(maxval(abs(v_xc_up - v_xc_up_ref)) < 1.0e-14_dp, &
+                       "XC cusp cache: each site must retain its own spin-up V_xc branch")
+            call check(maxval(abs(v_xc_down - v_xc_down_ref)) < 1.0e-14_dp, &
+                       "XC cusp cache: each site must retain its own spin-down V_xc branch")
+            call check(maxval(abs(e_xc - e_xc_ref)) < 1.0e-14_dp, &
+                       "XC cusp cache: each site must retain its own e_xc value")
+            call check(abs(v_xc_up_ref(2) - v_xc_up_ref(1)) > 1.0e-3_dp, &
+                       "XC cusp cache: the two sites must straddle a finite V_xc discontinuity")
+        end if
+
+        call xc_lsda_destroy(xc_func)
+    end subroutine test_xc_cache_preserves_half_filling_discontinuity
+
     subroutine test_scf_failure_exposes_final_state()
         use fortuno_serial, only: check => serial_check
         use kohn_sham_cycle, only: run_kohn_sham_scf_real, run_kohn_sham_scf_complex, &
@@ -2547,7 +2654,23 @@ contains
 
         call cleanup_scf_results(results, ierr)
 
-        ! Same contract for the complex (twisted BC) copy of the loop.
+        ! The complex loop must also take the open-boundary tridiagonal route.
+        ! Its dense H_up/H_down placeholders have extent (1,1) in this case, so
+        ! either dense Hamiltonian builder must be skipped before DSTEVR runs.
+        params%bc = BC_OPEN
+
+        call run_kohn_sham_scf_complex(params, scf_params, V_ext, xc_func, results, ierr)
+
+        call check(ierr == ERROR_CONVERGENCE_FAILED, &
+                   "complex OBC loop: one iteration must report convergence failure, not a matrix-size error")
+        call check(allocated(results%density_up), &
+                   "complex OBC loop: density_up must be available after the tridiagonal route")
+        call check(allocated(results%density_down), &
+                   "complex OBC loop: density_down must be available after the tridiagonal route")
+
+        call cleanup_scf_results(results, ierr)
+
+        ! Same contract for the complex twisted-BC copy of the loop.
         params%bc = BC_TWISTED
         params%phase = 0.5_dp
 

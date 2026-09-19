@@ -6,12 +6,13 @@
 !! - Convergence history
 !! - Summary information
 module output_writer
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     use lsda_constants, only: dp
     use lsda_types, only: system_params_t
     use kohn_sham_cycle, only: scf_results_t, scf_params_t
     use input_parser, only: input_params_t
     use boundary_conditions, only: BC_TWISTED
-    use lsda_errors, only: ERROR_SUCCESS, ERROR_FILE_WRITE
+    use lsda_errors, only: ERROR_SUCCESS, ERROR_FILE_WRITE, ERROR_SIZE_MISMATCH
     implicit none
     private
 
@@ -483,6 +484,10 @@ contains
         end if
         
         L = sys_params%L
+        if (size(results%eigvals) /= 2 * L) then
+            ierr = ERROR_SIZE_MISMATCH
+            return
+        end if
         filename = trim(prefix) // "_eigenvalues.dat"
 
         open(newunit=io_unit, file=filename, status='replace', iostat=io_stat)
@@ -496,12 +501,13 @@ contains
         write(io_unit, '(A)') "# Eigenvalues from LSDA-Hubbard calculation"
         call write_provenance(io_unit, "# ", inputs, sys_params)
         write(io_unit, '(A)') "#"
-        write(io_unit, '(A)') "# First L eigenvalues: spin-up"
-        write(io_unit, '(A)') "# Last L eigenvalues: spin-down"
+        write(io_unit, '(A)') "# Computed finite eigenvalues: spin-up"
+        write(io_unit, '(A)') "# Computed finite eigenvalues: spin-down"
         write(io_unit, '(A)') "#"
         write(io_unit, '(A)') "# Columns: index  spin  eigenvalue  occupied"
         
         do i = 1, L
+            if (.not. ieee_is_finite(results%eigvals(i))) cycle
             if (i <= sys_params%Nup) then
                 write(io_unit, '(I6,A8,ES20.10,A8)') i, "up", results%eigvals(i), "yes"
             else
@@ -510,6 +516,7 @@ contains
         end do
         
         do i = 1, L
+            if (.not. ieee_is_finite(results%eigvals(L+i))) cycle
             if (i <= sys_params%Ndown) then
                 write(io_unit, '(I6,A8,ES20.10,A8)') i, "down", results%eigvals(L+i), "yes"
             else
