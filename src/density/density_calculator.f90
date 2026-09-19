@@ -106,17 +106,26 @@ contains
     !!                           deg_tol_upper: Fortran is case-insensitive and a
     !!                           dummy called deg_tol_upper would shadow the
     !!                           constant DEG_TOL_UPPER.)
-    subroutine compute_occupations(eigvals, n_elec, deg_tol, occ, ierr, deg_tol_hi)
+    !! @param[out] shell_open    Optional. True when the degenerate chain is
+    !!                           still open at the last level of `eigvals`, i.e.
+    !!                           the shell may extend past the spectrum supplied.
+    !!                           Callers that pass a PARTIAL spectrum must grow
+    !!                           the window and call again; with a full spectrum
+    !!                           there is nothing above and the flag is moot.
+    subroutine compute_occupations(eigvals, n_elec, deg_tol, occ, ierr, deg_tol_hi, shell_open)
         real(dp), intent(in) :: eigvals(:)
         integer, intent(in) :: n_elec
         real(dp), intent(in) :: deg_tol
         real(dp), intent(out) :: occ(:)
         integer, intent(out) :: ierr
         real(dp), intent(in), optional :: deg_tol_hi
+        logical, intent(out), optional :: shell_open
 
         integer :: n_levels, j
         real(dp) :: tol_hi, pool, weight_sum, shared
         real(dp) :: w(size(eigvals))
+
+        if (present(shell_open)) shell_open = .false.
 
         n_levels = size(eigvals)
 
@@ -179,6 +188,14 @@ contains
         ! bit-for-bit, matching the C++ block rule for exact degeneracies.
         occ(1:n_elec) = (1.0_dp - w(1:n_elec)) + w(1:n_elec) * shared
         if (n_elec < n_levels) occ(n_elec + 1:n_levels) = w(n_elec + 1:n_levels) * shared
+
+        ! The chain is still open at the top of the supplied spectrum: there may
+        ! be further members of this shell that were never diagonalized, in which
+        ! case `weight_sum` is short and `shared` too large. Only the caller
+        ! knows whether more levels exist, so report instead of deciding here;
+        ! when `eigvals` is the full spectrum this flag is meaningless and must
+        ! be ignored.
+        if (present(shell_open)) shell_open = w(n_levels) > 0.0_dp
     end subroutine compute_occupations
 
     !> @brief Continuous "same shell" weight of two consecutive levels

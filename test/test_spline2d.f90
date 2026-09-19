@@ -16,6 +16,7 @@ contains
 
         tests = test_list([ &
             test("spline2d_init_destroy", test_spline2d_init_destroy), &
+            test("spline2d_uninitialized_guard", test_spline2d_uninitialized_guard), &
             test("spline2d_exact_at_grid", test_spline2d_exact_at_grid), &
             test("spline2d_linear_function", test_spline2d_linear_function), &
             test("spline2d_separable_function", test_spline2d_separable_function), &
@@ -24,6 +25,28 @@ contains
             test("spline2d_interpolation_bounds", test_spline2d_interpolation_bounds) &
         ])
     end function get_spline2d_tests
+
+    !> An uninitialized spline must return before any dimension or data array is used.
+    !!
+    !! A default spline has zero metadata and no allocated data arrays. The
+    !! guard must return before accessing its data; this status is the
+    !! observable contract.
+    subroutine test_spline2d_uninitialized_guard()
+        use fortuno_serial, only: check => serial_check
+        use spline2d, only: spline2d_t, spline2d_eval
+        use lsda_errors, only: ERROR_NOT_INITIALIZED
+
+        type(spline2d_t) :: spl
+        real(dp) :: value
+        integer :: ierr
+
+        ! The default initialized state is .false.; this is deterministic
+        ! valid input to the public error path.
+        value = spline2d_eval(spl, 0.0_dp, 0.0_dp, ierr = ierr)
+        call check(ierr == ERROR_NOT_INITIALIZED, &
+                   "uninitialized spline must report ERROR_NOT_INITIALIZED")
+        call check(abs(value) < TOL, "uninitialized spline should return its guarded value")
+    end subroutine test_spline2d_uninitialized_guard
 
     !> The x direction must be interpolated with a cubic spline, not linearly
     !!

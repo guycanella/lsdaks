@@ -69,11 +69,19 @@ module xc_lsda
     !! branch, which is why a tolerance is needed at all.
     real(dp), parameter :: REGION_SNAP_TOL = 1.0e-12_dp
 
+    !> Number of public XC evaluations since the last diagnostic reset.
+    !!
+    !! This is intentionally module-global diagnostic state, not physical
+    !! state in `xc_lsda_t`: it lets regression tests prove that the SCF uses
+    !! its output-density cache without changing the functional API.
+    integer, save :: xc_evaluation_count = 0
+
     public :: xc_lsda_init
     public :: get_exc
     public :: get_vxc
     public :: xc_lsda_destroy
     public :: dexc_dndown_b0
+    public :: reset_xc_evaluation_count, get_xc_evaluation_count
 
     private :: integral_1
     private :: is_corner_shortcut
@@ -89,6 +97,17 @@ module xc_lsda
     private :: get_vxc_positive
 
 contains
+
+    !> Reset the diagnostic count of public XC evaluations.
+    subroutine reset_xc_evaluation_count()
+        xc_evaluation_count = 0
+    end subroutine reset_xc_evaluation_count
+
+    !> Return the diagnostic count of public XC evaluations.
+    function get_xc_evaluation_count() result(count)
+        integer :: count
+        count = xc_evaluation_count
+    end function get_xc_evaluation_count
 
     !> Initialize XC functional from table file
     !!
@@ -250,6 +269,8 @@ contains
         real(dp), intent(in) :: n_up, n_dw
         real(dp), intent(out) :: exc
         integer, intent(out) :: ierr
+
+        xc_evaluation_count = xc_evaluation_count + 1
 
         ! Check initialization
         if (.not. xc%initialized) then
@@ -437,6 +458,8 @@ contains
         integer, intent(out) :: ierr
 
         real(dp) :: v_up_tmp, v_dw_tmp
+
+        xc_evaluation_count = xc_evaluation_count + 1
 
         ! Check initialization
         if (.not. xc%initialized) then
