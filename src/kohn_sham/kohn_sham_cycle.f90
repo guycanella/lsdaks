@@ -497,6 +497,13 @@ contains
 
         complex(dp), allocatable :: H_up(:,:), H_down(:,:), eigvecs_up(:,:), eigvecs_down(:,:)
 
+        !> Set when the near-degenerate Fermi shell is still open at the top of
+        !! the partial spectrum, i.e. the window was too small to contain it.
+        logical :: shell_open_up, shell_open_down
+
+        !> Extra levels added per attempt when a shell turns out not to fit.
+        integer, parameter :: SHELL_WINDOW_GROWTH = 8
+
         call validate_kohn_sham_cycle_inputs(params, scf_params, V_ext, ierr)
 
         if (ierr /= ERROR_SUCCESS) then
@@ -700,7 +707,17 @@ contains
 
             ! ---------------------------------
             ! 1d. Diagonalize both Hamiltonians
+            !
+            ! The N + 5 buffer holds the Fermi shell of every realistic system,
+            ! but it is a guess, not a bound: a chain split by a barrier can
+            ! carry a multiplet wider than that. Since only `compute_occupations`
+            ! can tell whether the shell closed inside the window, the window is
+            ! grown and the diagonalization repeated until it does. Before T14
+            ! the full spectrum was always computed and the question could not
+            ! arise; a truncated shell spreads the charge over too few levels and
+            ! conserves N while doing it, so it would never surface on its own.
             ! ---------------------------------
+            shell_window: do
             if (params%bc == BC_OPEN) then
                 ! The DSTEVR fast path bypasses the dense Hamiltonian builder,
                 ! so validate its diagonal explicitly before handing it to LAPACK.
@@ -752,10 +769,12 @@ contains
             !      CONTINUOUS in the gap (DEG_TOL -> DEG_TOL_UPPER, T20), so
             !      the map V_eff -> n has no jump at a near-degeneracy either.
             ! ----------------------------------------------
-            call compute_occupations(eigvals_up, params%Nup, DEG_TOL, occ_up, ierr)
+            call compute_occupations(eigvals_up, params%Nup, DEG_TOL, occ_up, ierr, &
+                                     shell_open=shell_open_up)
 
             if (ierr == ERROR_SUCCESS) then
-                call compute_occupations(eigvals_down, params%Ndown, DEG_TOL, occ_down, ierr)
+                call compute_occupations(eigvals_down, params%Ndown, DEG_TOL, occ_down, ierr, &
+                                         shell_open=shell_open_down)
             end if
 
             if (ierr /= ERROR_SUCCESS) then
@@ -764,6 +783,20 @@ contains
                        delta_n_down)
                 return
             end if
+
+            ! A window that already spans the whole spectrum cannot be grown,
+            ! and there is nothing above it either, so the flag is moot there.
+            if (n_vec_up >= L) shell_open_up = .false.
+            if (n_vec_down >= L) shell_open_down = .false.
+            if (.not. (shell_open_up .or. shell_open_down)) exit shell_window
+
+            if (shell_open_up) n_vec_up = min(L, n_vec_up + SHELL_WINDOW_GROWTH)
+            if (shell_open_down) n_vec_down = min(L, n_vec_down + SHELL_WINDOW_GROWTH)
+            deallocate(eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, occ_up, occ_down)
+            allocate(eigvals_up(n_vec_up), eigvals_down(n_vec_down), &
+                     eigvecs_up(L, n_vec_up), eigvecs_down(L, n_vec_down), &
+                     occ_up(n_vec_up), occ_down(n_vec_down))
+            end do shell_window
 
             ! ----------------------------------------------
             ! 1e. Compute new densities from eigenvectors

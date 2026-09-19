@@ -169,13 +169,30 @@ contains
         type(diag_workspace_t), intent(inout) :: workspace
         integer, intent(out) :: ierr
 
+        real(dp), allocatable :: real_vectors(:,:)
+
         if (.not. allocated(workspace%real_vectors) .or. size(workspace%real_vectors, 1) /= L .or. &
             size(workspace%real_vectors, 2) /= n_vec) then
             if (allocated(workspace%real_vectors)) deallocate(workspace%real_vectors)
             allocate(workspace%real_vectors(L, n_vec))
         end if
-        call diagonalize_open_tridiagonal(potential, L, n_vec, eigvals, workspace%real_vectors, workspace, ierr)
-        if (ierr == ERROR_SUCCESS) eigvecs(:,1:n_vec) = cmplx(workspace%real_vectors(:,1:n_vec), 0.0_dp, kind=dp)
+
+        ! Detach the buffer for the duration of the call. Passing
+        ! `workspace%real_vectors` as the definable `eigvecs` dummy while
+        ! `workspace` itself is associated with the definable `workspace` dummy
+        ! places the same storage under two definable dummies, one of them a
+        ! subobject of the other's actual argument, which F2018 15.5.2.13
+        ! forbids. It happens to work today only because `ensure_real_workspace`
+        ! never touches `real_vectors`; `move_alloc` removes the aliasing rather
+        ! than relying on that. Both moves are O(1), no array is copied.
+        !
+        ! If the callee is ever changed to allocate `workspace%real_vectors`
+        ! itself, the second `move_alloc` would discard that allocation; use a
+        ! separate local buffer and copy back instead.
+        call move_alloc(workspace%real_vectors, real_vectors)
+        call diagonalize_open_tridiagonal(potential, L, n_vec, eigvals, real_vectors, workspace, ierr)
+        if (ierr == ERROR_SUCCESS) eigvecs(:,1:n_vec) = cmplx(real_vectors(:,1:n_vec), 0.0_dp, kind=dp)
+        call move_alloc(real_vectors, workspace%real_vectors)
     end subroutine diagonalize_open_tridiagonal_complex
 
     !> Diagonalize only the lowest real-symmetric eigenpairs with DSYEVR.
