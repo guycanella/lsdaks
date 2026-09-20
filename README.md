@@ -4,7 +4,7 @@
 [![Fortran](https://img.shields.io/badge/Fortran-2008%2F2018-734f96?logo=fortran)](https://fortran-lang.org)
 [![fpm](https://img.shields.io/badge/fpm-compatible-brightgreen)](https://fpm.fortran-lang.org)
 
-A modern Fortran implementation of **Local Spin Density Approximation (LSDA)** for solving the one-dimensional Hubbard model using the Bethe Ansatz. This is a production-ready scientific code with comprehensive tests and clean architecture.
+A modern Fortran implementation of **Local Spin Density Approximation (LSDA)** for solving the one-dimensional Hubbard model using the Bethe Ansatz. The code is modular, covered by an extensive test suite, and validated against the C++ reference on the cases listed under [Validation](#validation) — which is a narrower claim than "validated in general": several features carry documented caveats, flagged with ⚠️ where they appear.
 
 ## Table of Contents
 
@@ -28,13 +28,13 @@ A modern Fortran implementation of **Local Spin Density Approximation (LSDA)** f
 ## Features
 
 - ✅ **Exact Bethe Ansatz solver** using Newton-Raphson with analytical Jacobian
-- ✅ **Exchange-correlation functional** via bicubic spline interpolation on pre-computed tables
+- ✅ **Exchange-correlation functional** interpolated with bicubic splines in density and magnetization on pre-computed tables
 - ✅ **Self-consistent Kohn-Sham solver** with adaptive mixing for stability
-- ✅ **10 types of external potentials**: uniform, harmonic, barriers, disorder, quasiperiodic, impurities
-- ✅ **High-performance linear algebra** using LAPACK (DSYEVD/ZHEEVD)
+- ✅ **Six potential-generator families** (ten selectable variants): uniform, harmonic, impurities, disorder, barriers, and quasiperiodic modulation
+- ✅ **High-performance linear algebra** using LAPACK (DSTEVR/ZHEEVR)
 - ✅ **Three boundary conditions**: open, periodic, twisted
-- ✅ **Comprehensive test suite** with 243 test runs in 20 suites (100% pass rate)
-- ✅ **Production-ready**: Validated against C++ reference with energy agreement < 1e-8
+- ✅ **20 test suites** with **1,455 `call check` assertions** (`grep -c "call check(" test/*.f90`)
+- ✅ **Measured C++ comparisons** and deliberate compatibility differences documented below
 
 ## System Requirements
 
@@ -151,10 +151,10 @@ fpm build --profile release --flag "-O3 -march=native"
 /
 
 &output
-  output_file = 'results.txt'
-  write_density = .true.
-  write_eigenvalues = .true.
-  write_convergence_history = .true.
+  output_prefix = 'results'
+  save_density = .true.
+  save_eigenvalues = .true.
+  save_wavefunction = .false.
 /
 ```
 
@@ -165,10 +165,10 @@ fpm run --profile release --flag "-O3 -march=native" lsdaks -- --input input.txt
 ```
 
 3. Results are saved to:
-   - `lsda_output_summary.txt` - Final energy and convergence info
-   - `lsda_output_density.dat` - Site-resolved densities
-   - `lsda_output_eigenvalues.dat` - Kohn-Sham eigenvalues
-   - `lsda_output_convergence.dat` - SCF convergence history
+   - `results_summary.txt` - Final energy and convergence info
+   - `results_density.dat` - Site-resolved densities
+   - `results_eigenvalues.dat` - Kohn-Sham eigenvalues
+   - `results_convergence.dat` - SCF convergence history
 
 ### Using Example Inputs
 
@@ -198,7 +198,7 @@ lsdaks/
 ├── app/                          # Executable programs
 │   ├── main.f90                  # Main LSDA solver
 │   ├── convert_tables.f90        # XC table format converter
-│   └── generate_table.f90        # Generate XC tables via Bethe Ansatz (EXPERIMENTAL, see below)
+│   └── generate_table.f90        # Generate thermodynamic-limit XC tables via Bethe Ansatz
 │
 ├── src/                          # Source code
 │   ├── types/                    # Core data structures
@@ -208,13 +208,13 @@ lsdaks/
 │   │
 │   ├── bethe_ansatz/             # Bethe Ansatz solver
 │   │   ├── bethe_equations.f90   # Lieb-Wu equations
-│   │   ├── nonlinear_solvers.f90 # Newton-Raphson, Broyden
+│   │   ├── nonlinear_solvers.f90 # Newton-Raphson
 │   │   ├── continuation.f90      # Continuation in U
 │   │   ├── table_io.f90          # Table I/O (ASCII/binary)
 │   │   └── bethe_tables.f90      # Generate XC tables
 │   │
 │   ├── xc_functional/            # Exchange-correlation
-│   │   ├── spline2d.f90          # 2D bicubic splines
+│   │   ├── spline2d.f90          # bicubic XC interpolation
 │   │   └── xc_lsda.f90           # LSDA functional interface
 │   │
 │   ├── potentials/               # External potentials
@@ -231,8 +231,7 @@ lsdaks/
 │   │   └── boundary_conditions.f90
 │   │
 │   ├── diagonalization/          # Eigensolvers
-│   │   ├── lapack_wrapper.f90
-│   │   └── degeneracy_handler.f90
+│   │   └── lapack_wrapper.f90
 │   │
 │   ├── density/                  # Density calculation
 │   │   └── density_calculator.f90
@@ -249,7 +248,7 @@ lsdaks/
 │       ├── input_parser.f90
 │       └── output_writer.f90
 │
-├── test/                         # Test suite (20 suites, 243 test runs)
+├── test/                         # Test suite (20 suites, 1,455 assertions)
 │   ├── test_bethe_equations.f90
 │   ├── test_nonlinear_solvers.f90
 │   ├── test_continuation.f90
@@ -266,7 +265,6 @@ lsdaks/
 ├── data/                         # Data files
 │   ├── tables/                   # XC functional tables
 │   │   └── fortran_native/       # Binary format (fast loading)
-│   └── legacy_cpp_code/          # Original C++ reference code
 │
 ├── examples/                     # Example input files
 │   ├── input_minimal.txt
@@ -288,23 +286,62 @@ lsdaks/
 └── README.md                     # This file
 ```
 
-### XC Tables and the Table Generator (experimental)
+### XC Tables and the Table Generator
 
 The SCF reads pre-computed exchange-correlation tables from `data/tables/fortran_native/`
 (25 values of U, converted from the C++ reference; Hartree already subtracted). These are the
 only tables validated for production runs.
 
-`generate_xc_table` is **experimental**. It solves the finite-L Lieb-Wu equations for
-discrete Bethe roots (L = 100) and derives V_xc by one-particle differences. In its current
-state the Newton solver fails to converge on part of the (n, m) grid, and the finite-L V_xc
-carries an O(1/L) error relative to the thermodynamic-limit reference tables. The executable
-refuses to write a table containing non-finite entries and exits with status 1. Do not feed
-its output to an SCF run without validating it against a reference table first. The
-thermodynamic-limit rewrite is tracked as phase 4.5 (T21) in `NEXT_STEPS_REPORT.md`.
+`generate_xc_table` solves the thermodynamic-limit Lieb-Wu integral equations on its
+configured, graded `(n, m)` grid and writes the native table format consumed by the SCF. The
+default grid has 75 density rows and 202 magnetization nodes per row, graded on **both** axes
+(`density_grid` and `magnetization_grid` in `src/bethe_ansatz/bethe_tables.f90`); it begins
+at `n_min = 0.02` and therefore does not cover the entire physical density--magnetization
+triangle. Its parameters and quadrature orders can be adjusted on the command line. A U=4
+table on this configured grid can be generated with the default settings. The executable
+refuses to write a table containing NaN or Inf, reports the offending grid points, and exits
+with status 1.
+
+**How far the generated tables are validated.** The generator was compared against the
+converted C++ reference tables on the **15 integer values of U**: worst `|Δexc| = 8.5e-7`,
+zero nodes outside 1e-6. For U=4, along the path the SCF actually consumes
+(`xc_lsda_init` + `get_exc`/`get_vxc`, 10099 nodes, corner n=1,m=1 excluded), worst
+`|Δexc| = 2.75e-7` and worst `|ΔVxc| = 7.67e-5`, zero nodes outside tolerance. No
+equivalence is claimed for non-integer U: the 10 reference tables in that range are
+internally inconsistent and were rejected as an oracle (see the "Resultado" of phase 4.5 in
+`NEXT_STEPS_REPORT.md`).
+
+The default output directory is the SCF table directory. To protect its existing reference
+tables, the generator refuses to overwrite an existing U table unless `--force` is supplied;
+use `--output <directory>` when creating a separate table set.
+
+**An XC table is mandatory for every SCF run.** The supported range is
+`1 <= |U| <= 20`: the lower end is `bethe_tables::U_TABLE_MIN`
+(`src/bethe_ansatz/bethe_tables.f90:153`), the upper end is simply the largest shipped
+table (`data/tables/fortran_native/xc_table_u20.00.dat`) — nothing in the code rejects
+`|U| > 20`, but there is no table there, so `U = 25` fails with the same "XC table not
+found!" error as `U = 0`.
+
+The XC *physics* of the non-interacting limit is already in the code: both `get_exc` and
+`get_vxc` short-circuit to zero for `|U| < U_SMALL = 1e-9`
+(`src/xc_functional/xc_lsda.f90:283` and `:473`). What blocks `U = 0` is only the table
+**loading** in `xc_lsda_init`, which the SCF performs unconditionally: `app/main.f90:94`
+resolves the table for `|U|` and, when the file is absent, `app/main.f90:97-110` prints
+"ERROR: XC table not found!" and stops with status 1. Table generation is refused for
+`U = 0` as well (`src/bethe_ansatz/bethe_tables.f90:537`), so `U = 0` cannot be run today.
+The failure mode is also cosmetically confusing: the file name is
+built with the `F0.2` descriptor (`app/main.f90:629`), which writes `0.0` as `.00` without
+the leading zero, so the executable looks for `xc_table_u.00.dat`, and the command the error
+message suggests (`fpm run generate_xc_table -- --U .00`) is itself refused by the
+generator. `F0.2` produces the correct name for every `U >= 1`, so the formatting defect only
+shows up in the range that is already unsupported. A future task must first make `app/main.f90`
+bypass table-name resolution, file validation, and the missing-table error path when
+`|U| < U_SMALL`, before initializing XC without a table (or making `xc_lsda_init` support that
+case). The zero-XC branches downstream already exist; that change is outside T17.
 
 ## External Potentials
 
-The code supports 10 types of external potentials `V_ext(i)`:
+The code exposes 10 selectable variants from six potential-generator families:
 
 ### 1. Uniform Potential
 ```fortran
@@ -331,8 +368,8 @@ The code supports 10 types of external potentials `V_ext(i)`:
 ```fortran
 &potential
   potential_type = 'impurity_single'
-  impurity_strength = 2.0
-  impurity_position = 50
+  V0 = 2.0          ! Impurity strength
+  pot_center = 50.0 ! Impurity site (1-indexed)
 /
 ```
 - **Formula**: `V(i) = V_imp` if `i = i_pos`, else `V(i) = 0`
@@ -342,9 +379,8 @@ The code supports 10 types of external potentials `V_ext(i)`:
 ```fortran
 &potential
   potential_type = 'impurity_multiple'
-  impurity_strength = 2.0
-  n_impurities = 3
-  impurity_positions = 25, 50, 75
+  V0 = 2.0
+  imp_positions_str = '25, 50, 75'
 /
 ```
 - **Use case**: Multiple defects, disorder modeling
@@ -367,7 +403,7 @@ The code supports 10 types of external potentials `V_ext(i)`:
 &potential
   potential_type = 'random_uniform'
   disorder_strength = 2.0  ! Width W
-  random_seed = 12345
+  pot_seed = 12345
 /
 ```
 - **Formula**: `V(i) ~ Uniform[-W, +W]`
@@ -379,7 +415,7 @@ The code supports 10 types of external potentials `V_ext(i)`:
 &potential
   potential_type = 'random_gaussian'
   disorder_strength = 1.0  ! Std deviation σ
-  random_seed = 12345
+  pot_seed = 12345
 /
 ```
 - **Formula**: `V(i) ~ Normal(0, σ²)`
@@ -405,7 +441,7 @@ The code supports 10 types of external potentials `V_ext(i)`:
 ```fortran
 &potential
   potential_type = 'barrier_double'
-  barrier_height = 5.0
+  V0 = 5.0            ! Barrier height
   barrier_width = 5.0
   well_depth = -3.0
   well_width = 20.0
@@ -428,7 +464,45 @@ The code supports 10 types of external potentials `V_ext(i)`:
 
 ## Input Format
 
-Input files use Fortran namelists (case-insensitive, order-independent):
+Input files use Fortran namelists (case-insensitive and order-independent). The table below lists the keys used in practice; it is not exhaustive (for example `pot_width` is also accepted in `/potential`, see `src/io/input_parser.f90`). Names that belong to no group are rejected. `phase` is supplied in units of π and converted to radians internally.
+
+| Group | Key | Type | Default | Applies to |
+|---|---|---|---|---|
+| system | `L` | integer | 10 | all |
+| system | `Nup`, `Ndown` | integer | 5, 5 | all |
+| system | `U` | real | 4.0 | all |
+| system | `bc` | character | `periodic` | all (`open`, `periodic`, `twisted`) |
+| system | `phase` | real | 0.0 | `twisted`; input unit π |
+| system | `table_dir` | character | `data/tables/fortran_native` | all |
+| potential | `potential_type` | character | `uniform` | all |
+| potential | `V0` | real | 0.0 | uniform, impurities, barriers |
+| potential | `spring_constant` | real | 0.001 | harmonic |
+| potential | `pot_center` | real | 0.0 | impurity_single |
+| potential | `imp_positions_str` | character | empty | impurity_multiple |
+| potential | `concentration` | real | 50.0 | impurity (random placement) |
+| potential | `pot_seed` | integer | -1 | impurity, random_uniform, random_gaussian |
+| potential | `disorder_strength` | real | 2.0 | random_uniform, random_gaussian |
+| potential | `position`, `width` | integer | 50, 5 | barrier_single |
+| potential | `barrier_width`, `well_depth`, `well_width` | real | 3.0, -3.0, 20.0 | barrier_double |
+| potential | `aah_lambda`, `aah_beta`, `aah_phi` | real | 1.0, 0.6180339887498948, 0.0 | quasiperiodic; φ is radians |
+| potential | `position1`, `width1`, `position2`, `width2` | integer | 35, 3, 65, 3 | deprecated; do not use |
+| scf | `max_iter` | integer | `ITER_MAX` | all |
+| scf | `density_tol` | real | `SCF_DENSITY_TOL` | diagnostic only |
+| scf | `energy_tol`, `potential_tol` | real | `SCF_ENERGY_TOL`, `SCF_POTENTIAL_TOL` | convergence |
+| scf | `mixing_alpha` | real | `MIX_ALPHA` | all; new-potential weight |
+| scf | `verbose`, `store_history`, `use_adaptive_mixing` | logical | true, true, true | all |
+| scf | `xc_smoothing_width` | real | 0.0 | opt-in smoothing near n=1 |
+| output | `output_prefix` | character | `lsda_output` | all |
+| output | `save_density`, `save_eigenvalues`, `save_wavefunction` | logical | true, true, false | all |
+
+The selectable values of `potential_type` are `uniform`, `harmonic`, `impurity`, `impurity_single`, `impurity_multiple`, `random_uniform`, `random_gaussian`, `barrier_single`, `barrier_double`, and `quasiperiodic`. These are the strings **accepted in the namelist**
+(`app/main.f90`), which is not the same list as the ten identifiers **recognised by
+`get_potential_info`** (`src/potentials/potential_factory.f90:160-178`, documented in
+`PROJECT_CONTEXT.md`): the namelist accepts the legacy alias `impurity` and routes random
+placement through it, while that inventory knows `impurity_random` instead. Of those ten,
+`create_potential` (`:78-146`) builds eight directly and rejects `impurity_multiple` and
+`impurity_random` with `ERROR_INVALID_INPUT`; those two are served by specialised routines
+in the `app/main.f90` dispatch. `distribution`, `twisted_phase`, `output_file`, `write_density`, `write_eigenvalues`, and `write_convergence_history` are not namelist keys.
 
 ### Complete Example
 
@@ -439,7 +513,7 @@ Input files use Fortran namelists (case-insensitive, order-independent):
   Ndown = 50           ! Spin-down electrons
   U = 4.0              ! Hubbard U
   bc = 'open'          ! Boundary: 'open', 'periodic', 'twisted'
-  twisted_phase = 0.0  ! Phase for twisted BC (in units of π)
+  phase = 0.0          ! Input phase in units of π; solver converts to radians
 /
 
 &potential
@@ -457,10 +531,10 @@ Input files use Fortran namelists (case-insensitive, order-independent):
 /
 
 &output
-  output_file = 'results.txt'
-  write_density = .true.
-  write_eigenvalues = .true.
-  write_convergence_history = .true.
+  output_prefix = 'results'
+  save_density = .true.
+  save_eigenvalues = .true.
+  save_wavefunction = .false.
 /
 ```
 
@@ -471,20 +545,64 @@ Input files use Fortran namelists (case-insensitive, order-independent):
 - **XC smoothing** (`xc_smoothing_width = w` in `&scf`, default `0`): replaces
   the BALDA discontinuity of `V_xc` at `n = 1` by a linear ramp of half-width
   `w`. The default stays `0` (exact C++ functional) because `w > 0` changes the
-  functional itself (about 0.7% in `E/L` between `w = 0.05` and `w = 0.2`), so
-  reference results must be produced with `w = 0`. Use it as an explicit,
+  Kohn--Sham potential without smoothing `E_xc` itself: for `w > 0`,
+  `V_xc != δE_xc/δn` by a finite amount and the reported energy is not
+  stationary at the fixed point. Note that `w = 0` does **not** restore an exact
+  variational principle either: `e_xc`, `V_xc^up` and `V_xc^dn` are three
+  independent bicubic splines over three independently tabulated columns
+  (`src/xc_functional/xc_lsda.f90:36-38`, initialised separately at `:228`,
+  `:232` and `:235`), so `V_xc` is never the analytic derivative of the `e_xc`
+  spline. With `w = 0` the fixed point is stationary only up to the internal
+  inconsistency between the splines, `‖V_xc^σ − ∂e_xc/∂n_σ‖`, measured directly
+  on the shipped `xc_table_u4.00.dat` splines (finite differences, `h = 1e-5`,
+  swept over `(n, m)`): of order `5e-4` away from half filling
+  (`max |∂e_xc/∂n↑ − V_xc^↑| = 4.66e-4` for `|n - 1| > 0.05`), and with **no
+  small bound at `n = 1`**, where BALDA has a discontinuity that the spline
+  smooths out (`8.28e-1` at `n = 1.00, m = 0.975`). Do not confuse this with the
+  generator-vs-reference table agreement quoted above (`|Δexc| = 2.75e-7`,
+  `|ΔVxc| = 7.67e-5`): that is the distance between two tables and says nothing
+  about how far `V_xc` is from the derivative of the `e_xc` spline. The `n = 1`
+  regime is precisely where the smoothing below is recommended, so the reported
+  energy there should not be read as variationally stationary.
+  Reference results must still be produced with
+  `w = 0`, because that is the only setting that reproduces the C++
+  functional. Use smoothing as an explicit,
   per-case opt-in for systems whose density sits on `n = 1` (Mott plateau in a
   trap, double-barrier well); it is echoed in the output header when active.
 - **Near-degenerate Fermi levels** (deliberate divergence from the C++):
   two consecutive Kohn-Sham levels closer than `DEG_TOL = 1e-10` share the
-  open-shell occupation equally, exactly as the C++ `update_degen` does; but
+  open-shell occupation equally, matching the C++ `update_degen` rule for an
+  exactly degenerate block; but
   between `1e-10` and `DEG_TOL_UPPER = 1e-6` the sharing fades out with a C¹
   weight instead of switching off abruptly (`compute_occupations`). This is an
   effective smearing over that `~1e-6 t` interval, not a strictly sharp
   zero-temperature occupation at every finite gap. Particle number is
   conserved algebraically (up to floating-point rounding), `0 <= occ <= 1`,
-  and every exact degeneracy gives the C++ result bit-for-bit. The upper edge
-  is absolute: in very large PBC systems (roughly `L >= 1e4`), distinct levels
+  and this occupation-rule equivalence does not imply bit-for-bit equivalence
+  of the SCF result.
+
+  Two consequences worth stating explicitly:
+
+  1. **Energy cost.** Inside the transition window the occupations are
+     fractional, so `E_band = Σ occ·ε` sits above the strict Aufbau sum by up to
+     roughly `O(g(g-1)·1e-6)` for a `g`-fold near-degenerate shell: the shell
+     spans at most `(g-1)·DEG_TOL_UPPER`, but the redistributed charge is `O(g)`.
+     For the common case `g = 2` this is about `1e-6` (in practice `<= 5e-7`).
+     That is roughly three orders of magnitude above the `5e-10` resolution
+     floor of the C++ comparison below, measured on cases with no level
+     inside the window. **The two numbers must not be treated as competing
+     accuracy estimates**: the `5e-10` floor is the limit of what the C++
+     comparison can resolve where the occupation rule is inactive, the
+     `1e-6` figure is the deliberate divergence where it is active.
+  2. **It is not a standard `f(ε - μ)` smearing.** The weight of level `j` is a
+     *product* of link weights along the chain of consecutive neighbours
+     (`src/density/density_calculator.f90:167-176`), and the chain only stops at
+     the first fully open link. A level three small gaps away from the Fermi
+     level can therefore still be pulled into the shared pool, which no
+     function of `ε - μ` alone would do.
+
+  The upper edge is absolute: in very large PBC systems
+  (roughly `L >= 1e4`), distinct levels
   can enter the transition interval. A tunnel doublet returned by LAPACK in a
   localised basis can therefore no longer flip a whole electron into one arm of
   a symmetric trap as the gap fluctuates around `1e-10`, so `n(i) = n(L+1-i)`
@@ -494,7 +612,7 @@ Input files use Fortran namelists (case-insensitive, order-independent):
 
 After a successful run, the following files are created:
 
-### 1. Summary File (`lsda_output_summary.txt`)
+### 1. Summary File (`results_summary.txt`)
 ```
 System Parameters:
   L (sites):        100
@@ -519,7 +637,7 @@ Density Check:
   Error:            2.8422E-14
 ```
 
-### 2. Density Profile (`lsda_output_density.dat`)
+### 2. Density Profile (`results_density.dat`)
 ```
 # Columns: site  n_up  n_down  n_total
      1    4.8566E-01    4.8566E-01    9.7134E-01
@@ -528,7 +646,7 @@ Density Check:
    ...
 ```
 
-### 3. Eigenvalues (`lsda_output_eigenvalues.dat`)
+### 3. Eigenvalues (`results_eigenvalues.dat`)
 ```
 # Columns: index  spin  eigenvalue  occupied
      1      up   -3.1234567890E+00     yes
@@ -548,7 +666,7 @@ rather than as missing data or a short write. The record count also varies with
 the filling and, when a near-degenerate shell forces the window to grow, between
 runs of the same system.
 
-### 4. Convergence History (`lsda_output_convergence.dat`)
+### 4. Convergence History (`results_convergence.dat`)
 ```
 # Columns: iteration  energy  density_error  mixing_alpha
      1   -40.123456    5.6789E-02    0.0500
@@ -559,7 +677,7 @@ runs of the same system.
 
 ## Running Tests
 
-The project includes a comprehensive test suite: 20 suites, 243 test runs.
+The project has 20 explicitly registered suites and 1,455 assertions as of 2026-09-20 (`grep -c "call check(" test/*.f90`). Running `fpm test --profile release` on that date executed 351 Fortuno test cases across the 20 suites with 0 failures. Assertion counts are source inventory, not a claim about coverage; the per-suite `Total:` line that Fortuno prints is that suite's case count, not the project total.
 
 > ⚠️ **Always run the tests with `--profile release`.**
 >
@@ -597,50 +715,11 @@ test file under `test/`, add a matching `[[test]]` block.
 
 ### Test Coverage
 
-Counts below are the test runs reported by `fpm test --profile release`
-(one row per `[[test]]` suite in `fpm.toml`).
-
-| Suite                     | Test runs | Status |
-|---------------------------|-----------|--------|
-| `test_adaptive_mixing`    | 9         | ✅ 100% |
-| `test_bethe_equations`    | 17        | ✅ 100% |
-| `test_boundary_conditions`| 17        | ✅ 100% |
-| `test_degeneracy_handler` | 12        | ✅ 100% |
-| `test_errors`             | 13        | ✅ 100% |
-| `test_hamiltonian_builder`| 18        | ✅ 100% |
-| `test_lapack_wrapper`     | 18        | ✅ 100% |
-| `test_potentials`         | 21        | ✅ 100% |
-| `test_spline2d`           | 5         | ✅ 100% |
-| `test_xc_lsda`            | 6         | ✅ 100% |
-| `test_nonlinear_solvers`  | 9         | ✅ 100% |
-| `test_continuation`       | 5         | ✅ 100% |
-| `test_table_io`           | 11        | ✅ 100% |
-| `test_bethe_tables`       | 6         | ✅ 100% |
-| `test_density_calculator` | 6         | ✅ 100% |
-| `test_convergence_monitor`| 13        | ✅ 100% |
-| `test_mixing_schemes`     | 9         | ✅ 100% |
-| `test_kohn_sham_cycle`    | 13        | ✅ 100% |
-| `test_input_parser`       | 21        | ✅ 100% |
-| `test_output_writer`      | 14        | ✅ 100% |
-| **Total (20 suites)**     | **243**   | **✅ 100%** |
+The suite inventory is the 20 `[[test]]` blocks in `fpm.toml`. Run `fpm test --profile release` for the current result; do not infer a stable total from historical documentation.
 
 ### Validation Tests
 
-Compare against C++ reference implementation:
-
-```bash
-# Generate comparison data
-./run_all_tests.sh
-./run_cpp_tests.sh
-
-# Compare energies
-python3 compare_energies.py
-
-# Benchmark analysis
-python3 benchmark_analysis.py
-```
-
-Results: **Energy agreement < 1e-8** for uniform potential at half-filling.
+Use `scripts/build_cpp_reference.sh` to build the reference into `build/cpp/`; no `run_all_tests.sh`, `run_cpp_tests.sh`, or `compare_energies.py` exists in this repository.
 
 ## Documentation
 
@@ -749,19 +828,13 @@ $$
 E[n_\uparrow, n_\downarrow] = T_s[n] + E_{\text{Hartree}}[n] + E_{xc}[n_\uparrow, n_\downarrow] + \int V_{\text{ext}}(r) n(r) dr
 $$
 
-The exchange-correlation functional `E_xc` is obtained from Bethe Ansatz solutions and interpolated using bicubic splines.
+The exchange-correlation functional `E_xc` is obtained from Bethe Ansatz solutions and interpolated with bicubic splines in density and magnetization.
 
 ## Performance
 
 ### Bethe Ansatz Solver
 
-Performance depends on system size and solver choice:
-
-| System Size | Solver Strategy | Typical Time |
-|-------------|-----------------|--------------|
-| N < 100 | Newton-Raphson (analytical Jacobian) | < 1 second |
-| 100 ≤ N < 500 | Broyden → Newton refinement | 1-10 seconds |
-| N ≥ 500 | Pure Broyden (memory efficient) | 10-60 seconds |
+The implemented solver is Newton-Raphson with an analytical Jacobian and continuation in U. Broyden is not implemented; timing depends on the grid and convergence history.
 
 ### SCF Convergence
 
@@ -770,38 +843,62 @@ Typical convergence in 50-200 iterations depending on:
 - **Adaptive mixing**: Helps with difficult cases
 - **Potential type**: Smooth potentials converge faster
 
-### Speedup vs C++ Reference
-
-Benchmark on 100 test cases (L=100, various U and densities):
-
-- **Fortran**: Total time = 257s
-- **C++**: Total time = 2854s
-- **Speedup**: **11.1x faster** (Fortran uses optimized LAPACK, C++ uses Givens rotations)
-
 ## Validation
 
 ### Energy Accuracy
 
-Comparison with C++ reference implementation:
+Measured on 2026-09-20 using `build/cpp/lsdaks_cpp`, OBC, U=4 and the native U=4 table:
 
-| Potential Type | Tests | Energy Match (tol=1e-6) | Avg Energy Diff |
-|----------------|-------|-------------------------|-----------------|
-| Uniform        | 25    | **16% (4/25)**          | 1.57e-02 %      |
-| Harmonic       | 25    | 0%                      | 6.62e+02 %      |
-| Random         | 25    | 0%                      | 1.90e+01 %      |
-| Barrier        | 25    | 0%                      | 2.62e+01 %      |
+| Potential | C++ E/L | Fortran E/L | abs. difference | status |
+|---|---:|---:|---:|---|
+| uniform, L=90, 45/45, tolerances 1e-10 | -0.565718185 | -0.565718185262 | below the 5e-10 print resolution | reproduced; C++ output kept at `build/cpp/ref_uniform_u4` |
+| harmonic `k=0.02`, L=20, 2/2 | -0.306692128 | -0.306692128394 | below the 5e-10 print resolution | historical; reproduced ad hoc on 2026-09-20 by rebuilding the input, no versioned input or script |
+| double barrier `(3,3,-3,20)`, L=20, 2/2 | -0.971707225 | -0.971707224930 | below the 5e-10 print resolution | historical; reproduced ad hoc on 2026-09-20 by rebuilding the input, no versioned input or script |
 
-**Best case**: Uniform potential at half-filling (n=1.0) → **ΔE < 1e-7 %**
+The C++ prints the energy with `%12.9g` (`original/lsdaks.cc:44`), i.e. 9 significant digits,
+so its last digit carries an uncertainty of ±5e-10. The raw differences
+(`2.62e-10` for the uniform row, `3.94e-10` for the harmonic one, `7.0e-11` for
+the double barrier) are all inside that print noise and must not be read as resolved
+agreements at those magnitudes: 5e-10 is the floor of what this comparison can measure.
+They are print resolution, not a measured level of agreement.
 
-**Note**: Large discrepancies for non-uniform potentials are under investigation (likely due to different XC table implementations or SCF convergence criteria).
+All three rows were measured on 2026-09-20 with the documented C++ executable
+(`build/cpp/lsdaks_cpp`) and the potential mapping given in this README, and the harmonic and
+double-barrier numbers agree with the values recorded earlier in the project. What separates
+the rows is packaging, not physics: only the uniform case has its C++ output kept in the tree
+(`build/cpp/ref_uniform_u4`). The last two rows have **no versioned input file and no
+comparison script**, so reproducing them means rebuilding the inputs by hand from the
+parameters in the table — which is exactly how they were checked. They are *historical* in
+that narrow sense: reproducible in principle, just not from the repository alone. The legacy C++
+type-4 impurity is not directly comparable: it
+writes a six-site pattern and may exceed `1..L`; Fortran `impurity_single` means one physical
+site.
+
+### Known differences from C++
+
+- The six Fortran potential-generator families are not a one-to-one equivalent of C++'s 13 types; Fortran has no `lsda_simetria.cc` path or interactive `r/m/s` loop.
+- Intentionally not reproduced: out-of-range writes in C++ potential types 4 and 13, type-6's uninitialized final site, negative `Mix` from `DwMix`, non-refining `integral_1`, and `TOL=1e-16`.
 
 ### Physics Validation
 
-- ✅ **U=0 (free fermions)**: Exact agreement with analytical solution
+- ⚠️ **U=0 (free fermions)**: Analytical reference used by the test suite only. The
+  executable cannot run this case at all (see "An XC table is mandatory" above), so it
+  is **not** validated end to end.
 - ✅ **Half-filling (n=1)**: Matches Essler et al. reference values
 - ✅ **Particle conservation**: `∫n dx = N` with error < 1e-12
-- ✅ **Energy functional**: Obeys variational principle
-- ✅ **Bethe Ansatz Jacobian**: Numerical vs analytical agreement < 1e-10
+- ⚠️ **Energy functional**: Stationary at the fixed point only up to the mismatch between
+  `V_xc^σ` and `∂e_xc/∂n_σ` (~5e-4 away from `n = 1`, **no small bound at `n = 1`**),
+  because `e_xc` and `V_xc` come from separate
+  splines over separate tabulated columns; see the `xc_smoothing_width` note above. The
+  opt-in smoothed potential (`w > 0`) is additionally non-variational by a finite amount.
+
+#### Internal consistency checks (not external validation)
+
+- ✅ **Bethe Ansatz Jacobian**: analytical Jacobian vs. finite differences of the **same**
+  residual, agreement < 1e-10. This checks that the Jacobian matches the residual as
+  coded; it says nothing about the residual being the correct Lieb-Wu equation. A missing
+  `sin k` factor in the residual survived this check until phase 4 precisely because both
+  sides used it. The residual is correct today, but the check itself is internal.
 
 ## Contributing
 
@@ -871,4 +968,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Status**: Production-ready 🚀 | **Tests**: 243 passing ✅ | **License**: MIT 📄
+**Status**: tested with 20 registered suites / 1,455 source assertions | **License**: MIT 📄
