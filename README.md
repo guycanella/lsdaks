@@ -334,9 +334,10 @@ built with the `F0.2` descriptor (`app/main.f90:629`), which writes `0.0` as `.0
 the leading zero, so the executable looks for `xc_table_u.00.dat`, and the command the error
 message suggests (`fpm run generate_xc_table -- --U .00`) is itself refused by the
 generator. `F0.2` produces the correct name for every `U >= 1`, so the formatting defect only
-shows up in the range that is already unsupported. A future task only needs to let
-`xc_lsda_init` skip the file read when `|U| < U_SMALL` — the zero-XC branches downstream
-already exist; that change is outside T17.
+shows up in the range that is already unsupported. A future task must first make `app/main.f90`
+bypass table-name resolution, file validation, and the missing-table error path when
+`|U| < U_SMALL`, before initializing XC without a table (or making `xc_lsda_init` support that
+case). The zero-XC branches downstream already exist; that change is outside T17.
 
 ## External Potentials
 

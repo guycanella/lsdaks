@@ -52,6 +52,9 @@ lsdaks/
 ├── ford.md                     # Configuração da documentação FORD
 ├── input.txt                   # Input de exemplo na raiz
 │
+├── scripts/                    # Scripts utilitários rastreados
+│   └── build_cpp_reference.sh  # Compila a referência C++ local em build/cpp/
+│
 ├── src/                        # Código-fonte principal (29 arquivos .f90)
 │   ├── types/
 │   │   ├── lsda_types.f90     # Tipos principais (system_params_t, scf_params_t, ...)
