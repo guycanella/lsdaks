@@ -18,8 +18,9 @@ program test_kohn_sham_cycle
     integer, parameter :: PROBE_IMP_SITE = 10
     real(dp), parameter :: PROBE_IMP_V = -2.0_dp
     character(len=*), parameter :: PROBE_TABLE = &
-        "data/tables/fortran_native/xc_table_u4.00.dat"
+        "build/test_kohn_sham_xc_table_u4.00.dat"
 
+    call prepare_test_xc_tables()
     call execute_serial_cmd_app(get_kohn_sham_tests())
 
 contains
@@ -71,8 +72,8 @@ contains
                  test_half_filling_warning_silent_otherwise), &
             test("scf_open_shell_converges_uniform", &
                  test_scf_open_shell_converges_uniform), &
-            test("scf_open_shell_matches_cpp_energy", &
-                 test_scf_open_shell_matches_cpp_energy), &
+            test("scf_open_shell_is_self_consistent", &
+                 test_scf_open_shell_is_self_consistent), &
             test("scf_fully_polarised_channel", &
                  test_scf_fully_polarised_channel), &
             test("scf_full_band_attractive_u", &
@@ -117,7 +118,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u2.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "Open shell SCF: XC init should succeed")
         if (ierr /= ERROR_SUCCESS) return
@@ -254,39 +255,60 @@ contains
         call xc_lsda_destroy(xc_func)
     end subroutine test_scf_trap_doublet_stays_symmetric
 
-    !> REGRESSION (T7): open shell energy against the C++ reference
+    !> An open-shell SCF solution must be self-consistent and uniformly occupied.
     !!
-    !! L = 10, N_up = N_down = 8, periodic BC, U = 4, V_ext = 0. The k = 2 pi m
+    !! L = 10, N_up = N_down = 8, periodic BC, U = 4, V_ext = 0.  The k = 2 pi m
     !! / 10 levels have cumulative degeneracies 1, 3, 5, 7, 9, 10, so N_sigma = 8
-    !! is an open shell. The C++ reference (build/cpp/lsdaks_cpp) converges in 11
-    !! loops with REL_ERROR = 0 and reports
-    !!   GROUND-STATE_ENERGY_PER_SITE = 1.75880482
-    !! while the Fortran used to burn its whole iteration budget with
-    !! ||delta n|| = 9.07e-1.
+    !! leaves the Fermi shell open.  Correct fractional occupation must share
+    !! that shell, preserving a uniform density and a self-consistent potential.
+    !! This is a regression for the former limit cycle without a C++ energy
+    !! oracle: the residual, particle number, uniformity, and Fermi doublet are
+    !! all intrinsic properties of this translationally invariant problem.
     !!
-    !! The tolerance is 1e-8. The C++ figure only carries 9 significant digits,
-    !! and the measured agreement is 3.3e-9 (Fortran 1.758804816658), so 1e-8 is
-    !! the tightest honest bound; anything looser (the 1e-4 used while the XC
-    !! interpolation was still bilinear) would no longer notice a broken corner
-    !! or empty-channel shortcut.
-    subroutine test_scf_open_shell_matches_cpp_energy()
+    !! It also carries the only ABSOLUTE energy anchor at a point where `e_xc`
+    !! is non-trivial.  Every other anchor of `compute_total_energy` sits in a
+    !! limit where `e_xc` vanishes or is constant (U = 0, fully polarised, full
+    !! band, Hartree difference), so a wrong factor on `E_xc` survives all of
+    !! them.  (A double-counted Hartree term does NOT:
+    !! `test_validate_double_occupancy_accepted` (`:852`) and
+    !! `test_scf_full_band_attractive_u` (`:536`) pin `E/L = U` to 1e-12 at
+    !! `n_up = n_dn = 1`, where doubling Hartree would give `2U`.)  Note the
+    !! anchor does not see `V_xc` itself: by the same uniform-density algebra
+    !! below, `V_eff^sigma` cancels out of the energy exactly; what it pins is
+    !! `e_xc`.  Here the answer is reconstructible in
+    !! closed form because the converged state is uniform: with `n_sigma = 0.8`
+    !! at every site, `V_eff^sigma` is a site-independent constant, so it shifts
+    !! every eigenvalue by the same amount and the shift `N_sigma V_eff^sigma`
+    !! cancels the double-counting term `sum_i V_eff^sigma n_sigma(i)` exactly
+    !! (`N_sigma = L n_sigma`).  What is left is
+    !!
+    !!   E = sum_sigma sum_m occ_m (-2 cos(2 pi m / L))   (free PBC band)
+    !!       + L U n_up n_dn                              (Hartree)
+    !!       + L e_xc(n_up, n_dn)                         (XC)
+    !!
+    !! with the open Fermi shell `m = +-4` carrying 1/2 an electron per state.
+    !! Only `e_xc` is taken from the code (via `get_exc`, the quantity the
+    !! functional is defined by); the assembly is built here, so a sign, factor
+    !! or double count in `compute_total_energy` cannot cancel out of both sides.
+    subroutine test_scf_open_shell_is_self_consistent()
         use fortuno_serial, only: check => serial_check
         use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
                                     cleanup_scf_results
         use lsda_types, only: system_params_t
-        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy, get_exc
         use boundary_conditions, only: BC_PERIODIC
+        use lsda_constants, only: DEG_TOL, TWOPI
         use lsda_errors, only: ERROR_SUCCESS
 
         integer, parameter :: L = 10
-        !> C++ reference value, measured with build/cpp/lsdaks_cpp
-        real(dp), parameter :: E_PER_SITE_CPP = 1.75880482_dp
+        real(dp), parameter :: N_SIGMA_SITE = 0.8_dp
         type(system_params_t) :: params
         type(scf_params_t) :: scf_params
         type(scf_results_t) :: results
         type(xc_lsda_t) :: xc_func
         real(dp) :: V_ext(L)
-        integer :: ierr
+        real(dp) :: e_band, e_hartree, exc_site, e_expected
+        integer :: ierr, ierr_exc, m
         character(len=256) :: table_file
 
         table_file = PROBE_TABLE  ! xc_table_u4.00.dat
@@ -313,18 +335,46 @@ contains
         call run_kohn_sham_scf_real(params, scf_params, V_ext, xc_func, results, ierr)
 
         call check(ierr == ERROR_SUCCESS, &
-                   "Open shell energy: L=10, N=8/8, PBC, U=4 must converge")
+                   "Open shell SCF: L=10, N=8/8, PBC, U=4 must converge")
 
         if (results%converged) then
-            call check(abs(results%final_energy / real(L, dp) - E_PER_SITE_CPP) < 1.0e-8_dp, &
-                       "Open shell energy: E/site must match the C++ 1.75880482 to 1e-8")
+            call check(results%final_potential_residual <= scf_params%potential_tol, &
+                       "Open shell SCF: converged result must meet the potential residual tolerance")
             call check(maxval(abs(results%density_up - 0.8_dp)) < 1.0e-10_dp, &
-                       "Open shell energy: n_up must be uniform at 0.8 like the C++ density")
+                       "Open shell SCF: n_up must be uniform at 0.8")
+            call check(maxval(abs(results%density_down - 0.8_dp)) < 1.0e-10_dp, &
+                       "Open shell SCF: n_down must be uniform at 0.8")
+            call check(abs(sum(results%density_up) - real(params%Nup, dp)) < 1.0e-10_dp .and. &
+                       abs(sum(results%density_down) - real(params%Ndown, dp)) < 1.0e-10_dp, &
+                       "Open shell SCF: both spin-channel particle numbers must be conserved")
+            call check(abs(results%eigvals(9) - results%eigvals(8)) < DEG_TOL .and. &
+                       abs(results%eigvals(L + 9) - results%eigvals(L + 8)) < DEG_TOL, &
+                       "Open shell SCF: the fractional Fermi shell must remain degenerate")
+
+            ! Free PBC band, per spin: m = 0 and the closed doublets m = +-1,
+            ! +-2, +-3 are full, the open doublet m = +-4 holds one electron.
+            e_band = -2.0_dp
+            do m = 1, 3
+                e_band = e_band + 2.0_dp * (-2.0_dp * cos(real(m, dp) * TWOPI / real(L, dp)))
+            end do
+            e_band = e_band + 1.0_dp * (-2.0_dp * cos(4.0_dp * TWOPI / real(L, dp)))
+            e_band = 2.0_dp * e_band   ! both spin channels
+
+            e_hartree = real(L, dp) * params%U * N_SIGMA_SITE * N_SIGMA_SITE
+
+            call get_exc(xc_func, N_SIGMA_SITE, N_SIGMA_SITE, exc_site, ierr_exc)
+            call check(ierr_exc == ERROR_SUCCESS, &
+                       "Open shell energy: e_xc(0.8, 0.8) must be evaluable")
+
+            e_expected = e_band + e_hartree + real(L, dp) * exc_site
+            call check(abs(results%final_energy - e_expected) < 1.0e-8_dp, &
+                       "Open shell energy: total energy must equal the uniform " // &
+                       "band + Hartree - double-counting reconstruction")
         end if
 
         call cleanup_scf_results(results, ierr)
         call xc_lsda_destroy(xc_func)
-    end subroutine test_scf_open_shell_matches_cpp_energy
+    end subroutine test_scf_open_shell_is_self_consistent
 
     !> REGRESSION (T7): a fully polarised system must run, not be rejected
     !!
@@ -519,7 +569,7 @@ contains
         character(len=256) :: table_file
 
         ! Initialize XC functional
-        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u2.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -580,7 +630,7 @@ contains
         type(xc_lsda_t) :: xc_func
         integer :: ierr
 
-        call xc_lsda_init(xc_func, 'data/tables/fortran_native/xc_table_u2.00.dat', ierr)
+        call xc_lsda_init(xc_func, 'build/test_kohn_sham_xc_table_u2.00.dat', ierr)
         call check(ierr == ERROR_SUCCESS, 'T19: XC init should succeed')
         if (ierr /= ERROR_SUCCESS) return
 
@@ -630,7 +680,7 @@ contains
         integer :: ierr, i
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -711,7 +761,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -855,7 +905,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -920,7 +970,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -992,7 +1042,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -1049,7 +1099,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -1122,7 +1172,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -1225,7 +1275,7 @@ contains
         pinf_v = ieee_value(1.0_dp, ieee_positive_inf)
         ninf_v = ieee_value(1.0_dp, ieee_negative_inf)
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -1323,7 +1373,7 @@ contains
         real(dp) :: V_ext(L)
         integer :: ierr
 
-        call xc_lsda_init(xc_func, "data/tables/fortran_native/xc_table_u4.00.dat", &
+        call xc_lsda_init(xc_func, "build/test_kohn_sham_xc_table_u4.00.dat", &
                           ierr, u_signed=4.0_dp)
         call check(ierr == ERROR_SUCCESS, "XC consistency: initialization should succeed")
         if (ierr /= ERROR_SUCCESS) return
@@ -1473,7 +1523,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u2.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
         if (ierr /= ERROR_SUCCESS) return
@@ -1551,9 +1601,9 @@ contains
 
     !> Test SCF convergence for U=0 with open BC
     !!
-    !! Physics: U=0 is the non-interacting limit (free Fermi gas).
-    !! SCF should converge in 1 iteration since V_xc = 0.
-    !! Density should be uniform for uniform V_ext.
+    !! Physics: U=0 is the non-interacting limit (free Fermi gas), with no XC
+    !! table.  For open boundaries the exact energy is the occupied sum of
+    !! -2 cos(j pi/(L+1)) in each spin channel.
     subroutine test_scf_converges_u0_open()
         use fortuno_serial, only: check => serial_check
         use kohn_sham_cycle, only: run_kohn_sham_scf_real, scf_params_t, scf_results_t, &
@@ -1569,23 +1619,19 @@ contains
         type(scf_results_t) :: results
         type(xc_lsda_t) :: xc_func
         real(dp) :: V_ext(L)
-        integer :: ierr, i
-        character(len=256) :: table_file
+        integer :: ierr, j
+        real(dp) :: expected_energy
 
-        ! Setup: U=0 table (if available, otherwise use small U)
-        table_file = "data/tables/fortran_native/xc_table_u1.00.dat"
-        call xc_lsda_init(xc_func, table_file, ierr)
-        if (ierr /= ERROR_SUCCESS) then
-            ! Skip test if table not found
-            return
-        end if
+        call xc_lsda_init(xc_func, ierr=ierr, u_signed=0.0_dp)
+        call check(ierr == ERROR_SUCCESS, "U=0 XC initialization must not require a table")
+        if (ierr /= ERROR_SUCCESS) return
 
         ! System parameters: small system, half-filled
         params%L = L
         params%Nup = 5
         params%Ndown = 5
         params%bc = BC_OPEN
-        params%U = 1.0_dp
+        params%U = 0.0_dp
         params%phase = 0.0_dp
 
         ! SCF parameters: tight convergence
@@ -1603,7 +1649,7 @@ contains
 
         call check(ierr == ERROR_SUCCESS, "SCF should succeed")
         call check(results%converged, "SCF should converge for U=0")
-        call check(results%n_iterations <= 10, "Should converge quickly for small U")
+        call check(results%n_iterations <= 10, "U=0 should converge quickly")
         call check(allocated(results%density_up), "Density_up should be allocated")
         call check(allocated(results%density_down), "Density_down should be allocated")
         call check(allocated(results%eigvals), "Eigvals should be allocated")
@@ -1611,6 +1657,13 @@ contains
         ! Verify particle number conservation
         call check(abs(sum(results%density_up) + sum(results%density_down) - 10.0_dp) < 1.0e-6_dp, &
                    "Particle number should be conserved")
+
+        expected_energy = 0.0_dp
+        do j = 1, 5
+            expected_energy = expected_energy - 4.0_dp * cos(real(j, dp) * acos(-1.0_dp) / real(L + 1, dp))
+        end do
+        call check(abs(results%final_energy - expected_energy) < 1.0e-10_dp, &
+                   "U=0 SCF energy must equal the open-chain free-Fermi value")
 
         call cleanup_scf_results(results, ierr)
         call xc_lsda_destroy(xc_func)
@@ -1639,7 +1692,7 @@ contains
         integer :: ierr, i
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u2.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         if (ierr /= ERROR_SUCCESS) return
 
@@ -1693,7 +1746,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u2.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         if (ierr /= ERROR_SUCCESS) return
 
@@ -1756,7 +1809,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u2.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         if (ierr /= ERROR_SUCCESS) return
 
@@ -1814,7 +1867,7 @@ contains
         integer :: ierr
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         if (ierr /= ERROR_SUCCESS) return
 
@@ -1870,7 +1923,7 @@ contains
         integer :: ierr, i
         character(len=256) :: table_file
 
-        table_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u2.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr)
         if (ierr /= ERROR_SUCCESS) return
 
@@ -1969,7 +2022,7 @@ contains
 
         ! The table is indexed by |U|, but the attractive sign must be handed to
         ! the functional explicitly so that the Shiba transformation is active.
-        table_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        table_file = "build/test_kohn_sham_xc_table_u4.00.dat"
         call xc_lsda_init(xc_func, table_file, ierr, u_signed=-4.0_dp)
         call check(ierr == ERROR_SUCCESS, "XC init should succeed")
 
@@ -2142,6 +2195,43 @@ contains
         call cleanup_scf_results(results, ierr)
         call xc_lsda_destroy(xc_func)
     end subroutine run_fixed_alpha_probe
+
+    !> Generate the deterministic XC fixtures used by this test program.
+    !!
+    !! The tables are intentionally produced through the same thermodynamic-limit
+    !! generator and native writer used in production.  They live beneath
+    !! `build/` and are not reference data checked into the repository.
+    !!
+    !! They are rewritten on every run rather than cached: these tables are the
+    !! oracle of this suite, and a file left over from an earlier generator
+    !! would silently keep the suite green against a table the code no longer
+    !! produces.  The 8 x 9 grid makes the regeneration cheap.
+    subroutine prepare_test_xc_tables()
+        use bethe_tables, only: generate_xc_table, grid_params_t
+        use table_io, only: xc_table_t, write_fortran_table, deallocate_table
+        use lsda_errors, only: ERROR_SUCCESS
+
+        real(dp), parameter :: U_VALUES(3) = [1.0_dp, 2.0_dp, 4.0_dp]
+        type(grid_params_t) :: params
+        type(xc_table_t) :: table
+        character(len=256) :: filename
+        integer :: i, ierr
+
+        params = grid_params_t()
+        params%n_points = 8
+        params%m_points = 9
+
+        do i = 1, size(U_VALUES)
+            write(filename, '(A,F0.2,A)') 'build/test_kohn_sham_xc_table_u', U_VALUES(i), '.dat'
+
+            call generate_xc_table(U_VALUES(i), params, table, ierr)
+            if (ierr /= ERROR_SUCCESS) error stop 'failed to generate kohn-sham XC test fixture'
+
+            call write_fortran_table(trim(filename), table, ierr)
+            if (allocated(table%n_grid)) call deallocate_table(table)
+            if (ierr /= ERROR_SUCCESS) error stop 'failed to write kohn-sham XC test fixture'
+        end do
+    end subroutine prepare_test_xc_tables
 
     !> The potential residual must NOT scale with the mixing weight (regression, T3)
     !!

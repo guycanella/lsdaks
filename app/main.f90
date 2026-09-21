@@ -3,7 +3,7 @@
 !! LSDAKS: Local Spin Density Approximation - Kohn-Sham solver
 !! for the 1D Hubbard model using Bethe Ansatz-based XC functionals.
 program lsdaks
-    use lsda_constants, only: dp
+    use lsda_constants, only: dp, U_SMALL
     use lsda_types, only: system_params_t
     use lsda_errors, only: ERROR_SUCCESS, ERROR_FILE_NOT_FOUND, ERROR_CONVERGENCE_FAILED
     use input_parser
@@ -15,6 +15,7 @@ program lsdaks
     use potential_impurity, only: potential_impurity_single, potential_impurity_random, &
                                   potential_impurity_multiple
     use boundary_conditions, only: BC_OPEN, BC_PERIODIC, BC_TWISTED
+    use table_io, only: xc_table_filename
     implicit none
     
     ! Main variables
@@ -90,45 +91,54 @@ program lsdaks
     call convert_to_scf_params(inputs, scf_params)
     call print_configuration(inputs, sys_params, scf_params)
 
-    ! Check XC table using |U| (tables are symmetric)
-    call check_xc_table(abs(sys_params%U), inputs%table_dir, table_file, &
-                        resolved_table_dir, table_exists)
+    if (abs(sys_params%U) < U_SMALL) then
+        ! The non-interacting gas has e_xc = V_xc = 0 exactly, so no table is
+        ! needed and table lookup must not reject a valid U = 0 calculation.
+        print '(A)', ""
+        print '(A)', "Using exact non-interacting XC functional (U = 0)"
+        call xc_lsda_init(xc_func, ierr=ierr, smoothing_width=inputs%xc_smoothing_width, &
+                          u_signed=sys_params%U)
+    else
+        ! Check XC table using |U| (tables are symmetric)
+        call check_xc_table(abs(sys_params%U), inputs%table_dir, table_file, &
+                            resolved_table_dir, table_exists)
 
-    if (.not. table_exists) then
-        print '(A)', ""
-        print '(A)', "=========================================="
-        print '(A)', "ERROR: XC table not found!"
-        print '(A)', "=========================================="
-        print '(A,F0.2)', "  Requested |U| = ", abs(sys_params%U)
-        print '(A)', ""
-        print '(A)', "Please generate the XC table first using:"
-        print '(A,F0.2)', "  fpm run generate_xc_table -- --U ", abs(sys_params%U)
-        print '(A)', ""
-        print '(A,A)', "  Looked for: ", trim(table_file)
-        print '(A)', ""
-        call print_available_tables(resolved_table_dir)
-        stop 1
-    end if
+        if (.not. table_exists) then
+            print '(A)', ""
+            print '(A)', "=========================================="
+            print '(A)', "ERROR: XC table not found!"
+            print '(A)', "=========================================="
+            print '(A,A)', "  Requested |U| = ", trim(real_str(abs(sys_params%U), 2))
+            print '(A)', ""
+            print '(A)', "Please generate the XC table first using:"
+            print '(A,A)', "  fpm run generate_xc_table -- --U ", trim(real_str(abs(sys_params%U), 2))
+            print '(A)', ""
+            print '(A,A)', "  Looked for: ", trim(table_file)
+            print '(A)', ""
+            call print_available_tables(resolved_table_dir)
+            stop 1
+        end if
     
-    print '(A)', ""
-    print '(A,A)', "Loading XC table: ", trim(table_file)
-    if (sys_params%U < 0.0_dp) then
-        print '(A)', "  Note: Using table for |U| (attractive interaction)"
-        print '(A)', "        The sign of U enters via the Shiba transformation in the XC functional"
-    end if
+        print '(A)', ""
+        print '(A,A)', "Loading XC table: ", trim(table_file)
+        if (sys_params%U < 0.0_dp) then
+            print '(A)', "  Note: Using table for |U| (attractive interaction)"
+            print '(A)', "        The sign of U enters via the Shiba transformation in the XC functional"
+        end if
 
-    ! The signed U must be handed over explicitly: the table file only carries
-    ! |U|, so without it the attractive run would silently use the repulsive
-    ! functional (the Shiba transformation would never trigger).
-    call xc_lsda_init(xc_func, table_file, ierr, smoothing_width=inputs%xc_smoothing_width, &
-                      u_signed=sys_params%U)
+        ! The signed U must be handed over explicitly: the table file only
+        ! carries |U|, so without it the attractive run would silently use the
+        ! repulsive functional (the Shiba transformation would never trigger).
+        call xc_lsda_init(xc_func, table_file, ierr, smoothing_width=inputs%xc_smoothing_width, &
+                          u_signed=sys_params%U)
+    end if
     if (ierr /= ERROR_SUCCESS) then
         print *, "ERROR: Failed to initialize XC functional"
         stop 1
     end if
 
     print '(A)', "  ✓ XC functional initialized"
-    if (inputs%xc_smoothing_width > 0.0_dp) then
+    if (inputs%xc_smoothing_width > 0.0_dp .and. abs(sys_params%U) >= U_SMALL) then
         print '(A,F0.4)', "  Note: V_xc discontinuity at n = 1 linearly smoothed over half-width w = ", &
                           inputs%xc_smoothing_width
         print '(A)', "        (this departs from the C++ reference, which keeps the jump)"
@@ -591,7 +601,7 @@ contains
 
         ! Candidate 1: the configured directory.
         resolved_dir = adjustl(table_dir)
-        call xc_table_path(resolved_dir, U, table_file)
+        call xc_table_filename(resolved_dir, U, table_file)
         inquire(file=table_file, exist=exists)
         if (exists) return
 
@@ -599,7 +609,7 @@ contains
         call get_environment_variable('LSDAKS_TABLE_DIR', env_dir, env_len, env_status)
         if (env_status == 0 .and. env_len > 0) then
             candidate = adjustl(env_dir)
-            call xc_table_path(candidate, U, table_file)
+            call xc_table_filename(candidate, U, table_file)
             inquire(file=table_file, exist=exists)
             if (exists) then
                 resolved_dir = candidate
@@ -610,43 +620,10 @@ contains
         ! Nothing found: report the first candidate, which is the one the user
         ! configured and therefore the one worth naming in the error message.
         resolved_dir = adjustl(table_dir)
-        call xc_table_path(resolved_dir, U, table_file)
+        call xc_table_filename(resolved_dir, U, table_file)
         exists = .false.
     end subroutine check_xc_table
 
-    !> Build the path of the XC table of a given |U| inside a directory
-    !!
-    !! @param[in]  dir   Directory (with or without trailing '/')
-    !! @param[in]  U     Hubbard interaction (the sign is ignored)
-    !! @param[out] path  `<dir>/xc_table_u<|U|>.dat`
-    subroutine xc_table_path(dir, U, path)
-        character(len=*), intent(in) :: dir
-        real(dp), intent(in) :: U
-        character(len=*), intent(out) :: path
-
-        ! trim() around pathsep: a blank separator must contribute zero
-        ! characters, otherwise the path would carry a stray space.
-        write(path, '(A,A,A,F0.2,A)') trim(dir), trim(pathsep(dir)), 'xc_table_u', abs(U), '.dat'
-    end subroutine xc_table_path
-
-    !> '/' unless the directory already ends with one (or is empty)
-    !!
-    !! @param[in] dir Directory name
-    !! @return    the separator to insert between `dir` and a file name
-    function pathsep(dir) result(sep)
-        character(len=*), intent(in) :: dir
-        character(len=1) :: sep
-        integer :: n
-
-        n = len_trim(dir)
-        if (n == 0) then
-            sep = ' '
-        else if (dir(n:n) == '/') then
-            sep = ' '
-        else
-            sep = '/'
-        end if
-    end function pathsep
 
     !> Print the XC tables that are ACTUALLY available in a directory
     !!
@@ -698,7 +675,7 @@ contains
 
         do i = 1, N_PROBES
             U_value = real(i, dp) / 100.0_dp
-            call xc_table_path(table_dir, U_value, filename)
+            call xc_table_filename(table_dir, U_value, filename)
             inquire(file=filename, exist=exists)
             if (exists) then
                 n_found = n_found + 1

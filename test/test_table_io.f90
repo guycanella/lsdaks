@@ -29,6 +29,7 @@ contains
             test("extract_u_standard", test_extract_u_standard), &
             test("extract_u_binary", test_extract_u_binary), &
             test("extract_u_invalid", test_extract_u_invalid), &
+            test("table_filename_roundtrip", test_table_filename_roundtrip), &
             test("binary_roundtrip", test_binary_roundtrip), &
             test("table_dimensions", test_table_dimensions), &
             test("table_ranges", test_table_ranges), &
@@ -345,6 +346,47 @@ contains
 
         call check(status /= 0, "Should fail for invalid filename")
     end subroutine test_extract_u_invalid
+
+
+    !> The name the generator writes must be the name the SCF looks up.
+    !!
+    !! Regression test for the `|U| < 1` divergence: the generator formatted the
+    !! magnitude with a bare `F0.2`, which gfortran prints without the leading
+    !! zero, so it wrote `xc_table_u.50.dat` while the run-time lookup asked for
+    !! `xc_table_u0.50.dat` and never found it - for the whole `0.5 <= |U| < 1`
+    !! range.  Both sides now call `xc_table_filename`, so the check is that the
+    !! shared name carries the zero and survives `extract_U_from_filename`.
+    subroutine test_table_filename_roundtrip()
+        use fortuno_serial, only: check => serial_check
+        use table_io, only: xc_table_filename, extract_U_from_filename
+        use lsda_constants, only: dp
+
+        real(dp), parameter :: U_VALUES(5) = &
+            [0.50_dp, 0.75_dp, -0.50_dp, 1.00_dp, 10.00_dp]
+        character(len=256) :: path
+        real(dp) :: U_back
+        integer :: i, status
+
+        do i = 1, size(U_VALUES)
+            call xc_table_filename('data/tables/fortran_native', U_VALUES(i), path)
+            call check(index(path, 'xc_table_u.') == 0, &
+                       "the table name must never drop the leading zero of |U| < 1")
+            call extract_U_from_filename(trim(path), U_back, status)
+            call check(status == 0, "the generated table name must be parseable")
+            call check(abs(U_back - abs(U_VALUES(i))) < 1.0e-10_dp, &
+                       "the table name must round-trip to |U|")
+        end do
+
+        call xc_table_filename('data/tables/fortran_native', 0.5_dp, path)
+        call check(trim(path) == 'data/tables/fortran_native/xc_table_u0.50.dat', &
+                   "U = 0.5 must map to xc_table_u0.50.dat")
+        call xc_table_filename('dir/', 0.5_dp, path)
+        call check(trim(path) == 'dir/xc_table_u0.50.dat', &
+                   "a trailing slash must not be doubled")
+        call xc_table_filename('', 4.0_dp, path)
+        call check(trim(path) == 'xc_table_u4.00.dat', &
+                   "an empty directory must give a bare file name")
+    end subroutine test_table_filename_roundtrip
 
 
     subroutine test_binary_roundtrip()

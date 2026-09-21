@@ -1,4 +1,4 @@
-!> Unit and validation tests for the thermodynamic-limit Lieb-Wu solver.
+!> Unit tests for the thermodynamic-limit Lieb-Wu solver.
 !!
 !! The anchors are, in order of strength:
 !! 1. The closed form of the half-filled unpolarized ground state,
@@ -7,27 +7,10 @@
 !! 2. The exactly solvable limits: `U -> 0` (free gas, `e_xc = 0`),
 !!    `U -> inf` (spinless fermions, `e = -(2/pi) sin(pi n)`), full
 !!    polarization (`e_xc = 0`).
-!! 3. Node-by-node agreement with the reference tables converted from the C++
-!!    implementation, for `U = 4` and, through the Shiba transformation, for
-!!    `U = -4`.
-!!
-!! @note VALIDATION-ONLY: anchor 3 (`reference_table_u4`,
-!!       `reference_table_u_minus4` and their helper
-!!       `compare_against_reference`) exists only to validate this generator
-!!       against the C++ implementation, and is meant to be deleted together
-!!       with `original/` and `data/tables/` once the generated tables have
-!!       been accepted - it reads a reference file that will not exist.
-!!       Anchors 1 and 2 are self-contained and stay.  Grep for
-!!       `VALIDATION-ONLY` to find every such block.
-!!
-!! @note The reference tables print the `m = 0` row with about 9 significant
-!!       digits, so the achievable agreement there is around 1e-9 absolute,
-!!       not machine precision.  The closed-form anchors are therefore
-!!       checked against the analytic integral, not against the file.
 program test_lieb_wu_integral
     use fortuno_serial, only: execute_serial_cmd_app
     use lsda_constants, only: dp, PI
-    use lieb_wu_integral, only: lw_quad_t, lw_seed_t, gauss_legendre, &
+    use lieb_wu_integral, only: lw_quad_t, gauss_legendre, &
                                 lieb_wu_energy, lieb_wu_exc, lieb_wu_solve_qb, &
                                 lieb_wu_solve_unpolarized
     use bethe_tables, only: compute_V_xc_numerical, xc_potentials_t
@@ -51,9 +34,7 @@ contains
             test("particle_hole_and_spin_symmetry", test_particle_hole_and_spin_symmetry), &
             test("quadrature_convergence", test_quadrature_convergence), &
             test("low_m_quadrature_floor_convergence", test_low_m_quadrature_floor_convergence), &
-            test("unpolarized_matches_large_b", test_unpolarized_matches_large_b), &
-            test("reference_table_u4", test_reference_table_u4), &
-            test("reference_table_u_minus4", test_reference_table_u_minus4) &
+            test("unpolarized_matches_large_b", test_unpolarized_matches_large_b) &
         ])
     end function get_tests
 
@@ -261,6 +242,12 @@ contains
     end subroutine test_particle_hole_and_spin_symmetry
 
     !> The default quadrature orders must already be converged.
+    !!
+    !! `fine%n_lambda` has to exceed `n_lambda_floor`, which is 40 at `U = 0.5`:
+    !! `n_lambda_per_panel` takes `max(nominal, floor)`, so a "fine" order below
+    !! the floor gives both runs exactly the same `Lambda` panels and the
+    !! comparison silently degenerates into a test of `n_k` and `n_omega` alone
+    !! - at the one `U` where the `Lambda` quadrature is the delicate part.
     subroutine test_quadrature_convergence()
         use fortuno_serial, only: check => serial_check
 
@@ -269,7 +256,7 @@ contains
         integer :: ierr
 
         fine%n_k = 96
-        fine%n_lambda = 28
+        fine%n_lambda = 64
         fine%n_omega = 32
 
         call lieb_wu_exc(0.35_dp, 0.25_dp, 4.0_dp, quad, exc_default, ierr)
@@ -288,33 +275,57 @@ contains
     end subroutine test_quadrature_convergence
 
     !> The production Lambda-order floor must converge the observable that
-    !! motivated it: the exchange splitting V_up - V_down near m=0. Comparing
-    !! the default path with an intentionally over-resolved n_lambda=40 path
-    !! keeps this regression independent of the C++ reference tables.
+    !! motivated it: the exchange splitting `V_up - V_down` near `m = 0`.
+    !!
+    !! This sweeps `U` instead of testing a single value, because the order the
+    !! spin quadrature needs is not monotone in `U` (see `n_lambda_floor`): the
+    !! leftover dyadic panel at the end of the `Lambda` mesh makes it oscillate,
+    !! so a ladder calibrated on a handful of `U` can be badly wrong *between*
+    !! its calibration points.  The grid deliberately includes the interior of
+    !! every branch of the floor - `1.02` in particular, where the previous
+    !! ladder returned the splitting with the **wrong sign** - and the hard band
+    !! around `U = 0.65` to `0.9`.
+    !!
+    !! The comparison is relative and includes the sign, because the splitting
+    !! at `m/n = 1e-5` is of order 1e-6 and any absolute tolerance large enough
+    !! to be comfortable is larger than the signal itself.
     subroutine test_low_m_quadrature_floor_convergence()
         use fortuno_serial, only: check => serial_check
 
         type(lw_quad_t) :: fine
         type(xc_potentials_t) :: vp, vf
-        real(dp), parameter :: U = 1.0_dp, N = 0.5_dp
-        real(dp), parameter :: M_FRAC(3) = [1.0e-5_dp, 1.0e-4_dp, 1.0e-3_dp]
-        real(dp) :: m, split_p, split_f, rel_err
-        integer :: i
+        real(dp), parameter :: U_LIST(9) = [0.5_dp, 0.65_dp, 0.9_dp, 1.0_dp, 1.02_dp, &
+                                            1.1_dp, 1.3_dp, 1.5_dp, 2.0_dp]
+        real(dp), parameter :: N_LIST(3) = [0.3_dp, 0.8_dp, 0.95_dp]
+        real(dp), parameter :: M_FRAC(2) = [1.0e-5_dp, 1.0e-4_dp]
+        real(dp) :: m, n, split_p, split_f, rel_err
+        integer :: iu, in_, im
 
-        fine%n_lambda = 40
-        do i = 1, size(M_FRAC)
-            m = N * M_FRAC(i)
-            vp = compute_V_xc_numerical(0.5_dp * (N + m), 0.5_dp * (N - m), U, &
-                                         delta_n=0.3_dp * m)
-            vf = compute_V_xc_numerical(0.5_dp * (N + m), 0.5_dp * (N - m), U, &
-                                         quad=fine, delta_n=0.3_dp * m)
-            split_p = vp%v_xc_up - vp%v_xc_down
-            split_f = vf%v_xc_up - vf%v_xc_down
-            rel_err = abs(split_p - split_f) / max(abs(split_f), 1.0e-12_dp)
-            call check(split_p * split_f > 0.0_dp, &
-                       "production low-m splitting must preserve the fine-grid sign")
-            call check(rel_err < 0.02_dp, &
-                       "production low-m splitting must converge against n_lambda=40")
+        ! Every quadrature dimension is refined, not just `Lambda`: with `n_k`
+        ! and `n_omega` left at their production defaults the reference shares
+        ! the charge and Fourier quadrature with the value under test, so the
+        ! comparison is blind to a deficiency there and can only see `Lambda`.
+        fine%n_lambda = 64
+        fine%n_k = 96
+        fine%n_omega = 64
+        do iu = 1, size(U_LIST)
+            do in_ = 1, size(N_LIST)
+                do im = 1, size(M_FRAC)
+                    n = N_LIST(in_)
+                    m = n * M_FRAC(im)
+                    vp = compute_V_xc_numerical(0.5_dp * (n + m), 0.5_dp * (n - m), &
+                                                U_LIST(iu), delta_n=0.3_dp * m)
+                    vf = compute_V_xc_numerical(0.5_dp * (n + m), 0.5_dp * (n - m), &
+                                                U_LIST(iu), quad=fine, delta_n=0.3_dp * m)
+                    split_p = vp%v_xc_up - vp%v_xc_down
+                    split_f = vf%v_xc_up - vf%v_xc_down
+                    rel_err = abs(split_p - split_f) / max(abs(split_f), 1.0e-12_dp)
+                    call check(split_p * split_f > 0.0_dp, &
+                               "production low-m splitting must preserve the fine-grid sign")
+                    call check(rel_err < 0.02_dp, &
+                               "production low-m splitting must converge against n_lambda=64")
+                end do
+            end do
         end do
     end subroutine test_low_m_quadrature_floor_convergence
 
@@ -343,161 +354,5 @@ contains
         call check(abs(n_fin - 2.0_dp * ndn_fin) < 1.0e-12_dp, &
                    "large B must be unpolarized")
     end subroutine test_unpolarized_matches_large_b
-
-    !> Compare `exc`, `Vxc_up` and `Vxc_down` on the nodes of the U = 4 reference.
-    !!
-    !! @note VALIDATION-ONLY: delete this test together with `original/` and
-    !!       `data/tables/`; it reads
-    !!       `data/tables/fortran_native/xc_table_u4.00.dat`.
-    !!
-    !! The reference grid is non-uniform on both axes, so the comparison is
-    !! made at the nodes of the file itself rather than on a grid of our own.
-    !! The `m = 0` and `m = n` rows are always included: they are the two
-    !! boundary identities (`de/dm = 0` and `V_up = 0`) that a wrong derivative
-    !! stencil would break first.
-    subroutine test_reference_table_u4()
-        use fortuno_serial, only: check => serial_check
-
-        real(dp) :: worst_exc, worst_up, worst_dn, worst_split
-        character(len=96) :: split_msg
-
-        call compare_against_reference(4.0_dp, worst_exc, worst_up, worst_dn, worst_split)
-
-        call check(worst_exc < 1.0e-6_dp, "U=4 exc must match the reference to 1e-6")
-        call check(worst_up < 1.0e-4_dp, "U=4 Vxc_up must match the reference to 1e-4")
-        call check(worst_dn < 1.0e-4_dp, "U=4 Vxc_down must match the reference to 1e-4")
-        write(split_msg, '(A,F10.4)') "U=4 exchange splitting relative error = ", worst_split
-        call check(worst_split < 0.10_dp, trim(split_msg))
-    end subroutine test_reference_table_u4
-
-    !> Same comparison for `U = -4` through the Shiba transformation.
-    !!
-    !! @note VALIDATION-ONLY: delete this test together with `original/` and
-    !!       `data/tables/`; it reads the same reference file.  The internal
-    !!       Shiba consistency check
-    !!       `test_bethe_tables / attractive_shiba_internal_consistency_u4`
-    !!       survives the deletion but is *not* a replacement: it pins the
-    !!       convention the module uses against itself, not against C++.
-    !!
-    !! The reference tables are stored for `|U|`, so the attractive values are
-    !! defined by `exc(n_up, n_dn; -U) = exc(1 - n_up, n_dn; U)`,
-    !! `Vxc_up = -Vxc_up(1 - n_up, n_dn; U)` and
-    !! `Vxc_down = +Vxc_down(1 - n_up, n_dn; U)`.  The test walks the same
-    !! reference nodes and feeds the generator the physical attractive
-    !! densities that map onto them, so a sign slip in the mapping fails here.
-    subroutine test_reference_table_u_minus4()
-        use fortuno_serial, only: check => serial_check
-
-        real(dp) :: worst_exc, worst_up, worst_dn
-
-        call compare_against_reference(-4.0_dp, worst_exc, worst_up, worst_dn)
-
-        call check(worst_exc < 1.0e-6_dp, "U=-4 exc must match the Shiba reference to 1e-6")
-        call check(worst_up < 1.0e-4_dp, "U=-4 Vxc_up must match the Shiba reference to 1e-4")
-        call check(worst_dn < 1.0e-4_dp, "U=-4 Vxc_down must match the Shiba reference to 1e-4")
-    end subroutine test_reference_table_u_minus4
-
-    !> Worst node-by-node deviation from the reference table of `|U|`.
-    !!
-    !! @note VALIDATION-ONLY: helper of the two reference-table tests above;
-    !!       it goes away with them, `original/` and `data/tables/`.
-    !!
-    !! The reference `m` axis is graded: it walks five decades of `m / n` with
-    !! only a handful of nodes per decade at the bottom and most of its nodes
-    !! above `m = 0.1 n`.  A plain "every 20th node" stride therefore skips
-    !! almost the whole refined region next to `m = 0`, which is exactly where
-    !! `de_xc/dm` carries its logarithmic corrections and where a wrong
-    !! derivative stencil would hide.  The sampled indices below are picked to
-    !! land on the decade boundaries of that ladder (`j = 2, 4, 7, 12, 22`,
-    !! i.e. `m / n` around 1e-5, 1.8e-4, 1e-3, 2e-3, 1e-2), on the interior,
-    !! and on the last nodes before the fully polarized edge.  The full
-    !! 10100-node comparison gives the same worst-case figures but takes
-    !! minutes.
-    !!
-    !! @param[in]  U          Hubbard interaction, with sign
-    !! @param[out] worst_exc  Largest `|exc - reference|`
-    !! @param[out] worst_up   Largest `|Vxc_up - reference|`
-    !! @param[out] worst_dn   Largest `|Vxc_down - reference|`
-    !! @param[out] worst_split Optional normalized error in `Vxc_up - Vxc_down`
-    !!                         near `m=0`, with a 1e-5 scale floor.
-    subroutine compare_against_reference(U, worst_exc, worst_up, worst_dn, worst_split)
-        use fortuno_serial, only: check => serial_check
-        use table_io, only: xc_table_t, read_fortran_table, deallocate_table
-        use bethe_tables, only: compute_E_xc, compute_V_xc_numerical, xc_potentials_t
-        use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
-
-        real(dp), intent(in) :: U
-        real(dp), intent(out) :: worst_exc, worst_up, worst_dn
-        real(dp), intent(out), optional :: worst_split
-
-        integer, parameter :: M_SAMPLE(13) = &
-            [1, 2, 4, 7, 12, 22, 42, 82, 122, 162, 192, 199, 202]
-        type(xc_table_t) :: ref
-        type(xc_potentials_t) :: v
-        type(lw_seed_t) :: seed
-        real(dp) :: n, m, nu, nd, exc
-        integer :: ierr, i, j, jj, n_eval
-        logical :: all_finite
-
-        worst_exc = 0.0_dp
-        worst_up = 0.0_dp
-        worst_dn = 0.0_dp
-        if (present(worst_split)) worst_split = 0.0_dp
-
-        call read_fortran_table('data/tables/fortran_native/xc_table_u4.00.dat', ref, ierr)
-        call check(ierr == ERROR_SUCCESS, "U=4 reference table must be readable")
-        if (ierr /= ERROR_SUCCESS) return
-
-        all_finite = .true.
-        n_eval = 0
-
-        do i = 1, ref%n_points_n
-            seed%valid = .false.
-            do jj = 1, size(M_SAMPLE)
-                j = min(M_SAMPLE(jj), ref%n_points_m)
-
-                n = ref%n_grid(i)
-                m = ref%m_grid(j, i)
-                if (m > n) cycle
-
-                ! Densities of the repulsive reference node; for U < 0 the
-                ! Shiba map n_up -> 1 - n_up is what the generator undoes.
-                nu = 0.5_dp * (n + m)
-                nd = 0.5_dp * (n - m)
-                if (U < 0.0_dp) nu = 1.0_dp - nu
-
-                exc = compute_E_xc(nu, nd, U, seed=seed)
-                v = compute_V_xc_numerical(nu, nd, U, seed=seed)
-                n_eval = n_eval + 1
-
-                if (.not. (ieee_is_finite(exc) .and. ieee_is_finite(v%v_xc_up) &
-                           .and. ieee_is_finite(v%v_xc_down))) then
-                    all_finite = .false.
-                    cycle
-                end if
-
-                worst_exc = max(worst_exc, abs(exc - ref%exc(j, i)))
-                if (U < 0.0_dp) then
-                    worst_up = max(worst_up, abs(v%v_xc_up + ref%vxc_up(j, i)))
-                else
-                    worst_up = max(worst_up, abs(v%v_xc_up - ref%vxc_up(j, i)))
-                end if
-                worst_dn = max(worst_dn, abs(v%v_xc_down - ref%vxc_down(j, i)))
-                if (present(worst_split)) then
-                    if (m > 1.0e-6_dp .and. m / max(n, 1.0e-12_dp) <= 2.0e-2_dp) then
-                        worst_split = max(worst_split, &
-                            abs((v%v_xc_up - v%v_xc_down) - &
-                                (ref%vxc_up(j, i) - ref%vxc_down(j, i))) / &
-                            max(abs(ref%vxc_up(j, i) - ref%vxc_down(j, i)), 1.0e-5_dp))
-                    end if
-                end if
-            end do
-        end do
-
-        call check(all_finite, "every reference node must evaluate to a finite value")
-        call check(n_eval > 400, "the comparison must cover the whole reference grid")
-
-        call deallocate_table(ref)
-    end subroutine compare_against_reference
 
 end program test_lieb_wu_integral

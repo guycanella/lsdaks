@@ -24,9 +24,10 @@
 !!       `U n_other` back separately.  Do not double count.
 !! @see lieb_wu_integral, table_io, xc_lsda
 module bethe_tables
-    use lsda_constants, only: dp, PI, TWOPI, U_SMALL
+    use lsda_constants, only: dp, PI, TWOPI, U_SMALL, HALF_FILLING_SNAP_TOL
     use lieb_wu_integral, only: lw_quad_t, lw_seed_t, lieb_wu_exc
-    use table_io, only: xc_table_t, write_fortran_table, count_nonfinite_entries
+    use table_io, only: xc_table_t, write_fortran_table, count_nonfinite_entries, &
+                        xc_table_filename
     use lsda_errors, only: ERROR_SUCCESS, ERROR_NOT_A_NUMBER, ERROR_INVALID_INPUT
     use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, ieee_is_nan, ieee_is_finite
     implicit none
@@ -76,25 +77,6 @@ module bethe_tables
     !! penultimate node at `n - m = 0.012 n`, four decades above this.
     real(dp), parameter :: M_EDGE_TOL = 1.0e-7_dp
 
-    !> Tolerance of the `n > 1` particle-hole branch test.
-    !!
-    !! `V_xc` is discontinuous at `n = 1` (the Mott cusp), and table grids
-    !! reach half filling through arithmetic that overshoots it: the reference
-    !! `U = 2` table has `n_grid(50) = 1.000000002`.  A bare `n > 1.0_dp` test
-    !! sends such a point through the particle-hole branch, which returns the
-    !! opposite one-sided limit with `V_up` and `V_dn` swapped - the defect
-    !! listed as Bug #1 of `xc_lsda` in CLAUDE.md.  The tolerance is 1e-8
-    !! rather than the 1e-12 of `xc_lsda` because the overshoot measured in the
-    !! reference grids is 2e-9, four decades above round-off; the price is an
-    !! `O(1e-8)` error on a genuine point that close to half filling, against
-    !! an `O(1)` error from the wrong branch.
-    real(dp), parameter :: N_HALF_TOL = 1.0e-8_dp
-
-    ! N_HALF_TOL and xc_functional::REGION_SNAP_TOL intentionally differ:
-    ! the former absorbs measured grid overshoot (about 2e-9), while the latter
-    ! is a round-off snap in the spline consumer. They must not be mechanically
-    ! unified without changing the physical cusp semantics of one path.
-
     !> Relative width of the magnetization stencil next to `m = 0`.
     !!
     !! The step in `m` must shrink with `m`, or the stencil never samples the
@@ -133,24 +115,21 @@ module bethe_tables
 
     !> Weakest interaction a *table* may be generated for.
     !!
-    !! `lieb_wu_integral` answers down to `U_QUAD_MIN = 0.5`, but a table is
-    !! more than a point evaluation: its smallest `m` nodes carry the
-    !! `m -> 0` exchange splitting, whose accuracy degrades with `U` because
-    !! the logarithmic corrections of the spin susceptibility sharpen while
-    !! the resolvable signal shrinks.  Measured worst relative error of
-    !! `V_up - V_dn` at the smallest `m` node: 0.24% at `U = 8`, 0.92% at
-    !! `U = 4`, 1.7% at `U = 2`, 8.2% at `U = 1`, and about 20% at `U = 0.5`
-    !! (the last against a high-order quadrature, since no reference table
-    !! exists below `U = 1`).  The C++ reference tables stop at `|U| = 1` for
-    !! the same reason, so that is where external validation stops and where
-    !! this generator refuses rather than writing an unvalidated table.
+    !! The point solver and generator share the lower limit
+    !! `U_QUAD_MIN = 0.5`.  A table is more than a point evaluation: its
+    !! smallest `m` nodes carry the `m -> 0` exchange splitting, whose
+    !! logarithmic corrections sharpen as `U` falls.  The
+    !! interaction-dependent `Lambda` quadrature floor in
+    !! `lieb_wu_integral` resolves that splitting down to this limit; it is
+    !! checked by self-convergence against an over-resolved quadrature rather
+    !! than against an external table.
     !!
     !! `U = 0` is **not** carved out of this floor: `generate_xc_table` refuses
     !! it too.  `compute_E_xc` and `compute_V_xc_numerical` do accept `U = 0`
     !! and return exactly zero, but a whole *table* of zeros has no consumer -
     !! the SCF has no XC term at `U = 0` - so writing one would only look like
     !! a validated table without being one.
-    real(dp), parameter, public :: U_TABLE_MIN = 1.0_dp
+    real(dp), parameter, public :: U_TABLE_MIN = 0.5_dp
 
     public :: compute_E0
     public :: compute_E_xc
@@ -347,6 +326,11 @@ contains
     !! * `n = 1`: `e_xc` has a cusp at half filling (Mott gap), so the
     !!   derivative is the one-sided limit from `n < 1`, taken with a
     !!   second-order backward stencil.
+    !!   Densities within `HALF_FILLING_SNAP_TOL` are snapped to that lower
+    !!   limit. A genuine point above the band (for example `n = 1 + 2e-9`)
+    !!   instead uses the particle-hole branch; for a polarized point, its
+    !!   intermediate negative magnetization is spin-swapped when mapped back,
+    !!   so the returned `V_xc_up`/`V_xc_down` are the upper-side channels.
     !!
     !! For `U < 0` the Shiba transformation is applied first and the spin-up
     !! potential changes sign, exactly as in `xc_lsda` and the C++ reference.
@@ -387,7 +371,12 @@ contains
         m = nu - nd
         sn = 1.0_dp
         sm = 1.0_dp
-        if (n > 1.0_dp + N_HALF_TOL) then
+        ! Match the spline consumer at the Mott boundary: both the branch
+        ! selection and the finite-difference stencil use the snapped density.
+        ! Without this assignment, sharing the tolerance alone would still
+        ! evaluate a near-boundary generator point at a different coordinate.
+        if (abs(n - 1.0_dp) < HALF_FILLING_SNAP_TOL) n = 1.0_dp
+        if (n > 1.0_dp + HALF_FILLING_SNAP_TOL) then
             n = 2.0_dp - n
             m = -m
             sn = -sn
@@ -549,7 +538,8 @@ contains
             .or. params%m_grade <= 0.0_dp .or. params%m_grade > 1.0_dp &
             .or. params%n_grade_low < 1.0_dp .or. params%n_grade_high < 1.0_dp &
             .or. .not. ieee_is_finite(params%n_min) .or. .not. ieee_is_finite(params%n_max) &
-            .or. params%n_min <= 0.0_dp .or. params%n_min > params%n_max &
+            .or. params%n_min <= 0.0_dp .or. params%n_max > 1.0_dp &
+            .or. params%n_min > params%n_max &
             .or. (params%n_points > 1 .and. params%n_min >= params%n_max)) then
             status = ERROR_INVALID_INPUT
             return
@@ -619,7 +609,6 @@ contains
         real(dp) :: U_current
         type(xc_table_t) :: table
         character(len=256) :: filename
-        character(len=32) :: U_str
 
         status = ERROR_SUCCESS
         n_U = size(U_values)
@@ -657,9 +646,7 @@ contains
                 return
             end if
 
-            write(U_str, '(F6.2)') U_current
-            U_str = adjustl(U_str)
-            filename = trim(output_dir) // "/xc_table_u" // trim(U_str) // ".dat"
+            call xc_table_filename(trim(output_dir), U_current, filename)
 
             call write_fortran_table(filename, table, io_stat)
 

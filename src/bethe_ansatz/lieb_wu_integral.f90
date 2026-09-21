@@ -162,6 +162,13 @@ module lieb_wu_integral
     !! about 24% of the run. The chosen 4.4 is the smallest tested value that
     !! retains the required low-m splitting accuracy; 7.33 is not a safe default
     !! merely because it corresponds to a smaller asymptotic `m/n`.
+    !!
+    !! @note The wall times above were measured with the earlier, lower floor;
+    !!       the current `n_lambda_floor` is more expensive below `U = 1.35`, so
+    !!       treat them as the relative cost of the *gate*, not as absolute
+    !!       timings. What the gate itself must satisfy - the low-`m` splitting
+    !!       staying converged and sign-correct at `m/n` down to 1e-5 - is swept
+    !!       over `U` and `n` by `test_low_m_quadrature_floor_convergence`.
     real(dp), parameter :: B_FLOOR_FRAC = 4.4_dp
 
     !> Residual of a scalar root find, with error propagation.
@@ -297,18 +304,58 @@ contains
     !!
     !! The XC potentials are finite differences of `e_xc`, and next to `m = 0`
     !! the signal they have to resolve is `e(n, m) - e(n, 0) = O(K m^2)`, i.e.
-    !! 1e-11 of `e_xc` at `m / n = 1e-5`.  The per-panel order needed to reach
-    !! that accuracy grows as the kernel width `u` shrinks.  Measured (1%
-    !! accuracy of the curvature `K` at `m / n = 1e-5`, worst case over `n`):
-    !! `U = 0.5` needs 32, `U = 0.75` needs 28, `U = 1` needs 24, `U = 1.5`
-    !! needs 16, `U >= 2` needs 14 or less.  `17 sqrt(2/U)` reproduces that
-    !! ladder and stays at or below the default 12 for `U >= 4`, so strongly
-    !! coupled tables cost exactly what they cost before.
-    !!
-    !! Without this floor the default order returned an `e_xc` difference that
-    !! was pure quadrature noise at low `U`, which flipped the **sign** of
+    !! 1e-11 of `e_xc` at `m / n = 1e-5`.  Without a floor the default order
+    !! returned pure quadrature noise there, which flipped the **sign** of
     !! `V_xc_up - V_xc_dn` as `m -> 0` - the quantity that decides the Stoner
     !! instability of the SCF.
+    !!
+    !! The requirement is **not** a monotone function of `U`, which is why this
+    !! is an envelope and not a fit.  The graded `Lambda` mesh ends with a
+    !! leftover panel `[v, B]` whose length relative to the kernel width `u`
+    !! depends on where the dyadic doubling happens to land, i.e. on the
+    !! fractional part of `log2(B / u)`.  The order needed therefore oscillates
+    !! with `U` instead of decreasing with it.
+    !!
+    !! Measured relative error of the `m -> 0` exchange splitting against
+    !! `n_lambda = 80`, worst case over `n` in {0.3, 0.8, 0.95} and `m/n` in
+    !! {1e-5, 1e-4}, on `U` from 0.5 to 2.4 in steps of 0.025 to 0.05
+    !! ("sign" = the splitting came out with the wrong sign):
+    !!
+    !! | `U`    | 12    | 16    | 20    | 24   | 28    | 32   | 36   | 40   |
+    !! |--------|-------|-------|-------|------|-------|------|------|------|
+    !! | 0.65   |       |       |       |      | sign  | 7.7% | 0.5% | 0.1% |
+    !! | 0.85   |       |       |       | sign | 38%   | 0.9% | 0.0% | 0.0% |
+    !! | 0.90   |       |       |       | 52%  | 2.3%  | 0.1% | 0.0% | 0.0% |
+    !! | 1.05   |       | sign  | 6.3%  | 0.0% | 0.0%  | 0.0% | 0.0% | 0.0% |
+    !! | 1.20   |       | 5.9%  | 0.0%  | 0.0% | 0.0%  | 0.0% | 0.0% | 0.0% |
+    !! | 1.35   | 57%   | 0.0%  | 0.0%  | 0.0% | 0.0%  | 0.0% | 0.0% | 0.0% |
+    !! | 1.50   | 2.1%  | 0.0%  | 0.0%  | 0.0% | 0.0%  | 0.0% | 0.0% | 0.0% |
+    !! | 2.00   | 0.0%  | 0.0%  | 0.0%  | 0.0% | 0.0%  | 0.0% | 0.0% | 0.0% |
+    !!
+    !! Blank cells are orders that the *previous* floor already clamped upwards,
+    !! so no independent measurement of them exists - and that clamping is what
+    !! made the earlier calibration look better than it was.
+    !!
+    !! Each branch below carries the order required at the **hardest** `U` of
+    !! its whole interval, not at one endpoint.  The previous ladder binned by
+    !! the upper edge of each step while the requirement does not decrease
+    !! monotonically, so `U = 1.02` fell into the step calibrated for `U = 1.5`
+    !! and came out with the splitting sign inverted.  End to end, with the
+    !! envelope below and the production quadrature, the worst relative error
+    !! over the same `(n, m/n)` set on `U` from 0.5 to 2.4 in steps of 0.025 is
+    !! 0.1%, with no sign inversion anywhere.
+    !!
+    !! Above `U = 2` the nominal default of 12 was measured sufficient up to
+    !! `U = 8.0` (same `(n, m/n)` set, `U` from 2.4 to 8.0: worst relative
+    !! error 0.0210%, no sign inversion). The reference refines all three
+    !! quadrature dimensions (`n_lambda = 64`, `n_k = 96`, `n_omega = 64`), as
+    !! does `test_low_m_quadrature_floor_convergence`. Above `U = 8` it is NOT measured -
+    !! tables are shipped up to `U = 20` - and since the requirement oscillates
+    !! with `frac(log2(B / u))` rather than decreasing with `U`, the measured
+    !! range must not be extrapolated.  Over that measured range the strongly
+    !! coupled tables keep their established cost; the price of the envelope is
+    !! paid by the weak and intermediate coupling range, and only next to
+    !! `m = 0` (see `n_lambda_per_panel`).
     !!
     !! @param[in] u  Kernel scale `U / 4`
     !! @return       Minimum number of Gauss-Legendre nodes per `Lambda` panel
@@ -316,7 +363,19 @@ contains
         real(dp), intent(in) :: u
         integer :: n_min
 
-        n_min = nint(17.0_dp * sqrt(0.5_dp / max(u, 0.25_dp * U_QUAD_MIN)))
+        if (u < 0.25_dp) then
+            ! U < 1: the oscillation peaks here; U = 0.65 and U = 0.85 invert
+            ! the sign of the splitting at every order up to 28.
+            n_min = 40
+        else if (u < 0.5_dp) then
+            ! 1 <= U < 2.  The drop to the nominal order must wait until here:
+            ! at U = 1.35 the nominal 12 misses the splitting by 57%.
+            n_min = 28
+        else
+            ! U >= 2: the nominal order is converged over the measured range
+            ! (2.4 <= U <= 8.0, worst error 0.0210%); U > 8 is unmeasured.
+            n_min = 12
+        end if
     end function n_lambda_floor
 
     !> Per-panel `Lambda` order actually used at a given spin cut-off `B`.

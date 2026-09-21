@@ -29,7 +29,8 @@
 program generate_xc_table_app
     use bethe_tables, only: generate_xc_table, grid_params_t, U_TABLE_MIN
     use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
-    use table_io, only: xc_table_t, write_fortran_table, count_nonfinite_entries
+    use table_io, only: xc_table_t, write_fortran_table, count_nonfinite_entries, &
+                        xc_table_filename
     use lsda_constants, only: dp
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     implicit none
@@ -150,9 +151,10 @@ program generate_xc_table_app
     ! delta functions that the fixed-order k quadrature cannot resolve: the
     ! solver itself refuses below U_QUAD_MIN = 0.5.  A *table* needs more than
     ! a point evaluation to be trustworthy - its smallest m nodes carry the
-    ! m -> 0 exchange splitting - and that is only validated against the C++
-    ! reference down to |U| = U_TABLE_MIN = 1.  Without this check the refusal
-    ! would reach the user as a generic ERROR_INVALID_INPUT from the generator.
+    ! m -> 0 exchange splitting - so the Lambda quadrature order rises as U
+    ! falls.  That rule is self-converged in the Fortran test suite down to
+    ! |U| = U_TABLE_MIN = 0.5.  Without this check the refusal would reach the
+    ! user as a generic ERROR_INVALID_INPUT from the generator.
     !
     ! U = 0 is NOT carved out: `generate_xc_table` refuses it like any other
     ! interaction below the floor.  A U = 0 table would be identically zero and
@@ -161,13 +163,12 @@ program generate_xc_table_app
     ! evaluations `compute_E_xc` / `compute_V_xc_numerical` do still accept
     ! U = 0 and return 0; only table generation refuses.
     if (abs(U) < U_TABLE_MIN) then
-        print '(A,F8.4,A)', "ERROR: |U| = ", abs(U), " is below the validated floor of the"
+        print '(A,F8.4,A)', "ERROR: |U| = ", abs(U), " is below the supported floor of the"
         print '(A,F6.2,A)', "       table generator, U_TABLE_MIN = ", U_TABLE_MIN, "."
         print '(A)', "       The spin kernels have width U/4 and become delta functions as"
-        print '(A)', "       U -> 0; below U = 1 the exchange splitting V_up - V_dn of the"
-        print '(A)', "       smallest m nodes is no longer accurate to a few percent and"
-        print '(A)', "       there is no reference table left to validate it against."
-        print '(A)', "       Use |U| >= 1.  U = 0 is refused here as well: e_xc vanishes"
+        print '(A)', "       U -> 0; below U = 0.5 the fixed-order quadrature cannot resolve"
+        print '(A)', "       the smallest-m exchange splitting reliably."
+        print '(A)', "       Use |U| >= 0.5.  U = 0 is refused here as well: e_xc vanishes"
         print '(A)', "       identically, so the table would be a file of zeros."
         stop 1
     end if
@@ -175,7 +176,7 @@ program generate_xc_table_app
     ! Refuse to clobber an existing table: the default output directory is the
     ! one the SCF reads and the file name follows from U alone, so a plain
     ! `--U 4` would otherwise overwrite the C++-validated reference table.
-    write(output_file, '(A,A,F0.2,A)') trim(output_dir), '/xc_table_u', U, '.dat'
+    call xc_table_filename(trim(output_dir), U, output_file)
     inquire(file=trim(output_file), exist=exists)
     if (exists .and. .not. force) then
         print '(A,A)', "ERROR: refusing to overwrite existing file ", trim(output_file)

@@ -13,6 +13,12 @@ module lsda_constants
     real(dp), parameter :: U_SMALL = 1.0e-9_dp            ! Check if U ≈ 0
     real(dp), parameter :: TOL_DEFAULT = 1.0e-16_dp       ! Convergence tol
 
+    ! Half-width of the numerical snap onto the Mott boundary n = 1.  Both
+    ! the table generator's point evaluator and the spline consumer use this
+    ! value, so a density in this round-off band is assigned the same
+    ! one-sided limit before and after table generation.
+    real(dp), parameter :: HALF_FILLING_SNAP_TOL = 1.0e-12_dp
+
     integer, parameter :: ITER_MAX = 10000                ! Max iterations SCF
 
     ! Mixing parameters (convention from original C++ code):

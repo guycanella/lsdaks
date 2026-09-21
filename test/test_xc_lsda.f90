@@ -6,6 +6,11 @@ program test_xc_lsda
 
     real(dp), parameter :: TOL = 1.0e-9_dp
 
+    !> Finer U = 4 fixture, used only by `test_off_node_matches_generator`
+    character(len=*), parameter :: FINE_TABLE = &
+        'build/test_xc_lsda_xc_table_u4.00_fine.dat'
+
+    call prepare_test_xc_tables()
     call execute_serial_cmd_app(get_xc_lsda_tests())
 
 contains
@@ -16,6 +21,8 @@ contains
 
         tests = test_list([ &
             test("xc_lsda_init_destroy", test_xc_lsda_init_destroy), &
+            test("zero_u_initializes_without_table", test_zero_u_initializes_without_table), &
+            test("nonzero_small_u_requires_table", test_nonzero_small_u_requires_table), &
             test("get_exc_evaluation", test_get_exc_evaluation), &
             test("get_exc_spin_symmetry", test_get_exc_spin_symmetry), &
             test("get_vxc_spin_symmetry", test_get_vxc_spin_symmetry), &
@@ -39,10 +46,63 @@ contains
             test("exc_below_first_table_density", &
                  test_exc_below_first_table_density), &
             test("empty_channel_shortcuts", test_empty_channel_shortcuts), &
-            test("cpp_reference_values_off_nodes", &
-                 test_cpp_reference_values_off_nodes) &
+            test("off_node_xc_symmetries", &
+                 test_off_node_xc_symmetries), &
+            test("off_node_matches_generator", &
+                 test_off_node_matches_generator) &
         ])
     end function get_xc_lsda_tests
+
+    !> The exact U = 0 functional must not read or require an XC table.
+    !!
+    !! This is the analytic non-interacting limit: e_xc and both spin potentials
+    !! vanish for every physical density.  A deliberately nonexistent filename
+    !! proves the initializer returns before any table I/O.
+    subroutine test_zero_u_initializes_without_table()
+        use fortuno_serial, only: check => serial_check
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, get_exc, get_vxc, xc_lsda_destroy
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(xc_lsda_t) :: xc
+        integer :: status, ierr
+        real(dp) :: exc, v_up, v_dw
+
+        call xc_lsda_init(xc, 'build/nonexistent_xc_table.dat', status, u_signed=0.0_dp)
+        call check(status == ERROR_SUCCESS, "U = 0 XC initialization must not require a table")
+        call check(xc%initialized, "U = 0 XC functional must be initialized")
+        call check(abs(xc%U) < TOL, "U = 0 XC functional must retain zero interaction")
+
+        call get_exc(xc, 0.4_dp, 0.3_dp, exc, ierr)
+        call check(ierr == ERROR_SUCCESS .and. abs(exc) < TOL, "e_xc must vanish at U = 0")
+
+        call get_vxc(xc, 0.4_dp, 0.3_dp, v_up, v_dw, ierr)
+        call check(ierr == ERROR_SUCCESS .and. abs(v_up) < TOL .and. abs(v_dw) < TOL, &
+                   "both V_xc channels must vanish at U = 0")
+
+        call xc_lsda_destroy(xc)
+    end subroutine test_zero_u_initializes_without_table
+
+    !> A nonzero interaction must not be silently replaced by the U = 0 XC functional.
+    !!
+    !! The zero-XC shortcut is a physical statement about the non-interacting
+    !! point only.  A small but nonzero U below the generator floor still needs
+    !! a compatible table and must therefore fail when no table can be read.
+    !! This fails if XC_U_MATCH_TOL is incorrectly used as the physical-zero
+    !! threshold.
+    subroutine test_nonzero_small_u_requires_table()
+        use fortuno_serial, only: check => serial_check
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, xc_lsda_destroy
+        use lsda_errors, only: ERROR_SUCCESS
+
+        type(xc_lsda_t) :: xc
+        integer :: status
+
+        call xc_lsda_init(xc, 'build/nonexistent_xc_table.dat', status, u_signed=1.0e-7_dp)
+        call check(status /= ERROR_SUCCESS, "nonzero U below the table floor must require a table")
+        call check(.not. xc%initialized, "nonzero U must not initialize the zero-XC functional")
+
+        call xc_lsda_destroy(xc)
+    end subroutine test_nonzero_small_u_requires_table
 
     !> The analytic ∂e_xc/∂n_dn at n_dn = 0 must reproduce the tabulated column
     !!
@@ -64,7 +124,7 @@ contains
         integer :: status, i, nm
         real(dp) :: analytic, tabulated, error, max_error
 
-        call read_fortran_table("data/tables/fortran_native/xc_table_u4.00.dat", table, status)
+        call read_fortran_table("build/test_xc_lsda_xc_table_u4.00.dat", table, status)
         call check(status == 0, "table should be readable")
         if (status /= 0) return
 
@@ -106,11 +166,11 @@ contains
         integer :: status, i, nm
         real(dp) :: n, m, h, exc_inner, exc_edge, slope, expected
 
-        call read_fortran_table("data/tables/fortran_native/xc_table_u4.00.dat", table, status)
+        call read_fortran_table("build/test_xc_lsda_xc_table_u4.00.dat", table, status)
         call check(status == 0, "endpoint slope: table should be readable")
         if (status /= 0) return
 
-        call xc_lsda_init(xc, "data/tables/fortran_native/xc_table_u4.00.dat", status)
+        call xc_lsda_init(xc, "build/test_xc_lsda_xc_table_u4.00.dat", status)
         call check(status == 0, "endpoint slope: XC initialization should succeed")
         if (status /= 0) then
             call deallocate_table(table)
@@ -157,7 +217,7 @@ contains
         integer :: status
         real(dp) :: exc_low, exc_first
 
-        call xc_lsda_init(xc, "data/tables/fortran_native/xc_table_u4.00.dat", status)
+        call xc_lsda_init(xc, "build/test_xc_lsda_xc_table_u4.00.dat", status)
         call check(status == 0, "XC initialization should succeed")
         if (status /= 0) return
 
@@ -177,21 +237,7 @@ contains
 
     end subroutine test_exc_below_first_table_density
 
-    !> REGRESSION (R10): e_xc and V_xc against hard-coded values OFF the nodes
-    !!
-    !! Every other test of this suite checks a symmetry, a sign, a shortcut or a
-    !! value ON a tabulated node. None of them sees an off-by-one in the row
-    !! window selected by `spline2d_eval` (`i_first`, `num_n`), in the synthetic
-    !! node, or in the boundary condition of the row splines: those only change
-    !! the interpolant BETWEEN nodes. This test pins the interpolated values
-    !! themselves against the C++ reference (`original/spline2D.cc`, functions
-    !! exc_value / Vxc_up_value / Vxc_dn_value, driven for |U| = 4 through a
-    !! throw-away driver linked against the original sources). The V_xc values
-    !! retain exact C++ parity. Four e_xc references intentionally differ: they
-    !! are reached through the final magnetization interval where the C++ uses
-    !! -V_xc^dn instead of the analytic endpoint slope -V_xc^dn/2. Their values
-    !! below were regenerated after that single correction; the independent
-    !! derivative identity is pinned by test_exc_fully_polarized_endpoint_slope.
+    !> XC symmetry identities must hold away from tabulated nodes.
     !!
     !! The seven points are off-node in BOTH directions and cover
     !!   1,2: Region I   (m >= 0, n <= 1)
@@ -201,103 +247,154 @@ contains
     !!   6,7: below the first tabulated density (n = 0.007 and n = 0.004 against
     !!        a first row at n = 0.0202807), i.e. the window that consists of the
     !!        synthetic node plus the whole table
-    !! and are evaluated for both signs of U, so the Shiba transformation is
-    !! covered as well.
-    !!
-    !! The tolerance is 1e-9: the measured deviations are at most 3e-11, and
-    !! they come from `integral_1`/`dexc_dndown_b0`, which is a closed form here
-    !! and a quadrature in the C++.
-    subroutine test_cpp_reference_values_off_nodes()
+    !! For repulsive U, spin exchange is an exact identity.  For attractive U,
+    !! the Shiba transformation relates the functional to the repulsive result
+    !! at (1 - n_up, n_down).  These checks independently exercise interpolation
+    !! between nodes, recursive region mapping, and the sign conventions of both
+    !! spin potentials without a reference-table or C++ runtime dependency.
+    subroutine test_off_node_xc_symmetries()
         use fortuno_serial, only: check => serial_check
         use xc_lsda, only: xc_lsda_t, xc_lsda_init, get_exc, get_vxc, xc_lsda_destroy
-        use lsda_constants, only: dp
 
         integer, parameter :: NPTS = 7
-        !> Deviation allowed against the C++ reference
-        real(dp), parameter :: CPP_TOL = 1.0e-9_dp
+        real(dp), parameter :: SYMMETRY_TOL = 1.0e-10_dp
 
-        type(xc_lsda_t) :: xc
+        type(xc_lsda_t) :: xc_rep, xc_att
         integer :: status, ierr, i
-        real(dp) :: exc, v_up, v_dw
+        real(dp) :: exc, exc_swap, exc_att, exc_shiba
+        real(dp) :: v_up, v_dw, v_up_swap, v_dw_swap
+        real(dp) :: v_up_att, v_dw_att, v_up_shiba, v_dw_shiba
         real(dp) :: n_up(NPTS), n_dw(NPTS)
-        real(dp) :: exc_p(NPTS), vup_p(NPTS), vdn_p(NPTS)
-        real(dp) :: exc_m(NPTS), vup_m(NPTS), vdn_m(NPTS)
 
         n_up = [0.34267985324_dp, 0.27001671326_dp, 0.15_dp, 0.45_dp, 0.82_dp, &
                 0.004_dp, 0.0031_dp]
         n_dw = [0.028423868551_dp, 0.20374663913_dp, 0.30_dp, 0.72_dp, 0.43_dp, &
                 0.003_dp, 0.0009_dp]
 
-        ! ---- C++ reference, U = +4 ------------------------------------------
-        exc_p = [-0.01886444325204032_dp, -0.09734691993050536_dp, &
-                 -0.08109155122879777_dp, -0.1976590508289344_dp, &
-                 -0.13884924763667_dp, -4.715464898467325e-05_dp, &
-                 -1.10470910602286e-05_dp]
-        vup_p = [-0.02884866182710155_dp, -0.2424327331672126_dp, &
-                 -0.4573210438228484_dp, 0.2416790877745727_dp, &
-                 0.6746049834235452_dp, -0.01124631958862716_dp, &
-                 -0.003347177556420216_dp]
-        vdn_p = [-0.6426005138655668_dp, -0.3754186383910444_dp, &
-                 -0.166737725269995_dp, 0.5858783532371914_dp, &
-                 0.155478183262056_dp, -0.01518029142525137_dp, &
-                 -0.0120627212450126_dp]
-
-        ! ---- C++ reference, U = -4 (Shiba) ----------------------------------
-        exc_m = [-0.02697199509353530_dp, -0.1888589974732909_dp, &
-                 -0.1370821173219327_dp, -0.1737738830700924_dp, &
-                 -0.1173161068289127_dp, -0.004928761787534891_dp, &
-                 -0.001483988382532426_dp]
-        vup_m = [0.02854827872029039_dp, 0.2896841644791011_dp, &
-                 -0.8316581996001842_dp, -0.2430808001099627_dp, &
-                 0.5561574713787855_dp, 0.01183572366169481_dp, &
-                 0.003548855676387826_dp]
-        vdn_m = [-0.9273540394183423_dp, -0.8577903714734391_dp, &
-                 0.1714570982716558_dp, 0.4960910736315256_dp, &
-                 -0.1593018655000886_dp, -1.641028794017704_dp, &
-                 -1.644573668825788_dp]
-
-        call xc_lsda_init(xc, "data/tables/fortran_native/xc_table_u4.00.dat", status, &
+        call xc_lsda_init(xc_rep, "build/test_xc_lsda_xc_table_u4.00.dat", status, &
                           u_signed = 4.0_dp)
-        call check(status == 0, "C++ reference: XC init (U = +4) should succeed")
+        call check(status == 0, "Off-node symmetry: repulsive XC init should succeed")
         if (status /= 0) return
 
-        do i = 1, NPTS
-            call get_exc(xc, n_up(i), n_dw(i), exc, ierr)
-            call check(ierr == 0, "C++ reference (U = +4): get_exc should succeed")
-            call check(abs(exc - exc_p(i)) < CPP_TOL, &
-                       "corrected reference (U = +4): e_xc must match off the nodes")
-
-            call get_vxc(xc, n_up(i), n_dw(i), v_up, v_dw, ierr)
-            call check(ierr == 0, "C++ reference (U = +4): get_vxc should succeed")
-            call check(abs(v_up - vup_p(i)) < CPP_TOL, &
-                       "C++ reference (U = +4): V_xc^up must match off the nodes")
-            call check(abs(v_dw - vdn_p(i)) < CPP_TOL, &
-                       "C++ reference (U = +4): V_xc^dn must match off the nodes")
-        end do
-
-        call xc_lsda_destroy(xc)
-
-        call xc_lsda_init(xc, "data/tables/fortran_native/xc_table_u4.00.dat", status, &
+        call xc_lsda_init(xc_att, "build/test_xc_lsda_xc_table_u4.00.dat", status, &
                           u_signed = -4.0_dp)
-        call check(status == 0, "C++ reference: XC init (U = -4) should succeed")
+        call check(status == 0, "Off-node symmetry: attractive XC init should succeed")
+        if (status /= 0) then
+            call xc_lsda_destroy(xc_rep)
+            return
+        end if
+
+        do i = 1, NPTS
+            call get_exc(xc_rep, n_up(i), n_dw(i), exc, ierr)
+            call get_exc(xc_rep, n_dw(i), n_up(i), exc_swap, status)
+            call check(ierr == 0 .and. status == 0, &
+                       "Off-node symmetry: repulsive e_xc evaluations should succeed")
+            call check(abs(exc - exc_swap) < SYMMETRY_TOL, &
+                       "Off-node symmetry: repulsive e_xc must be spin symmetric")
+
+            call get_vxc(xc_rep, n_up(i), n_dw(i), v_up, v_dw, ierr)
+            call get_vxc(xc_rep, n_dw(i), n_up(i), v_up_swap, v_dw_swap, status)
+            call check(ierr == 0 .and. status == 0, &
+                       "Off-node symmetry: repulsive V_xc evaluations should succeed")
+            call check(abs(v_up - v_dw_swap) < SYMMETRY_TOL .and. &
+                       abs(v_dw - v_up_swap) < SYMMETRY_TOL, &
+                       "Off-node symmetry: repulsive V_xc must exchange spin channels")
+
+            call get_exc(xc_att, n_up(i), n_dw(i), exc_att, ierr)
+            call get_exc(xc_rep, 1.0_dp - n_up(i), n_dw(i), exc_shiba, status)
+            call check(ierr == 0 .and. status == 0, &
+                       "Off-node Shiba: e_xc evaluations should succeed")
+            call check(abs(exc_att - exc_shiba) < SYMMETRY_TOL, &
+                       "Off-node Shiba: attractive e_xc must map to repulsive e_xc")
+
+            call get_vxc(xc_att, n_up(i), n_dw(i), v_up_att, v_dw_att, ierr)
+            call get_vxc(xc_rep, 1.0_dp - n_up(i), n_dw(i), v_up_shiba, v_dw_shiba, status)
+            call check(ierr == 0 .and. status == 0, &
+                       "Off-node Shiba: V_xc evaluations should succeed")
+            call check(abs(v_up_att + v_up_shiba) < SYMMETRY_TOL .and. &
+                       abs(v_dw_att - v_dw_shiba) < SYMMETRY_TOL, &
+                       "Off-node Shiba: attractive V_xc must retain the channel signs")
+        end do
+
+        call xc_lsda_destroy(xc_att)
+        call xc_lsda_destroy(xc_rep)
+    end subroutine test_off_node_xc_symmetries
+
+    !> Between nodes the interpolant must reproduce the function it interpolates.
+    !!
+    !! The symmetry checks above cannot see this: Shiba and spin exchange are
+    !! invariances of *any* interpolant, and an off-by-one in the row window of
+    !! `spline2d_eval` shifts both sides of a symmetry by the same amount, so it
+    !! passes them.  Here the spline is compared, at points off-node in both `n`
+    !! and `m`, against a direct solve of the same Lieb-Wu equations that built
+    !! the table - the generator, not the C++ reference.
+    !!
+    !! `V_xc` is checked the same way and for the same reason: the symmetry
+    !! checks are equally blind to a shifted row window in the `vxc_up` /
+    !! `vxc_down` splines, and nothing else in the suite pins those two
+    !! interpolants to the function they interpolate away from the nodes.
+    !!
+    !! This test uses the finer `FINE_TABLE` fixture rather than the 8 x 9 grid
+    !! the rest of the suite shares. `V_xc` is a derivative of `e_xc` and is
+    !! correspondingly harder to interpolate: measured at these same five
+    !! points, the spline error on 8 x 9 is 1.6e-2 in `V_xc` (8.1e-4 in
+    !! `e_xc`), against one-row-shift signals of the same 1e-2 order, so a
+    !! tolerance there could not separate a correct interpolation from a shift.
+    !!
+    !! Tolerance: on the 20 x 31 fixture the measured spline error at these
+    !! points is at most 7.3e-6 in `e_xc` and 1.4e-4 in `V_xc`; `VXC_TOL` sits
+    !! ~7x above that. Verified by mutation on this fixture (shifting only the
+    !! value arrays, rewriting the table and re-reading it): `cshift` of one
+    !! row (`dim=2`, the `n` axis) or one column (`dim=1`, the `m` axis) in
+    !! `exc`, `vxc_up` or `vxc_down` fails the combined assertions at all 5
+    !! points, with the smallest detected deviation 3.6e-4 in `e_xc` and
+    !! 1.9e-3 in `V_xc`. For a shifted `V_xc` channel, its own channel-specific
+    !! assertion catches 4 of 5 points; at the remaining point `n_up < n_dw`,
+    !! the Shiba/spin-swap path evaluates the opposite spline and the other
+    !! channel's assertion detects the mutation.
+    subroutine test_off_node_matches_generator()
+        use fortuno_serial, only: check => serial_check
+        use xc_lsda, only: xc_lsda_t, xc_lsda_init, get_exc, get_vxc, xc_lsda_destroy
+        use bethe_tables, only: compute_E_xc, compute_V_xc_numerical, xc_potentials_t
+
+        integer, parameter :: NPTS = 5
+        real(dp), parameter :: SPLINE_TOL = 1.0e-4_dp
+        real(dp), parameter :: VXC_TOL = 1.0e-3_dp
+        real(dp), parameter :: N_UP(NPTS) = [0.34267985324_dp, 0.27001671326_dp, &
+                                             0.15_dp, 0.4123_dp, 0.61_dp]
+        real(dp), parameter :: N_DW(NPTS) = [0.028423868551_dp, 0.20374663913_dp, &
+                                             0.30_dp, 0.3777_dp, 0.29_dp]
+
+        type(xc_lsda_t) :: xc
+        type(xc_potentials_t) :: v_exact
+        real(dp) :: exc, exc_exact, v_up, v_dw
+        integer :: status, i
+
+        call xc_lsda_init(xc, FINE_TABLE, status, u_signed = 4.0_dp)
+        call check(status == 0, "Off-node interpolation: XC init should succeed")
         if (status /= 0) return
 
         do i = 1, NPTS
-            call get_exc(xc, n_up(i), n_dw(i), exc, ierr)
-            call check(ierr == 0, "C++ reference (U = -4): get_exc should succeed")
-            call check(abs(exc - exc_m(i)) < CPP_TOL, &
-                       "corrected reference (U = -4): e_xc must match off the nodes")
+            call get_exc(xc, N_UP(i), N_DW(i), exc, status)
+            call check(status == 0, "Off-node interpolation: e_xc evaluation should succeed")
+            exc_exact = compute_E_xc(N_UP(i), N_DW(i), 4.0_dp)
+            call check(abs(exc - exc_exact) < SPLINE_TOL, &
+                       "Off-node interpolation: the spline must reproduce the " // &
+                       "generator between nodes, not a neighbouring row")
 
-            call get_vxc(xc, n_up(i), n_dw(i), v_up, v_dw, ierr)
-            call check(ierr == 0, "C++ reference (U = -4): get_vxc should succeed")
-            call check(abs(v_up - vup_m(i)) < CPP_TOL, &
-                       "C++ reference (U = -4): V_xc^up must match off the nodes")
-            call check(abs(v_dw - vdn_m(i)) < CPP_TOL, &
-                       "C++ reference (U = -4): V_xc^dn must match off the nodes")
+            call get_vxc(xc, N_UP(i), N_DW(i), v_up, v_dw, status)
+            call check(status == 0, "Off-node interpolation: V_xc evaluation should succeed")
+            v_exact = compute_V_xc_numerical(N_UP(i), N_DW(i), 4.0_dp)
+            call check(abs(v_up - v_exact%v_xc_up) < VXC_TOL, &
+                       "Off-node interpolation: the V_xc^up spline must reproduce " // &
+                       "the generator between nodes, not a neighbouring row")
+            call check(abs(v_dw - v_exact%v_xc_down) < VXC_TOL, &
+                       "Off-node interpolation: the V_xc^dn spline must reproduce " // &
+                       "the generator between nodes, not a neighbouring row")
         end do
 
         call xc_lsda_destroy(xc)
-    end subroutine test_cpp_reference_values_off_nodes
+    end subroutine test_off_node_matches_generator
 
     !> REGRESSION (T18): the empty-channel and corner shortcuts of the C++
     !!
@@ -336,7 +433,7 @@ contains
         !> The shortcuts return a literal 0, so "exactly zero" is testable
         real(dp), parameter :: ZERO_TOL = 1.0e-18_dp
 
-        call xc_lsda_init(xc, "data/tables/fortran_native/xc_table_u4.00.dat", status)
+        call xc_lsda_init(xc, "build/test_xc_lsda_xc_table_u4.00.dat", status)
         call check(status == 0, "XC initialization should succeed")
         if (status /= 0) return
 
@@ -412,7 +509,7 @@ contains
         integer :: status
         character(len=256) :: test_file
 
-        test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u4.00.dat"
 
         call xc_lsda_init(xc, test_file, status)
         call check(status == 0, "XC initialization should succeed")
@@ -435,7 +532,7 @@ contains
         real(dp) :: exc, n_up, n_dw
         character(len=256) :: test_file
 
-        test_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u2.00.dat"
         call xc_lsda_init(xc, test_file, status)
 
         n_up = 0.4_dp
@@ -462,7 +559,7 @@ contains
         real(dp) :: exc1, exc2, n_up, n_dw
         character(len=256) :: test_file
 
-        test_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u2.00.dat"
         call xc_lsda_init(xc, test_file, status)
 
         n_up = 0.45_dp
@@ -492,7 +589,7 @@ contains
         real(dp) :: v_up1, v_dw1, v_up2, v_dw2, n_up, n_dw
         character(len=256) :: test_file
 
-        test_file = "data/tables/fortran_native/xc_table_u2.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u2.00.dat"
         call xc_lsda_init(xc, test_file, status)
 
         n_up = 0.45_dp
@@ -600,7 +697,7 @@ contains
         real(dp), parameter :: EPS = 1.0e-6_dp
         character(len=256) :: test_file
 
-        test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u4.00.dat"
         call xc_lsda_init(xc, test_file, status)
         call check(status == 0, "XC initialization should succeed")
         call check(abs(xc%smoothing_width) < TOL, "smoothing must be off by default")
@@ -633,7 +730,7 @@ contains
         real(dp), parameter :: W = 0.05_dp
         character(len=256) :: test_file
 
-        test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u4.00.dat"
 
         call xc_lsda_init(xc_plain, test_file, status)
         call check(status == 0, "unsmoothed XC initialization should succeed")
@@ -684,7 +781,7 @@ contains
         integer :: status
         character(len=256) :: test_file
 
-        test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u4.00.dat"
 
         call xc_lsda_init(xc, test_file, status, smoothing_width=-0.1_dp)
         call check(status /= 0, "negative smoothing width must be rejected")
@@ -723,7 +820,7 @@ contains
         character(len=256) :: test_file
         real(dp) :: nan_w, pinf_w, ninf_w
 
-        test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u4.00.dat"
 
         nan_w = ieee_value(1.0_dp, ieee_quiet_nan)
         pinf_w = ieee_value(1.0_dp, ieee_positive_inf)
@@ -769,7 +866,7 @@ contains
         real(dp) :: exc_att, exc_rep
         real(dp), parameter :: N_UP = 0.3_dp, N_DW = 0.2_dp
 
-        test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u4.00.dat"
 
         call xc_lsda_init(xc_att, test_file, status, u_signed=-4.0_dp)
         call check(status == 0, "init with u_signed = -4 should succeed")
@@ -826,7 +923,7 @@ contains
         integer :: status
         character(len=256) :: test_file
 
-        test_file = "data/tables/fortran_native/xc_table_u4.00.dat"
+        test_file = "build/test_xc_lsda_xc_table_u4.00.dat"
 
         call xc_lsda_init(xc, test_file, status, u_signed=-2.0_dp)
         call check(status /= 0, "|u_signed| /= table |U| must be rejected")
@@ -834,4 +931,57 @@ contains
 
         call xc_lsda_destroy(xc)
     end subroutine test_shiba_requires_matching_table
+
+    !> Generate the deterministic XC fixtures used by this test program.
+    !!
+    !! The compact grid keeps the release and debug suites fast while exercising
+    !! the production table generator, writer, reader, and spline initialization.
+    !! Files live only in `build/` and are rewritten on every run: they are the
+    !! oracle of this suite, so a cached copy from an older generator would let
+    !! the tests keep validating against a table the code no longer produces.
+    !! The 8 x 9 grid makes regenerating cheap enough not to bother caching.
+    !!
+    !! One extra, finer fixture (`FINE_TABLE`, 20 x 31) is written for
+    !! `test_off_node_matches_generator`. That test compares the interpolants
+    !! against the generator between nodes, and on the 8 x 9 grid the measured
+    !! `V_xc` spline error at those points (1.6e-2) is the same order as the
+    !! deviation a one-row shift produces, so no tolerance there can tell the
+    !! two apart. On 20 x 31 the error drops to 1.4e-4 while the shift signal
+    !! stays at 1e-3..7e-2, and the comparison becomes discriminating. The
+    !! coarse grid is kept for every other test so their calibrated tolerances
+    !! stay valid.
+    subroutine prepare_test_xc_tables()
+        use bethe_tables, only: generate_xc_table, grid_params_t
+        use table_io, only: xc_table_t, write_fortran_table, deallocate_table
+        use lsda_errors, only: ERROR_SUCCESS
+
+        real(dp), parameter :: U_VALUES(2) = [2.0_dp, 4.0_dp]
+        type(grid_params_t) :: params
+        type(xc_table_t) :: table
+        character(len=256) :: filename
+        integer :: i, ierr
+
+        params = grid_params_t()
+        params%n_points = 8
+        params%m_points = 9
+
+        do i = 1, size(U_VALUES)
+            write(filename, '(A,F0.2,A)') 'build/test_xc_lsda_xc_table_u', U_VALUES(i), '.dat'
+
+            call generate_xc_table(U_VALUES(i), params, table, ierr)
+            if (ierr /= ERROR_SUCCESS) error stop 'failed to generate XC-LSDA test fixture'
+
+            call write_fortran_table(trim(filename), table, ierr)
+            if (allocated(table%n_grid)) call deallocate_table(table)
+            if (ierr /= ERROR_SUCCESS) error stop 'failed to write XC-LSDA test fixture'
+        end do
+
+        params%n_points = 20
+        params%m_points = 31
+        call generate_xc_table(4.0_dp, params, table, ierr)
+        if (ierr /= ERROR_SUCCESS) error stop 'failed to generate fine XC-LSDA test fixture'
+        call write_fortran_table(FINE_TABLE, table, ierr)
+        if (allocated(table%n_grid)) call deallocate_table(table)
+        if (ierr /= ERROR_SUCCESS) error stop 'failed to write fine XC-LSDA test fixture'
+    end subroutine prepare_test_xc_tables
 end program test_xc_lsda
