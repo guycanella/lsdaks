@@ -326,8 +326,8 @@ contains
     !! * `n = 1`: `e_xc` has a cusp at half filling (Mott gap), so the
     !!   derivative is the one-sided limit from `n < 1`, taken with a
     !!   second-order backward stencil.
-    !!   Densities within `HALF_FILLING_SNAP_TOL` are snapped to that lower
-    !!   limit. A genuine point above the band (for example `n = 1 + 2e-9`)
+    !!   Densities strictly inside `HALF_FILLING_SNAP_TOL` are snapped to that
+    !!   lower limit. A point at or above the band (for example `n = 1 + 2e-9`)
     !!   instead uses the particle-hole branch; for a polarized point, its
     !!   intermediate negative magnetization is spin-swapped when mapped back,
     !!   so the returned `V_xc_up`/`V_xc_down` are the upper-side channels.
@@ -376,7 +376,7 @@ contains
         ! Without this assignment, sharing the tolerance alone would still
         ! evaluate a near-boundary generator point at a different coordinate.
         if (abs(n - 1.0_dp) < HALF_FILLING_SNAP_TOL) n = 1.0_dp
-        if (n > 1.0_dp + HALF_FILLING_SNAP_TOL) then
+        if (n > 1.0_dp) then
             n = 2.0_dp - n
             m = -m
             sn = -sn

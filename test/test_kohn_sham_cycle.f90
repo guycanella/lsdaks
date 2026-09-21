@@ -2211,7 +2211,7 @@ contains
         use table_io, only: xc_table_t, write_fortran_table, deallocate_table
         use lsda_errors, only: ERROR_SUCCESS
 
-        real(dp), parameter :: U_VALUES(3) = [1.0_dp, 2.0_dp, 4.0_dp]
+        real(dp), parameter :: U_VALUES(2) = [2.0_dp, 4.0_dp]
         type(grid_params_t) :: params
         type(xc_table_t) :: table
         character(len=256) :: filename

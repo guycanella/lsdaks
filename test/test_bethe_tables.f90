@@ -472,8 +472,9 @@ contains
     !!
     !! (a) `n = 1` is a **discontinuity** of `V_xc` (the Mott cusp).  The
     !! direct generator evaluator and the spline consumer share
-    !! `HALF_FILLING_SNAP_TOL`: round-off inside that band stays on the lower
-    !! limit, while a genuine point outside it uses particle-hole symmetry.
+    !! `HALF_FILLING_SNAP_TOL`: round-off strictly inside that band stays on the
+    !! lower limit, while a point at or outside its upper boundary uses
+    !! particle-hole symmetry.
     !! Generated tables are restricted to `n <= 1`, so no table node can be
     !! evaluated by the two modules on opposite sides of this cusp.
     !!
@@ -487,7 +488,7 @@ contains
         use bethe_tables, only: compute_V_xc_numerical, xc_potentials_t
         use lsda_constants, only: dp, HALF_FILLING_SNAP_TOL
 
-        type(xc_potentials_t) :: v_half, v_snap, v_over, v_under, v_edge, v_near_edge
+        type(xc_potentials_t) :: v_half, v_snap, v_boundary, v_over, v_under, v_edge, v_near_edge
 
         ! (a) half filling reached from above by round-off shares the lower
         ! one-sided limit.  Outside the common band, particle-hole symmetry
@@ -495,6 +496,8 @@ contains
         v_half = compute_V_xc_numerical(0.5_dp, 0.5_dp, 4.0_dp)
         v_snap = compute_V_xc_numerical(0.5_dp + 0.10_dp * HALF_FILLING_SNAP_TOL, &
                                         0.5_dp + 0.10_dp * HALF_FILLING_SNAP_TOL, 4.0_dp)
+        v_boundary = compute_V_xc_numerical(0.5_dp + 0.50_dp * HALF_FILLING_SNAP_TOL, &
+                                            0.5_dp + 0.50_dp * HALF_FILLING_SNAP_TOL, 4.0_dp)
         v_over = compute_V_xc_numerical(0.5_dp + 1.0e-9_dp, 0.5_dp + 1.0e-9_dp, &
                                         4.0_dp)
         v_under = compute_V_xc_numerical(0.5_dp - 1.0e-9_dp, 0.5_dp - 1.0e-9_dp, &
@@ -504,6 +507,10 @@ contains
                    "a round-off excursion inside the shared snap band must keep V_xc_up")
         call check(abs(v_snap%v_xc_down - v_half%v_xc_down) < 1.0e-8_dp, &
                    "a round-off excursion inside the shared snap band must keep V_xc_down")
+        call check(abs(v_boundary%v_xc_up + v_under%v_xc_up) < 1.0e-4_dp, &
+                   "the upper snap boundary must use the particle-hole V_xc_up branch")
+        call check(abs(v_boundary%v_xc_down + v_under%v_xc_down) < 1.0e-4_dp, &
+                   "the upper snap boundary must use the particle-hole V_xc_down branch")
         call check(abs(v_over%v_xc_up + v_under%v_xc_up) < 1.0e-4_dp, &
                    "outside the shared snap band V_xc_up must obey particle-hole symmetry")
         call check(abs(v_over%v_xc_down + v_under%v_xc_down) < 1.0e-4_dp, &

@@ -39,7 +39,7 @@ program generate_xc_table_app
     character(len=256) :: output_dir, output_file, arg, val
     type(grid_params_t) :: params
     type(xc_table_t) :: table
-    integer :: ierr, io_stat, nargs
+    integer :: ierr, io_stat, nargs, command_stat, exit_stat
     integer :: n_bad_exc, n_bad_up, n_bad_dn, i, j
     logical :: have_U, force, exists
     real(dp) :: t_start, t_end, wall
@@ -173,6 +173,15 @@ program generate_xc_table_app
         stop 1
     end if
 
+    ! A freshly cloned repository (or a user-selected nested directory) need
+    ! not contain the output path yet. Create it before probing the destination
+    ! so a successful, potentially long generation cannot fail only at write.
+    call ensure_output_directory(trim(output_dir), command_stat, exit_stat)
+    if (command_stat /= 0 .or. exit_stat /= 0) then
+        print '(A,A)', "ERROR: failed to create output directory: ", trim(output_dir)
+        stop 1
+    end if
+
     ! Refuse to clobber an existing table: the default output directory is the
     ! one the SCF reads and the file name follows from U alone, so a plain
     ! `--U 4` would otherwise overwrite the C++-validated reference table.
@@ -269,6 +278,50 @@ program generate_xc_table_app
     print '(A)', ""
 
 contains
+
+    !> Create an output directory and any missing parents.
+    !!
+    !! `execute_command_line` delegates only this filesystem operation to the
+    !! platform command processor. The path is POSIX-shell quoted, including
+    !! embedded single quotes, because `--output` is user input.
+    subroutine ensure_output_directory(dir, cmdstat, exitstat)
+        character(len=*), intent(in) :: dir
+        integer, intent(out) :: cmdstat, exitstat
+
+        character(len=256) :: cmdmsg
+        logical :: exists
+
+        inquire(file=dir, exist=exists)
+        if (exists) then
+            cmdstat = 0
+            exitstat = 0
+            return
+        end if
+
+        cmdmsg = ''
+        call execute_command_line('mkdir -p -- ' // shell_quote(dir), wait=.true., &
+                                  exitstat=exitstat, cmdstat=cmdstat, cmdmsg=cmdmsg)
+    end subroutine ensure_output_directory
+
+    !> Quote a string as one POSIX-shell argument.
+    function shell_quote(value) result(quoted)
+        character(len=*), intent(in) :: value
+        character(len=:), allocatable :: quoted
+
+        integer :: i
+        character :: single_quote
+
+        single_quote = achar(39)
+        quoted = single_quote
+        do i = 1, len_trim(value)
+            if (value(i:i) == single_quote) then
+                quoted = quoted // single_quote // '"' // single_quote // '"' // single_quote
+            else
+                quoted = quoted // value(i:i)
+            end if
+        end do
+        quoted = quoted // single_quote
+    end function shell_quote
 
     subroutine usage()
         print '(A)', "Usage: generate_xc_table --U <value> [options]"
