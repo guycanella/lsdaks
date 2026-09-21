@@ -22,7 +22,7 @@
 !! (`original/spline2D.cc`, functions exc_value / Vxc_up_value / Vxc_dn_value).
 module xc_lsda
     use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
-    use lsda_constants, only: dp, U_SMALL, PI
+    use lsda_constants, only: dp, U_SMALL, PI, HALF_FILLING_SNAP_TOL
     use spline2d, only: spline2d_t, spline2d_init, spline2d_eval, spline2d_destroy
     use table_io, only: xc_table_t, read_fortran_table, deallocate_table
     use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT, ERROR_OUT_OF_BOUNDS, ERROR_FILE_READ, ERROR_SPLINE_INITIALIZATION_FAILED
@@ -67,7 +67,7 @@ module xc_lsda
     !! (see Bug #1 of CLAUDE.md: at exact half filling n_up + n_dw may come out
     !! as 1.0000000000000002) must therefore not be allowed to decide the
     !! branch, which is why a tolerance is needed at all.
-    real(dp), parameter :: REGION_SNAP_TOL = 1.0e-12_dp
+    real(dp), parameter :: REGION_SNAP_TOL = HALF_FILLING_SNAP_TOL
 
     !> Number of public XC evaluations since the last diagnostic reset.
     !!
@@ -118,7 +118,10 @@ contains
     !! and reproduces the C++ reference exactly.
     !!
     !! @param[out] xc         XC functional object
-    !! @param[in]  table_file Path to table file (Fortran binary format)
+    !! @param[in]  table_file Optional path to table file (Fortran binary
+    !!                         format). It is not required when `u_signed` is
+    !!                         present and |U| < U_SMALL: the exact
+    !!                         non-interacting functional has e_xc = V_xc = 0.
     !! @param[out] ierr Error code (0 = success)
     !! @param[in]  smoothing_width Optional half-width w of the V_xc smoothing
     !!                             window around n = 1; must be a non-NaN value
@@ -137,7 +140,7 @@ contains
     !!                      kept and no Shiba transformation is applied.
     subroutine xc_lsda_init(xc, table_file, ierr, smoothing_width, u_signed)
         type(xc_lsda_t), intent(out) :: xc
-        character(len=*), intent(in) :: table_file
+        character(len=*), intent(in), optional :: table_file
         integer, intent(out) :: ierr
         real(dp), intent(in), optional :: smoothing_width
         real(dp), intent(in), optional :: u_signed
@@ -165,6 +168,25 @@ contains
             xc%smoothing_width = smoothing_width
         else
             xc%smoothing_width = 0.0_dp
+        end if
+
+        ! U = 0 is exactly the non-interacting gas.  Do not require a table:
+        ! there is no exchange-correlation energy or potential to interpolate.
+        ! This physical-zero decision is deliberately independent of
+        ! XC_U_MATCH_TOL, which is only for matching a requested interaction
+        ! to the interaction carried by an XC table.
+        if (present(u_signed)) then
+            if (abs(u_signed) < U_SMALL) then
+                xc%U = 0.0_dp
+                xc%initialized = .true.
+                return
+            end if
+        end if
+
+        if (.not. present(table_file)) then
+            print *, "ERROR: an XC table file is required for nonzero U"
+            ierr = ERROR_INVALID_INPUT
+            return
         end if
 
         call read_fortran_table(table_file, table, io_stat)

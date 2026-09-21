@@ -56,7 +56,7 @@ program convert_tables
     do i = 1, N_TABLES
         ! Construct filenames
         call construct_cpp_filename(input_dir, U_VALUES(i), input_file)
-        call construct_fortran_filename(output_dir, U_VALUES(i), output_file)
+        call xc_table_filename(output_dir, U_VALUES(i), output_file)
 
         write(output_unit, '(A,F6.2,A)', advance='no') "  Converting U = ", U_VALUES(i), " ... "
 
@@ -147,6 +147,10 @@ contains
 
 
     !> Construct C++ table filename
+    !!
+    !! This is the *legacy C++* name (`lsda_hub_u<U>`, no extension), a
+    !! different scheme from the native `xc_table_u<|U|>.dat` built by
+    !! `table_io::xc_table_filename`, so it cannot share that helper.
     subroutine construct_cpp_filename(dir, U, filename)
         character(len=*), intent(in) :: dir
         real(dp), intent(in) :: U
@@ -171,30 +175,5 @@ contains
 
     end subroutine construct_cpp_filename
 
-
-    !> Construct Fortran binary table filename
-    subroutine construct_fortran_filename(dir, U, filename)
-        character(len=*), intent(in) :: dir
-        real(dp), intent(in) :: U
-        character(len=*), intent(out) :: filename
-
-        character(len=32) :: u_string
-
-        ! Format U with proper leading zero
-        if (U < 1.0_dp) then
-            write(u_string, '(F4.2)') U  ! "0.90"
-        else if (U < 10.0_dp) then
-            write(u_string, '(F4.2)') U  ! "4.00"
-        else
-            write(u_string, '(F5.2)') U  ! "10.00"
-        end if
-
-        ! Remove leading spaces
-        u_string = adjustl(u_string)
-
-        ! Construct full path
-        filename = trim(dir) // "/xc_table_u" // trim(u_string) // ".dat"
-
-    end subroutine construct_fortran_filename
 
 end program convert_tables

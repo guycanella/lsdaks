@@ -13,6 +13,7 @@ module table_io
     public :: read_cpp_table, write_fortran_table, read_fortran_table
     public :: deallocate_table, print_table_info
     public :: extract_U_from_filename
+    public :: xc_table_filename
     public :: count_nonfinite_entries
 
     integer, parameter :: MAX_LINE_LEN = 256
@@ -183,6 +184,45 @@ contains
         
         ierr = ERROR_SUCCESS
     end subroutine count_blocks_and_points
+
+    !> Canonical file name of the XC table of a given interaction.
+    !!
+    !! The single place where the `xc_table_u<|U|>.dat` naming is spelled out.
+    !! It used to be spelled out three times (generator, table sweep, SCF
+    !! lookup) and the generator's plain `F0.2` drops the leading zero of a
+    !! magnitude below one, so it wrote `xc_table_u.50.dat` while the SCF looked
+    !! for `xc_table_u0.50.dat`: the whole `0.5 <= |U| < 1` range produced a
+    !! table nothing could find.  Producer and consumer now share this routine
+    !! and cannot diverge again.
+    !!
+    !! The sign of `U` is ignored: tables are stored for `|U|` and the
+    !! attractive branch is reached through the Shiba map.
+    !!
+    !! @param[in]  dir   Directory; `''` yields a bare file name
+    !! @param[in]  U     Hubbard interaction (sign ignored)
+    !! @param[out] path  `<dir>/xc_table_u<|U|>.dat`, left justified
+    subroutine xc_table_filename(dir, U, path)
+        character(len=*), intent(in) :: dir
+        real(dp), intent(in) :: U
+        character(len=*), intent(out) :: path
+
+        character(len=32) :: u_str
+        integer :: n
+
+        ! F0.2 alone prints 0.5 as ".50" in gfortran; the leading zero is part
+        ! of the name every shipped table carries.
+        write(u_str, '(F0.2)') abs(U)
+        if (u_str(1:1) == '.') u_str = '0' // trim(u_str)
+
+        n = len_trim(dir)
+        if (n == 0) then
+            path = 'xc_table_u' // trim(u_str) // '.dat'
+        else if (dir(n:n) == '/') then
+            path = dir(1:n) // 'xc_table_u' // trim(u_str) // '.dat'
+        else
+            path = dir(1:n) // '/xc_table_u' // trim(u_str) // '.dat'
+        end if
+    end subroutine xc_table_filename
 
     subroutine extract_U_from_filename(filename, U, ierr)
         character(len=*), intent(in) :: filename

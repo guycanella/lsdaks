@@ -289,8 +289,19 @@ lsdaks/
 ### XC Tables and the Table Generator
 
 The SCF reads pre-computed exchange-correlation tables from `data/tables/fortran_native/`
-(25 values of U, converted from the C++ reference; Hartree already subtracted). These are the
-only tables validated for production runs.
+(25 values of U, converted from the C++ reference; Hartree already subtracted). These are what
+the SCF reads by default today, but they are transitional: the recorded plan is to remove them
+together with `original/`, and the intended workflow is to generate the table you need with
+`generate_xc_table` before running. A generated table is as usable for production as a
+converted one — the generator matches the converted tables on the 15 integer values of U
+(worst `|Δexc| = 8.5e-7`, zero nodes outside 1e-6, phase 4.5), and its correctness no longer
+rests on them: it is checked against analytic anchors and self-convergence (closed-form
+Bessel integral at `n=1, m=0`, the polarized corner `4 - 4√2`, the `U → ∞` and `U → 0`
+limits, particle-hole and spin symmetry, and quadrature convergence against a higher-order
+rule) in `test/test_lieb_wu_integral.f90` and `test/test_bethe_tables.f90`. The 10 non-integer
+U files (`1.10`, `4.10`, `5.90`, `6.10`, `6.90`, `7.10`, `7.90`, `8.10`, `8.90`, `9.10`) are
+not an oracle at all: within a single row, `exc(m=0)` and `exc(m≈1e-6)` differ by up to 123%
+where the function is quadratic in `m`, against 4e-10 in the integer-U files.
 
 `generate_xc_table` solves the thermodynamic-limit Lieb-Wu integral equations on its
 configured, graded `(n, m)` grid and writes the native table format consumed by the SCF. The
@@ -315,29 +326,36 @@ The default output directory is the SCF table directory. To protect its existing
 tables, the generator refuses to overwrite an existing U table unless `--force` is supplied;
 use `--output <directory>` when creating a separate table set.
 
-**An XC table is mandatory for every SCF run.** The supported range is
-`1 <= |U| <= 20`: the lower end is `bethe_tables::U_TABLE_MIN`
-(`src/bethe_ansatz/bethe_tables.f90:153`), the upper end is simply the largest shipped
-table (`data/tables/fortran_native/xc_table_u20.00.dat`) — nothing in the code rejects
-`|U| > 20`, but there is no table there, so `U = 25` fails with the same "XC table not
-found!" error as `U = 0`.
+**An XC table is required for every interacting SCF run, and only for those.** `U = 0` runs
+without any table: `app/main.f90:94` short-circuits on `|U| < U_SMALL = 1e-9` and initializes
+`xc_lsda_init` with no table at all, and `get_exc`/`get_vxc` return zero on the same test
+(`src/xc_functional/xc_lsda.f90:305` and `:495`), which is the exact XC of the
+non-interacting gas. This path is validated end to end: `L = 10`, `N↑ = N↓ = 5`, OBC, no
+table present, converged in 2 iterations. Before output rounding, its energy differs from
+the analytical `-Σ_{j=1..5} 4 cos(jπ/11)` by `1.95e-14`; the displayed
+`E = -12.053348366665` is rounded and is not used to compute that error.
 
-The XC *physics* of the non-interacting limit is already in the code: both `get_exc` and
-`get_vxc` short-circuit to zero for `|U| < U_SMALL = 1e-9`
-(`src/xc_functional/xc_lsda.f90:283` and `:473`). What blocks `U = 0` is only the table
-**loading** in `xc_lsda_init`, which the SCF performs unconditionally: `app/main.f90:94`
-resolves the table for `|U|` and, when the file is absent, `app/main.f90:97-110` prints
-"ERROR: XC table not found!" and stops with status 1. Table generation is refused for
-`U = 0` as well (`src/bethe_ansatz/bethe_tables.f90:537`), so `U = 0` cannot be run today.
-The failure mode is also cosmetically confusing: the file name is
-built with the `F0.2` descriptor (`app/main.f90:629`), which writes `0.0` as `.00` without
-the leading zero, so the executable looks for `xc_table_u.00.dat`, and the command the error
-message suggests (`fpm run generate_xc_table -- --U .00`) is itself refused by the
-generator. `F0.2` produces the correct name for every `U >= 1`, so the formatting defect only
-shows up in the range that is already unsupported. A future task must first make `app/main.f90`
-bypass table-name resolution, file validation, and the missing-table error path when
-`|U| < U_SMALL`, before initializing XC without a table (or making `xc_lsda_init` support that
-case). The zero-XC branches downstream already exist; that change is outside T17.
+For `U /= 0` the usable range is `0.5 <= |U| <= 20`. The lower end is
+`bethe_tables::U_TABLE_MIN = 0.5` (`src/bethe_ansatz/bethe_tables.f90:132`), enforced when
+generating a table (`src/bethe_ansatz/bethe_tables.f90:521`): below it, generation is refused.
+The upper end is simply the largest shipped table
+(`data/tables/fortran_native/xc_table_u20.00.dat`) — nothing in the code rejects `|U| > 20`,
+but no table exists there, so e.g. `U = 25` fails with "XC table not found!" until you
+generate one. Table file names are built by the single helper
+`table_io::xc_table_filename` (`src/bethe_ansatz/table_io.f90:204`), the only place that
+name is spelled out — every producer (`generate_table`, `bethe_tables`, `convert_tables`) and
+the SCF lookup in `app/main.f90` go through it. It emits the leading zero
+(`xc_table_u0.50.dat`); the earlier `F0.2` defect that produced `xc_table_u.50.dat` is gone.
+The legacy C++ input names (`lsda_hub_u<U>`) read by `convert_tables` are a different
+scheme and are built separately.
+
+**Cost of weak-coupling tables.** Generation time grows sharply below `U = 2`, because that
+range forces a floor on the quadrature order in Λ. Measured in release with OpenMP on the
+default grid: `U = 4.0` → **45.2 s** (unchanged), `U = 1.5` → **86.9 s** (1.9x),
+`U = 0.5` → **261.7 s** (5.8x). Budget for this before generating a weak-coupling table.
+The future optimization target is the **width of the residual panel** of the Λ mesh
+(task T27 in `NEXT_STEPS_REPORT.md`); endpoint refinement at `Λ = ±1` was tested and
+refuted as an explanation.
 
 ## External Potentials
 
@@ -881,9 +899,9 @@ site.
 
 ### Physics Validation
 
-- ⚠️ **U=0 (free fermions)**: Analytical reference used by the test suite only. The
-  executable cannot run this case at all (see "An XC table is mandatory" above), so it
-  is **not** validated end to end.
+- ✅ **U=0 (free fermions)**: Validated end to end through the executable, with no XC table
+  present: `L = 10`, `N↑ = N↓ = 5`, OBC has an internal, pre-rounding error of `1.95e-14`
+  against `-Σ_{j=1..5} 4 cos(jπ/11)`.
 - ✅ **Half-filling (n=1)**: Matches Essler et al. reference values
 - ✅ **Particle conservation**: `∫n dx = N` with error < 1e-12
 - ⚠️ **Energy functional**: Stationary at the fixed point only up to the mismatch between
