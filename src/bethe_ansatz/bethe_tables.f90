@@ -131,6 +131,12 @@ module bethe_tables
     !! a validated table without being one.
     real(dp), parameter, public :: U_TABLE_MIN = 0.5_dp
 
+    !> Largest interaction with recorded table-validation measurements.
+    !!
+    !! Generation deliberately has no upper rejection: values above this limit
+    !! are accepted, but are an unvalidated user-requested calculation.
+    real(dp), parameter, public :: U_TABLE_VALIDATED_MAX = 20.0_dp
+
     public :: compute_E0
     public :: compute_E_xc
     public :: compute_V_xc_numerical

@@ -26,7 +26,7 @@
 !!       as `U` falls.  The exact wall time depends on the adaptive `B` cutoff
 !!       and the requested U; it is not a correctness criterion for a table.
 program generate_xc_table_app
-    use bethe_tables, only: generate_xc_table, grid_params_t, U_TABLE_MIN
+    use bethe_tables, only: generate_xc_table, grid_params_t, U_TABLE_MIN, U_TABLE_VALIDATED_MAX
     use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
     use table_io, only: xc_table_t, write_fortran_table, count_nonfinite_entries, &
                         xc_table_filename
@@ -170,6 +170,12 @@ program generate_xc_table_app
         print '(A)', "       Use |U| >= 0.5.  U = 0 is refused here as well: e_xc vanishes"
         print '(A)', "       identically, so the table would be a file of zeros."
         stop 1
+    end if
+
+    if (abs(U) > U_TABLE_VALIDATED_MAX) then
+        print '(A,F8.2,A,F8.2)', "WARNING: |U| = ", abs(U), &
+              " exceeds the validated table range through |U| = ", U_TABLE_VALIDATED_MAX
+        print '(A)', "         Generation will continue, but this table is not validation-qualified."
     end if
 
     ! A freshly cloned repository (or a user-selected nested directory) need
