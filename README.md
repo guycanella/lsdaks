@@ -606,9 +606,9 @@ in the `app/main.f90` dispatch. `distribution`, `twisted_phase`, `output_file`, 
      level can therefore still be pulled into the shared pool, which no
      function of `ε - μ` alone would do.
 
-  The upper edge is absolute: in very large PBC systems
-  (roughly `L >= 1e4`), distinct levels
-  can enter the transition interval. A tunnel doublet returned by LAPACK in a
+  **Policy for large systems:** the upper edge remains absolute; it is not
+  rescaled with `L`. In very large PBC systems (roughly `L >= 1e4`), distinct
+  levels can therefore enter the transition interval. A tunnel doublet returned by LAPACK in a
   localised basis can therefore no longer flip a whole electron into one arm of
   a symmetric trap as the gap fluctuates around `1e-10`, so `n(i) = n(L+1-i)`
   is preserved.

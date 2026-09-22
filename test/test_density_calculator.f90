@@ -27,6 +27,7 @@ contains
             test("occupations_spectrum_edges", test_occupations_spectrum_edges), &
             test("occupations_invalid_input", test_occupations_invalid_input), &
             test("occupations_continuous_in_gap", test_occupations_continuous_in_gap), &
+            test("smoothstep_rounding_regression", test_smoothstep_rounding_regression), &
             test("occupations_doublet_sum_and_bounds", test_occupations_doublet_sum_and_bounds), &
             test("occupations_hard_step_on_request", test_occupations_hard_step_on_request), &
             test("occupations_report_unclosed_shell", test_occupations_report_unclosed_shell), &
@@ -319,6 +320,26 @@ contains
         call check(abs(occ_a(2) - 1.0_dp) < TOL .and. abs(occ_a(3)) < TOL, &
                    "Continuity: gap >> DEG_TOL_UPPER gives integer filling")
     end subroutine test_occupations_continuous_in_gap
+
+    !> Regression for the IEEE rounding of the C1 transition weight
+    !!
+    !! `(1-x)^2(1+2x)` and `1-x^2(3-2x)` are algebraically equal, but differ
+    !! by one ulp for x = 8e-5 in binary64. Keep the complement polynomial so
+    !! every compiler follows the intended smoothstep convention.
+    subroutine test_smoothstep_rounding_regression()
+        use, intrinsic :: iso_fortran_env, only: int64
+        use fortuno_serial, only: check => serial_check
+        use density_calculator, only: link_weight
+
+        real(dp), parameter :: X = 8.0e-5_dp
+        real(dp), parameter :: EXPECTED = 0.999999980801024_dp
+        real(dp) :: weight
+
+        weight = link_weight(X, 0.0_dp, 1.0_dp)
+
+        call check(transfer(weight, 0_int64) == transfer(EXPECTED, 0_int64), &
+                   "Smoothstep: transition weight must use the pinned binary64 rounding")
+    end subroutine test_smoothstep_rounding_regression
 
     !> REGRESSION (T20): sum(occ) = N and 0 <= occ <= 1 for every partial link
     !!
