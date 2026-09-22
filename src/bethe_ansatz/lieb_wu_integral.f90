@@ -331,12 +331,15 @@ contains
     !! `V_xc_up - V_xc_dn` as `m -> 0` - the quantity that decides the Stoner
     !! instability of the SCF.
     !!
-    !! The requirement is **not** a monotone function of `U`, which is why this
-    !! is an envelope and not a fit.  The graded `Lambda` mesh ends with a
-    !! leftover panel `[v, B]` whose length relative to the kernel width `u`
-    !! depends on where the dyadic doubling happens to land, i.e. on the
-    !! fractional part of `log2(B / u)`.  The order needed therefore oscillates
-    !! with `U` instead of decreasing with it.
+    !! The residual panel is now subdivided to at most `1.5 u`, eliminating the
+    !! former U-dependent geometry. The floor remains an envelope, but no
+    !! longer has to compensate for the dyadic residual-panel oscillation.
+    !!
+    !! The following table records the pre-subdivision calibration and explains
+    !! the original conservative envelope. The current 28/20/12 policy was
+    !! subsequently checked by the 462-point release sweep in
+    !! `test_low_m_quadrature_floor_convergence` (no sign inversion; relative
+    !! error below 2% against the refined quadrature).
     !!
     !! Measured relative error of the `m -> 0` exchange splitting against
     !! `n_lambda = 80`, worst case over `n` in {0.3, 0.8, 0.95} and `m/n` in
@@ -386,13 +389,13 @@ contains
         integer :: n_min
 
         if (u < 0.25_dp) then
-            ! U < 1: the oscillation peaks here; U = 0.65 and U = 0.85 invert
-            ! the sign of the splitting at every order up to 28.
-            n_min = 40
-        else if (u < 0.5_dp) then
-            ! 1 <= U < 2.  The drop to the nominal order must wait until here:
-            ! at U = 1.35 the nominal 12 misses the splitting by 57%.
+            ! U < 1: 28 is the smallest tested floor that passes the complete
+            ! 462-point calibration against the refined quadrature.
             n_min = 28
+        else if (u < 0.5_dp) then
+            ! 1 <= U < 2: residual subdivision reduces the calibrated floor
+            ! from 28 to 20 without sign inversions.
+            n_min = 20
         else
             ! U >= 2: the nominal order is converged over the measured range
             ! (2.4 <= U <= 8.0, worst error 0.0210%); U > 8 is unmeasured.
