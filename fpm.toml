@@ -33,6 +33,11 @@ name = "generate_xc_table"
 source-dir = "app"
 main = "generate_table.f90"
 
+[[executable]]
+name = "benchmark_partial_diagonalization"
+source-dir = "app"
+main = "benchmark_partial_diagonalization.f90"
+
 # ============================================
 # Tests
 #

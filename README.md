@@ -336,13 +336,12 @@ input. Generate the table required by a run before starting the SCF. Table file 
 name is spelled out — every producer and the SCF lookup in `app/main.f90` go through it. It emits the leading zero
 (`xc_table_u0.50.dat`); the earlier `F0.2` defect that produced `xc_table_u.50.dat` is gone.
 
-**Cost of weak-coupling tables.** Generation time grows sharply below `U = 2`, because that
-range forces a floor on the quadrature order in Λ. Measured in release with OpenMP on the
-default grid: `U = 4.0` → **45.2 s** (unchanged), `U = 1.5` → **86.9 s** (1.9x),
-`U = 0.5` → **261.7 s** (5.8x). Budget for this before generating a weak-coupling table.
-The future optimization target is the **width of the residual panel** of the Λ mesh
-(task T27 in `NEXT_STEPS_REPORT.md`); endpoint refinement at `Λ = ±1` was tested and
-refuted as an explanation.
+**Cost of weak-coupling tables.** Generation time grows below `U = 2`, where the Λ
+quadrature needs an elevated low-magnetization floor. The residual panel is split to a
+maximum width of `1.5u`, and the resulting `28/20/12` floor was revalidated over 462
+points (`U = 0.5..2.4`, step `0.025`; three densities and two magnetizations): no sign
+inversion and less than 2% relative error against the refined quadrature. Exact timing
+depends on hardware, OpenMP settings and the requested grid.
 
 ## External Potentials
 
@@ -847,6 +846,18 @@ Typical convergence in 50-200 iterations depending on:
 - **Mixing parameter**: `α = 0.05` is conservative and stable
 - **Adaptive mixing**: Helps with difficult cases
 - **Potential type**: Smooth potentials converge faster
+
+### Reproducible microbenchmarks
+
+Run `fpm run benchmark_partial_diagonalization --profile release` to compare the
+open-boundary partial DSTEVR path with the dense full-spectrum path at `L = 100`,
+`500` and `1000`. The benchmark also checks the computed eigenvalues. At low filling,
+the partial path avoids computing unoccupied eigenvectors; timings are machine dependent.
+
+The XC cache is guarded by `test_scf_reuses_output_xc_cache`: a two-iteration SCF uses
+`5L` XC evaluations (initial `V_xc`, then one `V_xc`/`e_xc` output pass per iteration),
+instead of the former `7L`. `spline1d_coeff` uses automatic workspace, removing the
+per-evaluation heap allocation from the spline hot path.
 
 ## Validation
 
