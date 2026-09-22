@@ -183,15 +183,14 @@ program generate_xc_table_app
 
     ! Refuse to clobber an existing table: the default output directory is the
     ! one the SCF reads and the file name follows from U alone, so a plain
-    ! `--U 4` would otherwise overwrite the C++-validated reference table.
+    ! `--U 4` would otherwise replace an existing generated table.
     call xc_table_filename(trim(output_dir), U, output_file)
     inquire(file=trim(output_file), exist=exists)
     if (exists .and. .not. force) then
         print '(A,A)', "ERROR: refusing to overwrite existing file ", trim(output_file)
         print '(A)', "       Use --output to select a directory other than the default tables/"
-        print '(A)', "       validated against the C++ implementation."
         print '(A)', "       Write elsewhere with --output <dir>, or pass --force if you"
-        print '(A)', "       really mean to replace the reference."
+        print '(A)', "       really mean to replace the existing generated table."
         stop 1
     end if
 

@@ -70,7 +70,7 @@ lsdaks/
 │   │   ├── nonlinear_solvers.f90    # Newton-Raphson com Jacobiano analítico
 │   │   ├── continuation.f90         # Sweep em U
 │   │   ├── lieb_wu_integral.f90     # Equações integrais no limite termodinâmico
-│   │   ├── table_io.f90             # I/O tabelas (ASCII/binário)
+│   │   ├── table_io.f90             # I/O de tabelas nativas e importação ASCII legada
 │   │   └── bethe_tables.f90         # Geração de tabelas XC
 │   │
 │   ├── xc_functional/
@@ -825,14 +825,17 @@ end do
 #### ✅ Completo (100%):
 - [x] **`table_io.f90`** (~400+ linhas, totalmente testado):
   - [x] Tipo `xc_table_t` para armazenar tabelas XC
+  - [x] `read_cpp_table()` - Leitura de tabelas ASCII C++ legadas
   - [x] `write_fortran_table()` - Escrita em formato binário nativo Fortran
   - [x] `read_fortran_table()` - Leitura de formato binário (~10x mais rápido que ASCII)
+  - [x] `extract_U_from_filename()` - Parser de nome de arquivo de tabela legado ou nativo
   - [x] `deallocate_table()` - Gerenciamento de memória
   - [x] `print_table_info()` - Diagnóstico e debug
 
 - [x] **`test_table_io.f90`** (274 linhas - 10 testes unitários):
+  - [x] Leitura de fixtures ASCII legadas geradas pelo próprio teste
   - [x] Escrita/leitura de formato binário Fortran
-  - [x] Validação de roundtrip do formato nativo
+  - [x] Validação de roundtrip ASCII → binário → memória
 
 - [x] **`bethe_tables.f90`** (325 linhas, 6 testes - totalmente implementado):
   - [x] Tipo `grid_params_t` para configurar grid de densidades
