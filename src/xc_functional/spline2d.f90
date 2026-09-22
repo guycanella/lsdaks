@@ -70,11 +70,12 @@ contains
         real(dp), intent(out) :: d2y(0:)
         character(len=*), intent(in) :: bc_type
 
-        real(dp), allocatable :: a(:), b(:)
+        ! Work arrays are automatic: this kernel is also called from
+        ! spline2d_eval, the SCF hot path.  Keeping them off the allocatable
+        ! heap avoids an allocate/deallocate pair for every XC evaluation.
+        real(dp) :: a(0:n), b(0:n)
         real(dp) :: h0, h1
         integer :: i
-
-        allocate(a(0:n), b(0:n))
 
         if (trim(bc_type) == 'clamped') then
             a(0) = (x(1) - x(0)) / 3.0_dp
@@ -141,7 +142,6 @@ contains
             d2y(0) = 0.0_dp
         end if
 
-        deallocate(a, b)
     end subroutine spline1d_coeff
 
     !> Initialize 2D spline from grid data

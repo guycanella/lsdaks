@@ -48,8 +48,9 @@ module lsda_constants
     ! the band energy are continuous functions of the spectrum. The C++ uses a
     ! hard step at LINEWIDTH_ = 1e-10 (see compute_occupations for why that is
     ! a deliberate divergence). This is an ABSOLUTE energy width in units of t,
-    ! not a relative tolerance: in very large PBC systems (roughly L >= 1e4),
-    ! physically distinct levels can fall inside this transition interval.
+    ! not a relative tolerance. Policy: retain this fixed scale rather than
+    ! scale it with L. In very large PBC systems (roughly L >= 1e4), physically
+    ! distinct levels can therefore fall inside this transition interval.
     real(dp), parameter :: DEG_TOL_UPPER = 1.0e-6_dp      ! Degeneracy transition upper edge
 
     real(dp), parameter :: NEWTON_TOL = 1.0e-10_dp        ! Newton convergence tol

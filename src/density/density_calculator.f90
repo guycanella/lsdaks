@@ -9,6 +9,7 @@ module density_calculator
     real(dp), parameter :: TOL = 1.0e-10_dp
 
     public :: compute_occupations
+    public :: link_weight
     public :: compute_density_spin
     public :: compute_total_density
     public :: verify_particle_number
@@ -201,8 +202,11 @@ contains
     !> @brief Continuous "same shell" weight of two consecutive levels
     !!
     !! Returns 1 for a gap below `tol_lo`, 0 for a gap at or above `tol_hi`,
-    !! and the C¹ smoothstep (1 - x)^2 (1 + 2x), x = (Δ - tol_lo)/(tol_hi -
-    !! tol_lo), in between. With tol_hi <= tol_lo it degenerates to the hard
+    !! and the C¹ smoothstep 1 - x²(3 - 2x), x = (Δ - tol_lo)/(tol_hi -
+    !! tol_lo), in between. This expanded complement form is deliberately used
+    !! instead of the algebraically equivalent `(1 - x)^2(1 + 2x)`: it fixes
+    !! the IEEE rounding of the transition weight (see its regression test).
+    !! With tol_hi <= tol_lo it degenerates to the hard
     !! step of the C++ (`|Δ| < LINEWIDTH_`).
     !!
     !! @param[in] delta  Gap between the two levels (sign irrelevant)
@@ -223,7 +227,7 @@ contains
             s = 0.0_dp
         else
             x = (gap - tol_lo) / (tol_hi - tol_lo)
-            s = (1.0_dp - x)**2 * (1.0_dp + 2.0_dp * x)
+            s = 1.0_dp - x * x * (3.0_dp - 2.0_dp * x)
         end if
     end function link_weight
 
