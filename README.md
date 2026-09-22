@@ -197,7 +197,6 @@ fpm run lsdaks -- --input examples/input_twisted_bc.txt
 lsdaks/
 ├── app/                          # Executable programs
 │   ├── main.f90                  # Main LSDA solver
-│   ├── convert_tables.f90        # XC table format converter
 │   └── generate_table.f90        # Generate thermodynamic-limit XC tables via Bethe Ansatz
 │
 ├── src/                          # Source code
@@ -288,20 +287,14 @@ lsdaks/
 
 ### XC Tables and the Table Generator
 
-The SCF reads pre-computed exchange-correlation tables from `data/tables/fortran_native/`
-(25 values of U, converted from the C++ reference; Hartree already subtracted). These are what
-the SCF reads by default today, but they are transitional: the recorded plan is to remove them
-together with `original/`, and the intended workflow is to generate the table you need with
-`generate_xc_table` before running. A generated table is as usable for production as a
-converted one — the generator matches the converted tables on the 15 integer values of U
-(worst `|Δexc| = 8.5e-7`, zero nodes outside 1e-6, phase 4.5), and its correctness no longer
-rests on them: it is checked against analytic anchors and self-convergence (closed-form
-Bessel integral at `n=1, m=0`, the polarized corner `4 - 4√2`, the `U → ∞` and `U → 0`
-limits, particle-hole and spin symmetry, and quadrature convergence against a higher-order
-rule) in `test/test_lieb_wu_integral.f90` and `test/test_bethe_tables.f90`. The 10 non-integer
-U files (`1.10`, `4.10`, `5.90`, `6.10`, `6.90`, `7.10`, `7.90`, `8.10`, `8.90`, `9.10`) are
-not an oracle at all: within a single row, `exc(m=0)` and `exc(m≈1e-6)` differ by up to 123%
-where the function is quadratic in `m`, against 4e-10 in the integer-U files.
+The SCF reads exchange-correlation tables from `tables/` by default. Generate the
+table required by an interacting run with `generate_xc_table` before starting the
+SCF, or choose another directory with `--output` and set `table_dir` accordingly.
+The generator is checked with analytic anchors and self-convergence (closed-form
+Bessel integral at `n=1, m=0`, the polarized corner, the `U → ∞` and `U → 0`
+limits, particle-hole and spin symmetry, and quadrature convergence against a
+higher-order rule) in `test/test_lieb_wu_integral.f90` and
+`test/test_bethe_tables.f90`.
 
 `generate_xc_table` solves the thermodynamic-limit Lieb-Wu integral equations on its
 configured, graded `(n, m)` grid and writes the native table format consumed by the SCF. The
@@ -313,18 +306,15 @@ table on this configured grid can be generated with the default settings. The ex
 refuses to write a table containing NaN or Inf, reports the offending grid points, and exits
 with status 1.
 
-**How far the generated tables are validated.** The generator was compared against the
-converted C++ reference tables on the **15 integer values of U**: worst `|Δexc| = 8.5e-7`,
-zero nodes outside 1e-6. For U=4, along the path the SCF actually consumes
-(`xc_lsda_init` + `get_exc`/`get_vxc`, 10099 nodes, corner n=1,m=1 excluded), worst
-`|Δexc| = 2.75e-7` and worst `|ΔVxc| = 7.67e-5`, zero nodes outside tolerance. No
-equivalence is claimed for non-integer U: the 10 reference tables in that range are
-internally inconsistent and were rejected as an oracle (see the "Resultado" of phase 4.5 in
-`NEXT_STEPS_REPORT.md`).
+**How far the generated tables are validated.** The generator is validated by
+analytic anchors and internal quadrature self-convergence. For U=4, along the
+path the SCF consumes (`xc_lsda_init` + `get_exc`/`get_vxc`, 10099 nodes,
+corner n=1,m=1 excluded), the last external comparison measured worst
+`|Δexc| = 2.75e-7` and worst `|ΔVxc| = 7.67e-5`, with no node outside tolerance.
 
-The default output directory is the SCF table directory. To protect its existing reference
-tables, the generator refuses to overwrite an existing U table unless `--force` is supplied;
-use `--output <directory>` when creating a separate table set.
+The default output directory is the SCF table directory. The generator refuses to
+overwrite an existing U table unless `--force` is supplied; use
+`--output <directory>` when creating a separate table set.
 
 **An XC table is required for every interacting SCF run, and only for those.** `U = 0` runs
 without any table: `app/main.f90:94` short-circuits on `|U| < U_SMALL = 1e-9` and initializes
@@ -338,16 +328,12 @@ the analytical `-Σ_{j=1..5} 4 cos(jπ/11)` by `1.95e-14`; the displayed
 For `U /= 0` the usable range is `0.5 <= |U| <= 20`. The lower end is
 `bethe_tables::U_TABLE_MIN = 0.5` (`src/bethe_ansatz/bethe_tables.f90:132`), enforced when
 generating a table (`src/bethe_ansatz/bethe_tables.f90:521`): below it, generation is refused.
-The upper end is simply the largest shipped table
-(`data/tables/fortran_native/xc_table_u20.00.dat`) — nothing in the code rejects `|U| > 20`,
-but no table exists there, so e.g. `U = 25` fails with "XC table not found!" until you
-generate one. Table file names are built by the single helper
+The validation measurements currently extend through `|U| = 20`; nothing in the code rejects
+`|U| > 20`, but that range is not yet validated. Generate the table required by a run before
+starting the SCF. Table file names are built by the single helper
 `table_io::xc_table_filename` (`src/bethe_ansatz/table_io.f90:204`), the only place that
-name is spelled out — every producer (`generate_table`, `bethe_tables`, `convert_tables`) and
-the SCF lookup in `app/main.f90` go through it. It emits the leading zero
+name is spelled out — every producer and the SCF lookup in `app/main.f90` go through it. It emits the leading zero
 (`xc_table_u0.50.dat`); the earlier `F0.2` defect that produced `xc_table_u.50.dat` is gone.
-The legacy C++ input names (`lsda_hub_u<U>`) read by `convert_tables` are a different
-scheme and are built separately.
 
 **Cost of weak-coupling tables.** Generation time grows sharply below `U = 2`, because that
 range forces a floor on the quadrature order in Λ. Measured in release with OpenMP on the
@@ -491,7 +477,7 @@ Input files use Fortran namelists (case-insensitive and order-independent). The 
 | system | `U` | real | 4.0 | all |
 | system | `bc` | character | `periodic` | all (`open`, `periodic`, `twisted`) |
 | system | `phase` | real | 0.0 | `twisted`; input unit π |
-| system | `table_dir` | character | `data/tables/fortran_native` | all |
+| system | `table_dir` | character | `tables` | all |
 | potential | `potential_type` | character | `uniform` | all |
 | potential | `V0` | real | 0.0 | uniform, impurities, barriers |
 | potential | `spring_constant` | real | 0.001 | harmonic |

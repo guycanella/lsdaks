@@ -29,11 +29,6 @@ source-dir = "app"
 main = "main.f90"
 
 [[executable]]
-name = "convert_tables"
-source-dir = "app"
-main = "convert_tables.f90"
-
-[[executable]]
 name = "generate_xc_table"
 source-dir = "app"
 main = "generate_table.f90"

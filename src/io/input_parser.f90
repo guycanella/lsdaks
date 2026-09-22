@@ -57,7 +57,7 @@ module input_parser
         !! requested table is not found here, `app/main.f90` also tries the
         !! directory named by the environment variable `LSDAKS_TABLE_DIR`, so
         !! the executable can be run from outside the repository root.
-        character(len=256) :: table_dir = 'data/tables/fortran_native'
+        character(len=256) :: table_dir = 'tables'
 
         ! Potential parameters
         character(len=20) :: potential_type = 'uniform'
