@@ -108,7 +108,6 @@ lsdaks/
 │
 ├── app/
 │   ├── main.f90               # Ponto de entrada (namelist-based)
-│   ├── convert_tables.f90     # Utilitário de conversão de tabelas
 │   └── generate_table.f90     # Gerador de tabelas XC a partir do Bethe Ansatz
 │
 ├── test/                       # 20 suítes Fortuno, 1455 chamadas `call check(`
@@ -145,13 +144,8 @@ lsdaks/
 │   ├── degeneracy_handler.f90       # QR/Gram-Schmidt; substituído pela ocupação C¹ (T7)
 │   └── test_degeneracy_handler.f90  # Testes do acima; fora de fpm.toml
 │
-├── original/                   # Implementação C++ de referência (somente leitura)
-│
 ├── doc/                        # Documentação de API gerada por FORD (258 arquivos
 │                               # versionados; saída de `ford ford.md`, não editar à mão)
-│
-└── data/
-    └── tables/
         └── fortran_native/     # Tabelas XC com o termo de Hartree já subtraído
 ```
 
@@ -831,24 +825,14 @@ end do
 #### ✅ Completo (100%):
 - [x] **`table_io.f90`** (~400+ linhas, totalmente testado):
   - [x] Tipo `xc_table_t` para armazenar tabelas XC
-  - [x] `read_cpp_table()` - Leitura de tabelas ASCII legadas (formato C++)
   - [x] `write_fortran_table()` - Escrita em formato binário nativo Fortran
   - [x] `read_fortran_table()` - Leitura de formato binário (~10x mais rápido que ASCII)
-  - [x] `extract_U_from_filename()` - Parser de nome de arquivo `lsda_hub_uX.XX`
   - [x] `deallocate_table()` - Gerenciamento de memória
   - [x] `print_table_info()` - Diagnóstico e debug
 
-- [x] **`convert_tables.f90`** (executável utilitário):
-  - [x] Conversão em batch de 25 tabelas C++ → Fortran binário
-  - [x] Valores de U: 1.00, 1.10, 2.00, 3.00, 4.00, 4.10, 5.00, 5.90, 6.00, 6.10, 6.90, 7.00, 7.10, 7.90, 8.00, 8.10, 8.90, 9.00, 9.10, 10.00, 12.00, 14.00, 16.00, 18.00, 20.00
-  - [x] Argumentos de linha de comando: `fpm run convert_tables -- <input_dir> <output_dir>`
-  - [x] Relatório de progresso e estatísticas de conversão
-
 - [x] **`test_table_io.f90`** (274 linhas - 10 testes unitários):
-  - [x] Leitura de tabelas C++ ASCII
   - [x] Escrita/leitura de formato binário Fortran
-  - [x] Validação de roundtrip (ASCII → binário → memória)
-  - [x] Parsing de U a partir do nome do arquivo
+  - [x] Validação de roundtrip do formato nativo
 
 - [x] **`bethe_tables.f90`** (325 linhas, 6 testes - totalmente implementado):
   - [x] Tipo `grid_params_t` para configurar grid de densidades
@@ -1078,7 +1062,7 @@ aceita o alias legado `impurity` para o posicionamento aleatório, enquanto o fa
       repositório. A saída é feita direto por `output_writer.f90` e `print`.
 - [x] `main.f90`: Ponto de entrada com argumentos de linha de comando ✅
 - [ ] `run_simulation.f90`: Runner principal — **nunca foi escrito**; `app/` contém apenas
-      `main.f90`, `convert_tables.f90` e `generate_table.f90`. O pipeline é integrado
+      `main.f90` e `generate_table.f90`. O pipeline é integrado
       dentro do próprio `main.f90`.
 - [x] Testes: `test_input_parser` (130) e `test_output_writer` (133) — 263 asserções ✅
 - [ ] Documentação: `INPUT_FORMAT.md` / `OUTPUT_FORMAT.md` não existem; o formato de
@@ -1601,7 +1585,6 @@ lacunas de empacotamento de inputs) — ver a seção "Status de Validação" e 
 - [x] **Fase 2 - Geração de Tabelas XC** (100% ✅):
   - [x] I/O de tabelas (`table_io.f90`) ✅
   - [x] Geração de tabelas (`bethe_tables.f90`) ✅
-  - [x] Utilitário de conversão (`convert_tables.f90`) ✅
   - [x] Asserções: `table_io` 95 + `bethe_tables` 79 = 174 ✅
 
 - [x] **Fase 3 - Splines 2D** (100% ✅):
@@ -1693,7 +1676,7 @@ lacunas de empacotamento de inputs) — ver a seção "Status de Validação" e 
         `test_logger.f90`. A verbosidade é controlada pela chave `verbose` do `&scf`.
   - [x] Executáveis principais (`app/`) ✅
     - [x] `main.f90`: ponto de entrada com --input flag; integra todo o pipeline ✅
-    - [x] `convert_tables.f90` e `generate_table.f90` ✅
+    - [x] `generate_table.f90` ✅
     - [ ] `run_simulation.f90`: **não existe**; o papel de runner ficou em `main.f90`.
     - [ ] `INPUT_FORMAT.md` / `OUTPUT_FORMAT.md`: **não existem**. Formato de entrada:
           tabela de namelist do `README.md`. API: `doc/` (FORD).
@@ -2366,7 +2349,7 @@ fpm run lsdaks -- --input input.txt
 
   **🎉 GRAND TOTAL (Fases 1+2+3+4 - após quasiperiodic):**
   - **15 módulos produção:** 3635 linhas
-  - **2 executáveis:** 208 linhas (main.f90 + convert_tables.f90)
+  - **2 executáveis no marco histórico:** 208 linhas
   - **9 suítes de testes:** 2665 linhas, 92 testes (100% passando)
   - **Total geral:** ~6508 linhas de código
 
@@ -2407,7 +2390,7 @@ fpm run lsdaks -- --input input.txt
 
   **🎉 GRAND TOTAL (Fases 1+2+3):**
   - **7 módulos produção:** 2545 linhas
-  - **2 executáveis:** 208 linhas (main.f90 + convert_tables.f90)
+  - **2 executáveis no marco histórico:** 208 linhas
   - **7 suítes de testes:** 1796 linhas, 58 testes (100% passando)
   - **Total geral:** ~4549 linhas de código
 
@@ -2431,14 +2414,13 @@ fpm run lsdaks -- --input input.txt
   - ✅ Geração de tabela pequena
 
   **Estatísticas Fase 2:**
-  - **Código produção:** 888 linhas (table_io + bethe_tables + convert_tables)
+  - **Código produção:** 888 linhas (I/O e geração de tabelas)
   - **Testes:** 444 linhas (16 testes, 100% passando)
   - **Pipeline completo:** Bethe Ansatz → E_xc → V_xc → Tabela → I/O binário
 
 ### 2025-01-09 - Fase 2: I/O de Tabelas Completo ✅
 - ✅ Sistema de I/O de tabelas totalmente funcional!
   - **`table_io.f90`** (364 linhas, 10 testes): Leitura/escrita ASCII/binário
-  - **`convert_tables.f90`** (199 linhas): Utilitário de conversão batch
   - **`test_table_io.f90`** (274 linhas): Validação roundtrip completa
 
 ### 2025-11-07 - Fase 1: COMPLETA ✅

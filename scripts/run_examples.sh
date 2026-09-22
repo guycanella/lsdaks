@@ -70,7 +70,9 @@ if [ -z "${EXECUTABLE}" ] || [ ! -x "${EXECUTABLE}" ]; then
     printf 'Cannot locate the lsdaks executable after building.\n' >&2
     exit 1
 fi
-TABLE_DIR="${PROJECT_DIR}/data/tables/fortran_native"
+# Examples consume the user's generated tables. An explicit environment value
+# lets CI or an external workflow select a table set without a checked-in one.
+TABLE_DIR="${LSDAKS_TABLE_DIR:-${PROJECT_DIR}/tables}"
 
 MAX_ITER=5
 FAILURES=0

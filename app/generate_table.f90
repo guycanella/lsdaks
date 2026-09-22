@@ -6,9 +6,8 @@
 !! that case, listing the offending grid points.
 !!
 !! The default output directory is the one the SCF reads, and the file name is
-!! derived from `U` alone, so a run can land exactly on a table that is part of
-!! the validated reference set.  An existing file is therefore never
-!! overwritten unless `--force` is given.
+!! derived from `U` alone. An existing file is never overwritten unless
+!! `--force` is given.
 !!
 !! Usage:
 !! ```
@@ -46,7 +45,7 @@ program generate_xc_table_app
     integer(8) :: c_start, c_end, c_rate
 
     nargs = command_argument_count()
-    output_dir = 'data/tables/fortran_native'
+    output_dir = 'tables'
     params = grid_params_t()
     have_U = .false.
     force = .false.
@@ -189,7 +188,7 @@ program generate_xc_table_app
     inquire(file=trim(output_file), exist=exists)
     if (exists .and. .not. force) then
         print '(A,A)', "ERROR: refusing to overwrite existing file ", trim(output_file)
-        print '(A)', "       Files under data/tables/fortran_native are the reference tables"
+        print '(A)', "       Use --output to select a directory other than the default tables/"
         print '(A)', "       validated against the C++ implementation."
         print '(A)', "       Write elsewhere with --output <dir>, or pass --force if you"
         print '(A)', "       really mean to replace the reference."
