@@ -268,16 +268,20 @@ contains
     !! @param[in]  B             Upper limit (must be > 0)
     !! @param[in]  u             Kernel scale `U/4`
     !! @param[in]  n_per_panel   Gauss-Legendre nodes per panel
-    !! @param[out] x             Nodes (allocated here)
-    !! @param[out] w             Weights (allocated here)
-    subroutine lambda_mesh(B, u, n_per_panel, x, w)
+    !! @param[out] x             Nodes (allocated here on success)
+    !! @param[out] w             Weights (allocated here on success)
+    !! @param[out] ierr          `ERROR_SUCCESS` or `ERROR_CONVERGENCE_FAILED`
+    subroutine lambda_mesh(B, u, n_per_panel, x, w, ierr)
         real(dp), intent(in) :: B, u
         integer, intent(in) :: n_per_panel
         real(dp), allocatable, intent(out) :: x(:), w(:)
+        integer, intent(out) :: ierr
 
         real(dp) :: edges(MAX_LAMBDA_PANELS + 1), v, scale, residual_start
         integer :: n_edges, n_residual, p, i0
         real(dp), allocatable :: xp(:), wp(:)
+
+        ierr = ERROR_SUCCESS
 
         ! The first panel resolves the kernel width itself; no floor is applied
         ! because `U_QUAD_MIN` already keeps `u` away from zero, and a floor
@@ -292,8 +296,12 @@ contains
             v = 2.0_dp * v
         end do
         residual_start = edges(n_edges)
-        n_residual = max(1, ceiling((B - residual_start) / (RESIDUAL_PANEL_MAX_WIDTH * scale)))
-        if (n_edges + n_residual > size(edges)) error stop "lambda_mesh: too many residual panels"
+        n_residual = max(1, ceiling((B - residual_start) / &
+                                    (RESIDUAL_PANEL_MAX_WIDTH * scale)))
+        if (n_edges + n_residual > size(edges)) then
+            ierr = ERROR_CONVERGENCE_FAILED
+            return
+        end if
         do p = 1, n_residual
             n_edges = n_edges + 1
             edges(n_edges) = residual_start + real(p, dp) * (B - residual_start) / real(n_residual, dp)
@@ -507,7 +515,8 @@ contains
         sk = sin(xk)
         ck = cos(xk)
 
-        call lambda_mesh(B, u4, n_lambda_per_panel(u4, B, quad%n_lambda), xl, wl)
+        call lambda_mesh(B, u4, n_lambda_per_panel(u4, B, quad%n_lambda), xl, wl, ierr)
+        if (ierr /= ERROR_SUCCESS) return
         nl = size(xl)
         ntot_eq = nk + nl
 

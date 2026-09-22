@@ -14,7 +14,7 @@ program test_lieb_wu_integral
                                 lieb_wu_energy, lieb_wu_exc, lieb_wu_solve_qb, &
                                 lieb_wu_solve_unpolarized
     use bethe_tables, only: compute_V_xc_numerical, xc_potentials_t
-    use lsda_errors, only: ERROR_SUCCESS
+    use lsda_errors, only: ERROR_SUCCESS, ERROR_CONVERGENCE_FAILED
     implicit none
 
     call execute_serial_cmd_app(get_tests())
@@ -34,7 +34,8 @@ contains
             test("particle_hole_and_spin_symmetry", test_particle_hole_and_spin_symmetry), &
             test("quadrature_convergence", test_quadrature_convergence), &
             test("low_m_quadrature_floor_convergence", test_low_m_quadrature_floor_convergence), &
-            test("unpolarized_matches_large_b", test_unpolarized_matches_large_b) &
+            test("unpolarized_matches_large_b", test_unpolarized_matches_large_b), &
+            test("lambda_mesh_capacity_failure", test_lambda_mesh_capacity_failure) &
         ])
     end function get_tests
 
@@ -354,5 +355,18 @@ contains
         call check(abs(n_fin - 2.0_dp * ndn_fin) < 1.0e-12_dp, &
                    "large B must be unpolarized")
     end subroutine test_unpolarized_matches_large_b
+
+    !> An extreme finite spin cutoff must return an error, not terminate the process.
+    subroutine test_lambda_mesh_capacity_failure()
+        use fortuno_serial, only: check => serial_check
+
+        type(lw_quad_t) :: quad
+        real(dp) :: n_tot, n_down, e_ba
+        integer :: ierr
+
+        call lieb_wu_solve_qb(1.0_dp, 1.0e6_dp, 0.5_dp, quad, n_tot, n_down, e_ba, ierr)
+        call check(ierr == ERROR_CONVERGENCE_FAILED, &
+                   "an over-capacity Lambda mesh must report convergence failure")
+    end subroutine test_lambda_mesh_capacity_failure
 
 end program test_lieb_wu_integral
