@@ -121,8 +121,15 @@ module lieb_wu_integral
     real(dp), parameter :: N_INPUT_TOL = 1.0e-8_dp
     !> Smallest admissible `B`; below it `sigma` is numerically zero.
     real(dp), parameter :: B_MIN = 1.0e-10_dp
-    !> Maximum number of dyadic `Lambda` panels.
-    integer, parameter :: MAX_LAMBDA_PANELS = 48
+    !> Maximum number of `Lambda` panels, including subdivisions of the last
+    !! non-dyadic interval.
+    integer, parameter :: MAX_LAMBDA_PANELS = 96
+    !> Maximum width of a residual Lambda panel in units of `u`.
+    !!
+    !! The dyadic mesh can end at a point `v` for which `[v, B]` is several
+    !! kernel widths wide. Splitting that residual prevents its geometry from
+    !! changing the low-magnetization splitting as U varies.
+    real(dp), parameter :: RESIDUAL_PANEL_MAX_WIDTH = 1.5_dp
     !> Exponential cut-off of the `m = 0` Fourier kernel: exp(-OMEGA_CUT).
     real(dp), parameter :: OMEGA_CUT = 48.0_dp
     !> Maximum number of `omega` panels of the `m = 0` Fourier kernel.
@@ -253,22 +260,28 @@ contains
     !> Dyadically graded Gauss-Legendre mesh on `[0, B]`.
     !!
     !! The spin kernels `a1` and `a2` have width `O(u)` while `B` ranges over
-    !! many decades, so panels double in length away from the origin.  This
-    !! keeps the kernel resolved everywhere with `O(log B)` panels.
+    !! many decades, so panels double in length away from the origin. The final
+    !! non-dyadic interval is subdivided into pieces no wider than `1.5 u`.
+    !! This keeps the kernel resolved everywhere with `O(log B)` panels while
+    !! avoiding a U-dependent residual-panel geometry.
     !!
     !! @param[in]  B             Upper limit (must be > 0)
     !! @param[in]  u             Kernel scale `U/4`
     !! @param[in]  n_per_panel   Gauss-Legendre nodes per panel
-    !! @param[out] x             Nodes (allocated here)
-    !! @param[out] w             Weights (allocated here)
-    subroutine lambda_mesh(B, u, n_per_panel, x, w)
+    !! @param[out] x             Nodes (allocated here on success)
+    !! @param[out] w             Weights (allocated here on success)
+    !! @param[out] ierr          `ERROR_SUCCESS` or `ERROR_CONVERGENCE_FAILED`
+    subroutine lambda_mesh(B, u, n_per_panel, x, w, ierr)
         real(dp), intent(in) :: B, u
         integer, intent(in) :: n_per_panel
         real(dp), allocatable, intent(out) :: x(:), w(:)
+        integer, intent(out) :: ierr
 
-        real(dp) :: edges(MAX_LAMBDA_PANELS + 1), v, scale
-        integer :: n_edges, p, i0
+        real(dp) :: edges(MAX_LAMBDA_PANELS + 1), v, scale, residual_start
+        integer :: n_edges, n_residual, p, i0
         real(dp), allocatable :: xp(:), wp(:)
+
+        ierr = ERROR_SUCCESS
 
         ! The first panel resolves the kernel width itself; no floor is applied
         ! because `U_QUAD_MIN` already keeps `u` away from zero, and a floor
@@ -282,8 +295,17 @@ contains
             edges(n_edges) = v
             v = 2.0_dp * v
         end do
-        n_edges = n_edges + 1
-        edges(n_edges) = B
+        residual_start = edges(n_edges)
+        n_residual = max(1, ceiling((B - residual_start) / &
+                                    (RESIDUAL_PANEL_MAX_WIDTH * scale)))
+        if (n_edges + n_residual > size(edges)) then
+            ierr = ERROR_CONVERGENCE_FAILED
+            return
+        end if
+        do p = 1, n_residual
+            n_edges = n_edges + 1
+            edges(n_edges) = residual_start + real(p, dp) * (B - residual_start) / real(n_residual, dp)
+        end do
 
         allocate(x((n_edges - 1) * n_per_panel))
         allocate(w((n_edges - 1) * n_per_panel))
@@ -493,7 +515,8 @@ contains
         sk = sin(xk)
         ck = cos(xk)
 
-        call lambda_mesh(B, u4, n_lambda_per_panel(u4, B, quad%n_lambda), xl, wl)
+        call lambda_mesh(B, u4, n_lambda_per_panel(u4, B, quad%n_lambda), xl, wl, ierr)
+        if (ierr /= ERROR_SUCCESS) return
         nl = size(xl)
         ntot_eq = nk + nl
 
