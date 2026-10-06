@@ -16,6 +16,8 @@ program lsdaks
                                   potential_impurity_multiple
     use boundary_conditions, only: BC_OPEN, BC_PERIODIC, BC_TWISTED
     use table_io, only: xc_table_filename
+    use bethe_tables, only: warn_if_u_unvalidated
+    use, intrinsic :: iso_fortran_env, only: output_unit
     implicit none
     
     ! Main variables
@@ -47,7 +49,7 @@ program lsdaks
     !! `scf_status`: `ierr` is overwritten by the cleanup helper before the exit
     !! status is decided.
     integer :: write_status
-    logical :: table_exists
+    logical :: table_exists, u_warned
 
     ! Timing variables
     real :: start_time, end_time, elapsed_time
@@ -99,6 +101,9 @@ program lsdaks
         call xc_lsda_init(xc_func, ierr=ierr, smoothing_width=inputs%xc_smoothing_width, &
                           u_signed=sys_params%U)
     else
+        ! Same high-U policy as the generator: warn and continue.
+        call warn_if_u_unvalidated(sys_params%U, output_unit, u_warned)
+
         ! Check XC table using |U| (tables are symmetric)
         call check_xc_table(abs(sys_params%U), inputs%table_dir, table_file, &
                             resolved_table_dir, table_exists)

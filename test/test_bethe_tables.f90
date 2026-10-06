@@ -26,6 +26,7 @@ contains
             test("vxc_edge_identity_only_on_edge_u4", test_vxc_edge_identity_only_on_edge), &
             test("graded_grids", test_graded_grids), &
             test("table_generator_u_floor", test_table_generator_u_floor), &
+            test("high_u_validation_warning", test_high_u_validation_warning), &
             test("half_filling_and_edge_guards_u4", test_half_filling_and_edge_guards), &
             test("compute_E_xc_above_half_filling_u4", test_compute_E_xc_above_half_filling_u4), &
             test("compute_E_xc_particle_hole_u4", test_compute_E_xc_particle_hole_u4), &
@@ -526,6 +527,58 @@ contains
         call check(abs(v_near_edge%v_xc_down - v_edge%v_xc_down) < 1.0e-6_dp, &
                    "V_xc_down must be continuous into the fully polarized edge")
     end subroutine test_half_filling_and_edge_guards
+
+    !> High-U policy shared by generator and SCF: inclusive bound at
+    !! `U_TABLE_VALIDATED_MAX`, warning text written to the given unit.
+    subroutine test_high_u_validation_warning()
+        use fortuno_serial, only: check => serial_check
+        use bethe_tables, only: u_exceeds_validated_range, warn_if_u_unvalidated, &
+                                U_TABLE_VALIDATED_MAX
+        use lsda_constants, only: dp
+
+        real(dp), parameter :: U_CASES(4) = [4.0_dp, 20.0_dp, 20.5_dp, -25.0_dp]
+        logical, parameter :: EXPECT(4) = [.false., .false., .true., .true.]
+        character(len=256) :: line1, line2
+        logical :: warned
+        integer :: unit, k, io_stat
+
+        call check(abs(U_TABLE_VALIDATED_MAX - 20.0_dp) < TOL, &
+                   "validated table range must end at |U| = 20")
+
+        do k = 1, size(U_CASES)
+            call check(u_exceeds_validated_range(U_CASES(k)) .eqv. EXPECT(k), &
+                       "u_exceeds_validated_range must match the inclusive |U| <= 20 policy")
+
+            open(newunit=unit, status='scratch', form='formatted', action='readwrite')
+            call warn_if_u_unvalidated(U_CASES(k), unit, warned)
+            call check(warned .eqv. EXPECT(k), "warned flag must match the policy")
+            rewind(unit)
+            line1 = ''
+            line2 = ''
+            read(unit, '(A)', iostat=io_stat) line1
+            if (EXPECT(k)) then
+                call check(io_stat == 0, "warning must be written when |U| > 20")
+                read(unit, '(A)', iostat=io_stat) line2
+                call check(index(line1, "WARNING: |U| =") == 1, "warning must start with WARNING")
+                call check(index(line1, "exceeds the validated table range") > 0, &
+                           "warning must name the validated range")
+                call check(index(line2, "not validation-qualified") > 0, &
+                           "warning must say the run is not validation-qualified")
+            else
+                call check(io_stat /= 0, "nothing must be written when |U| <= 20")
+            end if
+            close(unit)
+        end do
+
+        ! |U| is reported, not the signed value.
+        open(newunit=unit, status='scratch', form='formatted', action='readwrite')
+        call warn_if_u_unvalidated(-25.0_dp, unit, warned)
+        rewind(unit)
+        read(unit, '(A)') line1
+        close(unit)
+        call check(index(line1, "25.00") > 0 .and. index(line1, "-25") == 0, &
+                   "warning must report |U| for attractive interactions")
+    end subroutine test_high_u_validation_warning
 
     !> The generator must cover the full interaction range of the integral solver.
     !!

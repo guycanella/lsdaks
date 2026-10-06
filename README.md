@@ -326,12 +326,16 @@ the analytical `-Σ_{j=1..5} 4 cos(jπ/11)` by `1.95e-14`; the displayed
 `E = -12.053348366665` is rounded and is not used to compute that error.
 
 For `U /= 0`, generation accepts every finite `|U| >= 0.5`. The lower end is
-`bethe_tables::U_TABLE_MIN = 0.5` (`src/bethe_ansatz/bethe_tables.f90:132`), enforced when
-generating a table (`src/bethe_ansatz/bethe_tables.f90:521`): below it, generation is refused.
+`bethe_tables::U_TABLE_MIN = 0.5`, enforced when generating a table
+(`bethe_tables::generate_xc_table`): below it, generation is refused.
 Recorded validation measurements extend through `|U| = 20`
-(`bethe_tables::U_TABLE_VALIDATED_MAX`). Above that threshold the generator emits a warning
-and continues: this is an explicitly **unvalidated** user-requested calculation, not a rejected
-input. Generate the table required by a run before starting the SCF. Table file names are built by the single helper
+(`bethe_tables::U_TABLE_VALIDATED_MAX`, inclusive); this includes the
+low-`m` splitting `V_up - V_dn` that decides the Stoner instability, swept
+against a refined quadrature on `8 <= U <= 20` (294 points, worst relative error
+0.0038%, no sign inversion; see `lieb_wu_integral::n_lambda_floor`). Above that threshold both the generator
+and the SCF (`lsdaks`) print the same warning, from the single helper
+`bethe_tables::warn_if_u_unvalidated`, and continue: this is an explicitly **unvalidated**
+user-requested calculation, not a rejected input. Generate the table required by a run before starting the SCF. Table file names are built by the single helper
 `table_io::xc_table_filename` (`src/bethe_ansatz/table_io.f90:204`), the only place that
 name is spelled out — every producer and the SCF lookup in `app/main.f90` go through it. It emits the leading zero
 (`xc_table_u0.50.dat`); the earlier `F0.2` defect that produced `xc_table_u.50.dat` is gone.
@@ -340,7 +344,9 @@ name is spelled out — every producer and the SCF lookup in `app/main.f90` go t
 quadrature needs an elevated low-magnetization floor. The residual panel is split to a
 maximum width of `1.5u`, and the resulting `28/20/12` floor was revalidated over 462
 points (`U = 0.5..2.4`, step `0.025`; three densities and two magnetizations): no sign
-inversion and less than 2% relative error against the refined quadrature. Exact timing
+inversion and a worst relative error of 0.0863% (at `U = 0.600`) against the refined
+quadrature, in a release build (`-O3 -march=native`); at `m/n = 1e-5` this value depends on
+the compiler flags (0.2203% in the debug profile). Exact timing
 depends on hardware, OpenMP settings and the requested grid.
 
 ## External Potentials

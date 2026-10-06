@@ -133,8 +133,9 @@ module bethe_tables
 
     !> Largest interaction with recorded table-validation measurements.
     !!
-    !! Generation deliberately has no upper rejection: values above this limit
-    !! are accepted, but are an unvalidated user-requested calculation.
+    !! Neither the generator nor the SCF rejects values above this limit:
+    !! both accept them as an unvalidated user-requested calculation and warn
+    !! through `warn_if_u_unvalidated`.  The limit is inclusive.
     real(dp), parameter, public :: U_TABLE_VALIDATED_MAX = 20.0_dp
 
     public :: compute_E0
@@ -144,8 +145,42 @@ module bethe_tables
     public :: generate_table_grid
     public :: magnetization_grid
     public :: density_grid
+    public :: u_exceeds_validated_range
+    public :: warn_if_u_unvalidated
 
 contains
+
+    !> Whether `|U|` lies above the validated table range.
+    !!
+    !! The bound is inclusive: `|U| = U_TABLE_VALIDATED_MAX` is validated.
+    !!
+    !! @param[in] U  Hubbard interaction, with sign
+    !! @return `.true.` when `|U| > U_TABLE_VALIDATED_MAX`
+    pure logical function u_exceeds_validated_range(U) result(exceeds)
+        real(dp), intent(in) :: U
+
+        exceeds = abs(U) > U_TABLE_VALIDATED_MAX
+    end function u_exceeds_validated_range
+
+    !> Print the high-`U` warning shared by the table generator and the SCF.
+    !!
+    !! Single source of the message.  Writes nothing when `|U|` is inside the
+    !! validated range; the caller continues either way.
+    !!
+    !! @param[in]  U       Hubbard interaction, with sign
+    !! @param[in]  unit    Connected formatted output unit
+    !! @param[out] warned  `.true.` when the warning was written
+    subroutine warn_if_u_unvalidated(U, unit, warned)
+        real(dp), intent(in) :: U
+        integer, intent(in) :: unit
+        logical, intent(out) :: warned
+
+        warned = u_exceeds_validated_range(U)
+        if (.not. warned) return
+        write(unit, '(A,F8.2,A,F8.2)') "WARNING: |U| = ", abs(U), &
+            " exceeds the validated table range through |U| = ", U_TABLE_VALIDATED_MAX
+        write(unit, '(A)') "         The run will continue, but this U is not validation-qualified."
+    end subroutine warn_if_u_unvalidated
 
     !> Graded magnetization axis of one density row.
     !!

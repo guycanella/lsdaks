@@ -323,7 +323,15 @@ contains
                     rel_err = abs(split_p - split_f) / max(abs(split_f), 1.0e-12_dp)
                     call check(split_p * split_f > 0.0_dp, &
                                "production low-m splitting must preserve the fine-grid sign")
-                    call check(rel_err < 0.02_dp, &
+                    ! 0.5% = ~2x the worst error measured across build profiles
+                    ! for the current 28/20/12 floor: 0.0863% on the full
+                    ! 462-point sweep in release (-O3 -march=native, U = 0.600)
+                    ! and 0.2203% on these 54 points in the debug profile
+                    ! (U = 0.5, n = 0.3, m/n = 1e-5), measured 2026-10-02.  At
+                    ! m/n = 1e-5 the value is dominated by finite-difference
+                    ! rounding and varies with the compiler flags, so the margin
+                    ! covers the worst profile.
+                    call check(rel_err < 0.005_dp, &
                                "production low-m splitting must converge against n_lambda=64")
                 end do
             end do
