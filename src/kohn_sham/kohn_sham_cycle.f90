@@ -544,13 +544,7 @@ contains
         if (scf_params%store_history) then
             call init_convergence_history(results%history, scf_params%max_iter, ierr)
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for history init
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                           H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                           delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
         end if
 
         ! Initialize densities (uniform guess)
@@ -563,12 +557,7 @@ contains
         do i = 1, params%L
             ! Get V_xc from initial uniform density
             call get_vxc(xc_func, n_up_in(i), n_down_in(i), V_xc_up(i), V_xc_down(i), ierr)
-            if (ierr /= ERROR_SUCCESS) then
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             ! Initialize V_eff = V_ext + U*n_other + V_xc (like C++)
             V_eff_up(i) = V_ext(i) + params%U * n_down_in(i) + V_xc_up(i)
@@ -698,20 +687,10 @@ contains
             ! than the effective potential of this SCF iteration.
             if (params%bc /= BC_OPEN) then
                 call build_hamiltonian_complex(params%L, V_eff_up, V_zero, params%bc, params%phase, H_up, ierr)
-                if (ierr /= ERROR_SUCCESS) then
-                    deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                           H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                           delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
-                    return
-                end if
+                if (ierr /= ERROR_SUCCESS) return
 
                 call build_hamiltonian_complex(params%L, V_eff_down, V_zero, params%bc, params%phase, H_down, ierr)
-                if (ierr /= ERROR_SUCCESS) then
-                    deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                           H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                           delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
-                    return
-                end if
+                if (ierr /= ERROR_SUCCESS) return
             end if
 
             if (params%bc == BC_OPEN) then
@@ -724,13 +703,7 @@ contains
                 call diagonalize_hermitian_complex_partial(H_up, L, n_vec_up, eigvals_up, eigvecs_up, diag_workspace_up, ierr)
             end if
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for diagonalization Nup Hamiltonian
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
             
             ! Reuse a channel only for bitwise-identical potentials.  A numeric
             ! tolerance can suppress a physically meaningful incipient spin
@@ -747,13 +720,7 @@ contains
             else
                 call diagonalize_hermitian_complex_partial(H_down, L, n_vec_down, eigvals_down, eigvecs_down, diag_workspace_down, ierr)
             end if
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for diagonalization Ndown Hamiltonian
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             ! ----------------------------------------------
             ! 1d'. Occupation numbers, with fractional filling of an OPEN
@@ -773,12 +740,7 @@ contains
                                          shell_open=shell_open_down)
             end if
 
-            if (ierr /= ERROR_SUCCESS) then
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             ! A window that already spans the whole spectrum cannot be grown,
             ! and there is nothing above it either, so the flag is moot there.
@@ -799,46 +761,22 @@ contains
             ! ----------------------------------------------
             call compute_density_spin(eigvecs_up, params%L, occ_up, n_up_out, ierr)
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for density calculation Nup
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             call compute_density_spin(eigvecs_down, params%L, occ_down, n_down_out, ierr)
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for density calculation Ndown
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
             
             ! ----------------------------------------------
             ! 1f. Compute density differences
             ! ----------------------------------------------
             call compute_density_difference(n_up_out, n_up_in, params%L, delta_n_up, ierr)
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for Nup density difference
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
             
             call compute_density_difference(n_down_out, n_down_in, params%L, delta_n_down, ierr)
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for Ndown density difference
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             ! ---------------------------------------------------------------
             ! 1g. Density change, DIAGNOSTIC ONLY (see 1j for the criterion)
@@ -854,13 +792,7 @@ contains
             end if
             density_error = sqrt(density_error_up**2 + density_error_down**2)
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for total density up norm
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             ! -------------------------------------------------
             ! 1h. Cache XC quantities for the output densities
@@ -871,12 +803,7 @@ contains
             ! plus e_xc(n_out) evaluations with one pass over n_out.
             ! -------------------------------------------------
             call populate_xc_output_cache(xc_func, n_up_out, n_down_out, V_xc_up, V_xc_down, e_xc, ierr)
-            if (ierr /= ERROR_SUCCESS) then
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, e_xc, &
-                   H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                   delta_n_down, V_eff_up, V_eff_down, V_eff_up_calc, V_eff_down_calc, V_zero)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             ! ------------------------
             ! 1h'. Compute total energy
@@ -885,13 +812,7 @@ contains
                                     V_ext, V_eff_up, V_eff_down, xc_func, params%U, params%L, total_energy, ierr, &
                                     occ_up=occ_up, occ_down=occ_down, exc_values=e_xc)
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for total energy calculation
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             ! ---------------------------------------------------------------
             ! 1h'. Half-filling / V_xc discontinuity diagnostic
@@ -944,13 +865,7 @@ contains
                                                 residual=residual_V)
             end if
 
-            if (ierr /= ERROR_SUCCESS) then
-                ! TODO: Proper error handling for history update
-                deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
-                return
-            end if
+            if (ierr /= ERROR_SUCCESS) return
 
             ! ------------------------------
             ! 1j. Update adaptive mixing (if enabled)
@@ -1051,10 +966,6 @@ contains
         results%eigvals(params%L+1:params%L+n_vec_down) = eigvals_down
 
         ierr = ERROR_CONVERGENCE_FAILED
-
-        deallocate(n_up_in, n_down_in, n_up_out, n_down_out, V_xc_up, V_xc_down, &
-                       H_up, H_down, eigvals_up, eigvals_down, eigvecs_up, eigvecs_down, delta_n_up, &
-                       delta_n_down)
     end subroutine run_kohn_sham_scf_common
 
     !> Run the complex-valued SCF API through the shared solver core.

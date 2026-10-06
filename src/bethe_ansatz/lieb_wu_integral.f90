@@ -336,10 +336,7 @@ contains
     !! longer has to compensate for the dyadic residual-panel oscillation.
     !!
     !! The following table records the pre-subdivision calibration and explains
-    !! the original conservative envelope. The current 28/20/12 policy was
-    !! subsequently checked by the 462-point release sweep in
-    !! `test_low_m_quadrature_floor_convergence` (no sign inversion; relative
-    !! error below 2% against the refined quadrature).
+    !! the original conservative envelope.
     !!
     !! Measured relative error of the `m -> 0` exchange splitting against
     !! `n_lambda = 80`, worst case over `n` in {0.3, 0.8, 0.95} and `m/n` in
@@ -365,19 +362,37 @@ contains
     !! its whole interval, not at one endpoint.  The previous ladder binned by
     !! the upper edge of each step while the requirement does not decrease
     !! monotonically, so `U = 1.02` fell into the step calibrated for `U = 1.5`
-    !! and came out with the splitting sign inverted.  End to end, with the
-    !! envelope below and the production quadrature, the worst relative error
-    !! over the same `(n, m/n)` set on `U` from 0.5 to 2.4 in steps of 0.025 is
-    !! 0.1%, with no sign inversion anywhere.
+    !! and came out with the splitting sign inverted.
+    !!
+    !! End-to-end sweep: production quadrature against the refined one
+    !! (`n_lambda = 64`, `n_k = 96`, `n_omega = 64`), `delta_n = 0.3 m`, the
+    !! same `(n, m/n)` set, `U` from 0.5 to 2.4 in steps of 0.025 (462 points):
+    !!
+    !! - previous envelope 40/28/12, before the residual-panel subdivision:
+    !!   worst relative error 0.1037% at `U = 0.600`, no sign inversion;
+    !! - current envelope 28/20/12, with the subdivision (release build,
+    !!   2026-10-02): worst relative error 0.0863% at `U = 0.600`, `n = 0.3`,
+    !!   `m/n = 1e-5`, no sign inversion (release value; at this `m/n` it is
+    !!   dominated by finite-difference rounding and depends on the compiler
+    !!   flags - 0.2203% in the debug profile).  Worst per branch: 0.0863% for
+    !!   `U < 1`, 0.0437% for `1 <= U < 2` (`U = 1.175`), 0.0288% for
+    !!   `2 <= U <= 2.4` (`U = 2.075`).
     !!
     !! Above `U = 2` the nominal default of 12 was measured sufficient up to
     !! `U = 8.0` (same `(n, m/n)` set, `U` from 2.4 to 8.0: worst relative
     !! error 0.0210%, no sign inversion). The reference refines all three
     !! quadrature dimensions (`n_lambda = 64`, `n_k = 96`, `n_omega = 64`), as
-    !! does `test_low_m_quadrature_floor_convergence`. Above `U = 8` it is NOT measured -
-    !! tables are shipped up to `U = 20` - and since the requirement oscillates
-    !! with `frac(log2(B / u))` rather than decreasing with `U`, the measured
-    !! range must not be extrapolated.  Over that measured range the strongly
+    !! does `test_low_m_quadrature_floor_convergence`. The same sweep from
+    !! `U = 8.0` to `20.0` in steps of 0.25 (294 points, release build,
+    !! 2026-10-02) gives worst relative error 0.0038% at `U = 8.5`, `n = 0.3`,
+    !! `m/n = 1e-5` (0.0028% at `U = 9.5` when the five worst points are
+    !! re-run in the debug profile), no sign inversion; worst per sub-range
+    !! 0.0038% for `8 <= U < 12`, 0.0018% for `12 <= U < 16` (`U = 14.0`),
+    !! 0.0015% for `16 <= U <= 20` (`U = 16.25`).  Above `U = 20` - the
+    !! largest shipped table, `bethe_tables::U_TABLE_VALIDATED_MAX` - it is
+    !! NOT measured, and since the requirement oscillates with
+    !! `frac(log2(B / u))` rather than decreasing with `U`, the measured range
+    !! must not be extrapolated.  Over that measured range the strongly
     !! coupled tables keep their established cost; the price of the envelope is
     !! paid by the weak and intermediate coupling range, and only next to
     !! `m = 0` (see `n_lambda_per_panel`).
@@ -390,15 +405,17 @@ contains
 
         if (u < 0.25_dp) then
             ! U < 1: 28 is the smallest tested floor that passes the complete
-            ! 462-point calibration against the refined quadrature.
+            ! 462-point calibration against the refined quadrature (worst
+            ! error 0.0863%, U = 0.600).
             n_min = 28
         else if (u < 0.5_dp) then
             ! 1 <= U < 2: residual subdivision reduces the calibrated floor
-            ! from 28 to 20 without sign inversions.
+            ! from 28 to 20 without sign inversions (worst error 0.0437%).
             n_min = 20
         else
             ! U >= 2: the nominal order is converged over the measured range
-            ! (2.4 <= U <= 8.0, worst error 0.0210%); U > 8 is unmeasured.
+            ! (worst error 0.0210% on 2.4 <= U <= 8.0, 0.0038% on
+            ! 8.0 <= U <= 20.0); U > 20 is unmeasured.
             n_min = 12
         end if
     end function n_lambda_floor

@@ -26,12 +26,13 @@
 !!       as `U` falls.  The exact wall time depends on the adaptive `B` cutoff
 !!       and the requested U; it is not a correctness criterion for a table.
 program generate_xc_table_app
-    use bethe_tables, only: generate_xc_table, grid_params_t, U_TABLE_MIN, U_TABLE_VALIDATED_MAX
+    use bethe_tables, only: generate_xc_table, grid_params_t, U_TABLE_MIN, warn_if_u_unvalidated
     use lsda_errors, only: ERROR_SUCCESS, ERROR_INVALID_INPUT
     use table_io, only: xc_table_t, write_fortran_table, count_nonfinite_entries, &
                         xc_table_filename
     use lsda_constants, only: dp
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+    use, intrinsic :: iso_fortran_env, only: output_unit
     implicit none
 
     real(dp) :: U
@@ -40,7 +41,7 @@ program generate_xc_table_app
     type(xc_table_t) :: table
     integer :: ierr, io_stat, nargs, command_stat, exit_stat
     integer :: n_bad_exc, n_bad_up, n_bad_dn, i, j
-    logical :: have_U, force, exists
+    logical :: have_U, force, exists, warned
     real(dp) :: t_start, t_end, wall
     integer(8) :: c_start, c_end, c_rate
 
@@ -172,11 +173,7 @@ program generate_xc_table_app
         stop 1
     end if
 
-    if (abs(U) > U_TABLE_VALIDATED_MAX) then
-        print '(A,F8.2,A,F8.2)', "WARNING: |U| = ", abs(U), &
-              " exceeds the validated table range through |U| = ", U_TABLE_VALIDATED_MAX
-        print '(A)', "         Generation will continue, but this table is not validation-qualified."
-    end if
+    call warn_if_u_unvalidated(U, output_unit, warned)
 
     ! A freshly cloned repository (or a user-selected nested directory) need
     ! not contain the output path yet. Create it before probing the destination
