@@ -22,9 +22,19 @@ module lapack_wrapper
     !! gfortran 16.2 -O3, median of 3 cpu_time calls, OBC, V=0.1*sin(j)-0.5):
     !! RANGE='A' costs ~31 ms independent of n_vec; RANGE='I' grows linearly,
     !! 13.8 ms at n_vec/L=0.05, 29.6 ms at 0.10, 45.8 ms at 0.15, 71.8 ms at
-    !! 0.25. The paths cross at n_vec/L ~ 0.10-0.11 (same at L=400), so 'A' is
-    !! already ~2.4x faster at 0.25; the threshold errs toward the subset path.
-    real(dp), public, parameter :: FULL_SPECTRUM_FRACTION = 0.25_dp
+    !! 0.25. The paths cross at n_vec/L ~ 0.10-0.11 (same at L=400). The
+    !! threshold 0.15 sits just above that crossover, where 'A' is already
+    !! ~1.45x faster; at 0.10 the two paths cost the same and the L x L buffer
+    !! would be allocated for no gain, and the crossover itself is noisy. In an
+    !! unpolarised SCF n_vec/L = n/2 + 5/L (n_vec = N_sigma + 5; the Fermi-shell
+    !! window may add up to SHELL_WINDOW_GROWTH more), so for L >~ 500 only
+    !! fillings n <~ 0.3 stay on the subset path (where the full-spectrum gain
+    !! is small and the buffer is not needed); the previous 0.25 left
+    !! 0.22 <~ n <~ 0.5 on the subset path, where the full-spectrum call is
+    !! equal in cost at n ~ 0.22 and 1.45x-2.4x faster from n ~ 0.3 to 0.5.
+    !! The full-spectrum buffer is L x L per spin (8 MB at L=1000, 800 MB at
+    !! L=10000), independent of n_vec.
+    real(dp), public, parameter :: FULL_SPECTRUM_FRACTION = 0.15_dp
 
     public :: validate_diagonalization_inputs
     public :: diagonalize_symmetric_real, diagonalize_symmetric_real_values_only

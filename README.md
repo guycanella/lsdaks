@@ -905,8 +905,8 @@ table do not transfer directly to the SCF benchmark.
 #### Diagonalization strategy
 
 `diagonalize_open_tridiagonal` (`src/diagonalization/lapack_wrapper.f90`) asks DSTEVR for
-the index subset `1..n_vec` (RANGE='I') only while `n_vec ≤ L/4`
-(`lapack_wrapper::FULL_SPECTRUM_FRACTION = 0.25`). Above that it requests the whole spectrum
+the index subset `1..n_vec` (RANGE='I') only while `n_vec ≤ 0.15 L`
+(`lapack_wrapper::FULL_SPECTRUM_FRACTION = 0.15`). Above that it requests the whole spectrum
 (RANGE='A') into an `L × L` workspace buffer and copies out the lowest `n_vec` pairs: with a
 subset DSTEVR falls back to DSTEBZ+DSTEIN, whereas the full spectrum goes through MRRR
 (DSTEMR), which at `L = 1000` is ~2.5× faster per call (31–32 ms vs 74–82 ms). A sweep of
@@ -914,8 +914,15 @@ subset DSTEVR falls back to DSTEBZ+DSTEIN, whereas the full spectrum goes throug
 `V = 0.1 sin(j) − 0.5`, median of 3 `cpu_time` calls) gave RANGE='A' ≈ 31 ms regardless of
 `n_vec`, and RANGE='I' 13.8 / 29.6 / 45.8 / 71.8 / 140 ms at `n_vec/L` = 0.05 / 0.10 / 0.15 /
 0.25 / 0.50, i.e. the two paths cross at `n_vec/L ≈ 0.10–0.11` (the same ratio at `L = 400`).
-The 0.25 threshold therefore sits above the measured crossover: RANGE='A' is already ~2.4×
-faster there, and the margin favours the subset path. The microbenchmark above
+The 0.15 threshold sits just above the measured crossover, where RANGE='A' is already ~1.45×
+faster; it is not set at 0.10 because there the two paths cost the same (the `L × L` buffer
+would be allocated for no gain) and the crossover itself is within noise. In an unpolarised
+SCF `n_vec/L = n/2 + 5/L` (`n_vec = N_σ + 5`; the Fermi-shell window may add up to
+`SHELL_WINDOW_GROWTH` more), so for `L ≳ 500` only fillings `n ≲ 0.3` stay on the subset
+path; the earlier 0.25 threshold left the common range `0.22 ≲ n ≲ 0.5` on the subset path,
+where the full-spectrum call is equal in cost at `n ≈ 0.22` and 1.45×–2.4× faster from
+`n ≈ 0.3` to 0.5. The full-spectrum buffer is `L × L` per spin (8 MB at `L = 1000`, 800 MB at
+`L = 10 000`), independent of `n_vec`. The microbenchmark above
 (`n_vec = 55`) stays on the subset path and is unaffected; re-measured on 2026-10-07 it gave
 0.0199 s partial / 0.0674 s dense at `L = 1000` (3.38×), within run-to-run noise of the table.
 
@@ -933,8 +940,10 @@ fpm run --profile release --flag "-O3 -march=native" lsdaks -- --input examples/
 ```
 
 Three runs on 2026-10-07 (same machine and flags as above), after switching the OBC
-diagonalization to the full-spectrum DSTEVR path when `n_vec > L/4` (see
-"Diagonalization strategy" above): **3.365 / 3.288 / 3.291 s CPU** (3.78 / 3.31 / 3.29 s
+diagonalization to the full-spectrum DSTEVR path when `n_vec > FULL_SPECTRUM_FRACTION · L`
+(see "Diagonalization strategy" above; the threshold was 0.25 at the time of the measurement
+and is now 0.15, which does not change this run since `n_vec/L = 0.255` was already above
+both): **3.365 / 3.288 / 3.291 s CPU** (3.78 / 3.31 / 3.29 s
 wall), final energy unchanged to all printed digits (−757.52418133). The `< 5 s` target is
 **met**. History: on 2026-10-06 the same input took 7.42 / 7.47 / 7.95 s wall, ~7.4 s CPU,
 of which ~95 % was DSTEVR with RANGE='I' (bisection + inverse iteration, 74–82 ms per call

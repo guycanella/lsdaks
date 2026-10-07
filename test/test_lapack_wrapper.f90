@@ -264,17 +264,25 @@ contains
     !! This is a regression test for partial diagonalization: it exercises a
     !! 200-site system but requests only the lowest occupied shell and buffer.
     !! A dense full-spectrum path does not exercise the DSTEVR implementation.
+    !! With `n_vec/L = 0.185 > FULL_SPECTRUM_FRACTION = 0.15` this request goes
+    !! through the full-spectrum (RANGE='A') branch, so it also pins the
+    !! threshold from above (the L=10 test pins it from below).
     subroutine test_diag_open_tridiagonal_partial_l200()
         use fortuno_serial, only: check => serial_check
-        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace
+        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace, &
+                                  FULL_SPECTRUM_FRACTION
         integer, parameter :: L = 200, N_VEC = 37
         real(dp) :: potential(L), eigvals(N_VEC), eigvecs(L,N_VEC), exact
         type(diag_workspace_t) :: workspace
         integer :: ierr, n
 
+        call check(real(N_VEC, dp) > FULL_SPECTRUM_FRACTION * real(L, dp), &
+                   "L=200/n_vec=37 must sit above the full-spectrum threshold")
         potential = 0.0_dp
         call diagonalize_open_tridiagonal(potential, L, N_VEC, eigvals, eigvecs, workspace, ierr)
         call check(ierr == 0, "DSTEVR partial open-chain diagonalization should succeed")
+        call check(allocated(workspace%full_vectors), &
+                   "n_vec/L = 0.185 must take the full-spectrum path and allocate the L x L buffer")
         do n = 1, N_VEC
             exact = -2.0_dp * cos(real(n, dp) * PI / real(L + 1, dp))
             call check(abs(eigvals(n) - exact) < 1.0e-12_dp, &
@@ -349,16 +357,19 @@ contains
         call cleanup_diag_workspace(workspace)
     end subroutine test_diag_open_tridiagonal_full_path_nvec_equals_l
 
-    !> Small system below the threshold (L=10, n_vec=2) stays on the RANGE='I'
-    !! path and never allocates the L x L buffer.
+    !> Small system below the threshold (L=10, n_vec=1, ratio 0.10 < 0.15) stays
+    !! on the RANGE='I' path and never allocates the L x L buffer.
     subroutine test_diag_open_tridiagonal_partial_small()
         use fortuno_serial, only: check => serial_check
-        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace
-        integer, parameter :: L = 10, N_VEC = 2
+        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace, &
+                                  FULL_SPECTRUM_FRACTION
+        integer, parameter :: L = 10, N_VEC = 1
         real(dp) :: potential(L), eigvals(N_VEC), eigvecs(L, N_VEC), exact
         type(diag_workspace_t) :: workspace
         integer :: ierr, n
 
+        call check(real(N_VEC, dp) <= FULL_SPECTRUM_FRACTION * real(L, dp), &
+                   "Test must stay below the full-spectrum threshold")
         potential = 0.0_dp
         call diagonalize_open_tridiagonal(potential, L, N_VEC, eigvals, eigvecs, workspace, ierr)
         call check(ierr == 0, "Small partial open-chain diagonalization should succeed")
