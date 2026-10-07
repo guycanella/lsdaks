@@ -8,9 +8,33 @@ module lapack_wrapper
 
     type, public :: diag_workspace_t
         real(dp), allocatable :: work(:), rwork(:), d(:), e(:), real_vectors(:,:)
+        !> Full-spectrum scratch (L and L x L) used by `diagonalize_open_tridiagonal`
+        !! when `n_vec > FULL_SPECTRUM_FRACTION * L`.
+        real(dp), allocatable :: full_values(:), full_vectors(:,:)
         complex(dp), allocatable :: cwork(:)
         integer, allocatable :: iwork(:), isuppz(:)
     end type diag_workspace_t
+
+    !> Fraction of the spectrum above which `diagonalize_open_tridiagonal` asks
+    !! DSTEVR for all L eigenpairs (RANGE='A', MRRR via DSTEMR) and discards the
+    !! unused ones, instead of RANGE='I' (bisection + inverse iteration,
+    !! DSTEBZ+DSTEIN). Measured 2026-10-07 on L=1000 (Apple M4 Pro, Accelerate,
+    !! gfortran 16.2 -O3, median of 3 cpu_time calls, OBC, V=0.1*sin(j)-0.5):
+    !! RANGE='A' costs ~31 ms independent of n_vec; RANGE='I' grows linearly,
+    !! 13.8 ms at n_vec/L=0.05, 29.6 ms at 0.10, 45.8 ms at 0.15, 71.8 ms at
+    !! 0.25. The paths cross at n_vec/L ~ 0.10-0.11 (same at L=400). The
+    !! threshold 0.15 sits just above that crossover, where 'A' is already
+    !! ~1.45x faster; at 0.10 the two paths cost the same and the L x L buffer
+    !! would be allocated for no gain, and the crossover itself is noisy. In an
+    !! unpolarised SCF n_vec/L = n/2 + 5/L (n_vec = N_sigma + 5; the Fermi-shell
+    !! window may add up to SHELL_WINDOW_GROWTH more), so for L >~ 500 only
+    !! fillings n <~ 0.3 stay on the subset path (where the full-spectrum gain
+    !! is small and the buffer is not needed); the previous 0.25 left
+    !! 0.22 <~ n <~ 0.5 on the subset path, where the full-spectrum call is
+    !! equal in cost at n ~ 0.22 and 1.45x-2.4x faster from n ~ 0.3 to 0.5.
+    !! The full-spectrum buffer is L x L per spin (8 MB at L=1000, 800 MB at
+    !! L=10000), independent of n_vec.
+    real(dp), public, parameter :: FULL_SPECTRUM_FRACTION = 0.15_dp
 
     public :: validate_diagonalization_inputs
     public :: diagonalize_symmetric_real, diagonalize_symmetric_real_values_only
@@ -83,6 +107,8 @@ contains
         if (allocated(workspace%d)) deallocate(workspace%d)
         if (allocated(workspace%e)) deallocate(workspace%e)
         if (allocated(workspace%real_vectors)) deallocate(workspace%real_vectors)
+        if (allocated(workspace%full_values)) deallocate(workspace%full_values)
+        if (allocated(workspace%full_vectors)) deallocate(workspace%full_vectors)
     end subroutine cleanup_diag_workspace
 
     !> Ensure that a real MRRR workspace can solve a system of size L.
@@ -127,6 +153,12 @@ contains
     end subroutine ensure_complex_workspace
 
     !> Diagonalize an open-chain tridiagonal Hamiltonian using DSTEVR.
+    !!
+    !! For `n_vec > FULL_SPECTRUM_FRACTION * L` the whole spectrum is computed
+    !! with RANGE='A' into `workspace%full_*` and the lowest `n_vec` pairs are
+    !! copied out: DSTEVR then uses MRRR (DSTEMR), which at L=1000 is ~2.5x
+    !! faster than the bisection + inverse iteration (DSTEBZ+DSTEIN) it falls
+    !! back to for an index subset. Results are identical up to roundoff.
     !! @param[in] potential On-site effective potential (length L)
     !! @param[in] n_vec Number of lowest eigenpairs requested
     !! @param[out] eigvals Lowest eigenvalues (length >= n_vec)
@@ -148,8 +180,25 @@ contains
         call ensure_real_workspace(workspace, L)
         workspace%d(1:L) = potential
         if (L > 1) workspace%e(1:L-1) = -1.0_dp
-        call DSTEVR('V', 'I', L, workspace%d, workspace%e, 0.0_dp, 0.0_dp, 1, n_vec, 0.0_dp, m, eigvals, eigvecs, L, &
-                    workspace%isuppz, workspace%work, size(workspace%work), workspace%iwork, size(workspace%iwork), info)
+        if (real(n_vec, dp) > FULL_SPECTRUM_FRACTION * real(L, dp)) then
+            if (.not. allocated(workspace%full_vectors) .or. size(workspace%full_vectors, 1) /= L) then
+                if (allocated(workspace%full_vectors)) deallocate(workspace%full_vectors, workspace%full_values)
+                allocate(workspace%full_vectors(L, L), workspace%full_values(L))
+            end if
+            call DSTEVR('V', 'A', L, workspace%d, workspace%e, 0.0_dp, 0.0_dp, 1, L, 0.0_dp, m, &
+                        workspace%full_values, workspace%full_vectors, L, workspace%isuppz, &
+                        workspace%work, size(workspace%work), workspace%iwork, size(workspace%iwork), info)
+            if (info /= 0 .or. m /= L) then
+                ierr = merge(ERROR_CONVERGENCE_FAILED, ERROR_LAPACK_INVALID_ARG, info > 0)
+                return
+            end if
+            eigvals(1:n_vec) = workspace%full_values(1:n_vec)
+            eigvecs(:, 1:n_vec) = workspace%full_vectors(:, 1:n_vec)
+            return
+        else
+            call DSTEVR('V', 'I', L, workspace%d, workspace%e, 0.0_dp, 0.0_dp, 1, n_vec, 0.0_dp, m, eigvals, eigvecs, L, &
+                        workspace%isuppz, workspace%work, size(workspace%work), workspace%iwork, size(workspace%iwork), info)
+        end if
         if (info < 0 .or. m /= n_vec) then
             ierr = ERROR_LAPACK_INVALID_ARG
         else if (info > 0) then

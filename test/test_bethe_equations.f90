@@ -172,14 +172,14 @@ contains
         use fortuno_serial, only: check => serial_check
         use bethe_equations, only: initialize_quantum_numbers
         use lsda_constants, only: dp
-        integer :: Nup, M
+        integer :: N, M
         real(dp), allocatable :: I(:), J(:)
         
-        Nup = 5
+        N = 5
         M = 3
-        allocate(I(Nup), J(M))
+        allocate(I(N), J(M))
         
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
 
         ! Verify if I = [-2, -1, 0, 1, 2]
         call check(abs(I(1) - (-2.0_dp)) < 1.0e-14_dp)
@@ -198,14 +198,14 @@ contains
         use fortuno_serial, only: check => serial_check
         use bethe_equations, only: initialize_quantum_numbers
         use lsda_constants, only: dp
-        integer :: Nup, M
+        integer :: N, M
         real(dp), allocatable :: I(:), J(:)
         
-        Nup = 4
+        N = 4
         M = 2
-        allocate(I(Nup), J(M))
+        allocate(I(N), J(M))
         
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
 
         ! Verify if I = [-1.5, -0.5, 0.5, 1.5]
         call check(abs(I(1) - (-1.5_dp)) < 1.0e-14_dp)
@@ -220,18 +220,18 @@ contains
         use fortuno_serial, only: check => serial_check
         use bethe_equations, only: initialize_quantum_numbers, compute_residual
         use lsda_constants, only: dp, TWOPI
-        integer :: Nup, M, L
+        integer :: N, M, L
         real(dp) :: U
         real(dp), allocatable :: k(:), Lambda(:), I(:), J(:), F(:)
         
-        Nup = 3
+        N = 3
         M = 2
         L = 10
         U = 4.0_dp
         
-        allocate(k(Nup), Lambda(M), I(Nup), J(M))
+        allocate(k(N), Lambda(M), I(N), J(M))
         
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
         
         ! Simple initial guess
         k = TWOPI * I / real(L, dp)
@@ -241,7 +241,7 @@ contains
         F = compute_residual(k, Lambda, I, J, L, U)
 
         ! Check correct dimension
-        call check(size(F) == Nup + M)
+        call check(size(F) == N + M)
         
         deallocate(k, Lambda, I, J)
     end subroutine
@@ -250,17 +250,17 @@ contains
         use fortuno_serial, only: check => serial_check
         use bethe_equations, only: compute_jacobian
         use lsda_constants, only: dp
-        integer :: Nup, M, L, total_size
+        integer :: N, M, L, total_size
         real(dp) :: U
         real(dp), allocatable :: k(:), Lambda(:), J_matrix(:,:)
         
-        Nup = 3
+        N = 3
         M = 2
         L = 10
         U = 4.0_dp
-        total_size = Nup + M
+        total_size = N + M
         
-        allocate(k(Nup), Lambda(M))
+        allocate(k(N), Lambda(M))
         
         k = [0.5_dp, 1.0_dp, -0.5_dp]
         Lambda = [0.2_dp, -0.3_dp]
@@ -278,16 +278,16 @@ contains
         use fortuno_serial, only: check => serial_check
         use bethe_equations, only: compute_jacobian
         use lsda_constants, only: dp
-        integer :: Nup, M, L, i
+        integer :: N, M, L, i
         real(dp) :: U
         real(dp), allocatable :: k(:), Lambda(:), J_matrix(:,:)
         
-        Nup = 3
+        N = 3
         M = 2
         L = 10
         U = 4.0_dp
         
-        allocate(k(Nup), Lambda(M))
+        allocate(k(N), Lambda(M))
         
         k = [0.5_dp, 1.0_dp, -0.5_dp]
         Lambda = [0.2_dp, -0.3_dp]
@@ -297,7 +297,7 @@ contains
         ! Verify that block A has approximately diagonal structure
         ! (diagonal dominant, since it has the term 1 - (1/L)*sum)
         ! Let's check that the diagonal is not zero
-        do i = 1, Nup
+        do i = 1, N
             call check(abs(J_matrix(i, i)) > 0.5_dp)  ! Should be close to 1
         end do
         
@@ -309,43 +309,43 @@ contains
         use bethe_equations
         implicit none
         
-        integer :: Nup, M, L, j
+        integer :: N, M, L, j
         real(dp) :: U, h
         real(dp), allocatable :: k(:), Lambda(:), I_qn(:), J_qn(:)
         real(dp), allocatable :: J_analytical(:,:), J_numerical(:,:)
         real(dp), allocatable :: F_plus(:), F_minus(:), x(:), x_pert(:)
         
-        Nup = 2
+        N = 2
         M = 1
         L = 10
         U = 4.0_dp
         h = 1.0e-6_dp  ! Passo para diferenças finitas
         
-        allocate(k(Nup), Lambda(M), I_qn(Nup), J_qn(M))
-        allocate(J_analytical(Nup+M, Nup+M), J_numerical(Nup+M, Nup+M))
-        allocate(F_plus(Nup+M), F_minus(Nup+M))
-        allocate(x(Nup+M), x_pert(Nup+M))
+        allocate(k(N), Lambda(M), I_qn(N), J_qn(M))
+        allocate(J_analytical(N+M, N+M), J_numerical(N+M, N+M))
+        allocate(F_plus(N+M), F_minus(N+M))
+        allocate(x(N+M), x_pert(N+M))
         
-        call initialize_quantum_numbers(Nup, M, I_qn, J_qn)
+        call initialize_quantum_numbers(N, M, I_qn, J_qn)
         
         ! Ponto de teste
         k = TWOPI * I_qn / real(L, dp)
         Lambda = 0.0_dp
         
-        x(1:Nup) = k
-        x(Nup+1:) = Lambda
+        x(1:N) = k
+        x(N+1:) = Lambda
         
         ! Jacobiano analítico
         J_analytical = compute_jacobian(k, Lambda, L, U)
         
         ! Jacobiano numérico (diferenças finitas centrais)
-        do j = 1, Nup+M
+        do j = 1, N+M
             x_pert = x
             x_pert(j) = x(j) + h
-            F_plus = compute_residual(x_pert(1:Nup), x_pert(Nup+1:), I_qn, J_qn, L, U)
+            F_plus = compute_residual(x_pert(1:N), x_pert(N+1:), I_qn, J_qn, L, U)
             
             x_pert(j) = x(j) - h
-            F_minus = compute_residual(x_pert(1:Nup), x_pert(Nup+1:), I_qn, J_qn, L, U)
+            F_minus = compute_residual(x_pert(1:N), x_pert(N+1:), I_qn, J_qn, L, U)
             
             J_numerical(:, j) = (F_plus - F_minus) / (2.0_dp * h)
         end do
@@ -360,23 +360,23 @@ contains
         use bethe_equations
         use lsda_constants, only: dp, TWOPI
         
-        integer :: Nup, M, L, i
+        integer :: N, M, L, i
         real(dp) :: U, h
         real(dp), allocatable :: k(:), Lambda(:), I_qn(:), J_qn(:)
         real(dp), allocatable :: dFdU_analytical(:), dFdU_numerical(:)
         real(dp), allocatable :: F_plus(:), F_minus(:)
         
-        Nup = 2
+        N = 2
         M = 1
         L = 10
         U = 4.0_dp
         h = 1.0e-6_dp
         
-        allocate(k(Nup), Lambda(M), I_qn(Nup), J_qn(M))
-        allocate(dFdU_analytical(Nup+M), dFdU_numerical(Nup+M))
-        allocate(F_plus(Nup+M), F_minus(Nup+M))
+        allocate(k(N), Lambda(M), I_qn(N), J_qn(M))
+        allocate(dFdU_analytical(N+M), dFdU_numerical(N+M))
+        allocate(F_plus(N+M), F_minus(N+M))
         
-        call initialize_quantum_numbers(Nup, M, I_qn, J_qn)
+        call initialize_quantum_numbers(N, M, I_qn, J_qn)
         
         k = TWOPI * I_qn / real(L, dp)
         Lambda = 0.0_dp
@@ -387,7 +387,7 @@ contains
         F_minus = compute_residual(k, Lambda, I_qn, J_qn, L, U - h)
         dFdU_numerical = (F_plus - F_minus) / (2.0_dp * h)
         
-        do i = 1, Nup+M
+        do i = 1, N+M
             call check(abs(dFdU_analytical(i) - dFdU_numerical(i)) < 1.0e-8_dp, &
                     "dF/dU component should match numerical derivative")
         end do
@@ -402,16 +402,16 @@ contains
         use bethe_equations, only: initialize_quantum_numbers, compute_energy
         use lsda_constants, only: dp, TWOPI
         
-        integer :: Nup, L
+        integer :: N, L
         real(dp), allocatable :: I(:), J_dummy(:), k(:)
         real(dp) :: E, E_per_site
         
-        Nup = 9
+        N = 9
         L = 10
         
-        allocate(I(Nup), J_dummy(0), k(Nup))
+        allocate(I(N), J_dummy(0), k(N))
         
-        call initialize_quantum_numbers(Nup, 0, I, J_dummy)
+        call initialize_quantum_numbers(N, 0, I, J_dummy)
         
         k = TWOPI * I / real(L, dp)
         

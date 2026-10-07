@@ -26,6 +26,9 @@ contains
             test("diag_real_symmetric_2x2", test_diag_real_symmetric_2x2), &
             test("diag_real_tridiagonal", test_diag_real_tridiagonal), &
             test("diag_open_tridiagonal_partial_l200", test_diag_open_tridiagonal_partial_l200), &
+            test("diag_open_tridiagonal_full_path_matches_dense", test_diag_open_tridiagonal_full_path_matches_dense), &
+            test("diag_open_tridiagonal_full_path_nvec_equals_l", test_diag_open_tridiagonal_full_path_nvec_equals_l), &
+            test("diag_open_tridiagonal_partial_small", test_diag_open_tridiagonal_partial_small), &
             test("diag_open_tridiagonal_complex_rejects_short_destination", &
                  test_diag_open_tridiagonal_complex_rejects_short_destination), &
             test("diag_real_eigenvalue_order", test_diag_real_eigenvalue_order), &
@@ -261,17 +264,25 @@ contains
     !! This is a regression test for partial diagonalization: it exercises a
     !! 200-site system but requests only the lowest occupied shell and buffer.
     !! A dense full-spectrum path does not exercise the DSTEVR implementation.
+    !! With `n_vec/L = 0.185 > FULL_SPECTRUM_FRACTION = 0.15` this request goes
+    !! through the full-spectrum (RANGE='A') branch, so it also pins the
+    !! threshold from above (the L=10 test pins it from below).
     subroutine test_diag_open_tridiagonal_partial_l200()
         use fortuno_serial, only: check => serial_check
-        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace
+        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace, &
+                                  FULL_SPECTRUM_FRACTION
         integer, parameter :: L = 200, N_VEC = 37
         real(dp) :: potential(L), eigvals(N_VEC), eigvecs(L,N_VEC), exact
         type(diag_workspace_t) :: workspace
         integer :: ierr, n
 
+        call check(real(N_VEC, dp) > FULL_SPECTRUM_FRACTION * real(L, dp), &
+                   "L=200/n_vec=37 must sit above the full-spectrum threshold")
         potential = 0.0_dp
         call diagonalize_open_tridiagonal(potential, L, N_VEC, eigvals, eigvecs, workspace, ierr)
         call check(ierr == 0, "DSTEVR partial open-chain diagonalization should succeed")
+        call check(allocated(workspace%full_vectors), &
+                   "n_vec/L = 0.185 must take the full-spectrum path and allocate the L x L buffer")
         do n = 1, N_VEC
             exact = -2.0_dp * cos(real(n, dp) * PI / real(L + 1, dp))
             call check(abs(eigvals(n) - exact) < 1.0e-12_dp, &
@@ -279,6 +290,96 @@ contains
         end do
         call cleanup_diag_workspace(workspace)
     end subroutine test_diag_open_tridiagonal_partial_l200
+
+    !> Regression for the full-spectrum OBC path (`n_vec > FULL_SPECTRUM_FRACTION*L`):
+    !! the DSTEVR RANGE='A' result, truncated to `n_vec`, must match the dense
+    !! DSYEVR subset on a non-trivial, non-degenerate potential. Eigenvalues agree
+    !! to 1e-12 relative and eigenvectors up to sign (|<v|w>| = 1 to 1e-10).
+    subroutine test_diag_open_tridiagonal_full_path_matches_dense()
+        use fortuno_serial, only: check => serial_check
+        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, &
+                                  diagonalize_symmetric_real_partial, cleanup_diag_workspace, FULL_SPECTRUM_FRACTION
+        integer, parameter :: L = 400, N_VEC = L / 2
+        real(dp) :: potential(L), eigvals(N_VEC), eigvecs(L, N_VEC), ref_vals(N_VEC), ref_vecs(L, N_VEC)
+        real(dp), allocatable :: H(:,:)
+        type(diag_workspace_t) :: ws_tri, ws_dense
+        integer :: ierr, j
+        real(dp) :: overlap, scale
+
+        call check(real(N_VEC, dp) > FULL_SPECTRUM_FRACTION * real(L, dp), &
+                   "Test must request enough eigenpairs to cross the full-spectrum threshold")
+        do j = 1, L
+            potential(j) = 0.1_dp * sin(real(j, dp)) - 0.5_dp
+        end do
+        potential(137) = potential(137) + 2.0_dp
+
+        allocate(H(L, L)); H = 0.0_dp
+        do j = 1, L
+            H(j, j) = potential(j)
+            if (j < L) then; H(j, j + 1) = -1.0_dp; H(j + 1, j) = -1.0_dp; end if
+        end do
+        call diagonalize_symmetric_real_partial(H, L, N_VEC, ref_vals, ref_vecs, ws_dense, ierr)
+        call check(ierr == 0, "Dense DSYEVR reference should succeed")
+
+        call diagonalize_open_tridiagonal(potential, L, N_VEC, eigvals, eigvecs, ws_tri, ierr)
+        call check(ierr == 0, "Full-spectrum OBC path should succeed")
+        call check(allocated(ws_tri%full_vectors), "Full-spectrum path must use the L x L workspace buffer")
+        do j = 1, N_VEC
+            scale = max(1.0_dp, abs(ref_vals(j)))
+            call check(abs(eigvals(j) - ref_vals(j)) <= 1.0e-12_dp * scale, &
+                       "Full-spectrum eigenvalue must match dense reference to 1e-12 relative")
+            overlap = abs(dot_product(eigvecs(:, j), ref_vecs(:, j)))
+            call check(abs(overlap - 1.0_dp) < 1.0e-10_dp, &
+                       "Full-spectrum eigenvector must match dense reference up to sign")
+        end do
+        call cleanup_diag_workspace(ws_tri); call cleanup_diag_workspace(ws_dense); deallocate(H)
+    end subroutine test_diag_open_tridiagonal_full_path_matches_dense
+
+    !> Edge case: `n_vec = L` goes through the full-spectrum path and returns the
+    !! complete analytical OBC spectrum with normalised eigenvectors.
+    subroutine test_diag_open_tridiagonal_full_path_nvec_equals_l()
+        use fortuno_serial, only: check => serial_check
+        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace
+        integer, parameter :: L = 50
+        real(dp) :: potential(L), eigvals(L), eigvecs(L, L), exact
+        type(diag_workspace_t) :: workspace
+        integer :: ierr, n
+
+        potential = 0.0_dp
+        call diagonalize_open_tridiagonal(potential, L, L, eigvals, eigvecs, workspace, ierr)
+        call check(ierr == 0, "n_vec = L open-chain diagonalization should succeed")
+        call check(allocated(workspace%full_vectors), "n_vec = L must take the full-spectrum path")
+        do n = 1, L
+            exact = -2.0_dp * cos(real(n, dp) * PI / real(L + 1, dp))
+            call check(abs(eigvals(n) - exact) < 1.0e-12_dp, "n_vec = L eigenvalue should match analytical spectrum")
+            call check(abs(norm2(eigvecs(:, n)) - 1.0_dp) < 1.0e-12_dp, "n_vec = L eigenvector should be normalised")
+        end do
+        call cleanup_diag_workspace(workspace)
+    end subroutine test_diag_open_tridiagonal_full_path_nvec_equals_l
+
+    !> Small system below the threshold (L=10, n_vec=1, ratio 0.10 < 0.15) stays
+    !! on the RANGE='I' path and never allocates the L x L buffer.
+    subroutine test_diag_open_tridiagonal_partial_small()
+        use fortuno_serial, only: check => serial_check
+        use lapack_wrapper, only: diag_workspace_t, diagonalize_open_tridiagonal, cleanup_diag_workspace, &
+                                  FULL_SPECTRUM_FRACTION
+        integer, parameter :: L = 10, N_VEC = 1
+        real(dp) :: potential(L), eigvals(N_VEC), eigvecs(L, N_VEC), exact
+        type(diag_workspace_t) :: workspace
+        integer :: ierr, n
+
+        call check(real(N_VEC, dp) <= FULL_SPECTRUM_FRACTION * real(L, dp), &
+                   "Test must stay below the full-spectrum threshold")
+        potential = 0.0_dp
+        call diagonalize_open_tridiagonal(potential, L, N_VEC, eigvals, eigvecs, workspace, ierr)
+        call check(ierr == 0, "Small partial open-chain diagonalization should succeed")
+        call check(.not. allocated(workspace%full_vectors), "Partial path must not allocate the full-spectrum buffer")
+        do n = 1, N_VEC
+            exact = -2.0_dp * cos(real(n, dp) * PI / real(L + 1, dp))
+            call check(abs(eigvals(n) - exact) < 1.0e-12_dp, "Small partial eigenvalue should match analytical spectrum")
+        end do
+        call cleanup_diag_workspace(workspace)
+    end subroutine test_diag_open_tridiagonal_partial_small
 
     !> The complex OBC adapter must reject a destination that cannot hold the
     !! requested eigenvectors before it calls DSTEVR or promotes the results.

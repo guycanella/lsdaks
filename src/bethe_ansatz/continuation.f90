@@ -57,15 +57,15 @@ contains
     !! the point may be used as a predictor.
     !!
     !! @param[in]  x              Newton return vector
-    !! @param[in]  Nup            Number of charge rapidities in `x`
+    !! @param[in]  N            Number of charge rapidities in `x`
     !! @param[in]  converged      Convergence flag from `solve_newton`
     !! @param[in]  solver_status  Error code from `solve_newton`
     !! @param[out] solution       Stored solution (NaN when rejected)
     !! @param[out] energy         Stored energy (NaN when rejected)
     !! @param[out] accepted       `.true.` when the point may be reused
-    subroutine store_point(x, Nup, converged, solver_status, solution, energy, accepted)
+    subroutine store_point(x, N, converged, solver_status, solution, energy, accepted)
         real(dp), intent(in) :: x(:)
-        integer, intent(in) :: Nup, solver_status
+        integer, intent(in) :: N, solver_status
         logical, intent(in) :: converged
         real(dp), intent(out) :: solution(:), energy
         logical, intent(out) :: accepted
@@ -74,7 +74,7 @@ contains
 
         if (accepted) then
             solution = x
-            energy = compute_energy(x(1:Nup))
+            energy = compute_energy(x(1:N))
         else
             solution = ieee_value(0.0_dp, ieee_quiet_nan)
             energy = ieee_value(0.0_dp, ieee_quiet_nan)
@@ -119,11 +119,11 @@ contains
     !!              x_guess = 2·x_{i-1} - x_{i-2}
     !! - Corrector: Refine with Newton-Raphson (typically 1-3 iterations)
     !!
-    !! @param[in]  I                Charge quantum numbers (N↑)
+    !! @param[in]  I                Charge quantum numbers (size N = N↑ + N↓)
     !! @param[in]  J                Spin quantum numbers (M = N↓)
     !! @param[in]  L                Number of lattice sites
     !! @param[in]  U_values         U values [U_min, U_min+dU, ..., U_max] (n_points)
-    !! @param[out] solutions        Solutions x(U) - matrix (N↑+M, n_points)
+    !! @param[out] solutions        Solutions x(U) - matrix (N+M, n_points)
     !! @param[out] energies         Ground state energies E(U) (n_points)
     !! @param[out] converged_flags  Convergence flags (n_points)
     !!
@@ -134,7 +134,7 @@ contains
     !! Example usage:
     !! @code
     !!   U_values = [0.0, 0.5, 1.0, ..., 10.0]  ! 21 points
-    !!   allocate(solutions(Nup+M, 21), energies(21), flags(21))
+    !!   allocate(solutions(N+M, 21), energies(21), flags(21))
     !!   call sweep_U_forward(I, J, L, U_values, solutions, energies, flags)
     !! @endcode
     !!
@@ -147,21 +147,21 @@ contains
 
         real(dp), allocatable :: x(:), x_guess(:), dxdU(:), x_fermi(:), x_good(:)
         real(dp) :: U, dU, dU_old
-        integer :: Nup, M, site, n_points, solver_status
+        integer :: N, M, site, n_points, solver_status
         logical :: converged, accepted, have_good, have_two
 
-        Nup = size(I)
+        N = size(I)
         M = size(J)
         n_points = size(U_values)
 
-        allocate(x(Nup + M))
-        allocate(x_guess(Nup + M))
-        allocate(dxdU(Nup + M))
-        allocate(x_fermi(Nup + M))
-        allocate(x_good(Nup + M))
+        allocate(x(N + M))
+        allocate(x_guess(N + M))
+        allocate(dxdU(N + M))
+        allocate(x_fermi(N + M))
+        allocate(x_good(N + M))
 
-        x_fermi(1:Nup) = (TWOPI * I) / real(L, dp)
-        x_fermi(Nup + 1:Nup + M) = 0.0_dp
+        x_fermi(1:N) = (TWOPI * I) / real(L, dp)
+        x_fermi(N + 1:N + M) = 0.0_dp
         x_good = x_fermi
         have_good = .false.
         have_two = .false.
@@ -178,7 +178,7 @@ contains
             call solve_newton(x, I, J, L, U, converged, solver_status)
         end if
 
-        call store_point(x, Nup, converged, solver_status, solutions(:, 1), &
+        call store_point(x, N, converged, solver_status, solutions(:, 1), &
                          energies(1), accepted)
         converged_flags(1) = accepted
         if (accepted) then
@@ -193,7 +193,7 @@ contains
         x = x_good
         call solve_newton(x, I, J, L, U, converged, solver_status)
 
-        call store_point(x, Nup, converged, solver_status, solutions(:, 2), &
+        call store_point(x, N, converged, solver_status, solutions(:, 2), &
                          energies(2), accepted)
         converged_flags(2) = accepted
         if (accepted) then
@@ -225,7 +225,7 @@ contains
             x = x_guess
             call solve_newton(x, I, J, L, U, converged, solver_status)
 
-            call store_point(x, Nup, converged, solver_status, solutions(:, site), &
+            call store_point(x, N, converged, solver_status, solutions(:, site), &
                              energies(site), accepted)
             converged_flags(site) = accepted
             if (accepted) then
@@ -258,7 +258,7 @@ contains
     !! @param[in]  J                Spin quantum numbers
     !! @param[in]  L                Number of lattice sites
     !! @param[in]  U_values         U values [U_min, ..., U_max]
-    !! @param[out] solutions        Solutions x(U) - matrix (N↑+M, n_points)
+    !! @param[out] solutions        Solutions x(U) - matrix (N+M, n_points)
     !! @param[out] energies         Ground state energies E(U)
     !! @param[out] converged_flags  Convergence flags
     !!
@@ -275,21 +275,21 @@ contains
 
         real(dp), allocatable :: x(:), x_guess(:), dxdU(:), x_fermi(:), x_good(:)
         real(dp) :: U, dU, dU_old
-        integer :: Nup, M, site, n_points, solver_status
+        integer :: N, M, site, n_points, solver_status
         logical :: converged, accepted, have_good, have_two
 
-        Nup = size(I)
+        N = size(I)
         M = size(J)
         n_points = size(U_values)
 
-        allocate(x(Nup + M))
-        allocate(x_guess(Nup + M))
-        allocate(dxdU(Nup + M))
-        allocate(x_fermi(Nup + M))
-        allocate(x_good(Nup + M))
+        allocate(x(N + M))
+        allocate(x_guess(N + M))
+        allocate(dxdU(N + M))
+        allocate(x_fermi(N + M))
+        allocate(x_good(N + M))
 
-        x_fermi(1:Nup) = (TWOPI * I) / real(L, dp)
-        x_fermi(Nup + 1:Nup + M) = 0.0_dp
+        x_fermi(1:N) = (TWOPI * I) / real(L, dp)
+        x_fermi(N + 1:N + M) = 0.0_dp
         x_good = x_fermi
         have_good = .false.
         have_two = .false.
@@ -306,7 +306,7 @@ contains
             call solve_newton(x, I, J, L, U, converged, solver_status)
         end if
 
-        call store_point(x, Nup, converged, solver_status, solutions(:, n_points), &
+        call store_point(x, N, converged, solver_status, solutions(:, n_points), &
                          energies(n_points), accepted)
         converged_flags(n_points) = accepted
         if (accepted) then
@@ -321,7 +321,7 @@ contains
         x = x_good
         call solve_newton(x, I, J, L, U, converged, solver_status)
 
-        call store_point(x, Nup, converged, solver_status, solutions(:, n_points - 1), &
+        call store_point(x, N, converged, solver_status, solutions(:, n_points - 1), &
                          energies(n_points - 1), accepted)
         converged_flags(n_points - 1) = accepted
         if (accepted) then
@@ -355,7 +355,7 @@ contains
             x = x_guess
             call solve_newton(x, I, J, L, U, converged, solver_status)
 
-            call store_point(x, Nup, converged, solver_status, solutions(:, site), &
+            call store_point(x, N, converged, solver_status, solutions(:, site), &
                              energies(site), accepted)
             converged_flags(site) = accepted
             if (accepted) then
@@ -396,11 +396,11 @@ contains
     !!    accepted by a single direction is still reported as not converged,
     !!    because it has no cross-check behind it.
     !!
-    !! @param[in]  I                Charge quantum numbers (N↑)
+    !! @param[in]  I                Charge quantum numbers (size N = N↑ + N↓)
     !! @param[in]  J                Spin quantum numbers (M = N↓)
     !! @param[in]  L                Number of lattice sites
     !! @param[in]  U_values         U values [U_min, ..., U_max] (n_points)
-    !! @param[out] solutions        Refined solutions (average) - matrix (N↑+M, n_points)
+    !! @param[out] solutions        Refined solutions (average) - matrix (N+M, n_points)
     !! @param[out] energies         Refined energies (average) - vector (n_points)
     !! @param[out] converged_flags  Convergence flags (true if BOTH converged)
     !!
@@ -420,7 +420,7 @@ contains
     !! @code
     !!   ! Generate table for U ∈ [0, 10] with 100 points
     !!   U_values = [(i*0.1_dp, i=0,100)]
-    !!   allocate(solutions(Nup+M, 101), energies(101), flags(101))
+    !!   allocate(solutions(N+M, 101), energies(101), flags(101))
     !!   call sweep_U_bidirectional(I, J, L, U_values, solutions, energies, flags)
     !!   
     !!   if (all(flags)) then
@@ -438,17 +438,17 @@ contains
         real(dp), allocatable :: sol_fwd(:, :), sol_bwd(:, :), E_fwd(:), E_bwd(:)
         logical, allocatable :: flags_fwd(:), flags_bwd(:)
         real(dp) :: max_diff
-        integer :: Nup, M, n_points
+        integer :: N, M, n_points
         logical :: inconsistent
 
-        Nup = size(I)
+        N = size(I)
         M = size(J)
         n_points = size(U_values)
 
-        allocate(sol_fwd(Nup+M, n_points))
+        allocate(sol_fwd(N+M, n_points))
         allocate(E_fwd(n_points))
         allocate(flags_fwd(n_points))
-        allocate(sol_bwd(Nup+M, n_points))
+        allocate(sol_bwd(N+M, n_points))
         allocate(E_bwd(n_points))
         allocate(flags_bwd(n_points))
 

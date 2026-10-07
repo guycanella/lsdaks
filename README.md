@@ -902,6 +902,30 @@ whereas the SCF asks for `n_vec = min(L, N_σ + 5)` (`kohn_sham_cycle.f90:523-52
 Phase 5 input below (`N↑ = N↓ = 250`) that is 255 eigenpairs per spin, so the speedups in this
 table do not transfer directly to the SCF benchmark.
 
+#### Diagonalization strategy
+
+`diagonalize_open_tridiagonal` (`src/diagonalization/lapack_wrapper.f90`) asks DSTEVR for
+the index subset `1..n_vec` (RANGE='I') only while `n_vec ≤ 0.15 L`
+(`lapack_wrapper::FULL_SPECTRUM_FRACTION = 0.15`). Above that it requests the whole spectrum
+(RANGE='A') into an `L × L` workspace buffer and copies out the lowest `n_vec` pairs: with a
+subset DSTEVR falls back to DSTEBZ+DSTEIN, whereas the full spectrum goes through MRRR
+(DSTEMR), which at `L = 1000` is ~2.5× faster per call (31–32 ms vs 74–82 ms). A sweep of
+`n_vec/L` on 2026-10-07 (L = 1000, Apple M4 Pro, Accelerate, gfortran 16.2 `-O3`, OBC,
+`V = 0.1 sin(j) − 0.5`, median of 3 `cpu_time` calls) gave RANGE='A' ≈ 31 ms regardless of
+`n_vec`, and RANGE='I' 13.8 / 29.6 / 45.8 / 71.8 / 140 ms at `n_vec/L` = 0.05 / 0.10 / 0.15 /
+0.25 / 0.50, i.e. the two paths cross at `n_vec/L ≈ 0.10–0.11` (the same ratio at `L = 400`).
+The 0.15 threshold sits just above the measured crossover, where RANGE='A' is already ~1.45×
+faster; it is not set at 0.10 because there the two paths cost the same (the `L × L` buffer
+would be allocated for no gain) and the crossover itself is within noise. In an unpolarised
+SCF `n_vec/L = n/2 + 5/L` (`n_vec = N_σ + 5`; the Fermi-shell window may add up to
+`SHELL_WINDOW_GROWTH` more), so for `L ≳ 500` only fillings `n ≲ 0.3` stay on the subset
+path; the earlier 0.25 threshold left the common range `0.22 ≲ n ≲ 0.5` on the subset path,
+where the full-spectrum call is equal in cost at `n ≈ 0.22` and 1.45×–2.4× faster from
+`n ≈ 0.3` to 0.5. The full-spectrum buffer is `L × L` per spin (8 MB at `L = 1000`, 800 MB at
+`L = 10 000`), independent of `n_vec`. The microbenchmark above
+(`n_vec = 55`) stays on the subset path and is unaffected; re-measured on 2026-10-07 it gave
+0.0199 s partial / 0.0674 s dense at `L = 1000` (3.38×), within run-to-run noise of the table.
+
 ### SCF benchmark (Phase 5 target)
 
 The Phase 5 target was 100 SCF iterations at `L = 1000`, OBC, in under 5 s. The input is
@@ -915,10 +939,24 @@ versioned as `examples/bench/l1000_scf.txt` (U = 4, `N↑ = N↓ = 250`, uniform
 fpm run --profile release --flag "-O3 -march=native" lsdaks -- --input examples/bench/l1000_scf.txt
 ```
 
-Three runs on 2026-10-06 (same machine and flags as above): 7.42 / 7.47 / 7.95 s wall,
-~7.4 s CPU. The original `< 5 s` target is **not met** on this input. The historical
-5.510 s (2026-09-19) was measured with an input that was never recorded and is not directly
-comparable.
+Three runs on 2026-10-07 (same machine and flags as above), after switching the OBC
+diagonalization to the full-spectrum DSTEVR path when `n_vec > FULL_SPECTRUM_FRACTION · L`
+(see "Diagonalization strategy" above; the threshold was 0.25 at the time of the measurement
+and is now 0.15, which does not change this run since `n_vec/L = 0.255` was already above
+both): **3.365 / 3.288 / 3.291 s CPU** (3.78 / 3.31 / 3.29 s
+wall), final energy unchanged to all printed digits (−757.52418133). The `< 5 s` target is
+**met**. History: on 2026-10-06 the same input took 7.42 / 7.47 / 7.95 s wall, ~7.4 s CPU,
+of which ~95 % was DSTEVR with RANGE='I' (bisection + inverse iteration, 74–82 ms per call
+at `n_vec = 255`); the historical 5.510 s (2026-09-19) was measured with an input that was
+never recorded and is not directly comparable.
+
+**Expected runtime note.** This run ends with `stop 1` (NOT CONVERGED by design), and the
+gfortran runtime then prints `Note: The following floating-point exceptions are signalling:
+IEEE_INVALID_FLAG IEEE_DIVIDE_BY_ZERO IEEE_OVERFLOW_FLAG` (sometimes also
+`IEEE_UNDERFLOW_FLAG`). The flags are raised inside the linked LAPACK `DSTEVR`
+(Accelerate/vecLib on macOS arm64) for `L ≳ 300`; the eigenvalues it returns are correct to
+~3e-16 and no physical quantity in `lsdaks` is NaN or Inf. The note only appears on runs
+that terminate through `stop` (non-converged); converged runs exit normally and print nothing.
 
 The XC cache is guarded by `test_scf_reuses_output_xc_cache`: a two-iteration SCF uses
 `5L` XC evaluations (initial `V_xc`, then one `V_xc`/`e_xc` output pass per iteration),
