@@ -91,19 +91,19 @@ contains
         use bethe_equations, only: initialize_quantum_numbers, compute_residual
         use lsda_constants, only: dp
         
-        integer :: Nup, M, L
+        integer :: N, M, L
         real(dp) :: U, alpha
         real(dp), allocatable :: x(:), dx(:), F_old(:), I(:), J(:)
         
         ! Small system
-        Nup = 2
+        N = 2
         M = 1
         L = 10
         U = 4.0_dp
         
-        allocate(x(Nup+M), dx(Nup+M), I(Nup), J(M))
+        allocate(x(N+M), dx(N+M), I(N), J(M))
         
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
         
         ! Initial position
         x = [0.1_dp, -0.1_dp, 0.05_dp]
@@ -111,7 +111,7 @@ contains
         ! Direction that reduces the residual (simulated)
         dx = -0.01_dp * x  ! Small step in the opposite direction
 
-        F_old = compute_residual(x(1:Nup), x(Nup+1:), I, J, L, U)
+        F_old = compute_residual(x(1:N), x(N+1:), I, J, L, U)
         alpha = line_search(x, dx, F_old, I, J, L, U)
 
         ! For small and good direction, should accept full step
@@ -126,23 +126,23 @@ contains
         use bethe_equations, only: initialize_quantum_numbers, compute_residual
         use lsda_constants, only: dp
         
-        integer :: Nup, M, L
+        integer :: N, M, L
         real(dp) :: U, alpha
         real(dp), allocatable :: x(:), dx(:), F_old(:), I(:), J(:)
         
-        Nup = 2
+        N = 2
         M = 1
         L = 10
         U = 4.0_dp
         
-        allocate(x(Nup+M), dx(Nup+M), I(Nup), J(M))
+        allocate(x(N+M), dx(N+M), I(N), J(M))
         
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
         
         x = [0.5_dp, -0.3_dp, 0.2_dp]
         dx = [0.1_dp, 0.1_dp, 0.1_dp]
         
-        F_old = compute_residual(x(1:Nup), x(Nup+1:), I, J, L, U)
+        F_old = compute_residual(x(1:N), x(N+1:), I, J, L, U)
         
         alpha = line_search(x, dx, F_old, I, J, L, U)
         
@@ -161,32 +161,32 @@ contains
         use bethe_equations, only: initialize_quantum_numbers, compute_residual
         use nonlinear_solvers, only: solve_newton
         
-        integer :: Nup, M, L
+        integer :: N, M, L
         real(dp) :: U
         real(dp), allocatable :: I(:), J(:), x(:), k(:), Lambda(:), F(:)
         logical :: converged
         integer :: ierr
         
         ! System: 3 up, 2 down, L=10, U=0
-        Nup = 3
+        N = 3
         M = 2
         L = 10
         U = 0.0_dp
         
-        allocate(I(Nup), J(M), x(Nup+M))
-        allocate(k(Nup), Lambda(M), F(Nup+M))
+        allocate(I(N), J(M), x(N+M))
+        allocate(k(N), Lambda(M), F(N+M))
 
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
 
         ! Initial guess: k = 2π·I/L (exact solution!), Lambda = 0
-        x(1:Nup) = TWOPI * I / real(L, dp)
-        x(Nup+1:) = 0.0_dp
+        x(1:N) = TWOPI * I / real(L, dp)
+        x(N+1:) = 0.0_dp
         
         call solve_newton(x, I, J, L, U, converged, ierr)
         call check(converged, "Newton should converge for U=0")
         
-        k = x(1:Nup)
-        Lambda = x(Nup+1:)
+        k = x(1:N)
+        Lambda = x(N+1:)
         F = compute_residual(k, Lambda, I, J, L, U)
         call check(norm2(F) < 1.0e-9_dp, "Residual should be near zero")
         
@@ -203,30 +203,30 @@ contains
         use bethe_equations, only: initialize_quantum_numbers, compute_residual
         use nonlinear_solvers, only: solve_newton
         
-        integer :: Nup, M, L
+        integer :: N, M, L
         real(dp) :: U
         real(dp), allocatable :: I(:), J(:), x(:), F(:), k(:), Lambda(:)
         logical :: converged
         integer :: ierr
         
-        Nup = 2
+        N = 2
         M = 1
         L = 10
         U = 4.0_dp
         
-        allocate(I(Nup), J(M), x(Nup+M))
-        allocate(k(Nup), Lambda(M), F(Nup+M))
+        allocate(I(N), J(M), x(N+M))
+        allocate(k(N), Lambda(M), F(N+M))
         
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
         
-        x(1:Nup) = TWOPI * I / real(L, dp)
-        x(Nup+1:) = 0.0_dp
+        x(1:N) = TWOPI * I / real(L, dp)
+        x(N+1:) = 0.0_dp
         
         call solve_newton(x, I, J, L, U, converged, ierr)
         call check(converged, "Newton should converge for small system")
         
-        k = x(1:Nup)
-        Lambda = x(Nup+1:)
+        k = x(1:N)
+        Lambda = x(N+1:)
         F = compute_residual(k, Lambda, I, J, L, U)
         call check(norm2(F) < 1.0e-9_dp, "Final residual should be small")
         
@@ -240,23 +240,23 @@ contains
         use bethe_equations, only: initialize_quantum_numbers
         use nonlinear_solvers, only: solve_newton
         
-        integer :: Nup, M, L
+        integer :: N, M, L
         real(dp) :: U
         real(dp), allocatable :: I(:), J(:), x(:)
         logical :: converged
         integer :: ierr
         
-        Nup = 3
+        N = 3
         M = 2
         L = 10
         U = 2.0_dp
         
-        allocate(I(Nup), J(M), x(Nup+M))
+        allocate(I(N), J(M), x(N+M))
         
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
         
-        x(1:Nup) = TWOPI * I / real(L, dp)
-        x(Nup+1:) = 0.0_dp
+        x(1:N) = TWOPI * I / real(L, dp)
+        x(N+1:) = 0.0_dp
         
         call solve_newton(x, I, J, L, U, converged, ierr)
         call check(converged .eqv. .true., "Converged flag should be true")
@@ -271,36 +271,36 @@ contains
         use bethe_equations, only: initialize_quantum_numbers, compute_residual
         use nonlinear_solvers, only: solve_newton
         
-        integer :: Nup, M, L
+        integer :: N, M, L
         real(dp) :: U
         real(dp), allocatable :: I(:), J(:), x(:), k(:), Lambda(:), F_initial(:), F_final(:)
         real(dp) :: norm_initial, norm_final
         logical :: converged
         integer :: ierr
         
-        Nup = 3
+        N = 3
         M = 2
         L = 10
         U = 4.0_dp
         
-        allocate(I(Nup), J(M), x(Nup+M))
-        allocate(k(Nup), Lambda(M))
-        allocate(F_initial(Nup+M), F_final(Nup+M))
+        allocate(I(N), J(M), x(N+M))
+        allocate(k(N), Lambda(M))
+        allocate(F_initial(N+M), F_final(N+M))
         
-        call initialize_quantum_numbers(Nup, M, I, J)
+        call initialize_quantum_numbers(N, M, I, J)
 
-        x(1:Nup) = TWOPI * I / real(L, dp)
-        x(Nup+1:) = 0.0_dp
+        x(1:N) = TWOPI * I / real(L, dp)
+        x(N+1:) = 0.0_dp
         
-        k = x(1:Nup)
-        Lambda = x(Nup+1:)
+        k = x(1:N)
+        Lambda = x(N+1:)
         F_initial = compute_residual(k, Lambda, I, J, L, U)
         norm_initial = norm2(F_initial)
         
         call solve_newton(x, I, J, L, U, converged, ierr)
         
-        k = x(1:Nup)
-        Lambda = x(Nup+1:)
+        k = x(1:N)
+        Lambda = x(N+1:)
         F_final = compute_residual(k, Lambda, I, J, L, U)
         norm_final = norm2(F_final)
         

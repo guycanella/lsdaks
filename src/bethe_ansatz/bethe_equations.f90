@@ -165,30 +165,43 @@ contains
 
     !> Initialize quantum numbers for the ground state
     !!
-    !! Computes I_k and J_α using Fermi distribution:
-    !!   I_k = k - (N_up + 1)/2,    k = 1, ..., N_up
-    !!   J_α = α - (M + 1)/2,       α = 1, ..., M
+    !! Fills the N charge quantum numbers I_j and the M spin quantum numbers
+    !! J_α symmetrically around zero (Fermi-sea filling):
+    !!   I_j = j - (N + 1)/2,    j = 1, ..., N
+    !!   J_α = α - (M + 1)/2,    α = 1, ..., M
     !!
-    !! @param[in]  N_up   Number of spin-up electrons
-    !! @param[in]  M      Number of spin rapidities (= N_down)
-    !! @param[out] I      Array of charge quantum numbers [1:N_up]
-    !! @param[out] J      Array of spin quantum numbers [1:M]
+    !! **Parity as implemented:** I_j are integers when N is odd and
+    !! half-odd-integers when N is even; J_α are integers when M is odd and
+    !! half-odd-integers when M is even. Each set depends only on its own
+    !! count.
     !!
-    !! @note Arrays I and J must be pre-allocated by the caller
+    !! @warning The Lieb-Wu ground state (Essler et al., ch. 3) requires
+    !!          I_j integer/half-odd according to the parity of M (half-odd
+    !!          when M is odd) and J_α according to the parity of N − M + 1
+    !!          (half-odd when N − M is even). The rule above coincides with
+    !!          that only for some (N, M); this is the "known open issue" in
+    !!          the module header and is deliberately left unchanged here.
+    !!
+    !! @param[in]  N   Number of charge rapidities k (= N↑ + N↓, total electrons)
+    !! @param[in]  M   Number of spin rapidities Λ (= N↓)
+    !! @param[out] I   Charge quantum numbers [1:N]
+    !! @param[out] J_capital Spin quantum numbers [1:M]
+    !!
+    !! @note Arrays I and J_capital must be pre-allocated by the caller
     !!
     !! Example:
-    !!   N_up = 5  →  I = [-2, -1, 0, 1, 2]
-    !!   M = 3     →  J = [-1, 0, 1]
-    subroutine initialize_quantum_numbers(Nup, M, I, J_capital)
-        integer, intent(in) :: Nup, M
+    !!   N = 5  →  I = [-2, -1, 0, 1, 2]
+    !!   M = 3  →  J = [-1, 0, 1]
+    subroutine initialize_quantum_numbers(N, M, I, J_capital)
+        integer, intent(in) :: N, M
         real(dp), intent(out) :: I(:), J_capital(:)
         real(dp) :: offset_I, offset_J
         integer :: j, alpha
 
-        offset_I = (Nup + 1) / 2.0_dp
+        offset_I = (N + 1) / 2.0_dp
         offset_J = (M + 1) / 2.0_dp
 
-        do j = 1, Nup
+        do j = 1, N
             I(j) = real(j, dp) - offset_I
         end do
 
@@ -205,20 +218,24 @@ contains
     !!
     !! The system consists of two sets of equations:
     !!
-    !! **Charge equations** (for j = 1, ..., N↑):
+    !! Here N = N↑ + N↓ is the number of charge rapidities k_j and M = N↓ the
+    !! number of spin rapidities Λ_α, with θ(x) = 2 arctan(4x/U) and
+    !! Θ(x) = 2 arctan(2x/U).
+    !!
+    !! **Charge equations** (for j = 1, ..., N):
     !! \[ F_j^k = k_j - \frac{2\pi}{L} I_j + \frac{1}{L} \sum_{\alpha=1}^{M} \theta(\sin k_j - \Lambda_\alpha, U) \]
     !!
-    !! **Spin equations** (for α = 1, ..., M = N↓):
-    !! \[ F_\alpha^\Lambda = 2\pi J_\alpha - \sum_{j=1}^{N_\uparrow} \theta(\Lambda_\alpha - \sin k_j, U)
-    !!    + \sum_{\beta \neq \alpha} \Theta(\Lambda_\alpha - \Lambda_\beta, U) \]
+    !! **Spin equations** (for α = 1, ..., M):
+    !! \[ F_\alpha^\Lambda = 2\pi J_\alpha - \sum_{j=1}^{N} \theta(\Lambda_\alpha - \sin k_j, U)
+    !!    + \sum_{\beta \neq \alpha}^{M} \Theta(\Lambda_\alpha - \Lambda_\beta, U) \]
     !!
-    !! @param[in] k         Charge rapidities (size N↑)
+    !! @param[in] k         Charge rapidities (size N, number of charge rapidities, N = N↑ + N↓)
     !! @param[in] Lambda    Spin rapidities (size M = N↓)
-    !! @param[in] I         Charge quantum numbers (size N↑, can be semi-integers)
+    !! @param[in] I         Charge quantum numbers (size N, can be semi-integers)
     !! @param[in] J_capital Spin quantum numbers (size M, can be semi-integers)
     !! @param[in] L         Number of lattice sites
     !! @param[in] U         Hubbard interaction strength
-    !! @return F            Residual vector (size N↑ + M)
+    !! @return F            Residual vector (size N + M)
     !!
     !! @note The residual is zero (F = 0) when the rapidities satisfy the Lieb-Wu equations.
     !! @note Quantum numbers I and J should be initialized using `initialize_quantum_numbers`.
@@ -228,25 +245,25 @@ contains
     function compute_residual(k, Lambda, I, J_capital, L, U) result(F)
         real(dp), intent(in) :: k(:), Lambda(:), I(:), J_capital(:), U
         integer, intent(in) :: L
-        integer :: j, alpha, beta, Nup, M
+        integer :: j, alpha, beta, N, M
         real(dp) :: summ, summ1, summ2
         real(dp) :: F(size(k) + size(Lambda))
 
-        Nup = size(k)
+        N = size(k)
         M = size(Lambda)
 
         ! Special case: U ≈ 0
         if (abs(U) < U_SMALL) then
             ! For U=0, the exact solution is k_j = 2π·I_j/L
             ! Residual must be exactly zero
-            F(1:Nup) = k - TWOPI * I / real(L, dp)
-            F(Nup+1:Nup+M) = 0.0_dp  ! Lambda is arbitrary
+            F(1:N) = k - TWOPI * I / real(L, dp)
+            F(N+1:N+M) = 0.0_dp  ! Lambda is arbitrary
             return
         end if
         
         ! General case: U > 0
         ! Charge equations: F^k
-        do j = 1, Nup
+        do j = 1, N
             summ = 0.0_dp
             do alpha = 1, M
                 summ = summ + theta(sin(k(j)) - Lambda(alpha), U)
@@ -260,7 +277,7 @@ contains
             summ1 = 0.0_dp
             summ2 = 0.0_dp
 
-            do j = 1, Nup
+            do j = 1, N
                 summ1 = summ1 + theta(Lambda(alpha) - sin(k(j)), U)
             end do
 
@@ -270,13 +287,14 @@ contains
                 end if
             end do
 
-            F(Nup + alpha) = TWOPI * J_capital(alpha) - summ1 + summ2
+            F(N + alpha) = TWOPI * J_capital(alpha) - summ1 + summ2
         end do
     end function compute_residual
 
     !> Computes the Jacobian matrix J = ∂F/∂x for the Lieb-Wu equations.
     !!
-    !! The Jacobian is a square matrix of size (N↑ + M) × (N↑ + M) containing all
+    !! The Jacobian is a square matrix of size (N + M) × (N + M), with
+    !! N = N↑ + N↓ charge rapidities and M = N↓ spin rapidities, containing all
     !! partial derivatives of the residual F with respect to the rapidities x = [k, Λ].
     !! It has a 4-block structure:
     !!
@@ -285,31 +303,31 @@ contains
     !!   \frac{\partial F^\Lambda}{\partial k} & \frac{\partial F^\Lambda}{\partial \Lambda}
     !! \end{bmatrix} \]
     !!
-    !! **Block A** (N↑ × N↑, diagonal):
+    !! **Block A** (N × N, diagonal):
     !! \[ J_{jj} = 1 + \frac{\cos k_j}{L} \sum_{\alpha=1}^{M} \frac{8U}{U^2 + 16(\sin k_j - \Lambda_\alpha)^2} \]
     !! \[ J_{ji} = 0 \quad \text{for } i \neq j \]
     !!
-    !! **Block B** (N↑ × M):
-    !! \[ J_{j,N_\uparrow+\beta} = -\frac{1}{L} \cdot \frac{8U}{U^2 + 16(\sin k_j - \Lambda_\beta)^2} \]
+    !! **Block B** (N × M):
+    !! \[ J_{j,N+\beta} = -\frac{1}{L} \cdot \frac{8U}{U^2 + 16(\sin k_j - \Lambda_\beta)^2} \]
     !!
-    !! **Block C** (M × N↑):
-    !! \[ J_{N_\uparrow+\alpha,i} =
+    !! **Block C** (M × N):
+    !! \[ J_{N+\alpha,i} =
     !!   \frac{8U\cos k_i}{U^2 + 16(\Lambda_\alpha - \sin k_i)^2} \]
     !!
     !! **Block D** (M × M):
-    !! \[ J_{N_\uparrow+\alpha,N_\uparrow+\alpha} =
-    !!   -\sum_j \frac{8U}{U^2 + 16(\Lambda_\alpha - \sin k_j)^2}
-    !!   + \sum_{\beta \neq \alpha}
+    !! \[ J_{N+\alpha,N+\alpha} =
+    !!   -\sum_{j=1}^{N} \frac{8U}{U^2 + 16(\Lambda_\alpha - \sin k_j)^2}
+    !!   + \sum_{\beta \neq \alpha}^{M}
     !!     \frac{4U}{U^2 + 4(\Lambda_\alpha - \Lambda_\beta)^2} \]
-    !! \[ J_{N_\uparrow+\alpha,N_\uparrow+\gamma} =
+    !! \[ J_{N+\alpha,N+\gamma} =
     !!   -\frac{4U}{U^2 + 4(\Lambda_\alpha - \Lambda_\gamma)^2},
     !!   \quad \gamma \neq \alpha \]
     !!
-    !! @param[in] k       Charge rapidities (size N↑)
+    !! @param[in] k       Charge rapidities (size N, number of charge rapidities, N = N↑ + N↓)
     !! @param[in] Lambda  Spin rapidities (size M = N↓)
     !! @param[in] L       Number of lattice sites
     !! @param[in] U       Hubbard interaction strength
-    !! @return Jacobian   Jacobian matrix (size (N↑+M) × (N↑+M))
+    !! @return Jacobian   Jacobian matrix (size (N+M) × (N+M))
     !!
     !! @note This Jacobian is used in Newton-Raphson method to solve J·Δx = -F.
     !! @note The matrix is dense and fully populated (no sparsity exploitation).
@@ -319,11 +337,11 @@ contains
     function compute_jacobian(k, Lambda, L, U) result(Jacobian)
         real(dp), intent(in) :: k(:), Lambda(:), U
         integer, intent(in) :: L
-        integer :: Nup, M, i, j, alpha, beta, gamma
+        integer :: N, M, i, j, alpha, beta, gamma
         real(dp) :: Jacobian(size(k) + size(Lambda), size(k) + size(Lambda))
         real(dp) :: summ1, summ2
 
-        Nup = size(k)
+        N = size(k)
         M = size(Lambda)
 
         !!
@@ -336,7 +354,7 @@ contains
         if (abs(U) < U_SMALL) then
             ! Para U=0, o Jacobiano é identidade (equações desacoplam)
             Jacobian = 0.0_dp
-            do i = 1, Nup + M
+            do i = 1, N + M
                 Jacobian(i, i) = 1.0_dp
             end do
             return
@@ -344,8 +362,8 @@ contains
         
         ! General case: U > 0
         !! Block A: dF^k_j/dk_i
-        do j = 1, Nup
-            do i = 1, Nup
+        do j = 1, N
+            do i = 1, N
                 if (i == j) then
                     summ1 = 0.0_dp
                     do alpha = 1, M
@@ -359,16 +377,16 @@ contains
         end do
 
         !! Block B: dF^k_j/dLambda_beta
-        do j = 1, Nup
+        do j = 1, N
             do beta = 1, M
-                Jacobian(j, Nup + beta) = -dtheta_dx(sin(k(j)) - Lambda(beta), U) / real(L, dp)
+                Jacobian(j, N + beta) = -dtheta_dx(sin(k(j)) - Lambda(beta), U) / real(L, dp)
             end do
         end do
 
         !! Block C: dF^Lambda_alpha/dk_i
         do alpha = 1, M
-            do i = 1, Nup
-                Jacobian(Nup + alpha, i) = dtheta_dx(Lambda(alpha) - sin(k(i)), U) * cos(k(i))
+            do i = 1, N
+                Jacobian(N + alpha, i) = dtheta_dx(Lambda(alpha) - sin(k(i)), U) * cos(k(i))
             end do
         end do
 
@@ -377,7 +395,7 @@ contains
             do gamma = 1, M
                 if (alpha == gamma) then
                     summ1 = 0.0_dp
-                    do j = 1, Nup
+                    do j = 1, N
                         summ1 = summ1 + dtheta_dx(Lambda(alpha) - sin(k(j)), U)
                     end do
 
@@ -388,9 +406,9 @@ contains
                         end if
                     end do
 
-                    Jacobian(Nup + alpha, Nup + gamma) = -summ1 + summ2
+                    Jacobian(N + alpha, N + gamma) = -summ1 + summ2
                 else
-                    Jacobian(Nup + alpha, Nup + gamma) = -dTheta_capital_dx(Lambda(alpha) - Lambda(gamma), U)
+                    Jacobian(N + alpha, N + gamma) = -dTheta_capital_dx(Lambda(alpha) - Lambda(gamma), U)
                 end if
             end do
         end do
@@ -409,14 +427,14 @@ contains
     !! \[ \frac{\partial F_j^k}{\partial U} = \frac{1}{L} \sum_{\alpha=1}^{M} \frac{\partial \theta}{\partial U}(\sin k_j - \Lambda_\alpha, U) \]
     !!
     !! **Spin equations:**
-    !! \[ \frac{\partial F_\alpha^\Lambda}{\partial U} = -\sum_{j=1}^{N_\uparrow} \frac{\partial \theta}{\partial U}(\Lambda_\alpha - \sin k_j, U)
-    !!    + \sum_{\beta \neq \alpha} \frac{\partial \Theta}{\partial U}(\Lambda_\alpha - \Lambda_\beta, U) \]
+    !! \[ \frac{\partial F_\alpha^\Lambda}{\partial U} = -\sum_{j=1}^{N} \frac{\partial \theta}{\partial U}(\Lambda_\alpha - \sin k_j, U)
+    !!    + \sum_{\beta \neq \alpha}^{M} \frac{\partial \Theta}{\partial U}(\Lambda_\alpha - \Lambda_\beta, U) \]
     !!
-    !! @param[in] k         Charge rapidities (size N↑)
+    !! @param[in] k         Charge rapidities (size N, number of charge rapidities, N = N↑ + N↓)
     !! @param[in] Lambda    Spin rapidities (size M = N↓)
     !! @param[in] L         Number of lattice sites
     !! @param[in] U         Hubbard interaction strength
-    !! @return dFdU         Derivative vector ∂F/∂U (size N↑ + M)
+    !! @return dFdU         Derivative vector ∂F/∂U (size N + M)
     !!
     !! @note For U=0, ∂F/∂U = 0 (equations become independent of U)
     !! @note This is used in implicit derivative: dx/dU = -J⁻¹·(∂F/∂U)
@@ -425,11 +443,11 @@ contains
     function compute_dFdU(k, Lambda, L, U) result(dFdU)
         real(dp), intent(in) :: k(:), Lambda(:), U
         integer, intent(in) :: L
-        integer :: j, alpha, beta, Nup, M
+        integer :: j, alpha, beta, N, M
         real(dp) :: summ, summ1, summ2
         real(dp) :: dFdU(size(k) + size(Lambda))
 
-        Nup = size(k)
+        N = size(k)
         M = size(Lambda)
 
         ! Special case: U ≈ 0
@@ -441,7 +459,7 @@ contains
         
         ! General case: U > 0
         ! Charge equations: dF^k/dU
-        do j = 1, Nup
+        do j = 1, N
             summ = 0.0_dp
             do alpha = 1, M
                 summ = summ + dtheta_dU(sin(k(j)) - Lambda(alpha), U)
@@ -455,7 +473,7 @@ contains
             summ1 = 0.0_dp
             summ2 = 0.0_dp
 
-            do j = 1, Nup
+            do j = 1, N
                 summ1 = summ1 + dtheta_dU(Lambda(alpha) - sin(k(j)), U)
             end do
 
@@ -465,7 +483,7 @@ contains
                 end if
             end do
 
-            dFdU(Nup + alpha) = -summ1 + summ2
+            dFdU(N + alpha) = -summ1 + summ2
         end do
         
     end function compute_dFdU
@@ -474,11 +492,11 @@ contains
     !!
     !! Calculates the total energy of the system using the Bethe Ansatz solution:
     !!
-    !! \[ E = -2 \sum_{j=1}^{N_\uparrow} \cos(k_j) \]
+    !! \[ E = -2 \sum_{j=1}^{N} \cos(k_j) \]
     !!
-    !! where k_j are the charge rapidities (momenta) of the electrons.
+    !! where k_j are the N = N↑ + N↓ charge rapidities (momenta) of the electrons.
     !!
-    !! @param[in] k  Charge rapidities (size N↑)
+    !! @param[in] k  Charge rapidities (size N, number of charge rapidities, N = N↑ + N↓)
     !! @return    E  Total ground state energy
     !!
     !! @note Energy is in units of hopping t (t=1 in our convention)

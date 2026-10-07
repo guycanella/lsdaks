@@ -128,7 +128,7 @@ contains
     !! This ensures sufficient decrease in the residual norm, providing
     !! global convergence guarantees for Newton's method.
     !!
-    !! @param[in] x      Current iterate [k, Λ] (size N↑+M)
+    !! @param[in] x      Current iterate [k, Λ] (size N+M)
     !! @param[in] dx     Search direction (Newton step)
     !! @param[in] F_old  Residual at current point
     !! @param[in] I      Charge quantum numbers
@@ -154,24 +154,24 @@ contains
         integer, intent(in) :: L
         real(dp) :: alpha, best_alpha, best_norm, norm_F_old, norm_F_trial
         real(dp), allocatable :: k(:), Lambda(:), x_trial(:), F_trial(:)
-        integer :: Nup, M, step
+        integer :: N, M, step
 
         alpha = 1.0_dp              ! Start with full Newton step
         best_alpha = alpha
         best_norm = HUGE(1.0_dp)    ! Worst possible norm (infinity)
 
         norm_F_old = NORM2(F_old)
-        Nup = size(I)
+        N = size(I)
         M = size(J)
 
-        allocate(x_trial(Nup+M))
-        allocate(k(Nup), Lambda(M))
+        allocate(x_trial(N+M))
+        allocate(k(N), Lambda(M))
 
         do step = 1, MAX_LS_ITER
             x_trial = x + alpha * dx
 
-            k = x_trial(1:Nup)
-            Lambda = x_trial(Nup+1:)
+            k = x_trial(1:N)
+            Lambda = x_trial(N+1:)
 
             F_trial = compute_residual(k, Lambda, I, J, L, U)
             norm_F_trial = NORM2(F_trial)
@@ -210,9 +210,9 @@ contains
     !! - Armijo line search (global convergence)
     !! - Special handling for U=0 (analytical solution)
     !!
-    !! @param[inout] x         Solution vector [k₁,...,k_{N↑}, Λ₁,...,Λ_M]
+    !! @param[inout] x         Solution vector [k₁,...,k_N, Λ₁,...,Λ_M]
     !!                         Input: initial guess | Output: solution (if converged)
-    !! @param[in]    I         Charge quantum numbers (N↑)
+    !! @param[in]    I         Charge quantum numbers (size N = N↑ + N↓)
     !! @param[in]    J         Spin quantum numbers (M = N↓)
     !! @param[in]    L         Number of lattice sites
     !! @param[in]    U         Hubbard interaction strength
@@ -247,16 +247,16 @@ contains
         logical, intent(out) :: converged
         integer, intent(out) :: ierr
 
-        integer :: Nup, M, iter
+        integer :: N, M, iter
         real(dp), allocatable :: k(:), Lambda(:), F(:), Jacobian(:,:), dx(:), neg_F(:)
         real(dp) :: norm_F, alpha
 
-        Nup = size(I)
+        N = size(I)
         M = size(J)
 
-        allocate(k(Nup), Lambda(M))
-        allocate(F(Nup + M), neg_F(Nup + M), dx(Nup + M))
-        allocate(Jacobian(Nup + M, Nup + M))
+        allocate(k(N), Lambda(M))
+        allocate(F(N + M), neg_F(N + M), dx(N + M))
+        allocate(Jacobian(N + M, N + M))
 
         converged = .false.
         ierr = ERROR_SUCCESS
@@ -265,15 +265,15 @@ contains
             ! Analytical solution for U=0 (free Fermi gas)
             ! k_j = 2π·I_j/L
             ! Lambda is arbitrary (does not appear in the equations)
-            x(1:Nup) = TWOPI * I / real(L, dp)
-            x(Nup+1:) = 0.0_dp  ! Lambda = 0 (arbitrary)
+            x(1:N) = TWOPI * I / real(L, dp)
+            x(N+1:) = 0.0_dp  ! Lambda = 0 (arbitrary)
             converged = .true.
             return
         end if
 
         do iter = 1, NEWTON_MAX_ITER
-            k = x(1:Nup)
-            Lambda = x(Nup+1:)
+            k = x(1:N)
+            Lambda = x(N+1:)
 
             F = compute_residual(k, Lambda, I, J, L, U)
             norm_F = NORM2(F)
@@ -293,8 +293,8 @@ contains
 
             x = x + alpha * dx
 
-            k = x(1:Nup)
-            Lambda = x(Nup+1:)
+            k = x(1:N)
+            Lambda = x(N+1:)
             F = compute_residual(k, Lambda, I, J, L, U)
             norm_F = NORM2(F)
 
