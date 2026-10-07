@@ -6,10 +6,21 @@ module convergence_monitor
     private
 
     type :: convergence_history_t
-        integer :: max_iter
-        integer :: current_iter
+        !> Capacity of the history arrays. Defaulted to 0 so that a history that
+        !! never went through init_convergence_history (store_history = .false.)
+        !! still has a defined, obviously empty state: an intent(out) dummy of
+        !! this type is default-initialised, and update_convergence_history
+        !! compares against max_iter before touching anything.
+        integer :: max_iter = 0
+        !> Number of iterations actually recorded (0 when nothing was stored)
+        integer :: current_iter = 0
         real(dp), allocatable :: density_norms(:)
         real(dp), allocatable :: energies(:)
+        !> Self-consistency residual of the effective potential, ||V_calc - V_eff||,
+        !! normalised per site and spin channel. Unlike density_norms it does not
+        !! scale with the mixing weight, so it is the honest measure of how far
+        !! the cycle is from the Kohn-Sham fixed point.
+        real(dp), allocatable :: potential_residuals(:)
     end type convergence_history_t
 
     enum, bind(c)
@@ -147,12 +158,14 @@ contains
     !! @param[in] energy Total energy at this iteration
     !! @param[inout] history Convergence history object
     !! @param[out] ierr Error code (0 = success)
-    subroutine update_convergence_history(iteration, norm, energy, history, ierr)
+    !! @param[in] residual Potential self-consistency residual (optional)
+    subroutine update_convergence_history(iteration, norm, energy, history, ierr, residual)
         integer, intent(in) :: iteration
         real(dp), intent(in) :: norm
         real(dp), intent(in) :: energy
         type(convergence_history_t), intent(inout) :: history
         integer, intent(out) :: ierr
+        real(dp), intent(in), optional :: residual
 
         if (iteration < 1 .or. iteration > history%max_iter) then
             ierr = ERROR_INVALID_INPUT
@@ -167,6 +180,11 @@ contains
 
         history%density_norms(iteration) = norm
         history%energies(iteration) = energy
+
+        if (present(residual) .and. allocated(history%potential_residuals)) then
+            history%potential_residuals(iteration) = residual
+        end if
+
         history%current_iter = iteration
 
         ierr = ERROR_SUCCESS
@@ -192,9 +210,11 @@ contains
         
         allocate(history%density_norms(max_iter))
         allocate(history%energies(max_iter))
-        
+        allocate(history%potential_residuals(max_iter))
+
         history%density_norms = 0.0_dp
         history%energies = 0.0_dp
+        history%potential_residuals = 0.0_dp
         
         ierr = ERROR_SUCCESS
     end subroutine init_convergence_history
@@ -209,7 +229,8 @@ contains
         
         if (allocated(history%density_norms)) deallocate(history%density_norms)
         if (allocated(history%energies)) deallocate(history%energies)
-        
+        if (allocated(history%potential_residuals)) deallocate(history%potential_residuals)
+
         history%max_iter = 0
         history%current_iter = 0
         

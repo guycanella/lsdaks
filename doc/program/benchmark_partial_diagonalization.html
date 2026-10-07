@@ -1,0 +1,1026 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>benchmark_partial_diagonalization &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>benchmark_partial_diagonalization      <small>Program</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 5.7% of total for programs.">43 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/benchmark_partial_diagonalization.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/benchmark_partial_diagonalization.f90.html'>benchmark_partial_diagonalization.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">benchmark_partial_diagonalization</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-l_list">L_LIST</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-i~32">i</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-j~17">j</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-l~52">L</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-n_vec~5">n_vec</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-ierr~79">ierr</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-t0">t0</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-t1">t1</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-partial_seconds">partial_seconds</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-full_seconds">full_seconds</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-max_error">max_error</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-potential~3">potential</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-hamiltonian">hamiltonian</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-partial_values">partial_values</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-full_values">full_values</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-partial_vectors">partial_vectors</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-full_vectors">full_vectors</a>
+            <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#variable-workspace~12">workspace</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../program/benchmark_partial_diagonalization.html#src">benchmark_partial_diagonalization</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+        <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='../module/lapack_wrapper.html'>lapack_wrapper</a></li>
+                  <li class="list-inline-item"><a href='../module/lsda_errors.html'>lsda_errors</a></li>
+                  <li class="list-inline-item"><a href='../module/lsda_constants.html'>lsda_constants</a></li>
+              </ul>
+            </li>
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: program~~benchmark_partial_diagonalization~~UsesGraph Pages: 1 -->
+<svg id="programbenchmark_partial_diagonalizationUsesGraph" width="641pt" height="70pt"
+ viewBox="0.00 0.00 641.00 70.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph" class="graph" transform="scale(0.985244 0.985244) rotate(0) translate(4 66.77)">
+<title>program~~benchmark_partial_diagonalization~~UsesGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-66.77 646.6,-66.77 646.6,4 -4,4"/>
+<!-- program~benchmark_partial_diagonalization -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_node1" class="node">
+<title>program~benchmark_partial_diagonalization</title>
+<polygon fill="none" stroke="black" points="642.6,-31.4 465.33,-31.4 465.33,-8.63 642.6,-8.63 642.6,-31.4"/>
+<text xml:space="preserve" text-anchor="middle" x="553.96" y="-15.66" font-family="Helvetica,sans-Serif" font-size="10.50">benchmark_partial_diagonalization</text>
+</g>
+<!-- module~lapack_wrapper -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_node2" class="node">
+<title>module~lapack_wrapper</title>
+<g id="a_program~~benchmark_partial_diagonalization~~UsesGraph_node2"><a xlink:href="../module/lapack_wrapper.html" xlink:title="lapack_wrapper">
+<polygon fill="#337ab7" stroke="#337ab7" points="429.33,-51.4 342.06,-51.4 342.06,-28.63 429.33,-28.63 429.33,-51.4"/>
+<text xml:space="preserve" text-anchor="middle" x="385.69" y="-35.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lapack_wrapper</text>
+</a>
+</g>
+</g>
+<!-- program~benchmark_partial_diagonalization&#45;&gt;module~lapack_wrapper -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_edge1" class="edge">
+<title>program~benchmark_partial_diagonalization&#45;&gt;module~lapack_wrapper</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M464.96,-30.6C456.79,-31.58 448.68,-32.56 440.95,-33.49"/>
+<polygon fill="#000000" stroke="#000000" points="440.56,-30.01 431.05,-34.68 441.4,-36.96 440.56,-30.01"/>
+</g>
+<!-- module~lsda_constants -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_node3" class="node">
+<title>module~lsda_constants</title>
+<g id="a_program~~benchmark_partial_diagonalization~~UsesGraph_node3"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
+<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-51.4 121.77,-51.4 121.77,-28.63 204.54,-28.63 204.54,-51.4"/>
+<text xml:space="preserve" text-anchor="middle" x="163.15" y="-35.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
+</a>
+</g>
+</g>
+<!-- program~benchmark_partial_diagonalization&#45;&gt;module~lsda_constants -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_edge2" class="edge">
+<title>program~benchmark_partial_diagonalization&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M384.69,-1.01C320.1,-2.93 303.96,-7.58 240.54,-20.01 232.49,-21.59 224.04,-23.52 215.8,-25.56"/>
+<polygon fill="#000000" stroke="#000000" points="215.06,-22.13 206.24,-28 216.79,-28.92 215.06,-22.13"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M493.08,-8.18C461.5,-3.21 422.08,1.01 386.69,-1.01"/>
+</g>
+<!-- module~lsda_errors -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_node4" class="node">
+<title>module~lsda_errors</title>
+<g id="a_program~~benchmark_partial_diagonalization~~UsesGraph_node4"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
+<polygon fill="#337ab7" stroke="#337ab7" points="306.06,-51.4 240.54,-51.4 240.54,-28.63 306.06,-28.63 306.06,-51.4"/>
+<text xml:space="preserve" text-anchor="middle" x="273.3" y="-35.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
+</a>
+</g>
+</g>
+<!-- program~benchmark_partial_diagonalization&#45;&gt;module~lsda_errors -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_edge3" class="edge">
+<title>program~benchmark_partial_diagonalization&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M384.69,-1.01C356.71,-1.84 326.88,-13.07 305.3,-23.26"/>
+<polygon fill="#000000" stroke="#000000" points="303.89,-20.06 296.47,-27.62 306.98,-26.33 303.89,-20.06"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_constants -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_edge4" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M346.27,-51.82C333.59,-55.17 319.34,-58.35 306.06,-60.01 277.17,-63.63 269.42,-63.73 240.54,-60.01 231.36,-58.83 221.7,-56.88 212.47,-54.65"/>
+<polygon fill="#000000" stroke="#000000" points="213.49,-51.3 202.93,-52.2 211.74,-58.08 213.49,-51.3"/>
+</g>
+<!-- module~lapack_wrapper&#45;&gt;module~lsda_errors -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_edge5" class="edge">
+<title>module~lapack_wrapper&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M341.7,-40.01C333.81,-40.01 325.56,-40.01 317.66,-40.01"/>
+<polygon fill="#000000" stroke="#000000" points="317.92,-36.51 307.92,-40.01 317.92,-43.51 317.92,-36.51"/>
+</g>
+<!-- iso_fortran_env -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_node5" class="node">
+<title>iso_fortran_env</title>
+<g id="a_program~~benchmark_partial_diagonalization~~UsesGraph_node5"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-51.4 0,-51.4 0,-28.63 85.77,-28.63 85.77,-51.4"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-35.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- module~lsda_constants&#45;&gt;iso_fortran_env -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_edge6" class="edge">
+<title>module~lsda_constants&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M121.45,-40.01C113.64,-40.01 105.35,-40.01 97.21,-40.01"/>
+<polygon fill="#000000" stroke="#000000" points="97.38,-36.51 87.38,-40.01 97.38,-43.51 97.38,-36.51"/>
+</g>
+<!-- module~lsda_errors&#45;&gt;module~lsda_constants -->
+<g id="program~~benchmark_partial_diagonalization~~UsesGraph_edge7" class="edge">
+<title>module~lsda_errors&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M240.15,-40.01C232.61,-40.01 224.4,-40.01 216.24,-40.01"/>
+<polygon fill="#000000" stroke="#000000" points="216.34,-36.51 206.34,-40.01 216.34,-43.51 216.34,-36.51"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panprogrambenchmark_partial_diagonalizationUsesGraph = svgPanZoom('#programbenchmark_partial_diagonalizationUsesGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsesGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsesGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+    <p>Release benchmark for the partial open-chain diagonalization path.</p>
+    <br>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Calls</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: program~~benchmark_partial_diagonalization~~CallsGraph Pages: 1 -->
+<svg id="programbenchmark_partial_diagonalizationCallsGraph" width="641pt" height="163pt"
+ viewBox="0.00 0.00 641.00 163.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph" class="graph" transform="scale(0.855431 0.855431) rotate(0) translate(4 186.77)">
+<title>program~~benchmark_partial_diagonalization~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-186.77 745.33,-186.77 745.33,4 -4,4"/>
+<!-- program~benchmark_partial_diagonalization -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node1" class="node">
+<title>program~benchmark_partial_diagonalization</title>
+<polygon fill="none" stroke="black" points="177.27,-104.77 0,-104.77 0,-82 177.27,-82 177.27,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="88.63" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50">benchmark_partial_diagonalization</text>
+</g>
+<!-- proc~cleanup_diag_workspace -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node2" class="node">
+<title>proc~cleanup_diag_workspace</title>
+<g id="a_program~~benchmark_partial_diagonalization~~CallsGraph_node2"><a xlink:href="../proc/cleanup_diag_workspace.html" xlink:title="cleanup_diag_workspace">
+<polygon fill="#d9534f" stroke="#d9534f" points="556.18,-104.77 423.91,-104.77 423.91,-82 556.18,-82 556.18,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="490.05" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">cleanup_diag_workspace</text>
+</a>
+</g>
+</g>
+<!-- program~benchmark_partial_diagonalization&#45;&gt;proc~cleanup_diag_workspace -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge1" class="edge">
+<title>program~benchmark_partial_diagonalization&#45;&gt;proc~cleanup_diag_workspace</title>
+<path fill="none" stroke="#000000" d="M177.29,-93.39C247.51,-93.39 345.07,-93.39 412.26,-93.39"/>
+<polygon fill="#000000" stroke="#000000" points="412.09,-96.89 422.09,-93.39 412.09,-89.89 412.09,-96.89"/>
+</g>
+<!-- proc~diagonalize_open_tridiagonal -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node3" class="node">
+<title>proc~diagonalize_open_tridiagonal</title>
+<g id="a_program~~benchmark_partial_diagonalization~~CallsGraph_node3"><a xlink:href="../proc/diagonalize_open_tridiagonal.html" xlink:title="diagonalize_open_tridiagonal">
+<polygon fill="#d9534f" stroke="#d9534f" points="364.29,-143.77 213.27,-143.77 213.27,-121 364.29,-121 364.29,-143.77"/>
+<text xml:space="preserve" text-anchor="middle" x="288.78" y="-128.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">diagonalize_open_tridiagonal</text>
+</a>
+</g>
+</g>
+<!-- program~benchmark_partial_diagonalization&#45;&gt;proc~diagonalize_open_tridiagonal -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge2" class="edge">
+<title>program~benchmark_partial_diagonalization&#45;&gt;proc~diagonalize_open_tridiagonal</title>
+<path fill="none" stroke="#000000" d="M149.89,-105.25C170.83,-109.37 194.53,-114.03 216.29,-118.31"/>
+<polygon fill="#000000" stroke="#000000" points="215.5,-121.72 225.98,-120.22 216.85,-114.86 215.5,-121.72"/>
+</g>
+<!-- proc~diagonalize_symmetric_real -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node4" class="node">
+<title>proc~diagonalize_symmetric_real</title>
+<g id="a_program~~benchmark_partial_diagonalization~~CallsGraph_node4"><a xlink:href="../proc/diagonalize_symmetric_real.html" xlink:title="diagonalize_symmetric_real">
+<polygon fill="#d9534f" stroke="#d9534f" points="360.91,-64.77 216.64,-64.77 216.64,-42 360.91,-42 360.91,-64.77"/>
+<text xml:space="preserve" text-anchor="middle" x="288.78" y="-49.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">diagonalize_symmetric_real</text>
+</a>
+</g>
+</g>
+<!-- program~benchmark_partial_diagonalization&#45;&gt;proc~diagonalize_symmetric_real -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge3" class="edge">
+<title>program~benchmark_partial_diagonalization&#45;&gt;proc~diagonalize_symmetric_real</title>
+<path fill="none" stroke="#000000" d="M148.28,-81.55C170.05,-77.15 194.96,-72.12 217.66,-67.54"/>
+<polygon fill="#000000" stroke="#000000" points="218.35,-70.97 227.46,-65.56 216.96,-64.11 218.35,-70.97"/>
+</g>
+<!-- interface~dstevr -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node5" class="node">
+<title>interface~dstevr</title>
+<g id="a_program~~benchmark_partial_diagonalization~~CallsGraph_node5"><a xlink:href="../interface/dstevr.html" xlink:title="DSTEVR">
+<polygon fill="#a7506f" stroke="#a7506f" points="517.05,-182.77 463.05,-182.77 463.05,-160 517.05,-160 517.05,-182.77"/>
+<text xml:space="preserve" text-anchor="middle" x="490.05" y="-167.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">DSTEVR</text>
+</a>
+</g>
+</g>
+<!-- proc~diagonalize_open_tridiagonal&#45;&gt;interface~dstevr -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge4" class="edge">
+<title>proc~diagonalize_open_tridiagonal&#45;&gt;interface~dstevr</title>
+<path fill="none" stroke="#000000" d="M350.38,-144.25C383.39,-150.71 423.19,-158.49 451.67,-164.07"/>
+<polygon fill="#000000" stroke="#000000" points="450.77,-167.46 461.26,-165.95 452.12,-160.59 450.77,-167.46"/>
+</g>
+<!-- proc~ensure_real_workspace -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node7" class="node">
+<title>proc~ensure_real_workspace</title>
+<g id="a_program~~benchmark_partial_diagonalization~~CallsGraph_node7"><a xlink:href="../proc/ensure_real_workspace.html" xlink:title="ensure_real_workspace">
+<polygon fill="#d9534f" stroke="#d9534f" points="741.33,-103.77 615.81,-103.77 615.81,-81 741.33,-81 741.33,-103.77"/>
+<text xml:space="preserve" text-anchor="middle" x="678.57" y="-88.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ensure_real_workspace</text>
+</a>
+</g>
+</g>
+<!-- proc~diagonalize_open_tridiagonal&#45;&gt;proc~ensure_real_workspace -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge5" class="edge">
+<title>proc~diagonalize_open_tridiagonal&#45;&gt;proc~ensure_real_workspace</title>
+<path fill="none" stroke="#000000" d="M364.6,-130.49C423.35,-128.27 507.09,-123.52 579.81,-113.39 592.18,-111.66 605.33,-109.25 617.83,-106.66"/>
+<polygon fill="#000000" stroke="#000000" points="618.56,-110.09 627.61,-104.58 617.1,-103.24 618.56,-110.09"/>
+</g>
+<!-- proc~diagonalize_symmetric_real&#45;&gt;proc~cleanup_diag_workspace -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge6" class="edge">
+<title>proc~diagonalize_symmetric_real&#45;&gt;proc~cleanup_diag_workspace</title>
+<path fill="none" stroke="#000000" d="M348.76,-65.22C370.75,-69.64 395.94,-74.69 418.84,-79.29"/>
+<polygon fill="#000000" stroke="#000000" points="417.9,-82.67 428.39,-81.21 419.28,-75.81 417.9,-82.67"/>
+</g>
+<!-- proc~diagonalize_symmetric_real_partial -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node6" class="node">
+<title>proc~diagonalize_symmetric_real_partial</title>
+<g id="a_program~~benchmark_partial_diagonalization~~CallsGraph_node6"><a xlink:href="../proc/diagonalize_symmetric_real_partial.html" xlink:title="diagonalize_symmetric_real_partial">
+<polygon fill="#d9534f" stroke="#d9534f" points="579.81,-22.77 400.29,-22.77 400.29,0 579.81,0 579.81,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="490.05" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">diagonalize_symmetric_real_partial</text>
+</a>
+</g>
+</g>
+<!-- proc~diagonalize_symmetric_real&#45;&gt;proc~diagonalize_symmetric_real_partial -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge7" class="edge">
+<title>proc~diagonalize_symmetric_real&#45;&gt;proc~diagonalize_symmetric_real_partial</title>
+<path fill="none" stroke="#000000" d="M346.08,-41.52C369.64,-36.55 397.2,-30.74 421.81,-25.56"/>
+<polygon fill="#000000" stroke="#000000" points="422.34,-29.02 431.4,-23.53 420.9,-22.17 422.34,-29.02"/>
+</g>
+<!-- proc~validate_diagonalization_inputs -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node8" class="node">
+<title>proc~validate_diagonalization_inputs</title>
+<g id="a_program~~benchmark_partial_diagonalization~~CallsGraph_node8"><a xlink:href="../proc/validate_diagonalization_inputs.html" xlink:title="validate_diagonalization_inputs">
+<polygon fill="#d9534f" stroke="#d9534f" points="570.06,-63.77 410.04,-63.77 410.04,-41 570.06,-41 570.06,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="490.05" y="-48.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">validate_diagonalization_inputs</text>
+</a>
+</g>
+</g>
+<!-- proc~diagonalize_symmetric_real&#45;&gt;proc~validate_diagonalization_inputs -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge8" class="edge">
+<title>proc~diagonalize_symmetric_real&#45;&gt;proc~validate_diagonalization_inputs</title>
+<path fill="none" stroke="#000000" d="M361.16,-53.03C373.21,-52.97 385.87,-52.9 398.34,-52.84"/>
+<polygon fill="#000000" stroke="#000000" points="398.22,-56.34 408.2,-52.79 398.19,-49.34 398.22,-56.34"/>
+</g>
+<!-- proc~diagonalize_symmetric_real_partial&#45;&gt;proc~ensure_real_workspace -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge10" class="edge">
+<title>proc~diagonalize_symmetric_real_partial&#45;&gt;proc~ensure_real_workspace</title>
+<path fill="none" stroke="#000000" d="M552.5,-23.22C561.8,-25.78 571.17,-28.82 579.81,-32.39 606.14,-43.25 633.58,-60.71 652.65,-74"/>
+<polygon fill="#000000" stroke="#000000" points="650.41,-76.7 660.59,-79.64 654.46,-70.99 650.41,-76.7"/>
+</g>
+<!-- interface~dsyevr -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_node9" class="node">
+<title>interface~dsyevr</title>
+<g id="a_program~~benchmark_partial_diagonalization~~CallsGraph_node9"><a xlink:href="../interface/dsyevr.html" xlink:title="DSYEVR">
+<polygon fill="#a7506f" stroke="#a7506f" points="705.57,-22.77 651.57,-22.77 651.57,0 705.57,0 705.57,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="678.57" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">DSYEVR</text>
+</a>
+</g>
+</g>
+<!-- proc~diagonalize_symmetric_real_partial&#45;&gt;interface~dsyevr -->
+<g id="program~~benchmark_partial_diagonalization~~CallsGraph_edge9" class="edge">
+<title>proc~diagonalize_symmetric_real_partial&#45;&gt;interface~dsyevr</title>
+<path fill="none" stroke="#000000" d="M580.21,-11.39C601.37,-11.39 622.81,-11.39 640.16,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="639.95,-14.89 649.95,-11.39 639.95,-7.89 639.95,-14.89"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panprogrambenchmark_partial_diagonalizationCallsGraph = svgPanZoom('#programbenchmark_partial_diagonalizationCallsGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CallsGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CallsGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<br>
+
+    <section>
+    <h2>Variables</h2>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-l_list"></span>
+              integer,
+            </td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>L_LIST</strong>(3)</td>
+<td> =</td>
+                <td>[100, 500, 1000]</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-i~32"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>i</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-j~17"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>j</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-l~52"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>L</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_vec~5"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_vec</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~79"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-t0"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>t0</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-t1"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>t1</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-partial_seconds"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>partial_seconds</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-full_seconds"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>full_seconds</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-max_error"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>max_error</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-potential~3"></span>
+              real(kind=dp),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>potential</strong>(:)</td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-hamiltonian"></span>
+              real(kind=dp),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>hamiltonian</strong>(:,:)</td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-partial_values"></span>
+              real(kind=dp),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>partial_values</strong>(:)</td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-full_values"></span>
+              real(kind=dp),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>full_values</strong>(:)</td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-partial_vectors"></span>
+              real(kind=dp),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>partial_vectors</strong>(:,:)</td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-full_vectors"></span>
+              real(kind=dp),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>full_vectors</strong>(:,:)</td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-workspace~12"></span>
+              type(<a href='../type/diag_workspace_t.html'>diag_workspace_t</a>)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>workspace</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    </section>
+    <br>
+    
+    
+    
+
+    
+
+
+    
+
+    <section>
+    <h2 id="src">Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="k">program </span><span class="n">benchmark_partial_diagonalization</span>
+<span class="w">    </span><span class="k">use </span><span class="n">lsda_constants</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">dp</span>
+<span class="w">    </span><span class="k">use </span><span class="n">lsda_errors</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span>
+<span class="w">    </span><span class="k">use </span><span class="n">lapack_wrapper</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">diag_workspace_t</span><span class="p">,</span><span class="w"> </span><span class="n">cleanup_diag_workspace</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                              </span><span class="n">diagonalize_open_tridiagonal</span><span class="p">,</span><span class="w"> </span><span class="n">diagonalize_symmetric_real</span>
+<span class="w">    </span><span class="k">implicit none</span>
+
+<span class="k">    </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">L_LIST</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">]</span>
+<span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">n_vec</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span>
+<span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">t0</span><span class="p">,</span><span class="w"> </span><span class="n">t1</span><span class="p">,</span><span class="w"> </span><span class="n">partial_seconds</span><span class="p">,</span><span class="w"> </span><span class="n">full_seconds</span><span class="p">,</span><span class="w"> </span><span class="n">max_error</span>
+<span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">potential</span><span class="p">(:),</span><span class="w"> </span><span class="n">hamiltonian</span><span class="p">(:,:),</span><span class="w"> </span><span class="n">partial_values</span><span class="p">(:),</span><span class="w"> </span><span class="n">full_values</span><span class="p">(:)</span>
+<span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">partial_vectors</span><span class="p">(:,:),</span><span class="w"> </span><span class="n">full_vectors</span><span class="p">(:,:)</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">diag_workspace_t</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">workspace</span>
+
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; L       partial(s)      full(s)       speedup     max |delta E|&#39;</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">size</span><span class="p">(</span><span class="n">L_LIST</span><span class="p">)</span>
+<span class="w">        </span><span class="n">L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">L_LIST</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="c">! Low filling is the target workload: the SCF needs the occupied</span>
+<span class="w">        </span><span class="c">! states plus a small Fermi-shell buffer, not a fixed fraction of L.</span>
+<span class="w">        </span><span class="n">n_vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">min</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mi">55</span><span class="p">)</span>
+<span class="w">        </span><span class="k">allocate</span><span class="p">(</span><span class="n">potential</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">hamiltonian</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="n">partial_values</span><span class="p">(</span><span class="n">n_vec</span><span class="p">),</span><span class="w"> </span><span class="n">full_values</span><span class="p">(</span><span class="n">L</span><span class="p">),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                 </span><span class="n">partial_vectors</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">n_vec</span><span class="p">),</span><span class="w"> </span><span class="n">full_vectors</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">))</span>
+
+<span class="w">        </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">L</span>
+<span class="w">            </span><span class="n">potential</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1_dp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">sin</span><span class="p">(</span><span class="kt">real</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">dp</span><span class="p">))</span>
+<span class="w">        </span><span class="k">end do</span>
+<span class="k">        </span><span class="n">hamiltonian</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_dp</span>
+<span class="w">        </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">L</span>
+<span class="w">            </span><span class="n">hamiltonian</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">potential</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="k">end do</span>
+<span class="k">        do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="n">hamiltonian</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">1.0_dp</span>
+<span class="w">            </span><span class="n">hamiltonian</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">1.0_dp</span>
+<span class="w">        </span><span class="k">end do</span>
+
+<span class="k">        call </span><span class="nb">cpu_time</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="n">diagonalize_open_tridiagonal</span><span class="p">(</span><span class="n">potential</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">n_vec</span><span class="p">,</span><span class="w"> </span><span class="n">partial_values</span><span class="p">,</span><span class="w"> </span><span class="n">partial_vectors</span><span class="p">,</span><span class="w"> </span><span class="n">workspace</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="nb">cpu_time</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+<span class="w">        </span><span class="n">partial_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">error stop</span><span class="w"> </span><span class="s1">&#39;partial diagonalization failed&#39;</span>
+
+<span class="w">        </span><span class="k">call </span><span class="nb">cpu_time</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="n">diagonalize_symmetric_real</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">full_values</span><span class="p">,</span><span class="w"> </span><span class="n">full_vectors</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="nb">cpu_time</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+<span class="w">        </span><span class="n">full_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">error stop</span><span class="w"> </span><span class="s1">&#39;full diagonalization failed&#39;</span>
+
+<span class="w">        </span><span class="n">max_error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">maxval</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">partial_values</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">full_values</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n_vec</span><span class="p">)))</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(I5,3X,F10.4,3X,F10.4,3X,F9.2,3X,ES12.4)&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">partial_seconds</span><span class="p">,</span><span class="w"> </span><span class="n">full_seconds</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">            </span><span class="n">full_seconds</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="n">partial_seconds</span><span class="p">,</span><span class="w"> </span><span class="nb">tiny</span><span class="p">(</span><span class="mf">1.0_dp</span><span class="p">)),</span><span class="w"> </span><span class="n">max_error</span>
+
+<span class="w">        </span><span class="k">call </span><span class="n">cleanup_diag_workspace</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span>
+<span class="w">        </span><span class="k">deallocate</span><span class="p">(</span><span class="n">potential</span><span class="p">,</span><span class="w"> </span><span class="n">hamiltonian</span><span class="p">,</span><span class="w"> </span><span class="n">partial_values</span><span class="p">,</span><span class="w"> </span><span class="n">full_values</span><span class="p">,</span><span class="w"> </span><span class="n">partial_vectors</span><span class="p">,</span><span class="w"> </span><span class="n">full_vectors</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end do</span>
+<span class="k">end program </span><span class="n">benchmark_partial_diagonalization</span>
+</pre></div>
+
+    </section>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

@@ -62,10 +62,16 @@
                   <a class="nav-link" href="../lists/procedures.html">Procedures</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" href="../lists/types.html">Derived Types</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
                 </li>
             </ul>
               <div class="d-flex align-items-end flex-grow-1">
@@ -92,7 +98,7 @@
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
               <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-                 title="<p>11.4% of total for derived types.</p>Including implementation: 14 statements, 11.4% of total for derived types.">14 statements</a>
+                 title="<p> 9.7% of total for derived types.</p>Including implementation: 15 statements,  9.7% of total for derived types.">15 statements</a>
             </li>
 
             <li class="list-inline-item" id="source-file">
@@ -134,7 +140,7 @@
       </a>
       <div id="vars-0" class="collapse">
         <div class="list-group list-group-flush">
-            <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-iter~4">iter</a>
+            <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-iter~3">iter</a>
             <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-count_sc">count_sc</a>
             <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-count_bot">count_bot</a>
             <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-count_top">count_top</a>
@@ -144,8 +150,9 @@
             <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-energy_bot">energy_bot</a>
             <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-energy_new">energy_new</a>
             <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-energy_old">energy_old</a>
-            <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-tol~2">tol</a>
-            <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-converged~4">converged</a>
+            <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-tol~3">tol</a>
+            <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-alpha_min">alpha_min</a>
+            <a class="list-group-item" href="../type/adaptive_mix_t.html#variable-converged~5">converged</a>
         </div>
       </div>
     </div>
@@ -200,7 +207,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-iter~4"></span>
+              <span class="anchor" id="variable-iter~3"></span>
               integer,
             </td>
               <td>public</td>
@@ -370,7 +377,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-tol~2"></span>
+              <span class="anchor" id="variable-tol~3"></span>
               real(kind=dp),
             </td>
               <td>public</td>
@@ -387,7 +394,24 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-converged~4"></span>
+              <span class="anchor" id="variable-alpha_min"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>alpha_min</strong></td>
+<td> =</td>
+                <td>MIX_ALPHA_MIN</td>
+            <td>
+                <p>Floor for alpha = 1 - mix</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-converged~5"></span>
               logical,
             </td>
               <td>public</td>
@@ -425,6 +449,7 @@
 <span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">energy_new</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_dp</span><span class="w">          </span><span class="c">!&lt; Current energy</span>
 <span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">energy_old</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_dp</span><span class="w">          </span><span class="c">!&lt; Previous energy</span>
 <span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">tol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-8_dp</span><span class="w">              </span><span class="c">!&lt; Convergence tolerance</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">alpha_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MIX_ALPHA_MIN</span><span class="w">    </span><span class="c">!&lt; Floor for alpha = 1 - mix</span>
 <span class="w">        </span><span class="kt">logical</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">converged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">false</span><span class="p">.</span><span class="w">           </span><span class="c">!&lt; Convergence flag</span>
 <span class="w">    </span><span class="k">end type </span><span class="n">adaptive_mix_t</span>
 </pre></div>
@@ -442,7 +467,7 @@
           <div class="col">
             <p>
               LSDA-Hubbard-Fortran
- was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
 </p>
           </div>
           <div class="col">

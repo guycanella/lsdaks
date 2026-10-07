@@ -1,0 +1,627 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>write_provenance &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>write_provenance
+      <small>Subroutine</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 1.3% of total for procedures.">71 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/output_writer.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/output_writer.f90.html'>output_writer.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/output_writer.html'>output_writer</a></li>
+            <li class="breadcrumb-item active" aria-current="page">write_provenance</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/write_provenance.html#src">write_provenance</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>private  subroutine write_provenance(io_unit, comment, inputs, sys_params)  
+</h2>
+    
+
+    <p>Write the provenance block shared by every output file</p>
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-io_unit"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>io_unit</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-comment"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>comment</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-inputs~3"></span>
+              type(<a href='../type/input_params_t.html'>input_params_t</a>),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>inputs</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sys_params~3"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sys_params</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <br>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Called by</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: proc~~write_provenance~~CalledByGraph Pages: 1 -->
+<svg id="procwrite_provenanceCalledByGraph" width="477pt" height="154pt"
+ viewBox="0.00 0.00 477.00 154.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~write_provenance~~CalledByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 149.77)">
+<title>proc~~write_provenance~~CalledByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-149.77 472.81,-149.77 472.81,4 -4,4"/>
+<!-- proc~write_provenance -->
+<g id="proc~~write_provenance~~CalledByGraph_node1" class="node">
+<title>proc~write_provenance</title>
+<polygon fill="none" stroke="black" points="468.81,-83.77 372.54,-83.77 372.54,-61 468.81,-61 468.81,-83.77"/>
+<text xml:space="preserve" text-anchor="middle" x="420.67" y="-68.04" font-family="Helvetica,sans-Serif" font-size="10.50">write_provenance</text>
+</g>
+<!-- proc~write_convergence_history -->
+<g id="proc~~write_provenance~~CalledByGraph_node2" class="node">
+<title>proc~write_convergence_history</title>
+<g id="a_proc~~write_provenance~~CalledByGraph_node2"><a xlink:href="../proc/write_convergence_history.html" xlink:title="write_convergence_history">
+<polygon fill="#d9534f" stroke="#d9534f" points="336.54,-145.77 197.52,-145.77 197.52,-123 336.54,-123 336.54,-145.77"/>
+<text xml:space="preserve" text-anchor="middle" x="267.03" y="-130.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">write_convergence_history</text>
+</a>
+</g>
+</g>
+<!-- proc~write_convergence_history&#45;&gt;proc~write_provenance -->
+<g id="proc~~write_provenance~~CalledByGraph_edge1" class="edge">
+<title>proc~write_convergence_history&#45;&gt;proc~write_provenance</title>
+<path fill="none" stroke="#000000" d="M310.43,-122.55C319.15,-119.8 328.21,-116.69 336.54,-113.39 354.04,-106.44 372.91,-97.28 388.24,-89.38"/>
+<polygon fill="#000000" stroke="#000000" points="389.65,-92.59 396.89,-84.85 386.4,-86.39 389.65,-92.59"/>
+</g>
+<!-- proc~write_density_profile -->
+<g id="proc~~write_provenance~~CalledByGraph_node3" class="node">
+<title>proc~write_density_profile</title>
+<g id="a_proc~~write_provenance~~CalledByGraph_node3"><a xlink:href="../proc/write_density_profile.html" xlink:title="write_density_profile">
+<polygon fill="#d9534f" stroke="#d9534f" points="321.54,-104.77 212.52,-104.77 212.52,-82 321.54,-82 321.54,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="267.03" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">write_density_profile</text>
+</a>
+</g>
+</g>
+<!-- proc~write_density_profile&#45;&gt;proc~write_provenance -->
+<g id="proc~~write_provenance~~CalledByGraph_edge2" class="edge">
+<title>proc~write_density_profile&#45;&gt;proc~write_provenance</title>
+<path fill="none" stroke="#000000" d="M321.92,-85.92C334.69,-84.15 348.38,-82.26 361.34,-80.46"/>
+<polygon fill="#000000" stroke="#000000" points="361.58,-83.96 371,-79.13 360.62,-77.03 361.58,-83.96"/>
+</g>
+<!-- proc~write_eigenvalues -->
+<g id="proc~~write_provenance~~CalledByGraph_node4" class="node">
+<title>proc~write_eigenvalues</title>
+<g id="a_proc~~write_provenance~~CalledByGraph_node4"><a xlink:href="../proc/write_eigenvalues.html" xlink:title="write_eigenvalues">
+<polygon fill="#d9534f" stroke="#d9534f" points="315.54,-63.77 218.52,-63.77 218.52,-41 315.54,-41 315.54,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="267.03" y="-48.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">write_eigenvalues</text>
+</a>
+</g>
+</g>
+<!-- proc~write_eigenvalues&#45;&gt;proc~write_provenance -->
+<g id="proc~~write_provenance~~CalledByGraph_edge3" class="edge">
+<title>proc~write_eigenvalues&#45;&gt;proc~write_provenance</title>
+<path fill="none" stroke="#000000" d="M316.01,-58.71C330.32,-60.6 346.18,-62.69 361.09,-64.66"/>
+<polygon fill="#000000" stroke="#000000" points="360.39,-68.1 370.76,-65.93 361.31,-61.16 360.39,-68.1"/>
+</g>
+<!-- proc~write_summary -->
+<g id="proc~~write_provenance~~CalledByGraph_node5" class="node">
+<title>proc~write_summary</title>
+<g id="a_proc~~write_provenance~~CalledByGraph_node5"><a xlink:href="../proc/write_summary.html" xlink:title="write_summary">
+<polygon fill="#d9534f" stroke="#d9534f" points="309.16,-22.77 224.89,-22.77 224.89,0 309.16,0 309.16,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="267.03" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">write_summary</text>
+</a>
+</g>
+</g>
+<!-- proc~write_summary&#45;&gt;proc~write_provenance -->
+<g id="proc~~write_provenance~~CalledByGraph_edge4" class="edge">
+<title>proc~write_summary&#45;&gt;proc~write_provenance</title>
+<path fill="none" stroke="#000000" d="M309.31,-22.94C318.37,-25.78 327.85,-28.99 336.54,-32.39 353.75,-39.12 372.33,-47.91 387.56,-55.53"/>
+<polygon fill="#000000" stroke="#000000" points="385.65,-58.49 396.15,-59.9 388.82,-52.25 385.65,-58.49"/>
+</g>
+<!-- proc~write_results -->
+<g id="proc~~write_provenance~~CalledByGraph_node6" class="node">
+<title>proc~write_results</title>
+<g id="a_proc~~write_provenance~~CalledByGraph_node6"><a xlink:href="../proc/write_results.html" xlink:title="write_results">
+<polygon fill="#d9534f" stroke="#d9534f" points="161.52,-83.77 90,-83.77 90,-61 161.52,-61 161.52,-83.77"/>
+<text xml:space="preserve" text-anchor="middle" x="125.76" y="-68.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">write_results</text>
+</a>
+</g>
+</g>
+<!-- proc~write_results&#45;&gt;proc~write_convergence_history -->
+<g id="proc~~write_provenance~~CalledByGraph_edge5" class="edge">
+<title>proc~write_results&#45;&gt;proc~write_convergence_history</title>
+<path fill="none" stroke="#000000" d="M144.49,-84.18C158.46,-93.09 178.65,-105.15 197.52,-113.39 201.88,-115.29 206.47,-117.09 211.12,-118.78"/>
+<polygon fill="#000000" stroke="#000000" points="209.97,-122.09 220.57,-122.02 212.24,-115.47 209.97,-122.09"/>
+</g>
+<!-- proc~write_results&#45;&gt;proc~write_density_profile -->
+<g id="proc~~write_provenance~~CalledByGraph_edge6" class="edge">
+<title>proc~write_results&#45;&gt;proc~write_density_profile</title>
+<path fill="none" stroke="#000000" d="M161.9,-77.68C173.8,-79.48 187.5,-81.54 200.96,-83.57"/>
+<polygon fill="#000000" stroke="#000000" points="200.27,-87.01 210.68,-85.04 201.32,-80.09 200.27,-87.01"/>
+</g>
+<!-- proc~write_results&#45;&gt;proc~write_eigenvalues -->
+<g id="proc~~write_provenance~~CalledByGraph_edge7" class="edge">
+<title>proc~write_results&#45;&gt;proc~write_eigenvalues</title>
+<path fill="none" stroke="#000000" d="M161.9,-67.34C175.65,-65.36 191.8,-63.05 207.22,-60.83"/>
+<polygon fill="#000000" stroke="#000000" points="207.37,-64.34 216.77,-59.46 206.38,-57.42 207.37,-64.34"/>
+</g>
+<!-- proc~write_results&#45;&gt;proc~write_summary -->
+<g id="proc~~write_provenance~~CalledByGraph_edge8" class="edge">
+<title>proc~write_results&#45;&gt;proc~write_summary</title>
+<path fill="none" stroke="#000000" d="M145.11,-60.54C159.07,-51.9 178.98,-40.35 197.52,-32.39 202.74,-30.14 208.29,-28.03 213.87,-26.07"/>
+<polygon fill="#000000" stroke="#000000" points="214.75,-29.46 223.13,-22.99 212.54,-22.82 214.75,-29.46"/>
+</g>
+<!-- program~lsdaks -->
+<g id="proc~~write_provenance~~CalledByGraph_node7" class="node">
+<title>program~lsdaks</title>
+<g id="a_proc~~write_provenance~~CalledByGraph_node7"><a xlink:href="../program/lsdaks.html" xlink:title="lsdaks">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="54,-83.77 0,-83.77 0,-61 54,-61 54,-83.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-68.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsdaks</text>
+</a>
+</g>
+</g>
+<!-- program~lsdaks&#45;&gt;proc~write_results -->
+<g id="proc~~write_provenance~~CalledByGraph_edge9" class="edge">
+<title>program~lsdaks&#45;&gt;proc~write_results</title>
+<path fill="none" stroke="#000000" d="M54.44,-72.39C61.82,-72.39 70.06,-72.39 78.23,-72.39"/>
+<polygon fill="#000000" stroke="#000000" points="78.13,-75.89 88.13,-72.39 78.13,-68.89 78.13,-75.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CalledByGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CalledByGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="w">    </span><span class="k">subroutine </span><span class="n">write_provenance</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="n">comment</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">,</span><span class="w"> </span><span class="n">sys_params</span><span class="p">)</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">io_unit</span>
+<span class="w">        </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">comment</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">input_params_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">inputs</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">system_params_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sys_params</span>
+
+<span class="w">        </span><span class="kt">logical</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">seed_matters</span>
+
+<span class="w">        </span><span class="c">! --- System identification ----------------------------------------</span>
+<span class="w">        </span><span class="c">! Taken from sys_params (what was actually solved), not from the raw</span>
+<span class="w">        </span><span class="c">! input record, so the block cannot drift from the calculation.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">present</span><span class="p">(</span><span class="n">sys_params</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;L = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">sys_params</span><span class="p">%</span><span class="n">L</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;Nup = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">sys_params</span><span class="p">%</span><span class="n">Nup</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;Ndown = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">sys_params</span><span class="p">%</span><span class="n">Ndown</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F0.4)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;U = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">sys_params</span><span class="p">%</span><span class="n">U</span>
+<span class="w">        </span><span class="k">end if</span>
+
+<span class="k">        if</span><span class="w"> </span><span class="p">(.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="nb">present</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
+
+<span class="w">        </span><span class="c">! --- SCF contract -------------------------------------------------</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,ES12.4)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;potential_tol = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">potential_tol</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,ES12.4)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;energy_tol = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">energy_tol</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;max_iter = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">max_iter</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F10.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;mixing_alpha = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">mixing_alpha</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,L1)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;use_adaptive_mixing = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">use_adaptive_mixing</span>
+
+<span class="w">        </span><span class="c">! --- External potential and boundary condition --------------------</span>
+<span class="w">        </span><span class="c">!</span>
+<span class="w">        </span><span class="c">! Only the parameters that the requested potential_type actually reads</span>
+<span class="w">        </span><span class="c">! are written: dumping every field indiscriminately would record, say, a</span>
+<span class="w">        </span><span class="c">! well depth for a harmonic trap and invite the reader to believe it</span>
+<span class="w">        </span><span class="c">! meant something.</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;potential_type = &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">inputs</span><span class="p">%</span><span class="n">potential_type</span><span class="p">)</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;V0 = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">V0</span>
+
+<span class="w">        </span><span class="n">seed_matters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">false</span><span class="p">.</span>
+
+<span class="w">        </span><span class="k">select case</span><span class="w"> </span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">inputs</span><span class="p">%</span><span class="n">potential_type</span><span class="p">))</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;harmonic&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;spring_constant = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">spring_constant</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;random_uniform&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;random_gaussian&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="c">! No `distribution` line. The generator is selected exclusively by</span>
+<span class="w">            </span><span class="c">! potential_type (random_uniform vs random_gaussian), which</span>
+<span class="w">            </span><span class="c">! identifies it completely. There used to be a `distribution` input</span>
+<span class="w">            </span><span class="c">! key that nothing ever read; recording it stated a distribution the</span>
+<span class="w">            </span><span class="c">! run did not use - its default was &#39;gaussian&#39;, so a random_uniform</span>
+<span class="w">            </span><span class="c">! run was correctly generated as uniform while its own provenance</span>
+<span class="w">            </span><span class="c">! claimed gaussian. The key has since been removed from the namelist.</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;disorder_strength = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">disorder_strength</span>
+<span class="w">            </span><span class="n">seed_matters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">true</span><span class="p">.</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;barrier_single&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;position = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">position</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;width = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">width</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;barrier_double&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;barrier_width = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">barrier_width</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;well_depth = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">well_depth</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;well_width = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">well_width</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;impurity&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F10.4)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;concentration = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">concentration</span>
+<span class="w">            </span><span class="n">seed_matters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">true</span><span class="p">.</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;impurity_single&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;pot_center = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">pot_center</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;impurity_multiple&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;imp_positions = &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">inputs</span><span class="p">%</span><span class="n">imp_positions_str</span><span class="p">)</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;quasiperiodic&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="c">! These are the three values consumed by</span>
+<span class="w">            </span><span class="c">! apply_potential_quasiperiodic.  `pot_width` belongs to no part of</span>
+<span class="w">            </span><span class="c">! the AAH construction, so recording it here would make the output</span>
+<span class="w">            </span><span class="c">! look reproducible while omitting the actual potential.</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;aah_lambda = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">aah_lambda</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;aah_beta = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">aah_beta</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;aah_phi = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">aah_phi</span>
+<span class="w">        </span><span class="k">end select</span>
+
+<span class="w">        </span><span class="c">! The seed only identifies anything for the stochastic potentials; for a</span>
+<span class="w">        </span><span class="c">! deterministic one it is noise in the record.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">seed_matters</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;pot_seed = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">pot_seed</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;effective_seed = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">effective_seed</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">inputs</span><span class="p">%</span><span class="n">pot_seed</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                    </span><span class="s2">&quot;NOTE: pot_seed &lt; 0 means the disorder realisation was drawn from the&quot;</span>
+<span class="w">                </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                    </span><span class="s2">&quot;      system clock. The seed actually used is effective_seed above:&quot;</span>
+<span class="w">                </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,I0,A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                    </span><span class="s2">&quot;      set pot_seed = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">effective_seed</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; to reproduce this run.&quot;</span>
+<span class="w">            </span><span class="k">end if</span>
+<span class="k">        end if</span>
+
+<span class="k">        write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;bc = &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">inputs</span><span class="p">%</span><span class="n">bc_type</span><span class="p">)</span>
+<span class="w">        </span><span class="c">! The unit is spelled out: `inputs%phase` is the value as typed by the</span>
+<span class="w">        </span><span class="c">! user, in units of pi, while the twist angle that enters the</span>
+<span class="w">        </span><span class="c">! Hamiltonian is phase*pi radians. Without the annotation a reader of</span>
+<span class="w">        </span><span class="c">! this header cannot reproduce the run.</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F12.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;phase = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">phase</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;  (phase is in units of pi: theta = phase*pi radians)&quot;</span>
+
+<span class="w">        </span><span class="c">! --- XC functional -------------------------------------------------</span>
+<span class="w">        </span><span class="c">! F10.6 (not F0.6) so that the value keeps its leading zero: &quot;0.050000&quot;</span>
+<span class="w">        </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A,F10.6)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s2">&quot;xc_smoothing_width = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">inputs</span><span class="p">%</span><span class="n">xc_smoothing_width</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">inputs</span><span class="p">%</span><span class="n">xc_smoothing_width</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0_dp</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;WARNING: the XC functional was MODIFIED (V_xc discontinuity at n = 1&quot;</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;         linearly smoothed over the window [1-w, 1+w]).&quot;</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;         These results have NO parity with the C++ reference (w = 0).&quot;</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;         E_xc is NOT smoothed: with w &gt; 0, V_xc is not the functional&quot;</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;         derivative of the E_xc used in the total energy; the reported&quot;</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;         energy is not variational. Its error in the density deviation&quot;</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;         from the unsmoothed minimiser is second order where E_xc is&quot;</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;         differentiable, but first order in |dn| for densities pinned&quot;</span>
+<span class="w">            </span><span class="k">write</span><span class="p">(</span><span class="n">io_unit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">)</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                </span><span class="s2">&quot;         at n = 1, with coefficient given by the V_xc jump.&quot;</span>
+<span class="w">        </span><span class="k">end if</span>
+<span class="k">    end subroutine </span><span class="n">write_provenance</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

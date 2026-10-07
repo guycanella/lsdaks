@@ -62,10 +62,16 @@
                   <a class="nav-link" href="../lists/procedures.html">Procedures</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" href="../lists/types.html">Derived Types</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
                 </li>
             </ul>
               <div class="d-flex align-items-end flex-grow-1">
@@ -92,7 +98,7 @@
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
               <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-                 title=" 4.5% of total for modules and submodules.">198 statements</a>
+                 title=" 7.5% of total for modules and submodules.">439 statements</a>
             </li>
 
             <li class="list-inline-item" id="source-file">
@@ -126,7 +132,23 @@
         <div id="sidebar">
       <h3>Contents</h3>
   
-  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/xc_lsda.html#variable-xc_smoothing_width_max">XC_SMOOTHING_WIDTH_MAX</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#variable-xc_u_match_tol">XC_U_MATCH_TOL</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#variable-empty_channel_tol">EMPTY_CHANNEL_TOL</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#variable-corner_tol">CORNER_TOL</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#variable-region_snap_tol">REGION_SNAP_TOL</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#variable-xc_evaluation_count">xc_evaluation_count</a>
+        </div>
+      </div>
+    </div>
+
   
   
   
@@ -154,6 +176,13 @@
       </a>
       <div id="funcs-0" class="collapse">
         <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-get_xc_evaluation_count">get_xc_evaluation_count</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-exc_recursive">exc_recursive</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-is_corner_shortcut">is_corner_shortcut</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-vxc_up_recursive">vxc_up_recursive</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-vxc_dn_recursive">vxc_dn_recursive</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-integral_1">integral_1</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-dexc_dndown_b0">dexc_dndown_b0</a>
             <a class="list-group-item" href="../module/xc_lsda.html#proc-determine_region">determine_region</a>
         </div>
       </div>
@@ -166,10 +195,15 @@
       </a>
       <div id="subs-0" class="collapse">
         <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-reset_xc_evaluation_count">reset_xc_evaluation_count</a>
             <a class="list-group-item" href="../module/xc_lsda.html#proc-xc_lsda_init">xc_lsda_init</a>
             <a class="list-group-item" href="../module/xc_lsda.html#proc-get_exc">get_exc</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-get_exc_positive">get_exc_positive</a>
             <a class="list-group-item" href="../module/xc_lsda.html#proc-get_vxc">get_vxc</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-get_vxc_positive">get_vxc_positive</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-eval_vxc_branch">eval_vxc_branch</a>
             <a class="list-group-item" href="../module/xc_lsda.html#proc-xc_lsda_destroy">xc_lsda_destroy</a>
+            <a class="list-group-item" href="../module/xc_lsda.html#proc-snap_to_boundaries">snap_to_boundaries</a>
             <a class="list-group-item" href="../module/xc_lsda.html#proc-convert_to_nm">convert_to_nm</a>
             <a class="list-group-item" href="../module/xc_lsda.html#proc-apply_symmetry_transform">apply_symmetry_transform</a>
         </div>
@@ -197,136 +231,163 @@
         <ul class="list-group list-group-flush">
             <li class="list-group-item">
               <ul class="list-inline">
+                  <li class="list-inline-item"><a href='http://fortranwiki.org/fortran/show/ieee_arithmetic'>ieee_arithmetic</a></li>
+                  <li class="list-inline-item"><a href='lsda_constants.html'>lsda_constants</a></li>
+                  <li class="list-inline-item"><a href='spline2d.html'>spline2d</a></li>
                   <li class="list-inline-item"><a href='lsda_errors.html'>lsda_errors</a></li>
                   <li class="list-inline-item"><a href='table_io.html'>table_io</a></li>
-                  <li class="list-inline-item"><a href='spline2d.html'>spline2d</a></li>
-                  <li class="list-inline-item"><a href='lsda_constants.html'>lsda_constants</a></li>
               </ul>
             </li>
             <li class="list-group-item">
               <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
  -->
 <!-- Title: module~~xc_lsda~~UsesGraph Pages: 1 -->
-<svg id="modulexc_lsdaUsesGraph" width="494pt" height="131pt"
- viewBox="0.00 0.00 494.00 131.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="module~~xc_lsda~~UsesGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 126.73)">
+<svg id="modulexc_lsdaUsesGraph" width="513pt" height="182pt"
+ viewBox="0.00 0.00 513.00 182.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~xc_lsda~~UsesGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 177.68)">
 <title>module~~xc_lsda~~UsesGraph</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-126.73 490.06,-126.73 490.06,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-177.68 508.81,-177.68 508.81,4 -4,4"/>
 <!-- module~xc_lsda -->
 <g id="module~~xc_lsda~~UsesGraph_node1" class="node">
 <title>module~xc_lsda</title>
-<polygon fill="none" stroke="black" points="486.06,-92.77 432.06,-92.77 432.06,-70 486.06,-70 486.06,-92.77"/>
-<text xml:space="preserve" text-anchor="middle" x="459.06" y="-77.04" font-family="Helvetica,sans-Serif" font-size="10.50">xc_lsda</text>
+<polygon fill="none" stroke="black" points="504.81,-95.68 450.81,-95.68 450.81,-72.91 504.81,-72.91 504.81,-95.68"/>
+<text xml:space="preserve" text-anchor="middle" x="477.81" y="-79.94" font-family="Helvetica,sans-Serif" font-size="10.50">xc_lsda</text>
+</g>
+<!-- ieee_arithmetic -->
+<g id="module~~xc_lsda~~UsesGraph_node2" class="node">
+<title>ieee_arithmetic</title>
+<g id="a_module~~xc_lsda~~UsesGraph_node2"><a xlink:href="http://fortranwiki.org/fortran/show/ieee_arithmetic" xlink:title="ieee_arithmetic">
+<polygon fill="#337ab7" stroke="#337ab7" points="324.81,-173.68 240.54,-173.68 240.54,-150.91 324.81,-150.91 324.81,-173.68"/>
+<text xml:space="preserve" text-anchor="middle" x="282.67" y="-157.94" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ieee_arithmetic</text>
+</a>
+</g>
+</g>
+<!-- module~xc_lsda&#45;&gt;ieee_arithmetic -->
+<g id="module~~xc_lsda~~UsesGraph_edge1" class="edge">
+<title>module~xc_lsda&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M468.21,-96.06C457.42,-109.86 437.53,-132.26 414.81,-143.29 390.7,-155.01 361.36,-160 336.55,-161.95"/>
+<polygon fill="#000000" stroke="#000000" points="336.42,-158.45 326.66,-162.57 336.86,-165.44 336.42,-158.45"/>
 </g>
 <!-- module~lsda_constants -->
-<g id="module~~xc_lsda~~UsesGraph_node2" class="node">
+<g id="module~~xc_lsda~~UsesGraph_node3" class="node">
 <title>module~lsda_constants</title>
-<g id="a_module~~xc_lsda~~UsesGraph_node2"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
-<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-52.77 121.77,-52.77 121.77,-30 204.54,-30 204.54,-52.77"/>
-<text xml:space="preserve" text-anchor="middle" x="163.15" y="-37.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
+<g id="a_module~~xc_lsda~~UsesGraph_node3"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
+<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-95.68 121.77,-95.68 121.77,-72.91 204.54,-72.91 204.54,-95.68"/>
+<text xml:space="preserve" text-anchor="middle" x="163.15" y="-79.94" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
 </a>
 </g>
 </g>
 <!-- module~xc_lsda&#45;&gt;module~lsda_constants -->
-<g id="module~~xc_lsda~~UsesGraph_edge1" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge2" class="edge">
 <title>module~xc_lsda&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M368.06,-121.39C310.76,-122.12 293.07,-125.28 240.54,-102.39 218.38,-92.73 197.23,-74.94 182.83,-61.05"/>
-<polygon fill="#000000" stroke="#000000" points="185.41,-58.68 175.86,-54.08 180.46,-63.63 185.41,-58.68"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M468.21,-72.53C457.42,-58.73 437.53,-36.33 414.81,-25.29 361.84,0.44 341.42,5.26 283.67,-6.29"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-6.29C241.85,-13.46 204.48,-43.87 182.98,-64.54"/>
+<polygon fill="#000000" stroke="#000000" points="180.73,-61.83 176.11,-71.37 185.67,-66.8 180.73,-61.83"/>
 </g>
 <!-- module~lsda_errors -->
-<g id="module~~xc_lsda~~UsesGraph_node3" class="node">
+<g id="module~~xc_lsda~~UsesGraph_node4" class="node">
 <title>module~lsda_errors</title>
-<g id="a_module~~xc_lsda~~UsesGraph_node3"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
-<polygon fill="#337ab7" stroke="#337ab7" points="306.06,-52.77 240.54,-52.77 240.54,-30 306.06,-30 306.06,-52.77"/>
-<text xml:space="preserve" text-anchor="middle" x="273.3" y="-37.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
+<g id="a_module~~xc_lsda~~UsesGraph_node4"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
+<polygon fill="#337ab7" stroke="#337ab7" points="315.43,-95.68 249.91,-95.68 249.91,-72.91 315.43,-72.91 315.43,-95.68"/>
+<text xml:space="preserve" text-anchor="middle" x="282.67" y="-79.94" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
 </a>
 </g>
 </g>
 <!-- module~xc_lsda&#45;&gt;module~lsda_errors -->
-<g id="module~~xc_lsda~~UsesGraph_edge2" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge3" class="edge">
 <title>module~xc_lsda&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M442.49,-93.25C425.61,-104.92 397.41,-121.04 370.06,-121.39"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M368.06,-121.39C330.02,-121.87 335.82,-86.08 306.06,-62.39 304.93,-61.49 303.75,-60.58 302.56,-59.69"/>
-<polygon fill="#000000" stroke="#000000" points="304.59,-56.84 294.4,-53.94 300.56,-62.56 304.59,-56.84"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M450.36,-84.29C418.62,-84.29 364.96,-84.29 327.11,-84.29"/>
+<polygon fill="#000000" stroke="#000000" points="327.42,-80.79 317.42,-84.29 327.42,-87.79 327.42,-80.79"/>
 </g>
 <!-- module~spline2d -->
-<g id="module~~xc_lsda~~UsesGraph_node4" class="node">
+<g id="module~~xc_lsda~~UsesGraph_node5" class="node">
 <title>module~spline2d</title>
-<g id="a_module~~xc_lsda~~UsesGraph_node4"><a xlink:href="../module/spline2d.html" xlink:title="spline2d">
-<polygon fill="#337ab7" stroke="#337ab7" points="300.3,-93.77 246.3,-93.77 246.3,-71 300.3,-71 300.3,-93.77"/>
-<text xml:space="preserve" text-anchor="middle" x="273.3" y="-78.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d</text>
+<g id="a_module~~xc_lsda~~UsesGraph_node5"><a xlink:href="../module/spline2d.html" xlink:title="spline2d">
+<polygon fill="#337ab7" stroke="#337ab7" points="414.81,-56.68 360.81,-56.68 360.81,-33.91 414.81,-33.91 414.81,-56.68"/>
+<text xml:space="preserve" text-anchor="middle" x="387.81" y="-40.94" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d</text>
 </a>
 </g>
 </g>
 <!-- module~xc_lsda&#45;&gt;module~spline2d -->
-<g id="module~~xc_lsda~~UsesGraph_edge3" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge4" class="edge">
 <title>module~xc_lsda&#45;&gt;module~spline2d</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M368.06,-121.39C344.04,-121.69 319.03,-110.63 300.88,-100.2"/>
-<polygon fill="#000000" stroke="#000000" points="302.71,-97.22 292.35,-95.02 299.08,-103.2 302.71,-97.22"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M450.41,-72.59C442.58,-69.12 433.85,-65.26 425.49,-61.55"/>
+<polygon fill="#000000" stroke="#000000" points="427.14,-58.45 416.58,-57.6 424.3,-64.85 427.14,-58.45"/>
 </g>
 <!-- module~table_io -->
-<g id="module~~xc_lsda~~UsesGraph_node5" class="node">
+<g id="module~~xc_lsda~~UsesGraph_node6" class="node">
 <title>module~table_io</title>
-<g id="a_module~~xc_lsda~~UsesGraph_node5"><a xlink:href="../module/table_io.html" xlink:title="table_io">
-<polygon fill="#337ab7" stroke="#337ab7" points="396.06,-52.77 342.06,-52.77 342.06,-30 396.06,-30 396.06,-52.77"/>
-<text xml:space="preserve" text-anchor="middle" x="369.06" y="-37.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
+<g id="a_module~~xc_lsda~~UsesGraph_node6"><a xlink:href="../module/table_io.html" xlink:title="table_io">
+<polygon fill="#337ab7" stroke="#337ab7" points="414.81,-134.68 360.81,-134.68 360.81,-111.91 414.81,-111.91 414.81,-134.68"/>
+<text xml:space="preserve" text-anchor="middle" x="387.81" y="-118.94" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
 </a>
 </g>
 </g>
 <!-- module~xc_lsda&#45;&gt;module~table_io -->
-<g id="module~~xc_lsda~~UsesGraph_edge4" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge5" class="edge">
 <title>module~xc_lsda&#45;&gt;module~table_io</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M432.13,-69.6C424.06,-65.93 415,-61.82 406.36,-57.89"/>
-<polygon fill="#000000" stroke="#000000" points="408.04,-54.81 397.48,-53.85 405.14,-61.18 408.04,-54.81"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M450.41,-95.99C442.58,-99.47 433.85,-103.33 425.49,-107.04"/>
+<polygon fill="#000000" stroke="#000000" points="424.3,-103.74 416.58,-110.99 427.14,-110.14 424.3,-103.74"/>
 </g>
 <!-- iso_fortran_env -->
-<g id="module~~xc_lsda~~UsesGraph_node6" class="node">
+<g id="module~~xc_lsda~~UsesGraph_node7" class="node">
 <title>iso_fortran_env</title>
-<g id="a_module~~xc_lsda~~UsesGraph_node6"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
-<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-32.77 0,-32.77 0,-10 85.77,-10 85.77,-32.77"/>
-<text xml:space="preserve" text-anchor="middle" x="42.88" y="-17.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+<g id="a_module~~xc_lsda~~UsesGraph_node7"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-114.68 0,-114.68 0,-91.91 85.77,-91.91 85.77,-114.68"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-98.94" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
 </a>
 </g>
 </g>
 <!-- module~lsda_constants&#45;&gt;iso_fortran_env -->
-<g id="module~~xc_lsda~~UsesGraph_edge5" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge6" class="edge">
 <title>module~lsda_constants&#45;&gt;iso_fortran_env</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M121.45,-34.51C113.64,-33.18 105.35,-31.78 97.21,-30.41"/>
-<polygon fill="#000000" stroke="#000000" points="97.8,-26.96 87.36,-28.74 96.64,-33.86 97.8,-26.96"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M121.45,-90.83C113.64,-92.09 105.35,-93.42 97.21,-94.73"/>
+<polygon fill="#000000" stroke="#000000" points="96.68,-91.27 87.36,-96.31 97.79,-98.18 96.68,-91.27"/>
 </g>
 <!-- module~lsda_errors&#45;&gt;module~lsda_constants -->
-<g id="module~~xc_lsda~~UsesGraph_edge6" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge7" class="edge">
 <title>module~lsda_errors&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M240.15,-41.39C232.61,-41.39 224.4,-41.39 216.24,-41.39"/>
-<polygon fill="#000000" stroke="#000000" points="216.34,-37.89 206.34,-41.39 216.34,-44.89 216.34,-37.89"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M249.56,-84.29C239.16,-84.29 227.35,-84.29 215.9,-84.29"/>
+<polygon fill="#000000" stroke="#000000" points="216.15,-80.79 206.15,-84.29 216.15,-87.79 216.15,-80.79"/>
 </g>
 <!-- module~spline2d&#45;&gt;module~lsda_constants -->
-<g id="module~~xc_lsda~~UsesGraph_edge7" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge8" class="edge">
 <title>module~spline2d&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M245.84,-72.36C233.81,-67.79 219.27,-62.28 205.82,-57.18"/>
-<polygon fill="#000000" stroke="#000000" points="207.34,-54.02 196.74,-53.74 204.85,-60.56 207.34,-54.02"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M371.56,-33.6C351.83,-19.89 316.15,0.2 283.67,-6.29"/>
+</g>
+<!-- module~spline2d&#45;&gt;module~lsda_errors -->
+<g id="module~~xc_lsda~~UsesGraph_edge9" class="edge">
+<title>module~spline2d&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.52,-55.24C349.92,-59.24 337.42,-63.97 325.63,-68.43"/>
+<polygon fill="#000000" stroke="#000000" points="324.59,-65.08 316.48,-71.89 327.07,-71.63 324.59,-65.08"/>
+</g>
+<!-- module~table_io&#45;&gt;ieee_arithmetic -->
+<g id="module~~xc_lsda~~UsesGraph_edge10" class="edge">
+<title>module~table_io&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.52,-133.24C349.92,-137.24 337.42,-141.97 325.63,-146.43"/>
+<polygon fill="#000000" stroke="#000000" points="324.59,-143.08 316.48,-149.89 327.07,-149.63 324.59,-143.08"/>
 </g>
 <!-- module~table_io&#45;&gt;module~lsda_constants -->
-<g id="module~~xc_lsda~~UsesGraph_edge9" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge12" class="edge">
 <title>module~table_io&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-2.39C243.48,0.67 212.55,-12.29 191.18,-24.08"/>
-<polygon fill="#000000" stroke="#000000" points="189.71,-20.89 182.82,-28.94 193.23,-26.94 189.71,-20.89"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-123.29C252.77,-120.95 221.69,-110.24 198.75,-100.64"/>
+<polygon fill="#000000" stroke="#000000" points="200.15,-97.43 189.58,-96.66 197.36,-103.85 200.15,-97.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.48,-124.46C339.61,-125.11 309.73,-125.41 283.67,-123.29"/>
 </g>
 <!-- module~table_io&#45;&gt;module~lsda_errors -->
-<g id="module~~xc_lsda~~UsesGraph_edge10" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge13" class="edge">
 <title>module~table_io&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M341.94,-41.39C334.43,-41.39 326.02,-41.39 317.76,-41.39"/>
-<polygon fill="#000000" stroke="#000000" points="317.8,-37.89 307.8,-41.39 317.8,-44.89 317.8,-37.89"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.52,-113.35C349.92,-109.34 337.42,-104.62 325.63,-100.16"/>
+<polygon fill="#000000" stroke="#000000" points="327.07,-96.96 316.48,-96.7 324.59,-103.51 327.07,-96.96"/>
 </g>
 <!-- module~table_io&#45;&gt;iso_fortran_env -->
-<g id="module~~xc_lsda~~UsesGraph_edge8" class="edge">
+<g id="module~~xc_lsda~~UsesGraph_edge11" class="edge">
 <title>module~table_io&#45;&gt;iso_fortran_env</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M348.84,-29.51C330.48,-19.14 301.65,-5.29 274.3,-2.39"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-2.39C212.48,3.96 143.65,-3.81 97.31,-11.25"/>
-<polygon fill="#000000" stroke="#000000" points="96.82,-7.78 87.53,-12.87 97.97,-14.69 96.82,-7.78"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-123.29C218.35,-118.16 145.56,-112 97.37,-107.89"/>
+<polygon fill="#000000" stroke="#000000" points="97.74,-104.41 87.48,-107.04 97.15,-111.38 97.74,-104.41"/>
 </g>
 </g>
 </svg>
@@ -345,7 +406,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
  -->
 <!-- Title: Graph Key Pages: 1 -->
 <svg width="485pt" height="31pt"
@@ -413,70 +474,110 @@ modules which it uses.
               <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
  -->
 <!-- Title: module~~xc_lsda~~UsedByGraph Pages: 1 -->
-<svg id="modulexc_lsdaUsedByGraph" width="412pt" height="50pt"
- viewBox="0.00 0.00 412.00 50.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="module~~xc_lsda~~UsedByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 45.77)">
+<svg id="modulexc_lsdaUsedByGraph" width="502pt" height="92pt"
+ viewBox="0.00 0.00 502.00 92.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~xc_lsda~~UsedByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 87.89)">
 <title>module~~xc_lsda~~UsedByGraph</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-45.77 408.31,-45.77 408.31,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-87.89 498.31,-87.89 498.31,4 -4,4"/>
 <!-- module~xc_lsda -->
 <g id="module~~xc_lsda~~UsedByGraph_node1" class="node">
 <title>module~xc_lsda</title>
-<polygon fill="none" stroke="black" points="54,-41.77 0,-41.77 0,-19 54,-19 54,-41.77"/>
-<text xml:space="preserve" text-anchor="middle" x="27" y="-26.04" font-family="Helvetica,sans-Serif" font-size="10.50">xc_lsda</text>
+<polygon fill="none" stroke="black" points="54,-70.5 0,-70.5 0,-47.73 54,-47.73 54,-70.5"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-54.77" font-family="Helvetica,sans-Serif" font-size="10.50">xc_lsda</text>
 </g>
-<!-- module~kohn_sham_cycle -->
+<!-- module~input_parser -->
 <g id="module~~xc_lsda~~UsedByGraph_node2" class="node">
-<title>module~kohn_sham_cycle</title>
-<g id="a_module~~xc_lsda~~UsedByGraph_node2"><a xlink:href="../module/kohn_sham_cycle.html" xlink:title="kohn_sham_cycle">
-<polygon fill="#337ab7" stroke="#337ab7" points="187.02,-41.77 90,-41.77 90,-19 187.02,-19 187.02,-41.77"/>
-<text xml:space="preserve" text-anchor="middle" x="138.51" y="-26.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">kohn_sham_cycle</text>
+<title>module~input_parser</title>
+<g id="a_module~~xc_lsda~~UsedByGraph_node2"><a xlink:href="../module/input_parser.html" xlink:title="input_parser">
+<polygon fill="#337ab7" stroke="#337ab7" points="294.54,-51.5 223.02,-51.5 223.02,-28.73 294.54,-28.73 294.54,-51.5"/>
+<text xml:space="preserve" text-anchor="middle" x="258.78" y="-35.77" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">input_parser</text>
 </a>
 </g>
 </g>
-<!-- module~kohn_sham_cycle&#45;&gt;module~xc_lsda -->
+<!-- module~input_parser&#45;&gt;module~xc_lsda -->
 <g id="module~~xc_lsda~~UsedByGraph_edge1" class="edge">
-<title>module~kohn_sham_cycle&#45;&gt;module~xc_lsda</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M89.8,-30.39C81.68,-30.39 73.36,-30.39 65.55,-30.39"/>
-<polygon fill="#000000" stroke="#000000" points="65.71,-26.89 55.71,-30.39 65.71,-33.89 65.71,-26.89"/>
+<title>module~input_parser&#45;&gt;module~xc_lsda</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M137.51,-79.12C113.21,-78.91 86.37,-74.09 65.34,-69.22"/>
+<polygon fill="#000000" stroke="#000000" points="66.32,-65.86 55.78,-66.91 64.67,-72.66 66.32,-65.86"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M236.25,-51.93C213.06,-63.52 174.75,-79.41 139.51,-79.12"/>
 </g>
-<!-- module~input_parser -->
+<!-- module~kohn_sham_cycle -->
 <g id="module~~xc_lsda~~UsedByGraph_node3" class="node">
-<title>module~input_parser</title>
-<g id="a_module~~xc_lsda~~UsedByGraph_node3"><a xlink:href="../module/input_parser.html" xlink:title="input_parser">
-<polygon fill="#337ab7" stroke="#337ab7" points="294.54,-22.77 223.02,-22.77 223.02,0 294.54,0 294.54,-22.77"/>
-<text xml:space="preserve" text-anchor="middle" x="258.78" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">input_parser</text>
+<title>module~kohn_sham_cycle</title>
+<g id="a_module~~xc_lsda~~UsedByGraph_node3"><a xlink:href="../module/kohn_sham_cycle.html" xlink:title="kohn_sham_cycle">
+<polygon fill="#337ab7" stroke="#337ab7" points="187.02,-51.5 90,-51.5 90,-28.73 187.02,-28.73 187.02,-51.5"/>
+<text xml:space="preserve" text-anchor="middle" x="138.51" y="-35.77" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">kohn_sham_cycle</text>
 </a>
 </g>
 </g>
 <!-- module~input_parser&#45;&gt;module~kohn_sham_cycle -->
-<g id="module~~xc_lsda~~UsedByGraph_edge2" class="edge">
+<g id="module~~xc_lsda~~UsedByGraph_edge6" class="edge">
 <title>module~input_parser&#45;&gt;module~kohn_sham_cycle</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M222.62,-17.03C215.03,-18.25 206.81,-19.57 198.6,-20.89"/>
-<polygon fill="#000000" stroke="#000000" points="198.27,-17.4 188.95,-22.44 199.38,-24.31 198.27,-17.4"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M222.62,-40.12C215.12,-40.12 207,-40.12 198.88,-40.12"/>
+<polygon fill="#000000" stroke="#000000" points="198.97,-36.62 188.97,-40.12 198.97,-43.62 198.97,-36.62"/>
 </g>
-<!-- module~output_writer -->
+<!-- module~kohn_sham_cycle&#45;&gt;module~xc_lsda -->
+<g id="module~~xc_lsda~~UsedByGraph_edge2" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;module~xc_lsda</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M89.8,-48.39C81.59,-49.82 73.16,-51.28 65.28,-52.65"/>
+<polygon fill="#000000" stroke="#000000" points="64.95,-49.15 55.69,-54.31 66.14,-56.05 64.95,-49.15"/>
+</g>
+<!-- program~lsdaks -->
 <g id="module~~xc_lsda~~UsedByGraph_node4" class="node">
-<title>module~output_writer</title>
-<g id="a_module~~xc_lsda~~UsedByGraph_node4"><a xlink:href="../module/output_writer.html" xlink:title="output_writer">
-<polygon fill="#337ab7" stroke="#337ab7" points="404.31,-41.77 330.54,-41.77 330.54,-19 404.31,-19 404.31,-41.77"/>
-<text xml:space="preserve" text-anchor="middle" x="367.42" y="-26.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">output_writer</text>
+<title>program~lsdaks</title>
+<g id="a_module~~xc_lsda~~UsedByGraph_node4"><a xlink:href="../program/lsdaks.html" xlink:title="lsdaks">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="494.31,-51.5 440.31,-51.5 440.31,-28.73 494.31,-28.73 494.31,-51.5"/>
+<text xml:space="preserve" text-anchor="middle" x="467.31" y="-35.77" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsdaks</text>
 </a>
 </g>
 </g>
-<!-- module~output_writer&#45;&gt;module~kohn_sham_cycle -->
+<!-- program~lsdaks&#45;&gt;module~xc_lsda -->
 <g id="module~~xc_lsda~~UsedByGraph_edge3" class="edge">
-<title>module~output_writer&#45;&gt;module~kohn_sham_cycle</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M330.23,-30.99C318.81,-31.15 306.15,-31.3 294.54,-31.39 262.75,-31.61 254.81,-31.58 223.02,-31.39 215.14,-31.34 206.83,-31.27 198.65,-31.18"/>
-<polygon fill="#000000" stroke="#000000" points="198.76,-27.68 188.72,-31.07 198.68,-34.68 198.76,-27.68"/>
+<title>program~lsdaks&#45;&gt;module~xc_lsda</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M366.42,-79.12C266.05,-88.92 240.36,-79.96 139.51,-79.12"/>
+</g>
+<!-- program~lsdaks&#45;&gt;module~input_parser -->
+<g id="module~~xc_lsda~~UsedByGraph_edge5" class="edge">
+<title>program~lsdaks&#45;&gt;module~input_parser</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M446.54,-51.85C427.35,-62.29 397.01,-76.32 368.42,-79.12"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M366.42,-79.12C338.23,-81.87 308.08,-69.24 287.06,-57.63"/>
+<polygon fill="#000000" stroke="#000000" points="288.95,-54.68 278.54,-52.67 285.43,-60.73 288.95,-54.68"/>
+</g>
+<!-- program~lsdaks&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~xc_lsda~~UsedByGraph_edge8" class="edge">
+<title>program~lsdaks&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M257.78,-1.12C228.36,-3.12 196.71,-14.06 173.57,-23.84"/>
+<polygon fill="#000000" stroke="#000000" points="172.39,-20.54 164.64,-27.76 175.2,-26.95 172.39,-20.54"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M439.84,-30.66C400.79,-17.75 325.31,3.35 259.78,-1.12"/>
+</g>
+<!-- module~output_writer -->
+<g id="module~~xc_lsda~~UsedByGraph_node5" class="node">
+<title>module~output_writer</title>
+<g id="a_module~~xc_lsda~~UsedByGraph_node5"><a xlink:href="../module/output_writer.html" xlink:title="output_writer">
+<polygon fill="#337ab7" stroke="#337ab7" points="404.31,-51.5 330.54,-51.5 330.54,-28.73 404.31,-28.73 404.31,-51.5"/>
+<text xml:space="preserve" text-anchor="middle" x="367.42" y="-35.77" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">output_writer</text>
+</a>
+</g>
+</g>
+<!-- program~lsdaks&#45;&gt;module~output_writer -->
+<g id="module~~xc_lsda~~UsedByGraph_edge9" class="edge">
+<title>program~lsdaks&#45;&gt;module~output_writer</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M439.82,-40.12C432.43,-40.12 424.17,-40.12 415.96,-40.12"/>
+<polygon fill="#000000" stroke="#000000" points="416.01,-36.62 406.01,-40.12 416,-43.62 416.01,-36.62"/>
 </g>
 <!-- module~output_writer&#45;&gt;module~input_parser -->
 <g id="module~~xc_lsda~~UsedByGraph_edge4" class="edge">
 <title>module~output_writer&#45;&gt;module~input_parser</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M330.32,-23.95C322.52,-22.56 314.16,-21.07 306.03,-19.63"/>
-<polygon fill="#000000" stroke="#000000" points="306.71,-16.19 296.25,-17.88 305.49,-23.08 306.71,-16.19"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M330.32,-40.12C322.52,-40.12 314.16,-40.12 306.03,-40.12"/>
+<polygon fill="#000000" stroke="#000000" points="306.28,-36.62 296.28,-40.12 306.28,-43.62 306.28,-36.62"/>
+</g>
+<!-- module~output_writer&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~xc_lsda~~UsedByGraph_edge7" class="edge">
+<title>module~output_writer&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M348.63,-28.44C328,-16.16 292.63,1.12 259.78,-1.12"/>
 </g>
 </g>
 </svg>
@@ -495,7 +596,7 @@ modules which it uses.
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
  -->
 <!-- Title: Graph Key Pages: 1 -->
 <svg width="485pt" height="31pt"
@@ -558,6 +659,125 @@ modules which it uses.
       <br>
 
 
+        <section>
+          <h2>Variables</h2>
+            <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc_smoothing_width_max"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>XC_SMOOTHING_WIDTH_MAX</strong></td>
+<td> =</td>
+                <td>1.0_dp</td>
+            <td>
+                <p>Largest admissible smoothing half-width (the window must stay inside 0 &lt; n &lt; 2)</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc_u_match_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>XC_U_MATCH_TOL</strong></td>
+<td> =</td>
+                <td>1.0e-6_dp</td>
+            <td>
+                <p>Tolerance used to match the signed interaction requested by a calculation</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-empty_channel_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>private,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>EMPTY_CHANNEL_TOL</strong></td>
+<td> =</td>
+                <td>1.0e-14_dp</td>
+            <td>
+                <p>Width of the band in which a spin channel counts as empty</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-corner_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>private,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>CORNER_TOL</strong></td>
+<td> =</td>
+                <td>1.0e-14_dp</td>
+            <td>
+                <p>Width of the fully polarized corner shortcut n = m = 1 of the C++</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-region_snap_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>private,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>REGION_SNAP_TOL</strong></td>
+<td> =</td>
+                <td>HALF_FILLING_SNAP_TOL</td>
+            <td>
+                <p>Half-width of the band in which (n, m) is snapped onto a region boundary</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc_evaluation_count"></span>
+              integer,
+            </td>
+              <td>private,</td>
+            <td>
+              save
+            </td>
+            <td>::</td>
+            <td><strong>xc_evaluation_count</strong></td>
+<td> =</td>
+                <td>0</td>
+            <td>
+                <p>Number of public XC evaluations since the last diagnostic reset.</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+        </section>
+        <br>
 
 
 
@@ -601,7 +821,24 @@ modules which it uses.
 <td> =</td>
                 <td>0.0_dp</td>
             <td>
-<p>Hubbard U parameter</p>
+<p>Hubbard U parameter, WITH sign (negative = attractive)</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-smoothing_width"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>smoothing_width</strong></td>
+<td> =</td>
+                <td>0.0_dp</td>
+            <td>
+<p>Half-width w of the linear smoothing of V_xc around n = 1 (0 = off)</p>
             </td>
         </tr>
         <tr>
@@ -657,7 +894,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-initialized~2"></span>
+              <span class="anchor" id="variable-initialized"></span>
               logical,
             </td>
               <td>public</td>
@@ -687,11 +924,29 @@ modules which it uses.
         <section>
           <h2>Functions</h2>
               <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-determine_region"></span> <h3>private  function <a href='../proc/determine_region.html'>determine_region</a>(n_up, n_dw) result(region)  
+    <div class="card-header codesum"><span class="anchor" id="proc-get_xc_evaluation_count"></span> <h3>public  function <a href='../proc/get_xc_evaluation_count.html'>get_xc_evaluation_count</a>() result(count)  
 </h3></div>
     <div class="card-body">
           
-  <p>Determine symmetry region for (n_up, n_dw)</p>
+  <p>Return the diagnostic count of public XC evaluations.</p>
+
+  <h4>Arguments</h4>
+    <em>None</em>
+    <h4>
+    Return Value
+    <small>integer</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-exc_recursive"></span> <h3>private recursive function <a href='../proc/exc_recursive.html'>exc_recursive</a>(xc, n_up_in, n_dw_in) result(exc)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Recursive kernel of e_xc for the tabulated (repulsive) functional</p>
 
   <h4>Arguments</h4>
       <table class="table table-striped varlist">
@@ -706,22 +961,22 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_up~4"></span>
-              real(kind=dp),
+              <span class="anchor" id="variable-xc~4"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
             </td>
 <td>intent(in)</td>
               <td></td>            <td>
               
             </td>
             <td>::</td>
-            <td><strong>n_up</strong></td>
+            <td><strong>xc</strong></td>
             <td>
 
             </td>
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_dw~3"></span>
+              <span class="anchor" id="variable-n_up_in~2"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -729,7 +984,412 @@ modules which it uses.
               
             </td>
             <td>::</td>
-            <td><strong>n_dw</strong></td>
+            <td><strong>n_up_in</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw_in"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw_in</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>real(kind=dp)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-is_corner_shortcut"></span> <h3>private  function <a href='../proc/is_corner_shortcut.html'>is_corner_shortcut</a>(n, m) result(hit)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Fully polarized corner shortcut of the C++ reference</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n~9"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-m~9"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>m</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>logical</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-vxc_up_recursive"></span> <h3>private recursive function <a href='../proc/vxc_up_recursive.html'>vxc_up_recursive</a>(xc, n_up_in, n_dw_in) result(v_up)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Recursive kernel of V_xc^up for the tabulated (repulsive) functional</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc~8"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_up_in~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_up_in</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw_in~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw_in</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>real(kind=dp)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-vxc_dn_recursive"></span> <h3>private recursive function <a href='../proc/vxc_dn_recursive.html'>vxc_dn_recursive</a>(xc, n_up_in, n_dw_in) result(v_dw)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Recursive kernel of V_xc^dn for the tabulated (repulsive) functional</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc~9"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_up_in~4"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_up_in</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw_in~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw_in</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>real(kind=dp)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-integral_1"></span> <h3>private  function <a href='../proc/integral_1.html'>integral_1</a>(gama, q) result(res)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Auxiliary Bethe Ansatz integral of the fully polarized limit</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-gama"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>gama</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-q"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>q</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>real(kind=dp)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-dexc_dndown_b0"></span> <h3>public  function <a href='../proc/dexc_dndown_b0.html'>dexc_dndown_b0</a>(u, dens) result(res)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Derivative ∂e_xc/∂n_dn at the fully polarized point (n_up = n, n_dn = 0)</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-u"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>u</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-dens"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>dens</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>real(kind=dp)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-determine_region"></span> <h3>private  function <a href='../proc/determine_region.html'>determine_region</a>(n, m) result(region)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Determine symmetry region for a point given in (n, m) coordinates</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n~12"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-m~12"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>m</strong></td>
             <td>
 
             </td>
@@ -752,7 +1412,20 @@ modules which it uses.
         <section>
           <h2>Subroutines</h2>
               <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-xc_lsda_init"></span> <h3>public  subroutine <a href='../proc/xc_lsda_init.html'>xc_lsda_init</a>(xc, table_file, ierr)  
+    <div class="card-header codesum"><span class="anchor" id="proc-reset_xc_evaluation_count"></span> <h3>public  subroutine <a href='../proc/reset_xc_evaluation_count.html'>reset_xc_evaluation_count</a>()  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Reset the diagnostic count of public XC evaluations.</p>
+
+  <h4>Arguments</h4>
+    <em>None</em>
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-xc_lsda_init"></span> <h3>public  subroutine <a href='../proc/xc_lsda_init.html'>xc_lsda_init</a>(xc, table_file, ierr, smoothing_width, u_signed)  
 </h3></div>
     <div class="card-body">
           
@@ -786,11 +1459,11 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-table_file"></span>
+              <span class="anchor" id="variable-table_file~3"></span>
               character(len=*),
             </td>
-<td>intent(in)</td>
-              <td></td>            <td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
               
             </td>
             <td>::</td>
@@ -801,7 +1474,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~21"></span>
+              <span class="anchor" id="variable-ierr~49"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -810,6 +1483,36 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-smoothing_width~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>smoothing_width</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-u_signed"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>u_signed</strong></td>
             <td>
 
             </td>
@@ -856,7 +1559,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_up~2"></span>
+              <span class="anchor" id="variable-n_up~3"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -886,7 +1589,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-exc"></span>
+              <span class="anchor" id="variable-exc~2"></span>
               real(kind=dp),
             </td>
 <td>intent(out)</td>
@@ -901,7 +1604,107 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~22"></span>
+              <span class="anchor" id="variable-ierr~50"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_exc_positive"></span> <h3>private  subroutine <a href='../proc/get_exc_positive.html'>get_exc_positive</a>(xc, n_up, n_dw, exc, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Evaluate e_xc on the tabulated (repulsive) functional</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc~3"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_up~4"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_up</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-exc~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>exc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~51"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -941,7 +1744,7 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-xc~3"></span>
+              <span class="anchor" id="variable-xc~5"></span>
               type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
             </td>
 <td>intent(in)</td>
@@ -956,7 +1759,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_up~3"></span>
+              <span class="anchor" id="variable-n_up~6"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -971,7 +1774,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_dw~2"></span>
+              <span class="anchor" id="variable-n_dw~4"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -986,7 +1789,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-v_xc_up"></span>
+              <span class="anchor" id="variable-v_xc_up~2"></span>
               real(kind=dp),
             </td>
 <td>intent(out)</td>
@@ -1016,7 +1819,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~23"></span>
+              <span class="anchor" id="variable-ierr~52"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1025,6 +1828,221 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_vxc_positive"></span> <h3>private  subroutine <a href='../proc/get_vxc_positive.html'>get_vxc_positive</a>(xc, n_up, n_dw, v_xc_up, v_xc_dw, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Evaluate V_xc on the tabulated (repulsive) functional</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc~6"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_up~7"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_up</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw~5"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_xc_up~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>v_xc_up</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_xc_dw~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>v_xc_dw</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~53"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-eval_vxc_branch"></span> <h3>private  subroutine <a href='../proc/eval_vxc_branch.html'>eval_vxc_branch</a>(xc, n_up, n_dw, v_xc_up, v_xc_dw)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Evaluate V_xc at (n_up, n_dw) on the unsmoothed functional</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc~7"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_up~8"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_up</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw~6"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_xc_up~4"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>v_xc_up</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_xc_dw~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>v_xc_dw</strong></td>
             <td>
 
             </td>
@@ -1056,7 +2074,7 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-xc~4"></span>
+              <span class="anchor" id="variable-xc~10"></span>
               type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
             </td>
 <td>intent(inout)</td>
@@ -1065,6 +2083,121 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>xc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-snap_to_boundaries"></span> <h3>private  subroutine <a href='../proc/snap_to_boundaries.html'>snap_to_boundaries</a>(n_up_in, n_dw_in, n_up, n_dw, n, m)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Snap a density pair onto the region boundaries n = 1 and m = 0</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_up_in~5"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_up_in</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw_in~4"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw_in</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_up~11"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_up</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_dw~9"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_dw</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n~13"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-m~13"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>m</strong></td>
             <td>
 
             </td>
@@ -1096,7 +2229,7 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_up~5"></span>
+              <span class="anchor" id="variable-n_up~12"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1111,7 +2244,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_dw~4"></span>
+              <span class="anchor" id="variable-n_dw~10"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1126,7 +2259,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n~7"></span>
+              <span class="anchor" id="variable-n~14"></span>
               real(kind=dp),
             </td>
 <td>intent(out)</td>
@@ -1141,7 +2274,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-m~4"></span>
+              <span class="anchor" id="variable-m~14"></span>
               real(kind=dp),
             </td>
 <td>intent(out)</td>
@@ -1181,7 +2314,7 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-region~4"></span>
+              <span class="anchor" id="variable-region~5"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -1196,7 +2329,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_up~6"></span>
+              <span class="anchor" id="variable-n_up~13"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1211,7 +2344,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_dw~5"></span>
+              <span class="anchor" id="variable-n_dw~11"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1226,7 +2359,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_up_map~3"></span>
+              <span class="anchor" id="variable-n_up_map~4"></span>
               real(kind=dp),
             </td>
 <td>intent(out)</td>
@@ -1241,7 +2374,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_dw_map~3"></span>
+              <span class="anchor" id="variable-n_dw_map~4"></span>
               real(kind=dp),
             </td>
 <td>intent(out)</td>
@@ -1277,7 +2410,7 @@ modules which it uses.
           <div class="col">
             <p>
               LSDA-Hubbard-Fortran
- was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
 </p>
           </div>
           <div class="col">

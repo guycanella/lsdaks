@@ -20,8 +20,44 @@ module potential_random
     
     public :: potential_random_uniform
     public :: potential_random_gaussian
+    public :: box_muller_pair
 
 contains
+
+    !> Box-Muller transform of one pair of uniform deviates
+    !!
+    !! Maps a pair `(u1, u2)` drawn from the uniform distribution on [0, 1) -
+    !! which is exactly the range documented for `random_number` - onto a pair
+    !! of independent standard normal deviates.
+    !!
+    !! The radial factor is `sqrt(-2*log(1 - u1))` and NOT the textbook
+    !! `sqrt(-2*log(u1))`: because the source interval is half-open and closed
+    !! on the left, `u1` may legitimately come back as exactly 0, and
+    !! `log(0) = -Inf` makes the radius +Inf and poisons the whole potential
+    !! array with non-finite values (which then surfaced far from here, as
+    !! ERROR_NOT_A_NUMBER inside validate_hamiltonian_inputs). Using
+    !! `1 - u1 ∈ (0, 1]` keeps the argument of the logarithm strictly positive
+    !! for every value `random_number` can produce, while sampling the same
+    !! distribution: if u1 is uniform on [0,1), so is 1 - u1 on (0,1].
+    !!
+    !! This is a separate pure routine precisely so that the `u1 = 0` corner
+    !! can be exercised deterministically by a test instead of being left to
+    !! the (astronomically unlikely) chance of the generator emitting it.
+    !!
+    !! @param[in]  u1  First uniform deviate in [0, 1)
+    !! @param[in]  u2  Second uniform deviate in [0, 1)
+    !! @param[out] z1  First standard normal deviate, N(0, 1)
+    !! @param[out] z2  Second standard normal deviate, N(0, 1)
+    pure subroutine box_muller_pair(u1, u2, z1, z2)
+        real(dp), intent(in) :: u1, u2
+        real(dp), intent(out) :: z1, z2
+
+        real(dp) :: radius
+
+        radius = sqrt(-2.0_dp * log(1.0_dp - u1))
+        z1 = radius * cos(2.0_dp * PI * u2)
+        z2 = radius * sin(2.0_dp * PI * u2)
+    end subroutine box_muller_pair
 
     !> Random potential with uniform distribution: V(i) ~ U[-W, W]
     !!
@@ -60,8 +96,14 @@ contains
             return
         end if
 
-        ! Special case: W = 0 means no disorder
-        if (W == 0.0_dp) then
+        ! Special case: W = 0 means no disorder. `abs(W) < tiny(W)` is written
+        ! instead of `W == 0` for readability and to avoid the equality-comparison
+        ! warning, NOT because it is a looser test: for every normal number the
+        ! two conditions are identical, and they differ only for subnormal W
+        ! (|W| < ~2.2e-308), which the branch then also treats as no disorder.
+        ! That is deliberate - a subnormal disorder width is zero for every
+        ! physical purpose - but it is the whole of the difference.
+        if (abs(W) < tiny(W)) then
             V = 0.0_dp
             return
         end if
@@ -101,7 +143,10 @@ contains
     !! @param[out] V      Potential array V(i) for i = 1..L
     !! @param[out] ierr   Error flag (ERROR_SUCCESS or ERROR_NEGATIVE_VALUE)
     !!
-    !! @note Uses Box-Muller transform to generate Gaussian random numbers
+    !! @note Uses the Box-Muller transform (see `box_muller_pair`) to generate
+    !!       Gaussian random numbers; the transform is written so that it stays
+    !!       finite for every value `random_number` can return, including an
+    !!       exact 0
     !! @note For σ → 0: No disorder (all sites have V ≈ 0)
     !! @note For σ >> t (hopping): Strong disorder, Anderson localization
     subroutine potential_random_gaussian(sigma, L, seed, V, ierr)
@@ -121,8 +166,10 @@ contains
             return
         end if
 
-        ! Special case: sigma = 0 means no disorder
-        if (sigma == 0.0_dp) then
+        ! Special case: sigma = 0 means no disorder. Same threshold as for W
+        ! above, and the same caveat: for normal numbers this is exactly
+        ! `sigma == 0`; only subnormal sigma is additionally caught.
+        if (abs(sigma) < tiny(sigma)) then
             V = 0.0_dp
             return
         end if
@@ -141,11 +188,9 @@ contains
         do i = 1, L, 2
             call random_number(u1)
             call random_number(u2)
-            
-            ! Box-Muller transform
-            z1 = sqrt(-2.0_dp * log(u1)) * cos(2.0_dp * PI * u2)
-            z2 = sqrt(-2.0_dp * log(u1)) * sin(2.0_dp * PI * u2)
-            
+
+            call box_muller_pair(u1, u2, z1, z2)
+
             V(i) = sigma * z1
             if (i + 1 <= L) then
                 V(i + 1) = sigma * z2

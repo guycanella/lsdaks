@@ -63,10 +63,16 @@
                   <a class="nav-link" href="../lists/procedures.html">Procedures</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" href="../lists/types.html">Derived Types</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
                 </li>
             </ul>
               <div class="d-flex align-items-end flex-grow-1">
@@ -129,20 +135,23 @@
       </a>
       <div id="vars-0" class="collapse">
         <div class="list-group list-group-flush">
-            <a class="list-group-item" href="../namelist/potential.html#variable-potential_type~2">potential_type</a>
+            <a class="list-group-item" href="../namelist/potential.html#variable-potential_type~4">potential_type</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-v0~3">V0</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-pot_center~2">pot_center</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-pot_width~2">pot_width</a>
-            <a class="list-group-item" href="../namelist/potential.html#variable-concentration~2">concentration</a>
+            <a class="list-group-item" href="../namelist/potential.html#variable-concentration~3">concentration</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-pot_seed~2">pot_seed</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-imp_positions_str~2">imp_positions_str</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-disorder_strength~2">disorder_strength</a>
-            <a class="list-group-item" href="../namelist/potential.html#variable-distribution~2">distribution</a>
+            <a class="list-group-item" href="../namelist/potential.html#variable-spring_constant~2">spring_constant</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-position~2">position</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-width~2">width</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-barrier_width~2">barrier_width</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-well_depth~2">well_depth</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-well_width~2">well_width</a>
+            <a class="list-group-item" href="../namelist/potential.html#variable-aah_lambda~2">aah_lambda</a>
+            <a class="list-group-item" href="../namelist/potential.html#variable-aah_beta~2">aah_beta</a>
+            <a class="list-group-item" href="../namelist/potential.html#variable-aah_phi~2">aah_phi</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-position1~2">position1</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-width1~2">width1</a>
             <a class="list-group-item" href="../namelist/potential.html#variable-position2~2">position2</a>
@@ -188,8 +197,8 @@
           <th>Description</th>
       </tr></thead>
       <tbody>
-              <tr id="variable-potential_type~2">
-      <td><a href="#variable-potential_type~2">potential_type</a></td>
+              <tr id="variable-potential_type~4">
+      <td><a href="#variable-potential_type~4">potential_type</a></td>
       <td>character(len=20)</td>
       <td>None</td>
       <td></td>
@@ -216,8 +225,8 @@
       <td></td>
     </tr>
 
-              <tr id="variable-concentration~2">
-      <td><a href="#variable-concentration~2">concentration</a></td>
+              <tr id="variable-concentration~3">
+      <td><a href="#variable-concentration~3">concentration</a></td>
       <td>real(kind=dp)</td>
       <td>None</td>
       <td></td>
@@ -232,9 +241,9 @@
 
               <tr id="variable-imp_positions_str~2">
       <td><a href="#variable-imp_positions_str~2">imp_positions_str</a></td>
-      <td>character(len=500)</td>
+      <td>character(len=IMP_STR_BUFFER_LEN)</td>
       <td>None</td>
-      <td></td>
+      <td><p>Read buffer for the impurity list, DELIBERATELY much longer than the</p></td>
     </tr>
 
               <tr id="variable-disorder_strength~2">
@@ -244,9 +253,9 @@
       <td></td>
     </tr>
 
-              <tr id="variable-distribution~2">
-      <td><a href="#variable-distribution~2">distribution</a></td>
-      <td>character(len=20)</td>
+              <tr id="variable-spring_constant~2">
+      <td><a href="#variable-spring_constant~2">spring_constant</a></td>
+      <td>real(kind=dp)</td>
       <td>None</td>
       <td></td>
     </tr>
@@ -281,6 +290,27 @@
 
               <tr id="variable-well_width~2">
       <td><a href="#variable-well_width~2">well_width</a></td>
+      <td>real(kind=dp)</td>
+      <td>None</td>
+      <td></td>
+    </tr>
+
+              <tr id="variable-aah_lambda~2">
+      <td><a href="#variable-aah_lambda~2">aah_lambda</a></td>
+      <td>real(kind=dp)</td>
+      <td>None</td>
+      <td></td>
+    </tr>
+
+              <tr id="variable-aah_beta~2">
+      <td><a href="#variable-aah_beta~2">aah_beta</a></td>
+      <td>real(kind=dp)</td>
+      <td>None</td>
+      <td></td>
+    </tr>
+
+              <tr id="variable-aah_phi~2">
+      <td><a href="#variable-aah_phi~2">aah_phi</a></td>
       <td>real(kind=dp)</td>
       <td>None</td>
       <td></td>
@@ -329,7 +359,7 @@
           <div class="col">
             <p>
               LSDA-Hubbard-Fortran
- was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
 </p>
           </div>
           <div class="col">

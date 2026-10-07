@@ -1,0 +1,620 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>lieb_wu_energy &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>lieb_wu_energy
+      <small>Subroutine</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 0.1% of total for procedures.">8 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/lieb_wu_integral.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/lieb_wu_integral.f90.html'>lieb_wu_integral.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/lieb_wu_integral.html'>lieb_wu_integral</a></li>
+            <li class="breadcrumb-item active" aria-current="page">lieb_wu_energy</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/lieb_wu_energy.html#src">lieb_wu_energy</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>public  subroutine lieb_wu_energy(n, m, U, quad, e_ba, ierr)  
+</h2>
+    
+
+    <p>Bethe Ansatz total energy per site at density <code>n</code> and magnetization <code>m</code>.</p>
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n~17"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-m~17"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>m</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-u~19"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>U</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-quad~4"></span>
+              type(<a href='../type/lw_quad_t.html'>lw_quad_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>quad</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-e_ba~4"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>e_ba</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~61"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <br>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Calls</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: proc~~lieb_wu_energy~~CallsGraph Pages: 1 -->
+<svg id="proclieb_wu_energyCallsGraph" width="535pt" height="236pt"
+ viewBox="0.00 0.00 535.00 236.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~lieb_wu_energy~~CallsGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 231.77)">
+<title>proc~~lieb_wu_energy~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-231.77 530.83,-231.77 530.83,4 -4,4"/>
+<!-- proc~lieb_wu_energy -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node1" class="node">
+<title>proc~lieb_wu_energy</title>
+<polygon fill="none" stroke="black" points="86.52,-149.77 0,-149.77 0,-127 86.52,-127 86.52,-149.77"/>
+<text xml:space="preserve" text-anchor="middle" x="43.26" y="-134.03" font-family="Helvetica,sans-Serif" font-size="10.50">lieb_wu_energy</text>
+</g>
+<!-- proc~lieb_wu_invert -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node2" class="node">
+<title>proc~lieb_wu_invert</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node2"><a xlink:href="../proc/lieb_wu_invert.html" xlink:title="lieb_wu_invert">
+<polygon fill="#d9534f" stroke="#d9534f" points="202.29,-149.77 122.52,-149.77 122.52,-127 202.29,-127 202.29,-149.77"/>
+<text xml:space="preserve" text-anchor="middle" x="162.41" y="-134.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lieb_wu_invert</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_energy&#45;&gt;proc~lieb_wu_invert -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge1" class="edge">
+<title>proc~lieb_wu_energy&#45;&gt;proc~lieb_wu_invert</title>
+<path fill="none" stroke="#000000" d="M86.88,-138.38C94.62,-138.38 102.76,-138.38 110.7,-138.38"/>
+<polygon fill="#000000" stroke="#000000" points="110.61,-141.89 120.61,-138.39 110.61,-134.89 110.61,-141.89"/>
+</g>
+<!-- proc~b_guess_for -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node3" class="node">
+<title>proc~b_guess_for</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node3"><a xlink:href="../proc/b_guess_for.html" xlink:title="b_guess_for">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="343.56,-227.77 272.79,-227.77 272.79,-205 343.56,-205 343.56,-227.77"/>
+<text xml:space="preserve" text-anchor="middle" x="308.18" y="-212.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">b_guess_for</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_invert&#45;&gt;proc~b_guess_for -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge2" class="edge">
+<title>proc~lieb_wu_invert&#45;&gt;proc~b_guess_for</title>
+<path fill="none" stroke="#000000" d="M177.57,-150.17C192.1,-161.82 215.71,-179.57 238.29,-191.38 245.65,-195.24 253.74,-198.75 261.71,-201.85"/>
+<polygon fill="#000000" stroke="#000000" points="260.4,-205.1 271,-205.28 262.83,-198.53 260.4,-205.1"/>
+</g>
+<!-- proc~b_max_for -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node4" class="node">
+<title>proc~b_max_for</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node4"><a xlink:href="../proc/b_max_for.html" xlink:title="b_max_for">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="501.71,-227.77 439.19,-227.77 439.19,-205 501.71,-205 501.71,-227.77"/>
+<text xml:space="preserve" text-anchor="middle" x="470.45" y="-212.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">b_max_for</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_invert&#45;&gt;proc~b_max_for -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge3" class="edge">
+<title>proc~lieb_wu_invert&#45;&gt;proc~b_max_for</title>
+<path fill="none" stroke="#000000" d="M202.63,-148.98C214.11,-152.05 226.7,-155.38 238.29,-158.38 304.38,-175.5 381.32,-194.65 427.65,-206.1"/>
+<polygon fill="#000000" stroke="#000000" points="426.73,-209.48 437.28,-208.48 428.41,-202.68 426.73,-209.48"/>
+</g>
+<!-- proc~lieb_wu_solve_qb -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node5" class="node">
+<title>proc~lieb_wu_solve_qb</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node5"><a xlink:href="../proc/lieb_wu_solve_qb.html" xlink:title="lieb_wu_solve_qb">
+<polygon fill="#d9534f" stroke="#d9534f" points="356.31,-108.77 260.04,-108.77 260.04,-86 356.31,-86 356.31,-108.77"/>
+<text xml:space="preserve" text-anchor="middle" x="308.18" y="-93.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lieb_wu_solve_qb</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_invert&#45;&gt;proc~lieb_wu_solve_qb -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge4" class="edge">
+<title>proc~lieb_wu_invert&#45;&gt;proc~lieb_wu_solve_qb</title>
+<path fill="none" stroke="#000000" d="M202.69,-127.18C218.72,-122.61 237.49,-117.26 254.66,-112.36"/>
+<polygon fill="#000000" stroke="#000000" points="255.56,-115.74 264.22,-109.63 253.64,-109.01 255.56,-115.74"/>
+</g>
+<!-- proc~lieb_wu_solve_unpolarized -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node6" class="node">
+<title>proc~lieb_wu_solve_unpolarized</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node6"><a xlink:href="../proc/lieb_wu_solve_unpolarized.html" xlink:title="lieb_wu_solve_unpolarized">
+<polygon fill="#d9534f" stroke="#d9534f" points="378.06,-149.77 238.29,-149.77 238.29,-127 378.06,-127 378.06,-149.77"/>
+<text xml:space="preserve" text-anchor="middle" x="308.18" y="-134.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lieb_wu_solve_unpolarized</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_invert&#45;&gt;proc~lieb_wu_solve_unpolarized -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge5" class="edge">
+<title>proc~lieb_wu_invert&#45;&gt;proc~lieb_wu_solve_unpolarized</title>
+<path fill="none" stroke="#000000" d="M202.69,-138.38C210.18,-138.38 218.27,-138.38 226.51,-138.38"/>
+<polygon fill="#000000" stroke="#000000" points="226.29,-141.89 236.29,-138.39 226.29,-134.89 226.29,-141.89"/>
+</g>
+<!-- proc~solve_root_1d -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node7" class="node">
+<title>proc~solve_root_1d</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node7"><a xlink:href="../proc/solve_root_1d.html" xlink:title="solve_root_1d">
+<polygon fill="#d9534f" stroke="#d9534f" points="347.69,-67.77 268.67,-67.77 268.67,-45 347.69,-45 347.69,-67.77"/>
+<text xml:space="preserve" text-anchor="middle" x="308.18" y="-52.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">solve_root_1d</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_invert&#45;&gt;proc~solve_root_1d -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge6" class="edge">
+<title>proc~lieb_wu_invert&#45;&gt;proc~solve_root_1d</title>
+<path fill="none" stroke="#000000" d="M174.56,-126.9C188.37,-113.29 213.13,-90.79 238.29,-77.39 244.37,-74.14 251.03,-71.32 257.73,-68.89"/>
+<polygon fill="#000000" stroke="#000000" points="258.41,-72.36 266.79,-65.87 256.19,-65.72 258.41,-72.36"/>
+</g>
+<!-- proc~b_guess_for&#45;&gt;proc~b_max_for -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge7" class="edge">
+<title>proc~b_guess_for&#45;&gt;proc~b_max_for</title>
+<path fill="none" stroke="#000000" d="M343.95,-216.38C368.46,-216.38 401.41,-216.38 427.4,-216.38"/>
+<polygon fill="#000000" stroke="#000000" points="427.28,-219.89 437.28,-216.39 427.28,-212.89 427.28,-219.89"/>
+</g>
+<!-- interface~dgesv -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node8" class="node">
+<title>interface~dgesv</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node8"><a xlink:href="../interface/dgesv.html" xlink:title="dgesv">
+<polygon fill="#a7506f" stroke="#a7506f" points="497.45,-186.77 443.45,-186.77 443.45,-164 497.45,-164 497.45,-186.77"/>
+<text xml:space="preserve" text-anchor="middle" x="470.45" y="-171.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dgesv</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_solve_qb&#45;&gt;interface~dgesv -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge8" class="edge">
+<title>proc~lieb_wu_solve_qb&#45;&gt;interface~dgesv</title>
+<path fill="none" stroke="#000000" d="M356.81,-108.54C364.19,-111.21 371.52,-114.46 378.06,-118.39 397.46,-130.03 395.06,-142.1 414.06,-154.38 419.7,-158.03 426.07,-161.19 432.43,-163.86"/>
+<polygon fill="#000000" stroke="#000000" points="430.99,-167.06 441.58,-167.37 433.5,-160.52 430.99,-167.06"/>
+</g>
+<!-- proc~a_kernel -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node9" class="node">
+<title>proc~a_kernel</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node9"><a xlink:href="../proc/a_kernel.html" xlink:title="a_kernel">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="497.45,-104.77 443.45,-104.77 443.45,-82 497.45,-82 497.45,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="470.45" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">a_kernel</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_solve_qb&#45;&gt;proc~a_kernel -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge9" class="edge">
+<title>proc~lieb_wu_solve_qb&#45;&gt;proc~a_kernel</title>
+<path fill="none" stroke="#000000" d="M356.39,-96.21C380.34,-95.61 409.04,-94.89 431.53,-94.33"/>
+<polygon fill="#000000" stroke="#000000" points="431.57,-97.83 441.48,-94.08 431.39,-90.83 431.57,-97.83"/>
+</g>
+<!-- proc~gauss_legendre -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node10" class="node">
+<title>proc~gauss_legendre</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node10"><a xlink:href="../proc/gauss_legendre.html" xlink:title="gauss_legendre">
+<polygon fill="#d9534f" stroke="#d9534f" points="514.46,-145.77 426.44,-145.77 426.44,-123 514.46,-123 514.46,-145.77"/>
+<text xml:space="preserve" text-anchor="middle" x="470.45" y="-130.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">gauss_legendre</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_solve_qb&#45;&gt;proc~gauss_legendre -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge10" class="edge">
+<title>proc~lieb_wu_solve_qb&#45;&gt;proc~gauss_legendre</title>
+<path fill="none" stroke="#000000" d="M356.39,-108.29C374.76,-112.53 395.91,-117.41 414.91,-121.8"/>
+<polygon fill="#000000" stroke="#000000" points="414.11,-125.2 424.65,-124.04 415.69,-118.38 414.11,-125.2"/>
+</g>
+<!-- proc~lambda_mesh -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node11" class="node">
+<title>proc~lambda_mesh</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node11"><a xlink:href="../proc/lambda_mesh.html" xlink:title="lambda_mesh">
+<polygon fill="#d9534f" stroke="#d9534f" points="509.96,-63.77 430.94,-63.77 430.94,-41 509.96,-41 509.96,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="470.45" y="-48.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lambda_mesh</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_solve_qb&#45;&gt;proc~lambda_mesh -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge11" class="edge">
+<title>proc~lieb_wu_solve_qb&#45;&gt;proc~lambda_mesh</title>
+<path fill="none" stroke="#000000" d="M351.28,-85.56C372.31,-79.66 397.88,-72.48 419.85,-66.31"/>
+<polygon fill="#000000" stroke="#000000" points="420.5,-69.76 429.18,-63.69 418.61,-63.02 420.5,-69.76"/>
+</g>
+<!-- proc~n_lambda_per_panel -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_node12" class="node">
+<title>proc~n_lambda_per_panel</title>
+<g id="a_proc~~lieb_wu_energy~~CallsGraph_node12"><a xlink:href="../proc/n_lambda_per_panel.html" xlink:title="n_lambda_per_panel">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="526.83,-22.77 414.06,-22.77 414.06,0 526.83,0 526.83,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="470.45" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">n_lambda_per_panel</text>
+</a>
+</g>
+</g>
+<!-- proc~lieb_wu_solve_qb&#45;&gt;proc~n_lambda_per_panel -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge12" class="edge">
+<title>proc~lieb_wu_solve_qb&#45;&gt;proc~n_lambda_per_panel</title>
+<path fill="none" stroke="#000000" d="M356.8,-86.92C364.26,-84.16 371.62,-80.7 378.06,-76.39 399.05,-62.32 393.55,-47.14 414.06,-32.39 415.98,-31 418.01,-29.7 420.1,-28.47"/>
+<polygon fill="#000000" stroke="#000000" points="421.63,-31.62 428.93,-23.95 418.44,-25.39 421.63,-31.62"/>
+</g>
+<!-- proc~lieb_wu_solve_unpolarized&#45;&gt;interface~dgesv -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge13" class="edge">
+<title>proc~lieb_wu_solve_unpolarized&#45;&gt;interface~dgesv</title>
+<path fill="none" stroke="#000000" d="M360.33,-150.19C383.51,-155.55 410.45,-161.76 431.75,-166.68"/>
+<polygon fill="#000000" stroke="#000000" points="430.94,-170.09 441.47,-168.93 432.52,-163.27 430.94,-170.09"/>
+</g>
+<!-- proc~lieb_wu_solve_unpolarized&#45;&gt;proc~gauss_legendre -->
+<g id="proc~~lieb_wu_energy~~CallsGraph_edge14" class="edge">
+<title>proc~lieb_wu_solve_unpolarized&#45;&gt;proc~gauss_legendre</title>
+<path fill="none" stroke="#000000" d="M378.54,-136.65C390.72,-136.35 403.24,-136.04 414.95,-135.75"/>
+<polygon fill="#000000" stroke="#000000" points="414.91,-139.25 424.82,-135.5 414.74,-132.25 414.91,-139.25"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CallsGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CallsGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="w">    </span><span class="k">subroutine </span><span class="n">lieb_wu_energy</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">quad</span><span class="p">,</span><span class="w"> </span><span class="n">e_ba</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">U</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">lw_quad_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">quad</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">e_ba</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">ierr</span>
+
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">Q</span><span class="p">,</span><span class="w"> </span><span class="n">w</span>
+
+<span class="w">        </span><span class="k">call </span><span class="n">lieb_wu_invert</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5_dp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">abs</span><span class="p">(</span><span class="n">m</span><span class="p">)),</span><span class="w"> </span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">quad</span><span class="p">,</span><span class="w"> </span><span class="n">Q</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">e_ba</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end subroutine </span><span class="n">lieb_wu_energy</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

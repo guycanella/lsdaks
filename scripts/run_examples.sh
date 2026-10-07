@@ -50,6 +50,47 @@ cd "${PROJECT_DIR}" || exit 1
 WORK_DIR="$(mktemp -d /tmp/lsdaks_examples.XXXXXX)"
 trap 'rm -rf "${WORK_DIR}"' EXIT
 
+# Examples consume the user's generated tables. An explicit environment value
+# lets CI or an external workflow select a table set without a checked-in one.
+TABLE_DIR="${LSDAKS_TABLE_DIR:-${PROJECT_DIR}/tables}"
+
+# U of the hand-written inputs below (cases 2-6); it must be in the table set
+# like the U of every example, so it is declared once and interpolated.
+AUX_U=4.0
+
+# Pre-check: every table the examples need must exist before anything runs.
+# Otherwise every SCF case fails one by one with "XC table not found", which
+# is 14 copies of the same message. The required U values are read from the
+# inputs themselves (examples/*.txt, the root input.txt and AUX_U) so the list
+# cannot age; the file name follows table_io::xc_table_filename, |U| with two
+# decimals. The check is global: the generator case (7) does not need tables
+# but is not run either, so a clean clone gets exactly one message.
+MISSING=()
+while IFS= read -r u; do
+    table="${TABLE_DIR}/xc_table_u${u}.dat"
+    [ -f "${table}" ] || MISSING+=("${table}")
+done < <(
+    { cat "${PROJECT_DIR}"/examples/*.txt "${PROJECT_DIR}/input.txt" 2>/dev/null
+      printf 'U = %s\n' "${AUX_U}"; } |
+    awk -F= 'tolower($1) ~ /^[ \t]*u[ \t]*$/ { v = $2 + 0; if (v < 0) v = -v; printf "%.2f\n", v }' |
+    sort -u
+)
+if [ ${#MISSING[@]} -ne 0 ]; then
+    {
+        printf 'Cannot run the examples: %d XC table(s) missing in %s\n' \
+               "${#MISSING[@]}" "${TABLE_DIR}"
+        printf '  %s\n' "${MISSING[@]}"
+        printf 'Generate each one (U is the number in the file name; the sign does not matter):\n'
+        for table in "${MISSING[@]}"; do
+            u="${table##*/xc_table_u}"; u="${u%.dat}"
+            printf '  fpm run --profile release --flag "-O3 -march=native -fopenmp" --link-flag "-fopenmp" generate_xc_table -- --U %s --output "%s"\n' \
+                   "${u}" "${TABLE_DIR}"
+        done
+        printf 'or point LSDAKS_TABLE_DIR at a directory that already has them. No example was run.\n'
+    } >&2
+    exit 1
+fi
+
 # fpm itself needs the project directory, but the program must not inherit it
 # as its working directory: the examples carry ordinary relative output
 # prefixes.  Build once, select the executable just produced, then run it from
@@ -70,10 +111,6 @@ if [ -z "${EXECUTABLE}" ] || [ ! -x "${EXECUTABLE}" ]; then
     printf 'Cannot locate the lsdaks executable after building.\n' >&2
     exit 1
 fi
-# Examples consume the user's generated tables. An explicit environment value
-# lets CI or an external workflow select a table set without a checked-in one.
-TABLE_DIR="${LSDAKS_TABLE_DIR:-${PROJECT_DIR}/tables}"
-
 MAX_ITER=5
 FAILURES=0
 CHECKS=0
@@ -192,12 +229,12 @@ done
 printf '\n== a malformed input must be rejected ==\n'
 
 # 2. Unknown key.
-cat > "${WORK_DIR}/bad_key.txt" <<'EOF'
+cat > "${WORK_DIR}/bad_key.txt" <<EOF
 &system
   L = 10
   Nup = 5
   Ndown = 5
-  U = 4.0
+  U = ${AUX_U}
   no_such_key = 3
 /
 EOF
@@ -214,12 +251,12 @@ else
 fi
 
 # 3. Removed key: the message must say what to do, not just "cannot match".
-cat > "${WORK_DIR}/obsolete_key.txt" <<'EOF'
+cat > "${WORK_DIR}/obsolete_key.txt" <<EOF
 &system
   L = 10
   Nup = 5
   Ndown = 5
-  U = 4.0
+  U = ${AUX_U}
 /
 &potential
   potential_type = 'random_uniform'
@@ -240,7 +277,7 @@ fi
 
 # 4. Malformed value. gfortran reports this as plain end-of-file, exactly like
 #    an absent group, so the parser has to tell the two apart by itself.
-cat > "${WORK_DIR}/bad_value.txt" <<'EOF'
+cat > "${WORK_DIR}/bad_value.txt" <<EOF
 &system
   L = 10
   Nup = 5
@@ -264,7 +301,7 @@ cat > "${WORK_DIR}/no_groups.txt" <<EOF
   L = 10
   Nup = 5
   Ndown = 5
-  U = 4.0
+  U = ${AUX_U}
 /
 &scf
   max_iter = ${MAX_ITER}
@@ -287,12 +324,12 @@ printf '\n== a converged run whose output is lost must fail ==\n'
 
 # 6. The SCF converges and every output file fails to be written. The numbers
 #    are gone, so only the exit status can tell the caller.
-cat > "${WORK_DIR}/unwritable.txt" <<'EOF'
+cat > "${WORK_DIR}/unwritable.txt" <<EOF
 &system
   L = 10
   Nup = 5
   Ndown = 5
-  U = 4.0
+  U = ${AUX_U}
 /
 &scf
   max_iter = 200

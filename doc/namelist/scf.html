@@ -63,10 +63,16 @@
                   <a class="nav-link" href="../lists/procedures.html">Procedures</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" href="../lists/types.html">Derived Types</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
                 </li>
             </ul>
               <div class="d-flex align-items-end flex-grow-1">
@@ -129,13 +135,15 @@
       </a>
       <div id="vars-0" class="collapse">
         <div class="list-group list-group-flush">
-            <a class="list-group-item" href="../namelist/scf.html#variable-max_iter~4">max_iter</a>
+            <a class="list-group-item" href="../namelist/scf.html#variable-max_iter~8">max_iter</a>
             <a class="list-group-item" href="../namelist/scf.html#variable-density_tol~3">density_tol</a>
-            <a class="list-group-item" href="../namelist/scf.html#variable-energy_tol~3">energy_tol</a>
+            <a class="list-group-item" href="../namelist/scf.html#variable-energy_tol~4">energy_tol</a>
+            <a class="list-group-item" href="../namelist/scf.html#variable-potential_tol~3">potential_tol</a>
             <a class="list-group-item" href="../namelist/scf.html#variable-mixing_alpha~3">mixing_alpha</a>
             <a class="list-group-item" href="../namelist/scf.html#variable-verbose~3">verbose</a>
             <a class="list-group-item" href="../namelist/scf.html#variable-store_history~4">store_history</a>
             <a class="list-group-item" href="../namelist/scf.html#variable-use_adaptive_mixing~3">use_adaptive_mixing</a>
+            <a class="list-group-item" href="../namelist/scf.html#variable-xc_smoothing_width~2">xc_smoothing_width</a>
         </div>
       </div>
     </div>
@@ -177,8 +185,8 @@
           <th>Description</th>
       </tr></thead>
       <tbody>
-              <tr id="variable-max_iter~4">
-      <td><a href="#variable-max_iter~4">max_iter</a></td>
+              <tr id="variable-max_iter~8">
+      <td><a href="#variable-max_iter~8">max_iter</a></td>
       <td>integer</td>
       <td>None</td>
       <td></td>
@@ -191,8 +199,15 @@
       <td></td>
     </tr>
 
-              <tr id="variable-energy_tol~3">
-      <td><a href="#variable-energy_tol~3">energy_tol</a></td>
+              <tr id="variable-energy_tol~4">
+      <td><a href="#variable-energy_tol~4">energy_tol</a></td>
+      <td>real(kind=dp)</td>
+      <td>None</td>
+      <td></td>
+    </tr>
+
+              <tr id="variable-potential_tol~3">
+      <td><a href="#variable-potential_tol~3">potential_tol</a></td>
       <td>real(kind=dp)</td>
       <td>None</td>
       <td></td>
@@ -226,6 +241,13 @@
       <td></td>
     </tr>
 
+              <tr id="variable-xc_smoothing_width~2">
+      <td><a href="#variable-xc_smoothing_width~2">xc_smoothing_width</a></td>
+      <td>real(kind=dp)</td>
+      <td>None</td>
+      <td></td>
+    </tr>
+
       </tbody>
     </table>
   </section>
@@ -241,7 +263,7 @@
           <div class="col">
             <p>
               LSDA-Hubbard-Fortran
- was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
 </p>
           </div>
           <div class="col">

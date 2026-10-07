@@ -15,11 +15,15 @@ display: public
          private
 source: true
 graph: true
+graph_maxnodes: 40
+graph_maxdepth: 3
 search: true
 macro: TEST
        LOGIC=.true.
 extra_mods: json_module: http://jacobwilliams.github.io/json-fortran/
             futility: http://cmacmackin.github.io
+src_dir: ./src
+         ./app
 exclude_dir: ./test
              ./build
 extra_filetypes: sh #
@@ -44,10 +48,10 @@ from exact Bethe Ansatz solutions using bicubic spline interpolation.
 - **Exact Bethe Ansatz solver** using Newton-Raphson with analytical Jacobian
 - **Exchange-correlation functional** via 2D bicubic spline interpolation
 - **Self-consistent Kohn-Sham solver** with adaptive mixing
-- **7 types of external potentials**: uniform, harmonic, barriers, disorder, quasiperiodic, impurities
-- **High-performance linear algebra** using LAPACK (DSYEVD/ZHEEVD)
-- **Comprehensive test suite** with 252+ tests (100% pass rate)
-- **Production-ready**: Validated against C++ reference with energy agreement < 1e-8
+- **Six potential-generator families** (ten selectable variants): uniform, harmonic, barriers, disorder, quasiperiodic, impurities
+- **High-performance linear algebra** using LAPACK (DSTEVR/ZHEEVR)
+- **Comprehensive test suite**: 20 Fortuno suites (current counts in the README, "Running Tests")
+- **Validation**: analytic anchors and a historical C++ comparison, documented case by case in the README
 
 ## Physical Model
 
@@ -76,8 +80,9 @@ types/              - Core data structures and constants
 
 bethe_ansatz/       - Exact Bethe Ansatz solver
   ├── bethe_equations    - Lieb-Wu equations
-  ├── nonlinear_solvers  - Newton-Raphson, Broyden
+  ├── nonlinear_solvers  - Newton-Raphson with analytical Jacobian
   ├── continuation       - Continuation in U parameter
+  ├── lieb_wu_integral   - Thermodynamic-limit Lieb-Wu integral equations
   ├── table_io           - XC table I/O (ASCII/binary)
   └── bethe_tables       - Generate XC tables
 
@@ -92,6 +97,7 @@ potentials/         - External potentials
   ├── potential_random       - Disorder potentials
   ├── potential_barrier      - Rectangular barriers
   ├── potential_quasiperiodic - Aubry-André-Harper
+  ├── potential_seed         - Seed handling for random potentials
   └── potential_factory      - Factory pattern
 
 hamiltonian/        - Hamiltonian construction
@@ -99,8 +105,7 @@ hamiltonian/        - Hamiltonian construction
   └── boundary_conditions    - Open/periodic/twisted BC
 
 diagonalization/    - Eigensolvers
-  ├── lapack_wrapper       - LAPACK interface
-  └── degeneracy_handler   - Handle degenerate states
+  └── lapack_wrapper       - LAPACK interface (DSTEVR/DSYEVR/ZHEEVR)
 
 density/            - Density calculation
   └── density_calculator   - Density from eigenstates
@@ -120,6 +125,13 @@ io/                 - Input/Output
 
 ## Building and Testing
 
+Regenerate this documentation with `ford ford.md` from the repository root. The
+graphs are bounded on purpose (`graph_maxnodes: 40`, `graph_maxdepth: 3` in the
+header above): with `app/` in `src_dir`, unbounded graphs make FORD 7.0.12 hang
+indefinitely at the graph stage, because the programs' call trees span the whole
+project. Bounded, the run takes about 100 s. The header must contain only
+`key: value` lines - a `#` line is not a comment there and silently ends it.
+
 See the main [README.md](|page|/index.html) for build instructions.
 
 ## Physics Background
@@ -129,12 +141,15 @@ See the main [README.md](|page|/index.html) for build instructions.
 The Bethe Ansatz provides exact solutions for the 1D Hubbard model via the Lieb-Wu equations:
 
 $$
-k_j L + \sum_{\alpha=1}^M \theta(k_j - \Lambda_\alpha) = 2\pi I_j
+k_j L = 2\pi I_j - \sum_{\alpha=1}^M \theta(\sin k_j - \Lambda_\alpha)
 $$
 
 $$
-\sum_{j=1}^N \theta(k_j - \Lambda_\alpha) = 2\pi J_\alpha + \sum_{\beta=1}^M \Theta(\Lambda_\alpha - \Lambda_\beta)
+\sum_{j=1}^N \theta(\Lambda_\alpha - \sin k_j) = 2\pi J_\alpha + \sum_{\beta \neq \alpha} \Theta(\Lambda_\alpha - \Lambda_\beta)
 $$
+
+with $\theta(x) = 2\arctan(x/u)$, $\Theta(x) = 2\arctan(x/2u)$ and $u = U/4$, the
+convention of `bethe_equations.f90` (`theta(sin(k(j)) - Lambda(alpha), U)`).
 
 ### DFT-LSDA Mapping
 

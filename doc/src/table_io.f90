@@ -4,7 +4,8 @@ module table_io
     use lsda_constants, only: dp
     use lsda_errors, only: ERROR_SUCCESS, ERROR_FILE_NOT_FOUND, &
                                     ERROR_FILE_READ, ERROR_FILE_WRITE, &
-                                    ERROR_INVALID_INPUT
+                                    ERROR_INVALID_INPUT, ERROR_NOT_A_NUMBER
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     implicit none
     private
 
@@ -12,6 +13,8 @@ module table_io
     public :: read_cpp_table, write_fortran_table, read_fortran_table
     public :: deallocate_table, print_table_info
     public :: extract_U_from_filename
+    public :: xc_table_filename
+    public :: count_nonfinite_entries
 
     integer, parameter :: MAX_LINE_LEN = 256
 
@@ -182,6 +185,45 @@ contains
         ierr = ERROR_SUCCESS
     end subroutine count_blocks_and_points
 
+    !> Canonical file name of the XC table of a given interaction.
+    !!
+    !! The single place where the `xc_table_u<|U|>.dat` naming is spelled out.
+    !! It used to be spelled out three times (generator, table sweep, SCF
+    !! lookup) and the generator's plain `F0.2` drops the leading zero of a
+    !! magnitude below one, so it wrote `xc_table_u.50.dat` while the SCF looked
+    !! for `xc_table_u0.50.dat`: the whole `0.5 <= |U| < 1` range produced a
+    !! table nothing could find.  Producer and consumer now share this routine
+    !! and cannot diverge again.
+    !!
+    !! The sign of `U` is ignored: tables are stored for `|U|` and the
+    !! attractive branch is reached through the Shiba map.
+    !!
+    !! @param[in]  dir   Directory; `''` yields a bare file name
+    !! @param[in]  U     Hubbard interaction (sign ignored)
+    !! @param[out] path  `<dir>/xc_table_u<|U|>.dat`, left justified
+    subroutine xc_table_filename(dir, U, path)
+        character(len=*), intent(in) :: dir
+        real(dp), intent(in) :: U
+        character(len=*), intent(out) :: path
+
+        character(len=32) :: u_str
+        integer :: n
+
+        ! F0.2 alone prints 0.5 as ".50" in gfortran; the leading zero is part
+        ! of the name every shipped table carries.
+        write(u_str, '(F0.2)') abs(U)
+        if (u_str(1:1) == '.') u_str = '0' // trim(u_str)
+
+        n = len_trim(dir)
+        if (n == 0) then
+            path = 'xc_table_u' // trim(u_str) // '.dat'
+        else if (dir(n:n) == '/') then
+            path = dir(1:n) // 'xc_table_u' // trim(u_str) // '.dat'
+        else
+            path = dir(1:n) // '/xc_table_u' // trim(u_str) // '.dat'
+        end if
+    end subroutine xc_table_filename
+
     subroutine extract_U_from_filename(filename, U, ierr)
         character(len=*), intent(in) :: filename
         real(dp), intent(out) :: U
@@ -230,14 +272,48 @@ contains
 
     end subroutine extract_U_from_filename
     
+    !> Count the non-finite entries (NaN or ±Inf) in each data array of a table.
+    !!
+    !! Unallocated arrays count as zero. Used by `write_fortran_table` to refuse
+    !! persisting an invalid table, and by the generators to report which
+    !! quantity failed.
+    !!
+    !! @param[in]  table  XC table
+    !! @param[out] n_exc  Non-finite entries in `exc`
+    !! @param[out] n_up   Non-finite entries in `vxc_up`
+    !! @param[out] n_dn   Non-finite entries in `vxc_down`
+    subroutine count_nonfinite_entries(table, n_exc, n_up, n_dn)
+        type(xc_table_t), intent(in) :: table
+        integer, intent(out) :: n_exc, n_up, n_dn
+
+        n_exc = 0
+        n_up = 0
+        n_dn = 0
+        if (allocated(table%exc))      n_exc = count(.not. ieee_is_finite(table%exc))
+        if (allocated(table%vxc_up))   n_up  = count(.not. ieee_is_finite(table%vxc_up))
+        if (allocated(table%vxc_down)) n_dn  = count(.not. ieee_is_finite(table%vxc_down))
+    end subroutine count_nonfinite_entries
+
+    !> Write a table in the native binary format.
+    !!
+    !! Refuses to write, returning `ERROR_NOT_A_NUMBER` and creating no file,
+    !! when any entry of `exc`, `vxc_up` or `vxc_down` is NaN or ±Inf. A table
+    !! with holes would otherwise be read back by the SCF and the spline would
+    !! spread the invalid values over whole rows.
     subroutine write_fortran_table(filename, table, ierr)
         character(len=*), intent(in) :: filename
         type(xc_table_t), intent(in) :: table
         integer, intent(out) :: ierr
-        integer :: unit, io_stat
+        integer :: unit, io_stat, n_bad_exc, n_bad_up, n_bad_dn
 
         if (.not. allocated(table%n_grid)) then
             ierr = ERROR_INVALID_INPUT
+            return
+        end if
+
+        call count_nonfinite_entries(table, n_bad_exc, n_bad_up, n_bad_dn)
+        if (n_bad_exc + n_bad_up + n_bad_dn > 0) then
+            ierr = ERROR_NOT_A_NUMBER
             return
         end if
 
