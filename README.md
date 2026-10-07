@@ -909,8 +909,13 @@ the index subset `1..n_vec` (RANGE='I') only while `n_vec ≤ L/4`
 (`lapack_wrapper::FULL_SPECTRUM_FRACTION = 0.25`). Above that it requests the whole spectrum
 (RANGE='A') into an `L × L` workspace buffer and copies out the lowest `n_vec` pairs: with a
 subset DSTEVR falls back to DSTEBZ+DSTEIN, whereas the full spectrum goes through MRRR
-(DSTEMR), which at `L = 1000` is ~2.5× faster per call (31–32 ms vs 74–82 ms). The measured
-crossover is around `n_vec/L ≈ 0.7`; 0.25 was chosen with margin. The microbenchmark above
+(DSTEMR), which at `L = 1000` is ~2.5× faster per call (31–32 ms vs 74–82 ms). A sweep of
+`n_vec/L` on 2026-10-07 (L = 1000, Apple M4 Pro, Accelerate, gfortran 16.2 `-O3`, OBC,
+`V = 0.1 sin(j) − 0.5`, median of 3 `cpu_time` calls) gave RANGE='A' ≈ 31 ms regardless of
+`n_vec`, and RANGE='I' 13.8 / 29.6 / 45.8 / 71.8 / 140 ms at `n_vec/L` = 0.05 / 0.10 / 0.15 /
+0.25 / 0.50, i.e. the two paths cross at `n_vec/L ≈ 0.10–0.11` (the same ratio at `L = 400`).
+The 0.25 threshold therefore sits above the measured crossover: RANGE='A' is already ~2.4×
+faster there, and the margin favours the subset path. The microbenchmark above
 (`n_vec = 55`) stays on the subset path and is unaffected; re-measured on 2026-10-07 it gave
 0.0199 s partial / 0.0674 s dense at `L = 1000` (3.38×), within run-to-run noise of the table.
 

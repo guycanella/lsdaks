@@ -18,9 +18,12 @@ module lapack_wrapper
     !> Fraction of the spectrum above which `diagonalize_open_tridiagonal` asks
     !! DSTEVR for all L eigenpairs (RANGE='A', MRRR via DSTEMR) and discards the
     !! unused ones, instead of RANGE='I' (bisection + inverse iteration,
-    !! DSTEBZ+DSTEIN). Measured on L=1000 (Apple M4 Pro, Accelerate): RANGE='I'
-    !! with n_vec=255 costs 74-82 ms/call, RANGE='A' 31-32 ms/call; the two
-    !! paths cross around n_vec/L ~ 0.7, so 0.25 leaves a wide margin.
+    !! DSTEBZ+DSTEIN). Measured 2026-10-07 on L=1000 (Apple M4 Pro, Accelerate,
+    !! gfortran 16.2 -O3, median of 3 cpu_time calls, OBC, V=0.1*sin(j)-0.5):
+    !! RANGE='A' costs ~31 ms independent of n_vec; RANGE='I' grows linearly,
+    !! 13.8 ms at n_vec/L=0.05, 29.6 ms at 0.10, 45.8 ms at 0.15, 71.8 ms at
+    !! 0.25. The paths cross at n_vec/L ~ 0.10-0.11 (same at L=400), so 'A' is
+    !! already ~2.4x faster at 0.25; the threshold errs toward the subset path.
     real(dp), public, parameter :: FULL_SPECTRUM_FRACTION = 0.25_dp
 
     public :: validate_diagonalization_inputs
