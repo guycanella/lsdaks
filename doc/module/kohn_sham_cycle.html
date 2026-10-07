@@ -62,10 +62,16 @@
                   <a class="nav-link" href="../lists/procedures.html">Procedures</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" href="../lists/types.html">Derived Types</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
                 </li>
             </ul>
               <div class="d-flex align-items-end flex-grow-1">
@@ -92,7 +98,7 @@
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
               <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-                 title="10.7% of total for modules and submodules.">475 statements</a>
+                 title=" 7.7% of total for modules and submodules.">452 statements</a>
             </li>
 
             <li class="list-inline-item" id="source-file">
@@ -126,7 +132,19 @@
         <div id="sidebar">
       <h3>Contents</h3>
   
-  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/kohn_sham_cycle.html#variable-half_filling_tol">HALF_FILLING_TOL</a>
+            <a class="list-group-item" href="../module/kohn_sham_cycle.html#variable-oscillation_streak_min">OSCILLATION_STREAK_MIN</a>
+        </div>
+      </div>
+    </div>
+
   
   
   
@@ -148,7 +166,19 @@
       </div>
     </div>
 
-  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#funcs-0"
+         aria-expanded="false" aria-controls="funcs-0">
+         <h4 class="card-header bg-primary text-white">Functions</h4>
+      </a>
+      <div id="funcs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-count_half_filled_sites">count_half_filled_sites</a>
+            <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-half_filling_warning_due">half_filling_warning_due</a>
+        </div>
+      </div>
+    </div>
+
       <div class="card mb-4">
       <a data-bs-toggle="collapse" href="#subs-0"
          aria-expanded="false" aria-controls="subs-0">
@@ -158,7 +188,10 @@
         <div class="list-group list-group-flush">
             <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-compute_total_energy">compute_total_energy</a>
             <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-validate_kohn_sham_cycle_inputs">validate_kohn_sham_cycle_inputs</a>
+            <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-validate_xc_functional">validate_xc_functional</a>
+            <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-populate_xc_output_cache">populate_xc_output_cache</a>
             <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-run_kohn_sham_scf_real">run_kohn_sham_scf_real</a>
+            <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-run_kohn_sham_scf_common">run_kohn_sham_scf_common</a>
             <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-run_kohn_sham_scf_complex">run_kohn_sham_scf_complex</a>
             <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-init_scf_results">init_scf_results</a>
             <a class="list-group-item" href="../module/kohn_sham_cycle.html#proc-cleanup_scf_results">cleanup_scf_results</a>
@@ -187,399 +220,409 @@
         <ul class="list-group list-group-flush">
             <li class="list-group-item">
               <ul class="list-inline">
-                  <li class="list-inline-item"><a href='lsda_constants.html'>lsda_constants</a></li>
-                  <li class="list-inline-item"><a href='lapack_wrapper.html'>lapack_wrapper</a></li>
-                  <li class="list-inline-item"><a href='adaptive_mixing.html'>adaptive_mixing</a></li>
                   <li class="list-inline-item"><a href='hamiltonian_builder.html'>hamiltonian_builder</a></li>
-                  <li class="list-inline-item"><a href='lsda_types.html'>lsda_types</a></li>
                   <li class="list-inline-item"><a href='boundary_conditions.html'>boundary_conditions</a></li>
-                  <li class="list-inline-item"><a href='lsda_errors.html'>lsda_errors</a></li>
                   <li class="list-inline-item"><a href='xc_lsda.html'>xc_lsda</a></li>
-                  <li class="list-inline-item"><a href='mixing_schemes.html'>mixing_schemes</a></li>
+                  <li class="list-inline-item"><a href='lapack_wrapper.html'>lapack_wrapper</a></li>
+                  <li class="list-inline-item"><a href='http://fortranwiki.org/fortran/show/ieee_arithmetic'>ieee_arithmetic</a></li>
+                  <li class="list-inline-item"><a href='lsda_constants.html'>lsda_constants</a></li>
+                  <li class="list-inline-item"><a href='lsda_types.html'>lsda_types</a></li>
+                  <li class="list-inline-item"><a href='lsda_errors.html'>lsda_errors</a></li>
                   <li class="list-inline-item"><a href='density_calculator.html'>density_calculator</a></li>
+                  <li class="list-inline-item"><a href='adaptive_mixing.html'>adaptive_mixing</a></li>
                   <li class="list-inline-item"><a href='convergence_monitor.html'>convergence_monitor</a></li>
+                  <li class="list-inline-item"><a href='http://fortranwiki.org/fortran/show/iso_fortran_env'>iso_fortran_env</a></li>
               </ul>
             </li>
             <li class="list-group-item">
               <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
  -->
 <!-- Title: module~~kohn_sham_cycle~~UsesGraph Pages: 1 -->
-<svg id="modulekohn_sham_cycleUsesGraph" width="641pt" height="441pt"
- viewBox="0.00 0.00 641.00 441.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="module~~kohn_sham_cycle~~UsesGraph" class="graph" transform="scale(0.867835 0.867835) rotate(0) translate(4 504.71)">
+<svg id="modulekohn_sham_cycleUsesGraph" width="641pt" height="378pt"
+ viewBox="0.00 0.00 641.00 378.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~kohn_sham_cycle~~UsesGraph" class="graph" transform="scale(0.84635 0.84635) rotate(0) translate(4 442.89)">
 <title>module~~kohn_sham_cycle~~UsesGraph</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-504.71 734.62,-504.71 734.62,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-442.89 753.37,-442.89 753.37,4 -4,4"/>
 <!-- module~kohn_sham_cycle -->
 <g id="module~~kohn_sham_cycle~~UsesGraph_node1" class="node">
 <title>module~kohn_sham_cycle</title>
-<polygon fill="none" stroke="black" points="730.62,-259.77 633.6,-259.77 633.6,-237 730.62,-237 730.62,-259.77"/>
-<text xml:space="preserve" text-anchor="middle" x="682.11" y="-244.03" font-family="Helvetica,sans-Serif" font-size="10.50">kohn_sham_cycle</text>
+<polygon fill="none" stroke="black" points="749.37,-220.43 652.35,-220.43 652.35,-197.66 749.37,-197.66 749.37,-220.43"/>
+<text xml:space="preserve" text-anchor="middle" x="700.86" y="-204.7" font-family="Helvetica,sans-Serif" font-size="10.50">kohn_sham_cycle</text>
+</g>
+<!-- ieee_arithmetic -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_node2" class="node">
+<title>ieee_arithmetic</title>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node2"><a xlink:href="http://fortranwiki.org/fortran/show/ieee_arithmetic" xlink:title="ieee_arithmetic">
+<polygon fill="#337ab7" stroke="#337ab7" points="324.81,-121.43 240.54,-121.43 240.54,-98.66 324.81,-98.66 324.81,-121.43"/>
+<text xml:space="preserve" text-anchor="middle" x="282.67" y="-105.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ieee_arithmetic</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;ieee_arithmetic -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge1" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M651.88,-201.9C626.17,-198.16 593.93,-193.63 565.09,-190.05"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M563.09,-190.05C504.55,-182.77 524.88,-122.81 475.83,-90.05 453.8,-75.33 445.42,-75.63 419.32,-71.05"/>
+</g>
+<!-- iso_fortran_env -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_node3" class="node">
+<title>iso_fortran_env</title>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node3"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-181.43 0,-181.43 0,-158.66 85.77,-158.66 85.77,-181.43"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-165.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- module~kohn_sham_cycle&#45;&gt;iso_fortran_env -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge2" class="edge">
+<title>module~kohn_sham_cycle&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-428.05C263.22,-419.99 256.48,-421.36 240.54,-409.05 156.47,-344.14 84.99,-236.99 56.77,-191.52"/>
+<polygon fill="#000000" stroke="#000000" points="59.84,-189.82 51.63,-183.12 53.87,-193.47 59.84,-189.82"/>
 </g>
 <!-- module~adaptive_mixing -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node2" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node4" class="node">
 <title>module~adaptive_mixing</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node2"><a xlink:href="../module/adaptive_mixing.html" xlink:title="adaptive_mixing">
-<polygon fill="#337ab7" stroke="#337ab7" points="443.95,-457.77 355.18,-457.77 355.18,-435 443.95,-435 443.95,-457.77"/>
-<text xml:space="preserve" text-anchor="middle" x="399.57" y="-442.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mixing</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node4"><a xlink:href="../module/adaptive_mixing.html" xlink:title="adaptive_mixing">
+<polygon fill="#337ab7" stroke="#337ab7" points="462.7,-240.43 373.93,-240.43 373.93,-217.66 462.7,-217.66 462.7,-240.43"/>
+<text xml:space="preserve" text-anchor="middle" x="418.32" y="-224.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">adaptive_mixing</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge1" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge3" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~adaptive_mixing</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M679.1,-260.05C671.26,-301.28 638.5,-440.04 546.34,-485.38"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-485.38C525.78,-494.52 474.29,-477.01 438.26,-462.59"/>
-<polygon fill="#000000" stroke="#000000" points="439.61,-459.36 429.03,-458.82 436.96,-465.84 439.61,-459.36"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M563.09,-190.05C543.75,-187.65 497.37,-201.58 462.47,-213.46"/>
+<polygon fill="#000000" stroke="#000000" points="461.34,-210.15 453.03,-216.73 463.62,-216.77 461.34,-210.15"/>
 </g>
 <!-- module~boundary_conditions -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node3" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node5" class="node">
 <title>module~boundary_conditions</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node3"><a xlink:href="../module/boundary_conditions.html" xlink:title="boundary_conditions">
-<polygon fill="#337ab7" stroke="#337ab7" points="454.83,-338.77 344.31,-338.77 344.31,-316 454.83,-316 454.83,-338.77"/>
-<text xml:space="preserve" text-anchor="middle" x="399.57" y="-323.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">boundary_conditions</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node5"><a xlink:href="../module/boundary_conditions.html" xlink:title="boundary_conditions">
+<polygon fill="#337ab7" stroke="#337ab7" points="473.58,-400.43 363.06,-400.43 363.06,-377.66 473.58,-377.66 473.58,-400.43"/>
+<text xml:space="preserve" text-anchor="middle" x="418.32" y="-384.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">boundary_conditions</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~boundary_conditions -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge2" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge4" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~boundary_conditions</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-169.38C486.23,-159.26 497.07,-226.02 457.08,-269.38 445.2,-282.27 431.49,-296.36 420.55,-307.43"/>
-<polygon fill="#000000" stroke="#000000" points="418.08,-304.94 413.52,-314.5 423.05,-309.87 418.08,-304.94"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M563.09,-428.05C543.89,-434.73 494.04,-418.49 458.43,-404.97"/>
+<polygon fill="#000000" stroke="#000000" points="459.89,-401.78 449.3,-401.43 457.36,-408.31 459.89,-401.78"/>
 </g>
 <!-- module~convergence_monitor -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node4" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node6" class="node">
 <title>module~convergence_monitor</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node4"><a xlink:href="../module/convergence_monitor.html" xlink:title="convergence_monitor">
-<polygon fill="#337ab7" stroke="#337ab7" points="457.08,-260.77 342.06,-260.77 342.06,-238 457.08,-238 457.08,-260.77"/>
-<text xml:space="preserve" text-anchor="middle" x="399.57" y="-245.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">convergence_monitor</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node6"><a xlink:href="../module/convergence_monitor.html" xlink:title="convergence_monitor">
+<polygon fill="#337ab7" stroke="#337ab7" points="475.83,-322.43 360.81,-322.43 360.81,-299.66 475.83,-299.66 475.83,-322.43"/>
+<text xml:space="preserve" text-anchor="middle" x="418.32" y="-306.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">convergence_monitor</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~convergence_monitor -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge3" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge5" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~convergence_monitor</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-169.38C498.22,-161.35 498.71,-206.97 457.08,-228.38 453.82,-230.06 450.4,-231.67 446.92,-233.2"/>
-<polygon fill="#000000" stroke="#000000" points="445.7,-229.92 437.8,-236.97 448.38,-236.39 445.7,-229.92"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M697.74,-220.81C689.65,-261.61 656.37,-396.28 565.09,-428.05"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M563.09,-428.05C548.53,-433.12 475.2,-365.03 439.25,-330.48"/>
+<polygon fill="#000000" stroke="#000000" points="442.09,-328.35 432.47,-323.92 437.23,-333.39 442.09,-328.35"/>
 </g>
 <!-- module~density_calculator -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node5" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node7" class="node">
 <title>module~density_calculator</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node5"><a xlink:href="../module/density_calculator.html" xlink:title="density_calculator">
-<polygon fill="#337ab7" stroke="#337ab7" points="448.08,-219.77 351.06,-219.77 351.06,-197 448.08,-197 448.08,-219.77"/>
-<text xml:space="preserve" text-anchor="middle" x="399.57" y="-204.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">density_calculator</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node7"><a xlink:href="../module/density_calculator.html" xlink:title="density_calculator">
+<polygon fill="#337ab7" stroke="#337ab7" points="466.83,-121.43 369.81,-121.43 369.81,-98.66 466.83,-98.66 466.83,-121.43"/>
+<text xml:space="preserve" text-anchor="middle" x="418.32" y="-105.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">density_calculator</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~density_calculator -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge4" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge6" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~density_calculator</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-169.38C524.89,-165.99 477.49,-180.53 442.4,-192.8"/>
-<polygon fill="#000000" stroke="#000000" points="441.63,-189.36 433.38,-196.01 443.97,-195.96 441.63,-189.36"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M563.09,-190.05C516.63,-184.27 517.46,-152.47 475.83,-131.05 472.57,-129.37 469.15,-127.76 465.67,-126.23"/>
+<polygon fill="#000000" stroke="#000000" points="467.13,-123.05 456.55,-122.47 464.45,-129.52 467.13,-123.05"/>
 </g>
 <!-- module~hamiltonian_builder -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node6" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node8" class="node">
 <title>module~hamiltonian_builder</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node6"><a xlink:href="../module/hamiltonian_builder.html" xlink:title="hamiltonian_builder">
-<polygon fill="#337ab7" stroke="#337ab7" points="597.6,-338.77 493.08,-338.77 493.08,-316 597.6,-316 597.6,-338.77"/>
-<text xml:space="preserve" text-anchor="middle" x="545.34" y="-323.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">hamiltonian_builder</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node8"><a xlink:href="../module/hamiltonian_builder.html" xlink:title="hamiltonian_builder">
+<polygon fill="#337ab7" stroke="#337ab7" points="616.35,-240.43 511.83,-240.43 511.83,-217.66 616.35,-217.66 616.35,-240.43"/>
+<text xml:space="preserve" text-anchor="middle" x="564.09" y="-224.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">hamiltonian_builder</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge5" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge7" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~hamiltonian_builder</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M660.93,-260.21C638.37,-273.44 601.63,-294.98 575.84,-310.09"/>
-<polygon fill="#000000" stroke="#000000" points="574.38,-306.89 567.52,-314.97 577.92,-312.93 574.38,-306.89"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M651.97,-216.16C644.15,-217.32 635.95,-218.53 627.84,-219.74"/>
+<polygon fill="#000000" stroke="#000000" points="627.36,-216.27 617.98,-221.2 628.39,-223.19 627.36,-216.27"/>
 </g>
 <!-- module~lapack_wrapper -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node7" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node9" class="node">
 <title>module~lapack_wrapper</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node7"><a xlink:href="../module/lapack_wrapper.html" xlink:title="lapack_wrapper">
-<polygon fill="#337ab7" stroke="#337ab7" points="443.2,-141.77 355.93,-141.77 355.93,-119 443.2,-119 443.2,-141.77"/>
-<text xml:space="preserve" text-anchor="middle" x="399.57" y="-126.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lapack_wrapper</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node9"><a xlink:href="../module/lapack_wrapper.html" xlink:title="lapack_wrapper">
+<polygon fill="#337ab7" stroke="#337ab7" points="461.95,-281.43 374.68,-281.43 374.68,-258.66 461.95,-258.66 461.95,-281.43"/>
+<text xml:space="preserve" text-anchor="middle" x="418.32" y="-265.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lapack_wrapper</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge6" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge8" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~lapack_wrapper</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-169.38C511.65,-163.69 475.61,-153.9 447.79,-145.56"/>
-<polygon fill="#000000" stroke="#000000" points="448.82,-142.22 438.24,-142.65 446.78,-148.91 448.82,-142.22"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M563.09,-190.05C538.98,-187.05 531.93,-195.4 511.83,-209.05 492.04,-222.48 495.61,-235.61 475.83,-249.05 473.64,-250.54 471.33,-251.94 468.94,-253.25"/>
+<polygon fill="#000000" stroke="#000000" points="467.66,-249.99 460.2,-257.51 470.72,-256.28 467.66,-249.99"/>
 </g>
 <!-- module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node8" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node10" class="node">
 <title>module~lsda_constants</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node8"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
-<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-80.77 121.77,-80.77 121.77,-58 204.54,-58 204.54,-80.77"/>
-<text xml:space="preserve" text-anchor="middle" x="163.15" y="-65.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node10"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
+<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-181.43 121.77,-181.43 121.77,-158.66 204.54,-158.66 204.54,-181.43"/>
+<text xml:space="preserve" text-anchor="middle" x="163.15" y="-165.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge7" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge9" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-485.38C372.37,-481.43 365.05,-479.56 342.06,-466.38 307.41,-446.53 310.64,-423.94 274.3,-407.38"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-485.38C487.01,-513.59 463.75,-494.92 400.57,-485.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M417.32,-428.05C358.07,-423.81 338.11,-451.82 283.67,-428.05"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-428.05C263.22,-419.99 253.88,-424.14 240.54,-409.05 184.25,-345.35 169.39,-239.88 165.51,-193.34"/>
+<polygon fill="#000000" stroke="#000000" points="169,-193.09 164.79,-183.37 162.02,-193.6 169,-193.09"/>
 </g>
 <!-- module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node9" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node11" class="node">
 <title>module~lsda_errors</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node9"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
-<polygon fill="#337ab7" stroke="#337ab7" points="306.06,-160.77 240.54,-160.77 240.54,-138 306.06,-138 306.06,-160.77"/>
-<text xml:space="preserve" text-anchor="middle" x="273.3" y="-145.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node11"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
+<polygon fill="#337ab7" stroke="#337ab7" points="315.43,-201.43 249.91,-201.43 249.91,-178.66 315.43,-178.66 315.43,-201.43"/>
+<text xml:space="preserve" text-anchor="middle" x="282.67" y="-185.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge8" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge10" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-169.38C465.33,-155.62 371.7,-151.32 318.03,-149.98"/>
-<polygon fill="#000000" stroke="#000000" points="318.15,-146.48 308.07,-149.76 317.99,-153.48 318.15,-146.48"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M563.09,-190.05C499.68,-182.17 483.15,-187.14 419.32,-190.05"/>
 </g>
 <!-- module~lsda_types -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node10" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node12" class="node">
 <title>module~lsda_types</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node10"><a xlink:href="../module/lsda_types.html" xlink:title="lsda_types">
-<polygon fill="#337ab7" stroke="#337ab7" points="304.56,-496.77 242.04,-496.77 242.04,-474 304.56,-474 304.56,-496.77"/>
-<text xml:space="preserve" text-anchor="middle" x="273.3" y="-481.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_types</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node12"><a xlink:href="../module/lsda_types.html" xlink:title="lsda_types">
+<polygon fill="#337ab7" stroke="#337ab7" points="313.93,-400.43 251.41,-400.43 251.41,-377.66 313.93,-377.66 313.93,-400.43"/>
+<text xml:space="preserve" text-anchor="middle" x="282.67" y="-384.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_types</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~lsda_types -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge9" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge11" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~lsda_types</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-485.38C371.35,-481.28 340.38,-481.26 316.17,-482.29"/>
-<polygon fill="#000000" stroke="#000000" points="316.2,-478.78 306.39,-482.78 316.55,-485.77 316.2,-478.78"/>
-</g>
-<!-- module~mixing_schemes -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node11" class="node">
-<title>module~mixing_schemes</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node11"><a xlink:href="../module/mixing_schemes.html" xlink:title="mixing_schemes">
-<polygon fill="#337ab7" stroke="#337ab7" points="445.08,-100.77 354.06,-100.77 354.06,-78 445.08,-78 445.08,-100.77"/>
-<text xml:space="preserve" text-anchor="middle" x="399.57" y="-85.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mixing_schemes</text>
-</a>
-</g>
-</g>
-<!-- module~kohn_sham_cycle&#45;&gt;module~mixing_schemes -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge10" class="edge">
-<title>module~kohn_sham_cycle&#45;&gt;module~mixing_schemes</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M544.34,-169.38C498.22,-161.35 498.71,-131.8 457.08,-110.39 453.82,-108.71 450.4,-107.1 446.92,-105.57"/>
-<polygon fill="#000000" stroke="#000000" points="448.38,-102.38 437.8,-101.8 445.7,-108.85 448.38,-102.38"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M668.62,-236.79C646.23,-217.05 596.84,-178.19 546.34,-169.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M563.09,-428.05C502.74,-449.05 483.06,-432.61 419.32,-428.05"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M417.32,-428.05C384.31,-425.69 348.37,-414.69 322.09,-404.98"/>
+<polygon fill="#000000" stroke="#000000" points="323.45,-401.75 312.86,-401.46 320.96,-408.29 323.45,-401.75"/>
 </g>
 <!-- module~xc_lsda -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node12" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node13" class="node">
 <title>module~xc_lsda</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node12"><a xlink:href="../module/xc_lsda.html" xlink:title="xc_lsda">
-<polygon fill="#337ab7" stroke="#337ab7" points="572.34,-61.77 518.34,-61.77 518.34,-39 572.34,-39 572.34,-61.77"/>
-<text xml:space="preserve" text-anchor="middle" x="545.34" y="-46.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">xc_lsda</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node13"><a xlink:href="../module/xc_lsda.html" xlink:title="xc_lsda">
+<polygon fill="#337ab7" stroke="#337ab7" points="591.09,-122.43 537.09,-122.43 537.09,-99.66 591.09,-99.66 591.09,-122.43"/>
+<text xml:space="preserve" text-anchor="middle" x="564.09" y="-106.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">xc_lsda</text>
 </a>
 </g>
 </g>
 <!-- module~kohn_sham_cycle&#45;&gt;module~xc_lsda -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge11" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge12" class="edge">
 <title>module~kohn_sham_cycle&#45;&gt;module~xc_lsda</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M673.08,-236.59C650.99,-204.13 589.03,-113.1 560.74,-71.55"/>
-<polygon fill="#000000" stroke="#000000" points="563.7,-69.66 555.18,-63.37 557.91,-73.6 563.7,-69.66"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M683.6,-197.23C660.43,-180.38 617.69,-149.3 590.37,-129.43"/>
+<polygon fill="#000000" stroke="#000000" points="592.77,-126.85 582.63,-123.8 588.66,-132.51 592.77,-126.85"/>
 </g>
 <!-- module~adaptive_mixing&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge12" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge13" class="edge">
 <title>module~adaptive_mixing&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M354.74,-435.5C330.49,-428.77 300.12,-419.17 274.3,-407.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M376.97,-240.84C371.27,-243.4 365.7,-246.45 360.81,-250.05 315.61,-283.33 336.44,-369.2 283.67,-350.05"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-350.05C213.84,-325.42 181.43,-235.3 169.64,-192.68"/>
+<polygon fill="#000000" stroke="#000000" points="173.08,-192.03 167.17,-183.24 166.31,-193.81 173.08,-192.03"/>
 </g>
 <!-- module~adaptive_mixing&#45;&gt;module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge13" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge14" class="edge">
 <title>module~adaptive_mixing&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M383.47,-434.6C370.67,-423.86 352.76,-406.88 342.06,-388.38 300.31,-316.19 282.97,-216.7 276.99,-172.34"/>
-<polygon fill="#000000" stroke="#000000" points="280.48,-172.1 275.75,-162.63 273.54,-172.99 280.48,-172.1"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M376.86,-217.24C360.88,-212.58 342.5,-207.22 326.32,-202.49"/>
+<polygon fill="#000000" stroke="#000000" points="327.55,-199.21 316.97,-199.77 325.59,-205.93 327.55,-199.21"/>
 </g>
 <!-- module~boundary_conditions&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge14" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge15" class="edge">
 <title>module~boundary_conditions&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.91,-339.21C354.43,-341.85 347.91,-344.91 342.06,-348.38 307.73,-368.78 310.63,-423.96 274.3,-407.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M371.39,-377.22C345.38,-370.13 312.41,-360.48 283.67,-350.05"/>
 </g>
 <!-- module~boundary_conditions&#45;&gt;module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge15" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge16" class="edge">
 <title>module~boundary_conditions&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M361.13,-315.52C354.19,-312.09 347.45,-307.77 342.06,-302.38 305.08,-265.42 286.6,-204.79 278.89,-172.06"/>
-<polygon fill="#000000" stroke="#000000" points="282.35,-171.47 276.77,-162.46 275.51,-172.98 282.35,-171.47"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M404.16,-377.49C391.98,-366.37 373.85,-348.69 360.81,-331.05 331.82,-291.83 306.46,-240.43 293.28,-211.77"/>
+<polygon fill="#000000" stroke="#000000" points="296.64,-210.69 289.33,-203.02 290.26,-213.57 296.64,-210.69"/>
 </g>
 <!-- module~convergence_monitor&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge16" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge17" class="edge">
 <title>module~convergence_monitor&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M385.78,-261.24C373.87,-272.57 355.92,-290.39 342.06,-307.38 308.14,-349 323.14,-429.67 274.3,-407.38"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M390.77,-322.82C357.76,-336.75 303.38,-357.2 283.67,-350.05"/>
 </g>
 <!-- module~convergence_monitor&#45;&gt;module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge17" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge18" class="edge">
 <title>module~convergence_monitor&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M358.98,-237.62C353.05,-235.04 347.21,-231.98 342.06,-228.38 319.76,-212.84 300.26,-188.27 287.98,-170.66"/>
-<polygon fill="#000000" stroke="#000000" points="290.95,-168.81 282.46,-162.48 285.15,-172.72 290.95,-168.81"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M376.97,-299.25C371.27,-296.7 365.7,-293.65 360.81,-290.05 331.98,-268.82 308.55,-233.99 295.36,-211.55"/>
+<polygon fill="#000000" stroke="#000000" points="298.46,-209.92 290.47,-202.95 292.37,-213.38 298.46,-209.92"/>
+</g>
+<!-- module~density_calculator&#45;&gt;ieee_arithmetic -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge19" class="edge">
+<title>module~density_calculator&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M369.45,-110.05C358.66,-110.05 347.16,-110.05 336.2,-110.05"/>
+<polygon fill="#000000" stroke="#000000" points="336.54,-106.55 326.54,-110.05 336.54,-113.55 336.54,-106.55"/>
 </g>
 <!-- module~density_calculator&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge18" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge20" class="edge">
 <title>module~density_calculator&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M354.9,-220.13C350.19,-222.65 345.78,-225.7 342.06,-229.38 281.97,-289 351.31,-442.52 274.3,-407.38"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-407.38C212.55,-380.12 177.31,-163.84 167.2,-92.28"/>
-<polygon fill="#000000" stroke="#000000" points="170.69,-91.96 165.86,-82.53 163.76,-92.92 170.69,-91.96"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-151.05C260.23,-154.37 236.62,-158.17 216.21,-161.48"/>
+<polygon fill="#000000" stroke="#000000" points="215.73,-158.02 206.42,-163.08 216.85,-164.93 215.73,-158.02"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M382.82,-121.87C349.97,-132.9 302.8,-148.08 283.67,-151.05"/>
 </g>
 <!-- module~density_calculator&#45;&gt;module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge19" class="edge">
-<title>module~density_calculator&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M371.14,-196.57C361.86,-192.49 351.47,-187.82 342.06,-183.38 330.6,-177.98 318.18,-171.83 307.15,-166.27"/>
-<polygon fill="#000000" stroke="#000000" points="308.91,-163.24 298.41,-161.84 305.75,-169.48 308.91,-163.24"/>
-</g>
-<!-- module~hamiltonian_builder&#45;&gt;module~boundary_conditions -->
 <g id="module~~kohn_sham_cycle~~UsesGraph_edge21" class="edge">
-<title>module~hamiltonian_builder&#45;&gt;module~boundary_conditions</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M492.84,-327.38C484.33,-327.38 475.39,-327.38 466.58,-327.38"/>
-<polygon fill="#000000" stroke="#000000" points="466.62,-323.89 456.62,-327.39 466.62,-330.89 466.62,-323.89"/>
-</g>
-<!-- module~hamiltonian_builder&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge22" class="edge">
-<title>module~hamiltonian_builder&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M531.94,-339.19C516.02,-353.56 486.87,-377.28 457.08,-388.38 380.55,-416.91 348.6,-441.29 274.3,-407.38"/>
-</g>
-<!-- module~hamiltonian_builder&#45;&gt;module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge23" class="edge">
-<title>module~hamiltonian_builder&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M495.81,-315.53C439.95,-301.56 354.29,-279.03 342.06,-269.38 309.83,-243.95 290.36,-198.7 281.03,-171.62"/>
-<polygon fill="#000000" stroke="#000000" points="284.44,-170.78 278.01,-162.36 277.78,-172.95 284.44,-170.78"/>
-</g>
-<!-- ieee_arithmetic -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node13" class="node">
-<title>ieee_arithmetic</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node13"><a xlink:href="http://fortranwiki.org/fortran/show/ieee_arithmetic" xlink:title="ieee_arithmetic">
-<polygon fill="#337ab7" stroke="#337ab7" points="441.7,-379.77 357.43,-379.77 357.43,-357 441.7,-357 441.7,-379.77"/>
-<text xml:space="preserve" text-anchor="middle" x="399.57" y="-364.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ieee_arithmetic</text>
-</a>
-</g>
+<title>module~density_calculator&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M378.94,-121.92C372.68,-124.53 366.41,-127.57 360.81,-131.05 342.12,-142.67 342.31,-151.7 324.81,-165.05 321.49,-167.58 317.9,-170.07 314.27,-172.45"/>
+<polygon fill="#000000" stroke="#000000" points="312.65,-169.34 306.02,-177.61 316.36,-175.28 312.65,-169.34"/>
 </g>
 <!-- module~hamiltonian_builder&#45;&gt;ieee_arithmetic -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge20" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge22" class="edge">
 <title>module~hamiltonian_builder&#45;&gt;ieee_arithmetic</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M502.76,-339.24C487.26,-343.66 469.46,-348.74 453.11,-353.4"/>
-<polygon fill="#000000" stroke="#000000" points="452.17,-350.03 443.52,-356.14 454.09,-356.76 452.17,-350.03"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M528.93,-217.24C522.58,-213.79 516.48,-209.45 511.83,-204.05 477.14,-163.81 513.05,-127.97 475.83,-90.05 457.27,-71.14 445.42,-75.63 419.32,-71.05"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~boundary_conditions -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge23" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~boundary_conditions</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M558.32,-240.78C547.37,-266.41 518.06,-327.99 475.83,-364.05 472.44,-366.94 468.66,-369.56 464.71,-371.91"/>
+<polygon fill="#000000" stroke="#000000" points="463.21,-368.74 455.99,-376.5 466.47,-374.94 463.21,-368.74"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_constants -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge24" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M557.08,-240.76C545.05,-262.84 515.71,-310.25 475.83,-331.05 399.74,-370.74 364.34,-379.34 283.67,-350.05"/>
+</g>
+<!-- module~hamiltonian_builder&#45;&gt;module~lsda_errors -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge25" class="edge">
+<title>module~hamiltonian_builder&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M538.18,-217.25C509.93,-205.07 462.21,-188.09 419.32,-190.05"/>
 </g>
 <!-- module~lapack_wrapper&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge24" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge26" class="edge">
 <title>module~lapack_wrapper&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M365.24,-118.53C331.67,-106.73 283.55,-90.24 274.3,-89.39"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M380.73,-281.83C373.95,-284.52 367.04,-287.61 360.81,-291.05 323.02,-311.91 324.24,-364.78 283.67,-350.05"/>
 </g>
 <!-- module~lapack_wrapper&#45;&gt;module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge25" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge27" class="edge">
 <title>module~lapack_wrapper&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M355.46,-136.98C343.24,-138.85 329.93,-140.88 317.7,-142.75"/>
-<polygon fill="#000000" stroke="#000000" points="317.22,-139.28 307.86,-144.25 318.27,-146.2 317.22,-139.28"/>
-</g>
-<!-- iso_fortran_env -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node14" class="node">
-<title>iso_fortran_env</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node14"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
-<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-41.77 0,-41.77 0,-19 85.77,-19 85.77,-41.77"/>
-<text xml:space="preserve" text-anchor="middle" x="42.88" y="-26.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
-</a>
-</g>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M380.73,-258.27C373.95,-255.58 367.04,-252.49 360.81,-249.05 340.52,-237.85 319.78,-221.66 304.92,-209.08"/>
+<polygon fill="#000000" stroke="#000000" points="307.49,-206.67 297.63,-202.77 302.91,-211.96 307.49,-206.67"/>
 </g>
 <!-- module~lsda_constants&#45;&gt;iso_fortran_env -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge26" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge28" class="edge">
 <title>module~lsda_constants&#45;&gt;iso_fortran_env</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M126.35,-57.58C115,-53.84 102.29,-49.64 90.31,-45.69"/>
-<polygon fill="#000000" stroke="#000000" points="91.6,-42.43 81.01,-42.63 89.41,-49.08 91.6,-42.43"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M121.45,-170.05C113.64,-170.05 105.35,-170.05 97.21,-170.05"/>
+<polygon fill="#000000" stroke="#000000" points="97.38,-166.55 87.38,-170.05 97.38,-173.55 97.38,-166.55"/>
 </g>
 <!-- module~lsda_errors&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge27" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge29" class="edge">
 <title>module~lsda_errors&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M256.34,-137.58C238.69,-124.52 210.02,-103.31 189.33,-88.01"/>
-<polygon fill="#000000" stroke="#000000" points="191.52,-85.27 181.39,-82.14 187.35,-90.9 191.52,-85.27"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M249.56,-184.58C239.16,-182.81 227.35,-180.8 215.9,-178.86"/>
+<polygon fill="#000000" stroke="#000000" points="216.58,-175.42 206.13,-177.19 215.4,-182.32 216.58,-175.42"/>
 </g>
 <!-- module~lsda_types&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge28" class="edge">
-<title>module~lsda_types&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M265.29,-473.51C258.14,-460.94 247.19,-440.35 240.54,-421.38 198.42,-301.23 174.98,-149.55 167.15,-92.49"/>
-<polygon fill="#000000" stroke="#000000" points="170.64,-92.17 165.84,-82.72 163.7,-93.1 170.64,-92.17"/>
-</g>
-<!-- module~mixing_schemes&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge29" class="edge">
-<title>module~mixing_schemes&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M353.61,-91.38C329.96,-91.93 300.51,-91.81 274.3,-89.39"/>
-</g>
-<!-- module~mixing_schemes&#45;&gt;module~lsda_errors -->
 <g id="module~~kohn_sham_cycle~~UsesGraph_edge30" class="edge">
-<title>module~mixing_schemes&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M363.83,-101.26C356.54,-104.03 348.98,-107.14 342.06,-110.39 328.76,-116.63 314.58,-124.57 302.66,-131.65"/>
-<polygon fill="#000000" stroke="#000000" points="300.88,-128.64 294.13,-136.81 304.5,-134.63 300.88,-128.64"/>
+<title>module~lsda_types&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M256.62,-377.37C250.76,-373.74 244.95,-369.29 240.54,-364.05 196.78,-312.08 176.13,-232.04 168.22,-193.02"/>
+<polygon fill="#000000" stroke="#000000" points="171.69,-192.53 166.37,-183.37 164.82,-193.84 171.69,-192.53"/>
+</g>
+<!-- module~xc_lsda&#45;&gt;ieee_arithmetic -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge31" class="edge">
+<title>module~xc_lsda&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M417.32,-71.05C380.75,-64.63 339.95,-79.96 313.16,-93.24"/>
+<polygon fill="#000000" stroke="#000000" points="311.89,-89.96 304.62,-97.68 315.11,-96.18 311.89,-89.96"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M536.69,-102.02C508.12,-92.65 461.04,-78.37 419.32,-71.05"/>
 </g>
 <!-- module~xc_lsda&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge31" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge32" class="edge">
 <title>module~xc_lsda&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-89.39C253.9,-87.68 233.95,-84.4 216.26,-80.99"/>
-<polygon fill="#000000" stroke="#000000" points="216.97,-77.56 206.48,-79.04 215.6,-84.43 216.97,-77.56"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-50.39C384.32,-52.9 288.71,-90.72 274.3,-89.39"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M557.16,-99.32C545.26,-77.28 516.13,-30.25 475.83,-12.05 429.24,8.99 411.11,-2.95 360.81,-12.05 304.65,-22.21 285.37,-21.73 240.54,-57.05 209.25,-81.7 186.09,-122.75 173.9,-148"/>
+<polygon fill="#000000" stroke="#000000" points="170.76,-146.46 169.71,-157.01 177.1,-149.41 170.76,-146.46"/>
 </g>
 <!-- module~xc_lsda&#45;&gt;module~lsda_errors -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge32" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge33" class="edge">
 <title>module~xc_lsda&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-50.39C372.48,-54.99 363.99,-54.51 342.06,-69.39 329.77,-77.72 305.62,-107.93 289.72,-128.74"/>
-<polygon fill="#000000" stroke="#000000" points="287.03,-126.51 283.78,-136.59 292.61,-130.73 287.03,-126.51"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M550.87,-122.93C527.5,-144.37 473.94,-187.56 419.32,-190.05"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M417.32,-190.05C387.27,-191.42 353.38,-191.4 327.25,-191.05"/>
+<polygon fill="#000000" stroke="#000000" points="327.4,-187.55 317.34,-190.89 327.29,-194.55 327.4,-187.55"/>
 </g>
 <!-- module~spline2d -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node15" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node14" class="node">
 <title>module~spline2d</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node15"><a xlink:href="../module/spline2d.html" xlink:title="spline2d">
-<polygon fill="#337ab7" stroke="#337ab7" points="300.3,-61.77 246.3,-61.77 246.3,-39 300.3,-39 300.3,-61.77"/>
-<text xml:space="preserve" text-anchor="middle" x="273.3" y="-46.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node14"><a xlink:href="../module/spline2d.html" xlink:title="spline2d">
+<polygon fill="#337ab7" stroke="#337ab7" points="445.32,-162.43 391.32,-162.43 391.32,-139.66 445.32,-139.66 445.32,-162.43"/>
+<text xml:space="preserve" text-anchor="middle" x="418.32" y="-146.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d</text>
 </a>
 </g>
 </g>
 <!-- module~xc_lsda&#45;&gt;module~spline2d -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge33" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge34" class="edge">
 <title>module~xc_lsda&#45;&gt;module~spline2d</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M517.87,-47.65C488.84,-45.28 441,-43.25 400.57,-50.39"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M398.57,-50.39C369.9,-55.44 336.94,-55.17 312.16,-53.78"/>
-<polygon fill="#000000" stroke="#000000" points="312.43,-50.29 302.22,-53.13 311.97,-57.28 312.43,-50.29"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M536.72,-118.39C514.22,-124.64 481.63,-133.71 456.49,-140.71"/>
+<polygon fill="#000000" stroke="#000000" points="455.68,-137.3 446.98,-143.35 457.55,-144.04 455.68,-137.3"/>
 </g>
 <!-- module~table_io -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_node16" class="node">
+<g id="module~~kohn_sham_cycle~~UsesGraph_node15" class="node">
 <title>module~table_io</title>
-<g id="a_module~~kohn_sham_cycle~~UsesGraph_node16"><a xlink:href="../module/table_io.html" xlink:title="table_io">
-<polygon fill="#337ab7" stroke="#337ab7" points="426.57,-22.77 372.57,-22.77 372.57,0 426.57,0 426.57,-22.77"/>
-<text xml:space="preserve" text-anchor="middle" x="399.57" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
+<g id="a_module~~kohn_sham_cycle~~UsesGraph_node15"><a xlink:href="../module/table_io.html" xlink:title="table_io">
+<polygon fill="#337ab7" stroke="#337ab7" points="445.32,-43.43 391.32,-43.43 391.32,-20.66 445.32,-20.66 445.32,-43.43"/>
+<text xml:space="preserve" text-anchor="middle" x="418.32" y="-27.7" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
 </a>
 </g>
 </g>
 <!-- module~xc_lsda&#45;&gt;module~table_io -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge34" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge35" class="edge">
 <title>module~xc_lsda&#45;&gt;module~table_io</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M517.97,-43.23C495.47,-37.13 462.88,-28.29 437.74,-21.47"/>
-<polygon fill="#000000" stroke="#000000" points="438.8,-18.13 428.23,-18.89 436.97,-24.89 438.8,-18.13"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M545.79,-99.36C528.48,-87.89 500.89,-70.26 475.83,-57.05 469.48,-53.7 462.58,-50.39 455.87,-47.33"/>
+<polygon fill="#000000" stroke="#000000" points="457.5,-44.23 446.94,-43.38 454.66,-50.63 457.5,-44.23"/>
 </g>
 <!-- module~spline2d&#45;&gt;module~lsda_constants -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge35" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge36" class="edge">
 <title>module~spline2d&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M245.84,-55.03C236.75,-56.63 226.24,-58.48 215.84,-60.3"/>
-<polygon fill="#000000" stroke="#000000" points="215.41,-56.83 206.16,-62 216.62,-63.72 215.41,-56.83"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M391.02,-148.68C363.93,-146.8 320.59,-145.33 283.67,-151.05"/>
 </g>
-<!-- module~table_io&#45;&gt;module~lsda_constants -->
+<!-- module~spline2d&#45;&gt;module~lsda_errors -->
 <g id="module~~kohn_sham_cycle~~UsesGraph_edge37" class="edge">
-<title>module~table_io&#45;&gt;module~lsda_constants</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-11.39C240.02,-15.56 207.74,-35.42 186.97,-50.75"/>
-<polygon fill="#000000" stroke="#000000" points="185.02,-47.83 179.21,-56.69 189.28,-53.38 185.02,-47.83"/>
+<title>module~spline2d&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M390.92,-158.75C372.6,-164.1 347.8,-171.34 326.66,-177.5"/>
+<polygon fill="#000000" stroke="#000000" points="325.75,-174.12 317.13,-180.29 327.71,-180.84 325.75,-174.12"/>
 </g>
-<!-- module~table_io&#45;&gt;module~lsda_errors -->
+<!-- module~table_io&#45;&gt;ieee_arithmetic -->
 <g id="module~~kohn_sham_cycle~~UsesGraph_edge38" class="edge">
-<title>module~table_io&#45;&gt;module~lsda_errors</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M372.27,-18.9C361.95,-22.83 350.56,-28.51 342.06,-36.39 317.26,-59.36 323.69,-74.54 306.06,-103.39 300.99,-111.68 295.03,-120.52 289.65,-128.21"/>
-<polygon fill="#000000" stroke="#000000" points="286.85,-126.11 283.91,-136.29 292.56,-130.16 286.85,-126.11"/>
+<title>module~table_io&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M391.06,-42.09C381.29,-46.23 370.29,-51.38 360.81,-57.05 343.41,-67.45 341.5,-73.54 324.81,-85.05 321.3,-87.47 317.56,-89.92 313.81,-92.28"/>
+<polygon fill="#000000" stroke="#000000" points="312.02,-89.28 305.34,-97.5 315.69,-95.24 312.02,-89.28"/>
 </g>
 <!-- module~table_io&#45;&gt;iso_fortran_env -->
-<g id="module~~kohn_sham_cycle~~UsesGraph_edge36" class="edge">
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge39" class="edge">
 <title>module~table_io&#45;&gt;iso_fortran_env</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M272.3,-11.39C212.64,-19.11 143.78,-24.34 97.39,-27.32"/>
-<polygon fill="#000000" stroke="#000000" points="97.38,-23.82 87.62,-27.94 97.82,-30.8 97.38,-23.82"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M372.21,-9.09C346.94,-7.43 307.78,-6.28 274.3,-11.39"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M390.94,-38.87C363.8,-46.09 320.41,-58.21 283.67,-71.05"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-71.05C208.79,-96.53 126.05,-132.67 79.91,-153.5"/>
+<polygon fill="#000000" stroke="#000000" points="78.58,-150.26 70.92,-157.58 81.47,-156.64 78.58,-150.26"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_constants -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge40" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-71.05C262.66,-77.69 256.92,-78.34 240.54,-90.05 216.81,-107.01 194.35,-132 180.01,-149.53"/>
+<polygon fill="#000000" stroke="#000000" points="177.37,-147.22 173.86,-157.22 182.84,-151.59 177.37,-147.22"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_errors -->
+<g id="module~~kohn_sham_cycle~~UsesGraph_edge41" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M403.46,-43.88C391.14,-54.92 373.21,-72.3 360.81,-90.05 339.63,-120.36 349.63,-137.65 324.81,-165.05 322.6,-167.49 320.1,-169.77 317.44,-171.88"/>
+<polygon fill="#000000" stroke="#000000" points="315.51,-168.96 309.29,-177.54 319.5,-174.71 315.51,-168.96"/>
 </g>
 </g>
 </svg>
@@ -602,7 +645,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
  -->
 <!-- Title: Graph Key Pages: 1 -->
 <svg width="485pt" height="31pt"
@@ -670,55 +713,83 @@ modules which it uses.
               <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
  -->
 <!-- Title: module~~kohn_sham_cycle~~UsedByGraph Pages: 1 -->
-<svg id="modulekohn_sham_cycleUsedByGraph" width="322pt" height="50pt"
- viewBox="0.00 0.00 322.00 50.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="module~~kohn_sham_cycle~~UsedByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 45.77)">
+<svg id="modulekohn_sham_cycleUsedByGraph" width="412pt" height="70pt"
+ viewBox="0.00 0.00 412.00 70.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~kohn_sham_cycle~~UsedByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 66.23)">
 <title>module~~kohn_sham_cycle~~UsedByGraph</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-45.77 318.31,-45.77 318.31,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-66.23 408.31,-66.23 408.31,4 -4,4"/>
 <!-- module~kohn_sham_cycle -->
 <g id="module~~kohn_sham_cycle~~UsedByGraph_node1" class="node">
 <title>module~kohn_sham_cycle</title>
-<polygon fill="none" stroke="black" points="97.02,-41.77 0,-41.77 0,-19 97.02,-19 97.02,-41.77"/>
-<text xml:space="preserve" text-anchor="middle" x="48.51" y="-26.04" font-family="Helvetica,sans-Serif" font-size="10.50">kohn_sham_cycle</text>
+<polygon fill="none" stroke="black" points="97.02,-34.47 0,-34.47 0,-11.7 97.02,-11.7 97.02,-34.47"/>
+<text xml:space="preserve" text-anchor="middle" x="48.51" y="-18.73" font-family="Helvetica,sans-Serif" font-size="10.50">kohn_sham_cycle</text>
 </g>
 <!-- module~input_parser -->
 <g id="module~~kohn_sham_cycle~~UsedByGraph_node2" class="node">
 <title>module~input_parser</title>
 <g id="a_module~~kohn_sham_cycle~~UsedByGraph_node2"><a xlink:href="../module/input_parser.html" xlink:title="input_parser">
-<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-22.77 133.02,-22.77 133.02,0 204.54,0 204.54,-22.77"/>
-<text xml:space="preserve" text-anchor="middle" x="168.78" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">input_parser</text>
+<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-34.47 133.02,-34.47 133.02,-11.7 204.54,-11.7 204.54,-34.47"/>
+<text xml:space="preserve" text-anchor="middle" x="168.78" y="-18.73" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">input_parser</text>
 </a>
 </g>
 </g>
 <!-- module~input_parser&#45;&gt;module~kohn_sham_cycle -->
 <g id="module~~kohn_sham_cycle~~UsedByGraph_edge1" class="edge">
 <title>module~input_parser&#45;&gt;module~kohn_sham_cycle</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M132.62,-17.03C125.03,-18.25 116.81,-19.57 108.6,-20.89"/>
-<polygon fill="#000000" stroke="#000000" points="108.27,-17.4 98.95,-22.44 109.38,-24.31 108.27,-17.4"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M132.62,-23.08C125.12,-23.08 117,-23.08 108.88,-23.08"/>
+<polygon fill="#000000" stroke="#000000" points="108.97,-19.58 98.97,-23.08 108.97,-26.58 108.97,-19.58"/>
 </g>
 <!-- module~output_writer -->
 <g id="module~~kohn_sham_cycle~~UsedByGraph_node3" class="node">
 <title>module~output_writer</title>
 <g id="a_module~~kohn_sham_cycle~~UsedByGraph_node3"><a xlink:href="../module/output_writer.html" xlink:title="output_writer">
-<polygon fill="#337ab7" stroke="#337ab7" points="314.31,-41.77 240.54,-41.77 240.54,-19 314.31,-19 314.31,-41.77"/>
-<text xml:space="preserve" text-anchor="middle" x="277.42" y="-26.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">output_writer</text>
+<polygon fill="#337ab7" stroke="#337ab7" points="314.31,-34.47 240.54,-34.47 240.54,-11.7 314.31,-11.7 314.31,-34.47"/>
+<text xml:space="preserve" text-anchor="middle" x="277.42" y="-18.73" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">output_writer</text>
 </a>
 </g>
 </g>
 <!-- module~output_writer&#45;&gt;module~kohn_sham_cycle -->
 <g id="module~~kohn_sham_cycle~~UsedByGraph_edge2" class="edge">
 <title>module~output_writer&#45;&gt;module~kohn_sham_cycle</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M240.23,-30.99C228.81,-31.15 216.15,-31.3 204.54,-31.39 172.75,-31.61 164.81,-31.58 133.02,-31.39 125.14,-31.34 116.83,-31.27 108.65,-31.18"/>
-<polygon fill="#000000" stroke="#000000" points="108.76,-27.68 98.72,-31.07 108.68,-34.68 108.76,-27.68"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M241.36,-11.28C229.78,-7.93 216.73,-4.75 204.54,-3.08 173.05,1.22 164.59,0.65 133.02,-3.08 122.69,-4.3 111.79,-6.34 101.39,-8.66"/>
+<polygon fill="#000000" stroke="#000000" points="100.77,-5.22 91.84,-10.92 102.38,-12.03 100.77,-5.22"/>
 </g>
 <!-- module~output_writer&#45;&gt;module~input_parser -->
-<g id="module~~kohn_sham_cycle~~UsedByGraph_edge3" class="edge">
+<g id="module~~kohn_sham_cycle~~UsedByGraph_edge4" class="edge">
 <title>module~output_writer&#45;&gt;module~input_parser</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M240.32,-23.95C232.52,-22.56 224.16,-21.07 216.03,-19.63"/>
-<polygon fill="#000000" stroke="#000000" points="216.71,-16.19 206.25,-17.88 215.49,-23.08 216.71,-16.19"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M240.32,-23.08C232.52,-23.08 224.16,-23.08 216.03,-23.08"/>
+<polygon fill="#000000" stroke="#000000" points="216.28,-19.58 206.28,-23.08 216.28,-26.58 216.28,-19.58"/>
+</g>
+<!-- program~lsdaks -->
+<g id="module~~kohn_sham_cycle~~UsedByGraph_node4" class="node">
+<title>program~lsdaks</title>
+<g id="a_module~~kohn_sham_cycle~~UsedByGraph_node4"><a xlink:href="../program/lsdaks.html" xlink:title="lsdaks">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="404.31,-53.47 350.31,-53.47 350.31,-30.7 404.31,-30.7 404.31,-53.47"/>
+<text xml:space="preserve" text-anchor="middle" x="377.31" y="-37.73" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsdaks</text>
+</a>
+</g>
+</g>
+<!-- program~lsdaks&#45;&gt;module~kohn_sham_cycle -->
+<g id="module~~kohn_sham_cycle~~UsedByGraph_edge3" class="edge">
+<title>program~lsdaks&#45;&gt;module~kohn_sham_cycle</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M276.42,-62.08C216.18,-62.68 148.21,-49.06 102.5,-37.75"/>
+<polygon fill="#000000" stroke="#000000" points="103.4,-34.37 92.85,-35.3 101.68,-41.15 103.4,-34.37"/>
+</g>
+<!-- program~lsdaks&#45;&gt;module~input_parser -->
+<g id="module~~kohn_sham_cycle~~UsedByGraph_edge5" class="edge">
+<title>program~lsdaks&#45;&gt;module~input_parser</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M350.02,-50.3C330.48,-55.71 303.05,-61.84 278.42,-62.08"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M276.42,-62.08C249.06,-62.36 220.02,-50.87 199.16,-40.29"/>
+<polygon fill="#000000" stroke="#000000" points="200.86,-37.23 190.39,-35.62 197.57,-43.41 200.86,-37.23"/>
+</g>
+<!-- program~lsdaks&#45;&gt;module~output_writer -->
+<g id="module~~kohn_sham_cycle~~UsedByGraph_edge6" class="edge">
+<title>program~lsdaks&#45;&gt;module~output_writer</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M349.82,-36.94C342.35,-35.49 333.98,-33.87 325.68,-32.25"/>
+<polygon fill="#000000" stroke="#000000" points="326.46,-28.84 315.98,-30.37 325.13,-35.71 326.46,-28.84"/>
 </g>
 </g>
 </svg>
@@ -737,7 +808,7 @@ modules which it uses.
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated by graphviz version 14.0.4 (20251115.1723)
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
  -->
 <!-- Title: Graph Key Pages: 1 -->
 <svg width="485pt" height="31pt"
@@ -800,6 +871,57 @@ modules which it uses.
       <br>
 
 
+        <section>
+          <h2>Variables</h2>
+            <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-half_filling_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>HALF_FILLING_TOL</strong></td>
+<td> =</td>
+                <td>1.0e-3_dp</td>
+            <td>
+                <p>Half width of the band around n = 1 in which a site counts as half filled</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-oscillation_streak_min"></span>
+              integer,
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>OSCILLATION_STREAK_MIN</strong></td>
+<td> =</td>
+                <td>3</td>
+            <td>
+                <p>Number of consecutive sign alternations of ΔE required to call the energy</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+        </section>
+        <br>
 
 
 
@@ -876,6 +998,23 @@ modules which it uses.
             <td><strong>energy_tol</strong></td>
 <td> =</td>
                 <td>SCF_ENERGY_TOL</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-potential_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>potential_tol</strong></td>
+<td> =</td>
+                <td>SCF_POTENTIAL_TOL</td>
             <td>
 
             </td>
@@ -991,8 +1130,8 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>converged</strong></td>
-                <td></td>
-                <td></td>
+<td> =</td>
+                <td>.false.</td>
             <td>
 
             </td>
@@ -1008,8 +1147,8 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>n_iterations</strong></td>
-                <td></td>
-                <td></td>
+<td> =</td>
+                <td>0</td>
             <td>
 
             </td>
@@ -1025,8 +1164,25 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>final_density_error</strong></td>
-                <td></td>
-                <td></td>
+<td> =</td>
+                <td>0.0_dp</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-final_potential_residual"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>final_potential_residual</strong></td>
+<td> =</td>
+                <td>0.0_dp</td>
             <td>
 
             </td>
@@ -1042,15 +1198,15 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>final_energy</strong></td>
-                <td></td>
-                <td></td>
+<td> =</td>
+                <td>0.0_dp</td>
             <td>
 
             </td>
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-density_up"></span>
+              <span class="anchor" id="variable-density_up~3"></span>
               real(kind=dp),
             </td>
               <td>public,</td>
@@ -1084,7 +1240,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-eigvals"></span>
+              <span class="anchor" id="variable-eigvals~11"></span>
               real(kind=dp),
             </td>
               <td>public,</td>
@@ -1128,11 +1284,195 @@ modules which it uses.
         </section>
         <br>
 
+        <section>
+          <h2>Functions</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-count_half_filled_sites"></span> <h3>public pure function <a href='../proc/count_half_filled_sites.html'>count_half_filled_sites</a>(density_up, density_down, L) result(n_sites)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Count sites sitting at half filling</p><a href="../proc/count_half_filled_sites.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-density_up~6"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>density_up</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-density_down~4"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>density_down</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-l~34"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>L</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>integer</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-half_filling_warning_due"></span> <h3>public pure function <a href='../proc/half_filling_warning_due.html'>half_filling_warning_due</a>(n_half_filled, alternation_streak, delta_energy, total_energy, energy_tol) result(due)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Decide whether the half-filling / discontinuity warning applies</p><a href="../proc/half_filling_warning_due.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_half_filled"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_half_filled</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-alternation_streak"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>alternation_streak</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-delta_energy"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>delta_energy</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-total_energy~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>total_energy</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-energy_tol~2"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>energy_tol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>logical</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+        </section>
+        <br>
 
         <section>
           <h2>Subroutines</h2>
               <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-compute_total_energy"></span> <h3>public  subroutine <a href='../proc/compute_total_energy.html'>compute_total_energy</a>(eigvals_up, eigvals_down, n_up, n_down, density_up, density_down, V_ext, xc_func, U, L, total_energy, ierr)  
+    <div class="card-header codesum"><span class="anchor" id="proc-compute_total_energy"></span> <h3>public  subroutine <a href='../proc/compute_total_energy.html'>compute_total_energy</a>(eigvals_up, eigvals_down, n_up, n_down, density_up, density_down, V_ext, V_eff_up, V_eff_down, xc_func, U, L, total_energy, ierr, occ_up, occ_down, exc_values)  
 </h3></div>
     <div class="card-body">
           
@@ -1181,7 +1521,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-n_up"></span>
+              <span class="anchor" id="variable-n_up~2"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -1211,7 +1551,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-density_up~2"></span>
+              <span class="anchor" id="variable-density_up~4"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1241,7 +1581,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-v_ext"></span>
+              <span class="anchor" id="variable-v_ext~3"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1256,7 +1596,37 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xc_func"></span>
+              <span class="anchor" id="variable-v_eff_up"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>V_eff_up</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_eff_down"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>V_eff_down</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc_func~3"></span>
               type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
             </td>
 <td>intent(in)</td>
@@ -1271,7 +1641,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-u"></span>
+              <span class="anchor" id="variable-u~14"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1286,7 +1656,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-l~2"></span>
+              <span class="anchor" id="variable-l~31"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -1316,7 +1686,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~6"></span>
+              <span class="anchor" id="variable-ierr~35"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1325,6 +1695,51 @@ modules which it uses.
             </td>
             <td>::</td>
             <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-occ_up"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>occ_up</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-occ_down"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>occ_down</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-exc_values"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>exc_values</strong>(:)</td>
             <td>
 
             </td>
@@ -1371,7 +1786,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-scf_params"></span>
+              <span class="anchor" id="variable-scf_params~3"></span>
               type(<a href='../type/scf_params_t.html'>scf_params_t</a>),
             </td>
 <td>intent(in)</td>
@@ -1386,7 +1801,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-v_ext~2"></span>
+              <span class="anchor" id="variable-v_ext~4"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1401,7 +1816,207 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~7"></span>
+              <span class="anchor" id="variable-ierr~36"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-validate_xc_functional"></span> <h3>private  subroutine <a href='../proc/validate_xc_functional.html'>validate_xc_functional</a>(params, xc_func, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Validate that the XC functional belongs to the system being solved</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-params~2"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc_func~4"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc_func</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~37"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-populate_xc_output_cache"></span> <h3>public  subroutine <a href='../proc/populate_xc_output_cache.html'>populate_xc_output_cache</a>(xc_func, density_up, density_down, v_xc_up, v_xc_down, e_xc, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Evaluate and store XC quantities for a set of output densities.</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc_func~5"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc_func</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-density_up~5"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>density_up</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-density_down~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>density_down</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_xc_up"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>v_xc_up</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_xc_down"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>v_xc_down</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-e_xc"></span>
+              real(kind=dp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>e_xc</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~38"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1441,7 +2056,7 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-params~2"></span>
+              <span class="anchor" id="variable-params~3"></span>
               type(<a href='../type/system_params_t.html'>system_params_t</a>),
             </td>
 <td>intent(in)</td>
@@ -1456,7 +2071,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-scf_params~2"></span>
+              <span class="anchor" id="variable-scf_params~4"></span>
               type(<a href='../type/scf_params_t.html'>scf_params_t</a>),
             </td>
 <td>intent(in)</td>
@@ -1471,7 +2086,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-v_ext~3"></span>
+              <span class="anchor" id="variable-v_ext~5"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1486,7 +2101,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xc_func~2"></span>
+              <span class="anchor" id="variable-xc_func~6"></span>
               type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
             </td>
 <td>intent(in)</td>
@@ -1501,7 +2116,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-results~6"></span>
+              <span class="anchor" id="variable-results~3"></span>
               type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
             </td>
 <td>intent(out)</td>
@@ -1516,7 +2131,122 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~8"></span>
+              <span class="anchor" id="variable-ierr~39"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-run_kohn_sham_scf_common"></span> <h3>private  subroutine <a href='../proc/run_kohn_sham_scf_common.html'>run_kohn_sham_scf_common</a>(params, scf_params, V_ext, xc_func, results, ierr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Run self-consistent Kohn-Sham cycle (complex Hamiltonian)</p><a href="../proc/run_kohn_sham_scf_common.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-params~4"></span>
+              type(<a href='../type/system_params_t.html'>system_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-scf_params~5"></span>
+              type(<a href='../type/scf_params_t.html'>scf_params_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>scf_params</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-v_ext~6"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>V_ext</strong>(:)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xc_func~7"></span>
+              type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xc_func</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-results~4"></span>
+              type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>results</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~40"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1541,7 +2271,7 @@ modules which it uses.
 </h3></div>
     <div class="card-body">
           
-  <p>Run self-consistent Kohn-Sham cycle (complex Hamiltonian)</p><a href="../proc/run_kohn_sham_scf_complex.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+  <p>Run the complex-valued SCF API through the shared solver core.</p>
 
   <h4>Arguments</h4>
       <table class="table table-striped varlist">
@@ -1556,7 +2286,7 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-params~3"></span>
+              <span class="anchor" id="variable-params~5"></span>
               type(<a href='../type/system_params_t.html'>system_params_t</a>),
             </td>
 <td>intent(in)</td>
@@ -1571,7 +2301,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-scf_params~3"></span>
+              <span class="anchor" id="variable-scf_params~6"></span>
               type(<a href='../type/scf_params_t.html'>scf_params_t</a>),
             </td>
 <td>intent(in)</td>
@@ -1586,7 +2316,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-v_ext~4"></span>
+              <span class="anchor" id="variable-v_ext~7"></span>
               real(kind=dp),
             </td>
 <td>intent(in)</td>
@@ -1601,7 +2331,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xc_func~3"></span>
+              <span class="anchor" id="variable-xc_func~8"></span>
               type(<a href='../type/xc_lsda_t.html'>xc_lsda_t</a>),
             </td>
 <td>intent(in)</td>
@@ -1616,7 +2346,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-results~7"></span>
+              <span class="anchor" id="variable-results~5"></span>
               type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
             </td>
 <td>intent(out)</td>
@@ -1631,7 +2361,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~9"></span>
+              <span class="anchor" id="variable-ierr~41"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1671,7 +2401,7 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-results~8"></span>
+              <span class="anchor" id="variable-results~6"></span>
               type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
             </td>
 <td>intent(out)</td>
@@ -1686,7 +2416,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-l~6"></span>
+              <span class="anchor" id="variable-l~36"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -1731,7 +2461,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~10"></span>
+              <span class="anchor" id="variable-ierr~42"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1771,7 +2501,7 @@ modules which it uses.
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-results~9"></span>
+              <span class="anchor" id="variable-results~7"></span>
               type(<a href='../type/scf_results_t.html'>scf_results_t</a>),
             </td>
 <td>intent(inout)</td>
@@ -1786,7 +2516,7 @@ modules which it uses.
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-ierr~11"></span>
+              <span class="anchor" id="variable-ierr~43"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1822,7 +2552,7 @@ modules which it uses.
           <div class="col">
             <p>
               LSDA-Hubbard-Fortran
- was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
 </p>
           </div>
           <div class="col">

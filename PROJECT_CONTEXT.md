@@ -53,7 +53,8 @@ lsdaks/
 ├── input.txt                   # Input de exemplo na raiz
 │
 ├── scripts/                    # Scripts utilitários rastreados
-│   └── build_cpp_reference.sh  # Compila a referência C++ local em build/cpp/
+│   ├── run_examples.sh         # Smoke test da camada de input (examples/*.txt)
+│   └── update-modules.sh
 │
 ├── src/                        # Código-fonte principal (29 arquivos .f90)
 │   ├── types/
@@ -110,27 +111,27 @@ lsdaks/
 │   ├── main.f90               # Ponto de entrada (namelist-based)
 │   └── generate_table.f90     # Gerador de tabelas XC a partir do Bethe Ansatz
 │
-├── test/                       # 20 suítes Fortuno, 1455 chamadas `call check(`
-│   ├── test_kohn_sham_cycle.f90       # 238 asserções
-│   ├── test_output_writer.f90         # 133
-│   ├── test_input_parser.f90          # 130
-│   ├── test_density_calculator.f90    # 118
-│   ├── test_xc_lsda.f90               # 116
-│   ├── test_potentials.f90            # 112
-│   ├── test_table_io.f90              #  95
-│   ├── test_bethe_tables.f90          #  79
-│   ├── test_adaptive_mixing.f90       #  58
-│   ├── test_lieb_wu_integral.f90      #  53
-│   ├── test_boundary_conditions.f90   #  48
-│   ├── test_errors.f90                #  47
-│   ├── test_hamiltonian_builder.f90   #  44
-│   ├── test_lapack_wrapper.f90        #  42
-│   ├── test_convergence_monitor.f90   #  41
-│   ├── test_bethe_equations.f90       #  27
-│   ├── test_continuation.f90          #  22
-│   ├── test_nonlinear_solvers.f90     #  19
-│   ├── test_spline2d.f90              #  17
-│   └── test_mixing_schemes.f90        #  16
+├── test/                       # 20 suítes Fortuno (contagens atuais: README, "Running Tests")
+│   ├── test_kohn_sham_cycle.f90
+│   ├── test_output_writer.f90
+│   ├── test_input_parser.f90
+│   ├── test_density_calculator.f90
+│   ├── test_xc_lsda.f90
+│   ├── test_potentials.f90
+│   ├── test_table_io.f90
+│   ├── test_bethe_tables.f90
+│   ├── test_adaptive_mixing.f90
+│   ├── test_lieb_wu_integral.f90
+│   ├── test_boundary_conditions.f90
+│   ├── test_errors.f90
+│   ├── test_hamiltonian_builder.f90
+│   ├── test_lapack_wrapper.f90
+│   ├── test_convergence_monitor.f90
+│   ├── test_bethe_equations.f90
+│   ├── test_continuation.f90
+│   ├── test_nonlinear_solvers.f90
+│   ├── test_spline2d.f90
+│   └── test_mixing_schemes.f90
 │
 ├── examples/                   # Inputs de exemplo (namelist, não fontes Fortran)
 │   ├── input_minimal.txt
@@ -146,7 +147,8 @@ lsdaks/
 │
 ├── doc/                        # Documentação de API gerada por FORD (258 arquivos
 │                               # versionados; saída de `ford ford.md`, não editar à mão)
-        └── fortran_native/     # Tabelas XC com o termo de Hartree já subtraído
+│
+└── tables/                     # Tabelas XC geradas (xc_table_u<|U|>.dat); não versionadas
 ```
 
 **Não existem no repositório** (aparecem em planos antigos, não em `src/`):
@@ -328,19 +330,19 @@ $$
 
 Solução exata para o estado fundamental via Ansatz de Bethe.
 
-**Equações para rapidities de carga** ($j = 1, 2, \ldots, N_{\uparrow}$):
+**Equações para rapidities de carga** ($j = 1, 2, \ldots, N$ onde $N = N_{\uparrow} + N_{\downarrow}$):
 $$
-F_j^k = k_j - \frac{2\pi}{L} I_j - \frac{1}{L} \sum_{\alpha=1}^{M} \theta(k_j - \Lambda_\alpha, U) = 0
+F_j^k = k_j - \frac{2\pi}{L} I_j + \frac{1}{L} \sum_{\alpha=1}^{M} \theta(\sin k_j - \Lambda_\alpha, U) = 0
 $$
 
 **Equações para rapidities de spin** ($\alpha = 1, 2, \ldots, M$ onde $M = N_{\downarrow}$):
 $$
-F_\alpha^\Lambda = \frac{2\pi}{L} J_\alpha - \sum_{j=1}^{N_{\uparrow}} \theta(\Lambda_\alpha - k_j, U) + \sum_{\substack{\beta=1 \\ \beta \neq \alpha}}^{M} \Theta(\Lambda_\alpha - \Lambda_\beta, U) = 0
+F_\alpha^\Lambda = 2\pi J_\alpha - \sum_{j=1}^{N} \theta(\Lambda_\alpha - \sin k_j, U) + \sum_{\substack{\beta=1 \\ \beta \neq \alpha}}^{M} \Theta(\Lambda_\alpha - \Lambda_\beta, U) = 0
 $$
 
 Onde:
-- $\theta(x, U) = 2\arctan(2x/U)$ (espalhamento carga-spin)
-- $\Theta(x, U) = 2\arctan(x/U)$ (espalhamento spin-spin)
+- $\theta(x, U) = 2\arctan(4x/U) = 2\arctan(x/u)$, com $u = U/4$ (espalhamento carga-spin)
+- $\Theta(x, U) = 2\arctan(2x/U) = 2\arctan(x/2u)$ (espalhamento spin-spin)
 - $\{I_j\}$: números quânticos de carga (inteiros/semi-inteiros)
 - $\{J_\alpha\}$: números quânticos de spin (inteiros/semi-inteiros)
 
@@ -521,16 +523,16 @@ subroutine solve_lieb_wu(n_up, n_dn, L, U, k, Lambda, energy)
 
 #### 1. Formulação do Problema
 
-**Variáveis:** $\mathbf{x} = [k_1, k_2, \ldots, k_{N_\uparrow}, \Lambda_1, \Lambda_2, \ldots, \Lambda_M]$ onde $M = N_\downarrow$
+**Variáveis:** $\mathbf{x} = [k_1, k_2, \ldots, k_N, \Lambda_1, \Lambda_2, \ldots, \Lambda_M]$ onde $N = N_\uparrow + N_\downarrow$ e $M = N_\downarrow$
 
 **Sistema não-linear:** $\mathbf{F}(\mathbf{x}) = 0$
 
 $$
-F_j^k = k_j - \frac{2\pi}{L} I_j - \frac{1}{L} \sum_{\alpha=1}^{M} \theta(k_j - \Lambda_\alpha, U)
+F_j^k = k_j - \frac{2\pi}{L} I_j + \frac{1}{L} \sum_{\alpha=1}^{M} \theta(\sin k_j - \Lambda_\alpha, U)
 $$
 
 $$
-F_\alpha^\Lambda = \frac{2\pi}{L} J_\alpha - \sum_{j=1}^{N_\uparrow} \theta(\Lambda_\alpha - k_j, U) + \sum_{\substack{\beta=1 \\ \beta \neq \alpha}}^{M} \Theta(\Lambda_\alpha - \Lambda_\beta, U)
+F_\alpha^\Lambda = 2\pi J_\alpha - \sum_{j=1}^{N} \theta(\Lambda_\alpha - \sin k_j, U) + \sum_{\substack{\beta=1 \\ \beta \neq \alpha}}^{M} \Theta(\Lambda_\alpha - \Lambda_\beta, U)
 $$
 
 **Jacobiano analítico:**
@@ -780,7 +782,7 @@ end do
   - [x] `sweep_U_bidirectional()` - Média de forward + backward (maior precisão)
   - [x] Predictor-corrector: típico speedup de 5-10x vs soluções independentes
 
-- [x] **`test/test_bethe_equations.f90`** (446 linhas, 17 testes ✅):
+- [x] **`test/test_bethe_equations.f90`** (446 linhas ✅):
   - [x] Funções θ e Θ: zeros, antissimetria
   - [x] Derivadas analíticas vs numéricas: dθ/dx, dΘ/dx, dθ/dU, dΘ/dU
   - [x] Números quânticos: pares e ímpares
@@ -789,21 +791,21 @@ end do
   - [x] dF/dU: validação numérica
   - [x] Energia: U=0, dimensões
 
-- [x] **`test/test_nonlinear_solvers.f90`** (302 linhas, 9 testes ✅):
+- [x] **`test/test_nonlinear_solvers.f90`** (302 linhas ✅):
   - [x] Sistema linear: 2×2, identidade, preservação de inputs
   - [x] Jacobiano: validação numérica
   - [x] Newton: Fermi gas (U=0), sistema pequeno (U=4)
   - [x] Convergência: flags, redução de resíduo
   - [x] Line search: eficácia
 
-- [x] **`test/test_continuation.f90`** (198 linhas, 5 testes ✅):
+- [x] **`test/test_continuation.f90`** (198 linhas ✅):
   - [x] `estimate_dxdU`: diferenças finitas simples
   - [x] `sweep_forward`: 3 pontos, convergência total
   - [x] `sweep_backward`: 3 pontos
   - [x] `sweep_bidirectional`: consistência entre métodos
 
 #### 🏆 Conquistas da Fase 1:
-- ✅ **31 testes unitários** passando (100% de sucesso)
+- ✅ **Testes unitários** passando (100% de sucesso)
 - ✅ **Jacobiano conferido numericamente** (erro < 1e-10) — checagem de autoconsistência,
   não validação externa: compara o Jacobiano analítico com a derivada numérica do **mesmo**
   resíduo. Foi por isso que o fator `sin k` ausente no resíduo sobreviveu a essa checagem
@@ -832,12 +834,12 @@ end do
   - [x] `deallocate_table()` - Gerenciamento de memória
   - [x] `print_table_info()` - Diagnóstico e debug
 
-- [x] **`test_table_io.f90`** (274 linhas - 10 testes unitários):
+- [x] **`test_table_io.f90`** (274 linhas):
   - [x] Leitura de fixtures ASCII legadas geradas pelo próprio teste
   - [x] Escrita/leitura de formato binário Fortran
   - [x] Validação de roundtrip ASCII → binário → memória
 
-- [x] **`bethe_tables.f90`** (325 linhas, 6 testes - totalmente implementado):
+- [x] **`bethe_tables.f90`** (325 linhas - totalmente implementado):
   - [x] Tipo `grid_params_t` para configurar grid de densidades
   - [x] `compute_E0()` - Energia não-interagente (Fermi gas livre)
   - [x] `compute_E_xc()` - Energia XC: E_xc = E_BA - E_0
@@ -850,7 +852,7 @@ end do
     - [x] Polarizado (m=n)
   - [x] Integração total com módulos `bethe_equations`, `nonlinear_solvers`, `table_io`
 
-- [x] **`test_bethe_tables.f90`** (170 linhas - 6 testes):
+- [x] **`test_bethe_tables.f90`** (170 linhas):
   - [x] Teste E0 para half-filling
   - [x] Teste E0 para sistema polarizado
   - [x] Teste E_xc = 0 para U=0
@@ -859,7 +861,7 @@ end do
   - [x] Teste geração de tabela pequena
 
 #### 🎉 Conquistas da Fase 2:
-- ✅ **16 testes unitários** (10 I/O + 6 geração) passando (100%)
+- ✅ **Testes unitários** (I/O + geração) passando (100%)
 - ✅ **Pipeline completo**: Bethe Ansatz → E_xc → V_xc → Tabela → I/O
 - ✅ **Derivadas numéricas** de 5 pontos para alta precisão
 - ✅ **Grid flexível** com parâmetros configuráveis
@@ -882,7 +884,7 @@ end do
 **Objetivo:** Implementar interpolação bicúbica 2D para avaliar funcionais XC em pontos arbitrários (n, m).
 
 #### ✅ Completo (100%):
-- [x] **`spline2d.f90`** (351 linhas, 5 testes, 100% testado):
+- [x] **`spline2d.f90`** (351 linhas, 100% testado):
   - [x] Tipo `spline2d_t` para armazenar coeficientes da spline em grids irregulares
   - [x] `spline1d_coeff()` - Algoritmo de Thomas para spline 1D (natural/clamped BC)
   - [x] `spline2d_init()` - Construir splines separáveis a partir de tabela 2D
@@ -891,7 +893,7 @@ end do
   - [x] Tratamento de grids irregulares (n_y varia com x)
   - [x] Arrays 0-indexed internos para compatibilidade com algoritmo clássico
 
-- [x] **`xc_lsda.f90`** (335 linhas, 6 testes, 100% testado):
+- [x] **`xc_lsda.f90`** (335 linhas, 100% testado):
   - [x] Tipo `xc_lsda_t` contendo splines de exc, vxc_up, vxc_dw
   - [x] `xc_lsda_init()` - Carregar tabela e construir 3 splines (exc, vxc_up, vxc_dw)
   - [x] `get_exc(n_up, n_dw)` - Energia XC por partícula via interpolação
@@ -904,14 +906,14 @@ end do
     - [x] Region IV (m≥0, n>1): Combinada
   - [x] Tratamento especial para U=0, n=0, densidades fora da faixa física
 
-- [x] **`test_spline2d.f90`** (196 linhas, 5 testes ✅):
+- [x] **`test_spline2d.f90`** (196 linhas ✅):
   - [x] Init/destroy: alocação, inicialização, cleanup
   - [x] Interpolação exata em pontos do grid (erro < 1e-9)
   - [x] Funções lineares: spline exata para f(x,y) = ax + by + c
   - [x] Funções separáveis: f(x,y) = g(x)·h(y) com alta precisão
   - [x] Casos limite: single x point, bounds checking
 
-- [x] **`test_xc_lsda.f90`** (200 linhas, 6 testes ✅):
+- [x] **`test_xc_lsda.f90`** (200 linhas ✅):
   - [x] Init/destroy com tabelas reais (U=4.00, U=2.00)
   - [x] Avaliação de exc retorna valores válidos e não-zero para U>0
   - [x] **Simetria de spin**: exc(n_up, n_dw) = exc(n_dw, n_up)
@@ -920,7 +922,7 @@ end do
   - [x] Transformações de simetria corretas
 
 #### 🏆 Conquistas da Fase 3:
-- ✅ **11 testes unitários** passando (100% de sucesso)
+- ✅ **Testes unitários** passando (100% de sucesso)
 - ✅ **Spline 2D separável** implementada com grid irregular
 - ✅ **Simetrias físicas** mapeando todo o domínio (n, m) para tabela compacta
 - ✅ **Integração total** com pipeline Bethe → Tabelas → Splines
@@ -944,7 +946,7 @@ end do
 **Objetivo:** Implementar sistema de potenciais externos e tratamento centralizado de erros.
 
 #### ✅ Completo (100%):
-- [x] **`lsda_errors.f90`** (224 linhas, 13 testes):
+- [x] **`lsda_errors.f90`** (224 linhas):
   - [x] Códigos de erro organizados por categoria (input 1-99, numerical 100-199, I/O 200-299, memory 300-399)
   - [x] `get_error_message()` - Mensagens legíveis para cada código de erro
   - [x] `error_handler()` - Handler centralizado com opção fatal
@@ -989,7 +991,7 @@ de strings **aceitas no namelist** (`app/main.f90`, documentada no `README.md`):
 aceita o alias legado `impurity` para o posicionamento aleatório, enquanto o factory conhece
 `impurity_random`. `create_potential()` cria diretamente oito deles; os dois identificadores adicionais de impureza são atendidos pelas rotinas especializadas, e a documentação de alto nível agrupa essas variantes em famílias.
 
-- [x] **`test_potentials.f90`** (585 linhas, 21 testes):
+- [x] **`test_potentials.f90`** (585 linhas):
   - [x] Testes com explicações físicas detalhadas nos comentários
   - [x] Uniform: constância, Harmonic: simetria/mínimo central
   - [x] Impurity: posição/bounds/overlap/concentração
@@ -998,13 +1000,13 @@ aceita o alias legado `impurity` para o posicionamento aleatório, enquanto o fa
   - [x] Quasiperiodic: golden ratio, phase shift, critical point, localization
   - [x] Factory: criação/comparação/tipo inválido
 
-- [x] **`test_lsda_errors.f90`** (284 linhas, 13 testes):
+- [x] **`test_lsda_errors.f90`** (284 linhas):
   - [x] Verificação de códigos em intervalos corretos
   - [x] Mensagens para todos os tipos de erro
   - [x] Utilitários de validação (bounds, positive, range)
 
 #### 🏆 Conquistas da Fase 4:
-- ✅ **34 testes unitários** passando (100% de sucesso)
+- ✅ **Testes unitários** passando (100% de sucesso)
 - ✅ **10 identificadores de potencial** implementados, agrupados em famílias na interface de alto nível
 - ✅ **Sistema de erros robusto** para todo o projeto
 - ✅ **Factory pattern** para criação dinâmica de potenciais
@@ -1032,8 +1034,8 @@ aceita o alias legado `impurity` para o posicionamento aleatório, enquanto o fa
 - [ ] `degeneracy_handler.f90`: QR/Gram-Schmidt para degenerescências — **removido de `src/`**;
       hoje é código morto em `extras/dead_code/`, não compilado e sem nenhum chamador.
       A quase-degenerescência é tratada pela ocupação C¹ em `density_calculator.f90` (T7).
-- [x] Testes: `test_boundary_conditions` (48), `test_hamiltonian_builder` (44),
-      `test_lapack_wrapper` (42) — 134 asserções ✅
+- [x] Testes: `test_boundary_conditions`, `test_hamiltonian_builder`,
+      `test_lapack_wrapper` ✅
 
 **Status:** ✅ COMPLETO! Pipeline Hamiltonian → Diagonalization funcional.
 
@@ -1049,9 +1051,9 @@ aceita o alias legado `impurity` para o posicionamento aleatório, enquanto o fa
   - [x] **REFATORAÇÃO CRÍTICA:** Mudança de density mixing → **potential mixing** ✅
   - [x] Convergência em casos difíceis: U=-4, V=-4, 50% impurities ✅
   - [x] Dual convergence check (density OR energy) ✅
-- [x] Testes: `test_kohn_sham_cycle` (238), `test_density_calculator` (118),
-      `test_adaptive_mixing` (58), `test_convergence_monitor` (41),
-      `test_mixing_schemes` (16) — 471 asserções ✅
+- [x] Testes: `test_kohn_sham_cycle`, `test_density_calculator`,
+      `test_adaptive_mixing`, `test_convergence_monitor`,
+      `test_mixing_schemes` (contagens atuais: README, "Running Tests") ✅
 
 **🎉 MILESTONE:** Código funcional end-to-end! SCF converge em sistemas complexos!
 
@@ -1067,7 +1069,7 @@ aceita o alias legado `impurity` para o posicionamento aleatório, enquanto o fa
 - [ ] `run_simulation.f90`: Runner principal — **nunca foi escrito**; `app/` contém apenas
       `main.f90` e `generate_table.f90`. O pipeline é integrado
       dentro do próprio `main.f90`.
-- [x] Testes: `test_input_parser` (130) e `test_output_writer` (133) — 263 asserções ✅
+- [x] Testes: `test_input_parser` e `test_output_writer` (contagens atuais: README, "Running Tests") ✅
 - [ ] Documentação: `INPUT_FORMAT.md` / `OUTPUT_FORMAT.md` não existem; o formato de
       entrada está documentado na tabela de namelist do `README.md` e a documentação
       de API gerada por FORD está em `doc/`.
@@ -1593,7 +1595,7 @@ lacunas de empacotamento de inputs) — ver a seção "Status de Validação" e 
 - [x] **Fase 3 - Splines 2D** (100% ✅):
   - [x] Interpolação bicúbica (`spline2d.f90`) ✅
   - [x] Interface XC funcional (`xc_lsda.f90`) ✅
-  - [x] Asserções: `spline2d` 17 + `xc_lsda` 116 = 133 ✅
+  - [x] Testes: `test_spline2d`, `test_xc_lsda` ✅
 
 - [x] **Fase 4 - Potenciais & Erros** (100% ✅):
   - [x] Sistema de erros centralizado (`lsda_errors.f90`) ✅
@@ -1661,19 +1663,19 @@ lacunas de empacotamento de inputs) — ver a seção "Status de Validação" e 
     - [x] `run_kohn_sham_scf_real()`: SCF para H real (OBC/PBC) ✅
     - [x] `run_kohn_sham_scf_complex()`: SCF para H complexo (TBC) ✅
     - [x] Convergência em casos extremos: U=-4, V=-4, 50% impurities ✅
-    - [x] Asserções: `test_kohn_sham_cycle` 238 ✅
+    - [x] Testes: `test_kohn_sham_cycle` ✅
 
 - [x] **Fase 7 - I/O & Interface** (100% ✅):
   - [x] Parse de input (`input_parser.f90`) ✅
     - [x] Namelist-based: &system, &potential, &scf ✅
     - [x] `parse_input_file()`: leitura de arquivo de input ✅
     - [x] Validação de parâmetros físicos ✅
-    - [x] Asserções: `test_input_parser` 130 ✅
+    - [x] Testes: `test_input_parser` ✅
   - [x] Escrita de output (`output_writer.f90`) ✅
     - [x] `write_results()`: densidades, eigenvalues, energia total ✅
     - [x] `write_convergence_history()`: histórico SCF ✅
     - [x] Formato legível para visualização/análise ✅
-    - [x] Asserções: `test_output_writer` 133 ✅
+    - [x] Testes: `test_output_writer` ✅
   - [ ] Sistema de logging (`logger.f90`) — **não existe**; nunca foi escrito.
         Não há `log_message()` nem `set_log_level()` no repositório, e não há
         `test_logger.f90`. A verbosidade é controlada pela chave `verbose` do `&scf`.
@@ -1702,22 +1704,21 @@ lacunas de empacotamento de inputs) — ver a seção "Status de Validação" e 
 - [ ] Simetria de paridade (não implementada)
 
 #### Qualidade
-Contagens por **asserções** (`call check(`), medidas em 2026-09-20 com
-`for f in test/*.f90; do grep -c 'call check(' "$f"; done`. Não são "testes" no sentido
-de casos Fortuno; o agregado de casos é o que `fpm test --profile release` imprime.
+Suítes por área; contagens de asserções (`call check(`) e de casos Fortuno não são
+mantidas aqui — veja README, seção "Running Tests", e `fpm test --profile release`.
 
-- [x] Bethe core (`bethe_equations` 27, `nonlinear_solvers` 19, `continuation` 22) — 68 ✅
-- [x] Limite termodinâmico (`lieb_wu_integral`) — 53 ✅
-- [x] Tabelas (`table_io` 95, `bethe_tables` 79) — 174 ✅
-- [x] Splines/XC (`spline2d` 17, `xc_lsda` 116) — 133 ✅
-- [x] Potenciais e erros (`potentials` 112, `errors` 47) — 159 ✅
-- [x] Hamiltoniano e diagonalização (`boundary_conditions` 48, `hamiltonian_builder` 44,
-      `lapack_wrapper` 42) — 134 ✅
-- [x] Densidade e SCF (`kohn_sham_cycle` 238, `density_calculator` 118,
-      `adaptive_mixing` 58, `convergence_monitor` 41, `mixing_schemes` 16) — 471 ✅
-- [x] I/O (`input_parser` 130, `output_writer` 133) — 263 ✅
-- [x] **Total: 20 suítes em `fpm.toml`, 1455 asserções** ✅
-      `fpm test --profile release` em 2026-09-20: 351 casos Fortuno, 0 falhas.
+- [x] Bethe core (`bethe_equations`, `nonlinear_solvers`, `continuation`) ✅
+- [x] Limite termodinâmico (`lieb_wu_integral`) ✅
+- [x] Tabelas (`table_io`, `bethe_tables`) ✅
+- [x] Splines/XC (`spline2d`, `xc_lsda`) ✅
+- [x] Potenciais e erros (`potentials`, `errors`) ✅
+- [x] Hamiltoniano e diagonalização (`boundary_conditions`, `hamiltonian_builder`,
+      `lapack_wrapper`) ✅
+- [x] Densidade e SCF (`kohn_sham_cycle`, `density_calculator`,
+      `adaptive_mixing`, `convergence_monitor`, `mixing_schemes`) ✅
+- [x] I/O (`input_parser`, `output_writer`) ✅
+- [x] **Total: 20 suítes em `fpm.toml`** ✅ — contagens atuais de asserções e casos
+      Fortuno e o comando que as reproduz: README, seção "Running Tests".
 - [x] Pipeline completo: Bethe → Tables → Splines → Potentials → Hamiltonian → Diagonalization → Density → Convergence → **SCF → I/O** ✅
 - [x] Testes end-to-end: SCF converge em casos difíceis (U=-4, V=-4, 50% impurities) ✅
 - [x] Validação física: conservação de partículas, bounds, simetrias ✅
@@ -1919,7 +1920,7 @@ fpm run lsdaks -- --input input.txt
 
 - **Tempo de refatoração:** ~2 dias (investigação + implementação + validação)
 - **Linhas modificadas:** ~1085 linhas (novo `adaptive_mixing.f90` + refatoração `kohn_sham_cycle.f90`)
-- **Testes adicionados:** 15 testes `adaptive_mixing`, validação end-to-end
+- **Testes adicionados:** testes `adaptive_mixing`, validação end-to-end
 - **Impacto:** 🎯 **Sistema difícil agora converge!** Código production-ready!
 
 ---
@@ -1927,7 +1928,7 @@ fpm run lsdaks -- --input input.txt
 ### 2025-01-16 - 🎉 FASE 6 COMPLETA! Solver LSDA Funcional! 🎉
 - ✅ **MILESTONE CRÍTICO:** Fase 6 100% completa! O projeto agora tem um solver LSDA-DFT totalmente funcional!
 
-  **`kohn_sham_cycle.f90` implementado** (778 linhas, 13 testes):
+  **`kohn_sham_cycle.f90` implementado** (778 linhas):
   - ✅ **Tipos principais**:
     - `scf_params_t`: Parâmetros do ciclo SCF (max_iter, tolerâncias, mixing_alpha, verbose, store_history)
     - `scf_results_t`: Resultados completos (converged, n_iterations, final_density_error, final_energy, density_up/down, eigvals, history)
@@ -1950,7 +1951,7 @@ fpm run lsdaks -- --input input.txt
   - ✅ **Padronização**: Uso consistente de `eigvals` (não `eigvalues`) em todo o código
   - ✅ **Simplificação**: Removido `V_eff_up/down` intermediário (cálculo direto V_ext + V_xc)
 
-  **Testes implementados** (557 linhas, 13 testes):
+  **Testes implementados** (557 linhas):
   - ✅ `test_compute_total_energy_simple`: E_tot com eigenvalues simples, validação física
   - ✅ `test_compute_total_energy_half_filling`: Half-filling (n=1) com U=4
   - ✅ `test_validate_inputs_valid`: Validação aceita parâmetros físicos
@@ -1977,11 +1978,11 @@ fpm run lsdaks -- --input input.txt
     - Check: `ierr == ERROR_SUCCESS .or. ierr == ERROR_CONVERGENCE_FAILED`
 
   **Estatísticas Fase 6 (COMPLETA):**
-  - ✅ Total: 1032 linhas produção + 1374 linhas testes (41 testes)
+  - ✅ Total: 1032 linhas produção + 1374 linhas testes
   - ✅ Módulos: `density_calculator.f90`, `convergence_monitor.f90`, `mixing_schemes.f90`, `kohn_sham_cycle.f90`
   - ✅ **Pipeline COMPLETO:** Bethe → Tables → Splines → Potentials → Hamiltonian → Diagonalization → Density → Convergence → **SCF!**
 
-  **Total do Projeto:** 198 testes, 100% passando! 🎉🎉🎉
+  **Total do Projeto:** 100% dos testes passando! 🎉🎉🎉
 
   **🎯 MARCO HISTÓRICO:** O projeto agora é um solver LSDA-DFT funcional completo para o modelo de Hubbard 1D!
   - ✅ Bethe Ansatz: solução exata via Lieb-Wu
@@ -1991,14 +1992,14 @@ fpm run lsdaks -- --input input.txt
   - ✅ Hamiltoniano: tight-binding com BCs
   - ✅ Diagonalização: LAPACK otimizado
   - ✅ SCF: ciclo self-consistent completo
-  - ✅ Testes: 198 testes unitários, 100% passando
+  - ✅ Testes: 100% passando
 
 ---
 
 ### 2025-01-16 - Fase 6: Convergência SCF & Mixing Implementados! 🎉
 - ✅ **MILESTONE:** Fase 6 agora 60% completa! Falta apenas o loop SCF principal.
 
-  **`convergence_monitor.f90` implementado** (218 linhas, 13 testes):
+  **`convergence_monitor.f90` implementado** (218 linhas):
   - ✅ `compute_density_difference()`: Calcula Δn = n_new - n_old
   - ✅ `compute_density_norm()`: Três tipos de norma para monitoramento
     - L1: ||Δn||₁ = Σᵢ |Δn(i)| (mudança absoluta total)
@@ -2012,7 +2013,7 @@ fpm run lsdaks -- --input input.txt
   - ✅ `update_convergence_history()`: Armazena dados de cada iteração
   - ✅ `cleanup_convergence_history()`: Libera memória
 
-  **Testes implementados** (288 linhas, 13 testes):
+  **Testes implementados** (288 linhas):
   - ✅ `test_density_difference_simple`: Calcula Δn site a site
   - ✅ `test_density_difference_zero`: Densidades idênticas (convergido)
   - ✅ `test_density_difference_size_mismatch`: Detecta arrays errados
@@ -2027,13 +2028,13 @@ fpm run lsdaks -- --input input.txt
   - ✅ `test_history_update`: Atualiza histórico com norma + energia
   - ✅ `test_history_bounds_checking`: Valida limites de iteração
 
-  **`mixing_schemes.f90` implementado** (54 linhas, 9 testes):
+  **`mixing_schemes.f90` implementado** (54 linhas):
   - ✅ `linear_mixing()`: n_mixed = (1-α)·n_old + α·n_new
     - Valida 0 < α ≤ 1
     - Preserva bounds físicos: 0 ≤ n ≤ 2
   - 💡 **Nota:** Broyden e Anderson mixing comentados para features bonus futuras
 
-  **Testes implementados** (238 linhas, 9 testes):
+  **Testes implementados** (238 linhas):
   - ✅ `test_linear_mixing_alpha_half`: α=0.5 (média simples, damping moderado)
   - ✅ `test_linear_mixing_alpha_one`: α=1.0 (sem damping, atualização completa)
   - ✅ `test_linear_mixing_alpha_small`: α=0.1 (damping pesado, previne oscilações)
@@ -2045,18 +2046,18 @@ fpm run lsdaks -- --input input.txt
   - ✅ `test_linear_mixing_size_mismatch`: Detecta arrays de tamanho errado
 
   **Estatísticas Fase 6 (atualizado):**
-  - ✅ Total: 475 linhas produção + 817 linhas testes (28 testes)
+  - ✅ Total: 475 linhas produção + 817 linhas testes
   - ✅ **Pipeline:** Bethe → Tables → Splines → Potentials → Hamiltonian → Diagonalization → Density → **Convergence!**
   - 🔜 Próximo: `ks_cycle.f90` (loop SCF completo - MÓDULO FINAL!)
 
-  **Total do Projeto:** 185 testes, 100% passando! 🎉
+  **Total do Projeto:** 100% dos testes passando! 🎉
 
 ---
 
 ### 2025-01-16 - Fase 6: Cálculo de Densidade Implementado! 🎉
 - ✅ **MILESTONE:** Fase 5 completa (100%)! Fase 6 iniciada (densidade de autoestados KS).
 
-  **`density_calculator.f90` implementado** (203 linhas, 6 testes):
+  **`density_calculator.f90` implementado** (203 linhas):
   - ✅ `compute_density_spin()`: Cálculo de n_σ(i) = Σⱼ |ψⱼ(i)|² para estados ocupados
     - Interface genérica: overload para eigenvectors reais (OBC/PBC) e complexos (TBC)
     - Para T=0 (ground state): ocupar primeiros N níveis
@@ -2067,7 +2068,7 @@ fpm run lsdaks -- --input input.txt
     - 0 ≤ n(i) ≤ 2 para densidade total (Pauli exclusion)
   - ✅ **Bug fix**: Variável `i→j` em loop de `check_density_bounds` (linha 195)
 
-  **Testes implementados** (291 linhas, 6 testes):
+  **Testes implementados** (291 linhas):
   - ✅ `test_single_electron_density`: 1 elétron em caixa 1D (OBC)
     - Verifica n(i) = |ψ₁(i)|², densidade máxima no centro
   - ✅ `test_half_filling_unpolarized`: N=L, PBC, U=0
@@ -2085,18 +2086,18 @@ fpm run lsdaks -- --input input.txt
   - ✅ Interface `diagonalize_symmetric_real`: Ordem de parâmetros corrigida (H, L, ...) não (L, H, ...)
 
   **Estatísticas Fase 6 (parcial):**
-  - ✅ Total: 203 linhas produção + 291 linhas testes (6 testes)
+  - ✅ Total: 203 linhas produção + 291 linhas testes
   - ✅ **Pipeline completo:** Bethe → Tables → Splines → Potentials → Hamiltonian → Diagonalization → **Density!**
   - 🔜 Próximo: `scf_mixer.f90` (mixing schemes) + `ks_cycle.f90` (loop SCF)
 
-  **Total do Projeto:** 164 testes, 100% passando! 🎉
+  **Total do Projeto:** 100% dos testes passando! 🎉
 
 ---
 
 ### 2025-01-15 - Fase 5: Diagonalização LAPACK & Degenerescências! 🎉
 - ✅ **MILESTONE:** Diagonalização de matrizes simétricas/Hermitianas completa!
 
-  **`lapack_wrapper.f90` implementado** (347 linhas, 18 testes):
+  **`lapack_wrapper.f90` implementado** (347 linhas):
   - ✅ `validate_diagonalization_inputs()`: Validação de dimensões
     - L > 0, size(H) == (L,L), size(eigvals) == L, size(eigvecs) == (L,L)
   - ✅ `diagonalize_symmetric_real()`: Wrapper DSYEVD para matrizes reais simétricas
@@ -2115,7 +2116,7 @@ fpm run lsdaks -- --input input.txt
     - LAPACK usa convenção Fortran nativa, não C!
     - `bind(C)` causava falha em workspace query no gfortran
 
-  **`degeneracy_handler.f90` implementado** (405 linhas, 13 testes):
+  **`degeneracy_handler.f90` implementado** (405 linhas):
   - ✅ `find_degenerate_subspaces()`: Detecta grupos degenerados
     - Varre eigenvalues, identifica grupos onde |λᵢ - λⱼ| < DEG_TOL (1.0e-8)
     - Retorna array 2D: subspaces(n_subspaces, max_deg)
@@ -2145,33 +2146,33 @@ fpm run lsdaks -- --input input.txt
   - ✅ **Orthonormalização**: LAPACK pode retornar base arbitrária no subespaço degenerado
     - QR/Gram-Schmidt garante base ortonormal canônica
 
-  **Testes implementados** (31 novos testes, 100% passando):
-  - ✅ 18 testes `test_lapack_wrapper.f90`:
-    - Validação de inputs (6 testes)
-    - Diagonalização real (7 testes): identity, diagonal, 2×2 analítico, tridiagonal tight-binding, ordering, normalização, ortogonalidade
-    - Eigenvalues only (1 teste)
-    - Complexo Hermitiano (4 testes): identity, 2×2 analítico, eigenvalues reais, values only
-  - ✅ 13 testes `test_degeneracy_handler.f90`:
-    - Detecção de degenerescências (5 testes): nenhuma, par, tripla, múltiplos grupos, todos degenerados
-    - Contagem (3 testes): single, par, tripla
-    - Orthonormalization (3 testes): real pair/triple, complex pair
-    - Verificação (2 testes): identity perfeita, detectar não-ortogonalidade
+  **Testes implementados** (100% passando):
+  - ✅ `test_lapack_wrapper.f90`:
+    - Validação de inputs
+    - Diagonalização real: identity, diagonal, 2×2 analítico, tridiagonal tight-binding, ordering, normalização, ortogonalidade
+    - Eigenvalues only
+    - Complexo Hermitiano: identity, 2×2 analítico, eigenvalues reais, values only
+  - ✅ `test_degeneracy_handler.f90`:
+    - Detecção de degenerescências: nenhuma, par, tripla, múltiplos grupos, todos degenerados
+    - Contagem: single, par, tripla
+    - Orthonormalization: real pair/triple, complex pair
+    - Verificação: identity perfeita, detectar não-ortogonalidade
 
   **Estatísticas Fase 5:**
   - ✅ Total: 1228 linhas código produção + 1531 linhas testes
-  - ✅ 66 testes (100% passando)
+  - ✅ Testes 100% passando
   - ✅ 4 módulos completos: boundary_conditions, hamiltonian_builder, lapack_wrapper, degeneracy_handler
   - ✅ Pipeline completo: Bethe Ansatz → Tables → Splines → Potentials → Hamiltonian → **Diagonalization!**
   - 🔜 Próximo: symmetry.f90 (explorar simetria de paridade para 4x speedup)
 
-  **Total do Projeto:** 158 testes, 100% passando! 🎉
+  **Total do Projeto:** 100% dos testes passando! 🎉
 
 ---
 
 ### 2025-01-14 - Fase 5: Hamiltoniano & Boundary Conditions! 🎉
 - ✅ **MILESTONE:** Construção do Hamiltoniano tight-binding completa!
 
-  **`boundary_conditions.f90` implementado** (256 linhas, 17 testes):
+  **`boundary_conditions.f90` implementado** (256 linhas):
   - ✅ Enum com tipos de BC: `BC_OPEN`, `BC_PERIODIC`, `BC_TWISTED`
   - ✅ `validate_bc_parameters()`: Validação completa
     - BC type válido (1, 2, ou 3)
@@ -2196,7 +2197,7 @@ fpm run lsdaks -- --input input.txt
   - ✅ **TBC**: Persistent currents, efeito Aharonov-Bohm, flux threading
   - ✅ Antiperiodic BC (θ=π): meio quantum de fluxo, quebra degenerescências
 
-  **`hamiltonian_builder.f90` implementado** (220 linhas, 18 testes):
+  **`hamiltonian_builder.f90` implementado** (220 linhas):
   - ✅ `validate_hamiltonian_inputs()`: Validação robusta
     - L > 0 (sistema físico)
     - size(V_ext) == size(V_xc) == L
@@ -2234,14 +2235,14 @@ fpm run lsdaks -- --input input.txt
   - ✅ `ERROR_NOT_A_NUMBER` adicionado aos exports públicos de `lsda_errors.f90`
   - ✅ Mensagem de erro adicionada: "Array contains NaN or Inf values"
 
-  **Testes implementados** (866 linhas, 35 testes):
-  - ✅ **`test_boundary_conditions.f90`** (433 linhas, 17 testes):
+  **Testes implementados** (866 linhas):
+  - ✅ **`test_boundary_conditions.f90`** (433 linhas):
     - Validação de BC: open, periodic, twisted (com/sem theta, ranges)
     - Aplicação de BC: open (no-op), periodic (edges), twisted (complex phases)
     - Antiperiodic (θ=π): H(1,L) = H(L,1) = +1
     - Free particle eigenvalues: OBC, PBC, TBC (validação analítica)
     - Size mismatch detection
-  - ✅ **`test_hamiltonian_builder.f90`** (433 linhas, 18 testes):
+  - ✅ **`test_hamiltonian_builder.f90`** (433 linhas):
     - Validação: inputs válidos, L inválido, size mismatches, NaN/Inf detection
     - Effective potential: computação e size mismatch
     - Free Hamiltonian: estrutura tridiagonal, OBC (sem edges), PBC (com edges)
@@ -2258,8 +2259,7 @@ fpm run lsdaks -- --input input.txt
 
   **Estatísticas Fase 5 (parcial):**
   - **Código produção:** 476 linhas (2 módulos completos)
-  - **Testes:** 866 linhas (35 testes, 100% passando)
-  - **Total do projeto:** 110 testes (antes 92 + 18 novos)
+  - **Testes:** 866 linhas (100% passando)
   - **Próximo:** `symmetry.f90` para exploração de paridade
 
   **🎯 Próximo Passo:**
@@ -2305,7 +2305,7 @@ fpm run lsdaks -- --input input.txt
 ### 2025-01-13 (Parte 1) - Fase 4: COMPLETA! 🎉
 - ✅ **MILESTONE:** Sistema de potenciais e erros totalmente funcional!
 
-  **Módulo `lsda_errors.f90` implementado** (224 linhas, 13 testes):
+  **Módulo `lsda_errors.f90` implementado** (224 linhas):
   - ✅ Códigos de erro organizados: input (1-99), numerical (100-199), I/O (200-299), memory (300-399)
   - ✅ `get_error_message()` - Mensagens legíveis para cada código
   - ✅ `error_handler()` - Handler centralizado com opção fatal
@@ -2320,15 +2320,15 @@ fpm run lsdaks -- --input input.txt
   - ✅ **`potential_barrier.f90`** (157 linhas): single/double barriers (quantum tunneling)
   - ✅ **`potential_factory.f90`** (173 linhas): Factory pattern para criação dinâmica
 
-  **Testes implementados** (786 linhas, 30 testes):
-  - ✅ **`test_potentials.f90`** (502 linhas, 17 testes):
+  **Testes implementados** (786 linhas):
+  - ✅ **`test_potentials.f90`** (502 linhas):
     - Uniform: constância em todos os sites
     - Harmonic: simetria de paridade, mínimo central
     - Impurity: posicionamento, bounds, overlap, concentração aleatória
     - Random: média zero, distribuições corretas (uniform/Gaussian)
     - Barrier: largura, bounds, separação do poço quântico, não-sobreposição
     - Factory: criação via string, comparação com chamadas diretas
-  - ✅ **`test_lsda_errors.f90`** (284 linhas, 13 testes):
+  - ✅ **`test_lsda_errors.f90`** (284 linhas):
     - Códigos em intervalos corretos
     - Mensagens para todos os tipos
     - Utilitários de validação
@@ -2347,19 +2347,19 @@ fpm run lsdaks -- --input input.txt
 
   **Estatísticas Fase 4 (inicial):**
   - **Código produção:** 977 linhas (7 módulos base)
-  - **Testes:** 786 linhas (30 testes, 100% passando)
+  - **Testes:** 786 linhas (100% passando)
   - **Física:** 6 tipos de potenciais com explicações detalhadas nos testes
 
   **🎉 GRAND TOTAL (Fases 1+2+3+4 - após quasiperiodic):**
   - **15 módulos produção:** 3635 linhas
   - **2 executáveis no marco histórico:** 208 linhas
-  - **9 suítes de testes:** 2665 linhas, 92 testes (100% passando)
+  - **9 suítes de testes:** 2665 linhas (100% passando)
   - **Total geral:** ~6508 linhas de código
 
 ### 2025-01-12 - Fase 3: COMPLETA! 🎉
 - ✅ **MILESTONE:** Pipeline XC totalmente funcional de ponta a ponta!
 
-  **Módulo `spline2d.f90` implementado** (351 linhas, 5 testes):
+  **Módulo `spline2d.f90` implementado** (351 linhas):
   - ✅ Tipo `spline2d_t` para grids irregulares 2D (n_y varia com x)
   - ✅ `spline1d_coeff()` - Algoritmo de Thomas para splines cúbicas 1D
   - ✅ `spline2d_init()` - Construção de splines separáveis
@@ -2368,7 +2368,7 @@ fpm run lsdaks -- --input input.txt
   - ✅ Tratamento de boundary conditions (natural e clamped)
   - ✅ Arrays 0-indexed internos para compatibilidade com algoritmo clássico
 
-  **Módulo `xc_lsda.f90` implementado** (335 linhas, 6 testes):
+  **Módulo `xc_lsda.f90` implementado** (335 linhas):
   - ✅ Tipo `xc_lsda_t` com 3 splines: exc, vxc_up, vxc_dw
   - ✅ `xc_lsda_init()` - Carregamento de tabela e construção de splines
   - ✅ `get_exc(n_up, n_dw)` - Energia XC por partícula
@@ -2382,25 +2382,25 @@ fpm run lsdaks -- --input input.txt
   - ✅ Casos especiais: U=0, n=0, bounds checking
   - ✅ **Padronização de nomenclatura:** n_dw (não n_dn) para spin-down
 
-  **Testes implementados** (396 linhas, 11 testes):
-  - ✅ `test_spline2d.f90` (5 testes): Init/destroy, interpolação exata, funções lineares/separáveis
-  - ✅ `test_xc_lsda.f90` (6 testes): Init/destroy, simetrias de spin, regiões, transformações
+  **Testes implementados** (396 linhas):
+  - ✅ `test_spline2d.f90`: Init/destroy, interpolação exata, funções lineares/separáveis
+  - ✅ `test_xc_lsda.f90`: Init/destroy, simetrias de spin, regiões, transformações
 
   **Estatísticas Fase 3:**
   - **Código produção:** 686 linhas (spline2d + xc_lsda)
-  - **Testes:** 396 linhas (11 testes, 100% passando)
+  - **Testes:** 396 linhas (100% passando)
   - **Pipeline completo:** Bethe Ansatz → Tabelas → Splines → XC funcional pronto para KS!
 
   **🎉 GRAND TOTAL (Fases 1+2+3):**
   - **7 módulos produção:** 2545 linhas
   - **2 executáveis no marco histórico:** 208 linhas
-  - **7 suítes de testes:** 1796 linhas, 58 testes (100% passando)
+  - **7 suítes de testes:** 1796 linhas (100% passando)
   - **Total geral:** ~4549 linhas de código
 
 ### 2025-01-11 - Fase 2: COMPLETA! 🎉
 - ✅ **MILESTONE:** Geração de tabelas XC totalmente funcional!
 
-  **Módulo `bethe_tables.f90` implementado** (325 linhas, 6 testes):
+  **Módulo `bethe_tables.f90` implementado** (325 linhas):
   - ✅ Tipo `grid_params_t` para configurar grid de densidades
   - ✅ `compute_E0()` - Energia cinética não-interagente (Fermi gas livre)
   - ✅ `compute_E_xc()` - Energia XC via Bethe Ansatz: E_xc = E_BA - E_0
@@ -2409,7 +2409,7 @@ fpm run lsdaks -- --input input.txt
   - ✅ `generate_table_grid()` - Grid flexível com parâmetros customizados
   - ✅ Casos especiais: U=0, half-filling, polarizado
 
-  **Testes `test_bethe_tables.f90`** (170 linhas, 6 testes):
+  **Testes `test_bethe_tables.f90`** (170 linhas):
   - ✅ E0 para half-filling e sistema polarizado
   - ✅ E_xc = 0 para U=0 (validação física)
   - ✅ Simetria V_xc (V_up = V_dn quando n_up = n_dn)
@@ -2418,12 +2418,12 @@ fpm run lsdaks -- --input input.txt
 
   **Estatísticas Fase 2:**
   - **Código produção:** 888 linhas (I/O e geração de tabelas)
-  - **Testes:** 444 linhas (16 testes, 100% passando)
+  - **Testes:** 444 linhas (100% passando)
   - **Pipeline completo:** Bethe Ansatz → E_xc → V_xc → Tabela → I/O binário
 
 ### 2025-01-09 - Fase 2: I/O de Tabelas Completo ✅
 - ✅ Sistema de I/O de tabelas totalmente funcional!
-  - **`table_io.f90`** (364 linhas, 10 testes): Leitura/escrita ASCII/binário
+  - **`table_io.f90`** (364 linhas): Leitura/escrita ASCII/binário
   - **`test_table_io.f90`** (274 linhas): Validação roundtrip completa
 
 ### 2025-11-07 - Fase 1: COMPLETA ✅
@@ -2431,9 +2431,9 @@ fpm run lsdaks -- --input input.txt
   - **3 módulos completos:** `bethe_equations.f90`, `nonlinear_solvers.f90`, `continuation.f90`
   - **1159 linhas de código produção** (487 + 303 + 369)
   - **946 linhas de testes** (446 + 302 + 198)
-  - **31 testes unitários passando** (17 + 9 + 5)
+  - **Testes unitários passando**
 
-- ✅ **`continuation.f90`** (369 linhas, 5 testes):
+- ✅ **`continuation.f90`** (369 linhas):
   - Implementado predictor-corrector method
   - Sweep forward, backward e bidirectional
   - Speedup típico de 5-10x vs soluções independentes
@@ -2446,14 +2446,14 @@ fpm run lsdaks -- --input input.txt
   - Documentação FORD-compliant completa
 
 ### 2025-11-06 - Fase 1: Continuation + Newton ✅
-- ✅ **`nonlinear_solvers.f90`** (303 linhas, 9 testes):
+- ✅ **`nonlinear_solvers.f90`** (303 linhas):
   - Newton-Raphson com line search
   - Wrapper LAPACK DGESV
   - Tratamento robusto: U=0, NaN, matrizes singulares
   - 100% dos testes passando
 
 ### 2025-11-05 - Fase 1: Bethe Equations ✅
-- ✅ **`bethe_equations.f90`** (487 linhas, 17 testes):
+- ✅ **`bethe_equations.f90`** (487 linhas):
   - Funções θ e Θ completas
   - Jacobiano analítico validado (< 1e-10)
   - Números quânticos inicializados

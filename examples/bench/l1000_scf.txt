@@ -1,0 +1,35 @@
+!> Phase 5 SCF benchmark: L = 1000, OBC, 100 SCF iterations (README, "SCF benchmark").
+!! Not an example. The 1e-30 tolerances force exactly max_iter = 100 iterations, so the
+!! run ends with NOT CONVERGED and exit status 1 by design; the wall time is the result.
+!! Needs tables/xc_table_u4.00.dat. Run from the repository root:
+!!   fpm run --profile release --flag "-O3 -march=native" lsdaks -- --input examples/bench/l1000_scf.txt
+
+&system
+  L = 1000
+  Nup = 250
+  Ndown = 250
+  U = 4.0
+  bc = 'open'
+  phase = 0.0
+  table_dir = 'tables'
+/
+&potential
+  potential_type = 'uniform'
+  V0 = 0.0
+/
+&scf
+  max_iter = 100
+  density_tol = 1.0e-30
+  energy_tol = 1.0e-30
+  potential_tol = 1.0e-30
+  mixing_alpha = 0.05
+  verbose = .false.
+  store_history = .true.
+  use_adaptive_mixing = .true.
+/
+&output
+  output_prefix = 'bench_l1000'
+  save_density = .false.
+  save_eigenvalues = .false.
+  save_wavefunction = .false.
+/

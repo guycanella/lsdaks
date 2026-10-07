@@ -62,10 +62,16 @@
                   <a class="nav-link" href="../lists/procedures.html">Procedures</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" href="../lists/types.html">Derived Types</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
                 </li>
             </ul>
               <div class="d-flex align-items-end flex-grow-1">
@@ -92,7 +98,7 @@
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
               <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-                 title="<p> 7.3% of total for derived types.</p>Including implementation: 9 statements,  7.3% of total for derived types.">9 statements</a>
+                 title="<p> 6.5% of total for derived types.</p>Including implementation: 10 statements,  6.5% of total for derived types.">10 statements</a>
             </li>
 
             <li class="list-inline-item" id="source-file">
@@ -137,6 +143,7 @@
             <a class="list-group-item" href="../type/scf_params_t.html#variable-max_iter">max_iter</a>
             <a class="list-group-item" href="../type/scf_params_t.html#variable-density_tol">density_tol</a>
             <a class="list-group-item" href="../type/scf_params_t.html#variable-energy_tol">energy_tol</a>
+            <a class="list-group-item" href="../type/scf_params_t.html#variable-potential_tol">potential_tol</a>
             <a class="list-group-item" href="../type/scf_params_t.html#variable-mixing_alpha">mixing_alpha</a>
             <a class="list-group-item" href="../type/scf_params_t.html#variable-verbose">verbose</a>
             <a class="list-group-item" href="../type/scf_params_t.html#variable-store_history">store_history</a>
@@ -246,6 +253,23 @@
         </tr>
         <tr>
             <td>
+              <span class="anchor" id="variable-potential_tol"></span>
+              real(kind=dp),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>potential_tol</strong></td>
+<td> =</td>
+                <td>SCF_POTENTIAL_TOL</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
               <span class="anchor" id="variable-mixing_alpha"></span>
               real(kind=dp),
             </td>
@@ -325,9 +349,12 @@
     <h3><span class="anchor" id="src"></span>Source Code</h3>
     <div class="hl codehilite"><pre><span></span><span class="w">    </span><span class="k">type</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">scf_params_t</span>
 <span class="w">        </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">max_iter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ITER_MAX</span><span class="w">             </span><span class="c">! Maximum SCF iterations</span>
-<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">density_tol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SCF_DENSITY_TOL</span><span class="w">  </span><span class="c">! Convergence tolerance for density</span>
-<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">energy_tol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SCF_ENERGY_TOL</span><span class="w">    </span><span class="c">! Convergence tolerance for energy</span>
-<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mixing_alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MIX_ALPHA</span><span class="w">       </span><span class="c">! Linear mixing parameter (used if use_adaptive_mixing = .false.)</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">density_tol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SCF_DENSITY_TOL</span><span class="w">  </span><span class="c">! Diagnostic tolerance for ||Δn|| (no longer a convergence criterion)</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">energy_tol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SCF_ENERGY_TOL</span><span class="w">    </span><span class="c">! Relative tolerance for energy stability</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">potential_tol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SCF_POTENTIAL_TOL</span><span class="w"> </span><span class="c">! Convergence tolerance for the potential residual</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mixing_alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MIX_ALPHA</span><span class="w">       </span><span class="c">! Mixing weight of the NEW potential. Used as-is when</span>
+<span class="w">                                                   </span><span class="c">! use_adaptive_mixing = .false., and as the STARTING</span>
+<span class="w">                                                   </span><span class="c">! value of the adaptive controller otherwise.</span>
 <span class="w">        </span><span class="kt">logical</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">verbose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">false</span><span class="p">.</span><span class="w">               </span><span class="c">! Print convergence info</span>
 <span class="w">        </span><span class="kt">logical</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">store_history</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">true</span><span class="p">.</span><span class="w">          </span><span class="c">! Store convergence history</span>
 <span class="w">        </span><span class="kt">logical</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">use_adaptive_mixing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">true</span><span class="p">.</span><span class="w">    </span><span class="c">! Use adaptive mixing (C++ behavior)</span>
@@ -347,7 +374,7 @@
           <div class="col">
             <p>
               LSDA-Hubbard-Fortran
- was developed by Guilherme Canella<br>              &copy; 2025 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
 </p>
           </div>
           <div class="col">

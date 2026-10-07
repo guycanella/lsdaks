@@ -33,6 +33,16 @@ module lsda_types
         integer :: Ndown        !< Number of spin-down electrons (N↓)
         integer :: bc           !< Boundary conditions: 0=open, 1=periodic, 2=twisted
         real(dp) :: U           !< Hubbard interaction strength (in units of hopping t=1)
-        real(dp) :: phase       !< Twist angle for twisted BC (in units of π), only used if bc=2
+        !> Twist angle for twisted BC, **in radians**, only used if bc=2.
+        !!
+        !! Must lie in [0, 2π): this is the unit and the range that
+        !! `apply_boundary_conditions_complex` and `validate_bc_parameters`
+        !! expect. The user-facing input (`input_params_t%phase`, the `phase`
+        !! key of the `&system` namelist and the `--phase` flag) is given in
+        !! units of π, following the C++ reference, and is multiplied by π
+        !! exactly once, in `convert_to_system_params`, when this field is
+        !! filled. Anything that fills this field by hand must therefore give
+        !! radians (e.g. 0.5 means half a radian, not π/2).
+        real(dp) :: phase
     end type system_params_t
 end module lsda_types

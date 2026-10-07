@@ -32,6 +32,7 @@ module lsda_errors
     public :: ERROR_NOT_A_NUMBER
     public :: ERROR_UNPHYSICAL_DENSITY
     public :: ERROR_SPLINE_INITIALIZATION_FAILED
+    public :: ERROR_NOT_INITIALIZED
     public :: ERROR_CONVERGENCE_FAILED
     public :: ERROR_SINGULAR_MATRIX
     public :: ERROR_LAPACK_FAILED
@@ -54,6 +55,7 @@ module lsda_errors
     integer, parameter :: ERROR_NOT_A_NUMBER = 7
     integer, parameter :: ERROR_UNPHYSICAL_DENSITY = 8
     integer, parameter :: ERROR_SPLINE_INITIALIZATION_FAILED = 9
+    integer, parameter :: ERROR_NOT_INITIALIZED = 10
 
     ! Error codes - Numerical (100-199)
     integer, parameter :: ERROR_CONVERGENCE_FAILED = 100
@@ -105,6 +107,8 @@ contains
             msg = "Unphysical density values detected"
         case (ERROR_SPLINE_INITIALIZATION_FAILED)
             msg = "Spline initialization failed"
+        case (ERROR_NOT_INITIALIZED)
+            msg = "Object has not been initialized"
 
         ! Numerical errors (100-199)
         case (ERROR_CONVERGENCE_FAILED)

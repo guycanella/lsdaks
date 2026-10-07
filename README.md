@@ -33,7 +33,7 @@ A modern Fortran implementation of **Local Spin Density Approximation (LSDA)** f
 - ✅ **Six potential-generator families** (ten selectable variants): uniform, harmonic, impurities, disorder, barriers, and quasiperiodic modulation
 - ✅ **High-performance linear algebra** using LAPACK (DSTEVR/ZHEEVR)
 - ✅ **Three boundary conditions**: open, periodic, twisted
-- ✅ **20 test suites** with **1,455 `call check` assertions** (`grep -c "call check(" test/*.f90`)
+- ✅ **20 test suites**; current assertion and case counts are in [Running Tests](#running-tests)
 - ✅ **Measured C++ comparisons** and deliberate compatibility differences documented below
 
 ## System Requirements
@@ -172,7 +172,15 @@ fpm run --profile release --flag "-O3 -march=native" lsdaks -- --input input.txt
 
 ### Using Example Inputs
 
-The `examples/` directory contains pre-configured input files:
+The `examples/` directory contains pre-configured input files.
+
+The examples (and the root `input.txt`, U = −4) read XC tables from `tables/` (or
+`LSDAKS_TABLE_DIR`). Before running them, generate `xc_table_u2.00.dat`,
+`xc_table_u4.00.dat`, `xc_table_u8.00.dat` and `xc_table_u16.00.dat` with
+`fpm run --profile release --flag "-O3 -march=native -fopenmp" --link-flag "-fopenmp" generate_xc_table -- --U <U>`
+(one run per U; the sign of U does not matter, the file name uses |U|).
+`scripts/run_examples.sh` checks for all of them up front and lists the missing
+ones with the exact commands.
 
 ```bash
 # Minimal example
@@ -197,7 +205,8 @@ fpm run lsdaks -- --input examples/input_twisted_bc.txt
 lsdaks/
 ├── app/                          # Executable programs
 │   ├── main.f90                  # Main LSDA solver
-│   └── generate_table.f90        # Generate thermodynamic-limit XC tables via Bethe Ansatz
+│   ├── generate_table.f90        # Generate thermodynamic-limit XC tables via Bethe Ansatz
+│   └── benchmark_partial_diagonalization.f90  # Partial vs dense diagonalization timings
 │
 ├── src/                          # Source code
 │   ├── types/                    # Core data structures
@@ -209,6 +218,7 @@ lsdaks/
 │   │   ├── bethe_equations.f90   # Lieb-Wu equations
 │   │   ├── nonlinear_solvers.f90 # Newton-Raphson
 │   │   ├── continuation.f90      # Continuation in U
+│   │   ├── lieb_wu_integral.f90  # Thermodynamic-limit Lieb-Wu integral equations
 │   │   ├── table_io.f90          # Table I/O (ASCII/binary)
 │   │   └── bethe_tables.f90      # Generate XC tables
 │   │
@@ -223,6 +233,7 @@ lsdaks/
 │   │   ├── potential_random.f90
 │   │   ├── potential_barrier.f90
 │   │   ├── potential_quasiperiodic.f90
+│   │   ├── potential_seed.f90
 │   │   └── potential_factory.f90
 │   │
 │   ├── hamiltonian/              # Hamiltonian construction
@@ -247,7 +258,7 @@ lsdaks/
 │       ├── input_parser.f90
 │       └── output_writer.f90
 │
-├── test/                         # Test suite (20 suites, 1,455 assertions)
+├── test/                         # Test suite (20 suites; counts in Running Tests)
 │   ├── test_bethe_equations.f90
 │   ├── test_nonlinear_solvers.f90
 │   ├── test_continuation.f90
@@ -261,23 +272,18 @@ lsdaks/
 │   ├── test_kohn_sham_cycle.f90
 │   └── ...
 │
-├── data/                         # Data files
-│   ├── tables/                   # XC functional tables
-│   │   └── fortran_native/       # Binary format (fast loading)
+├── tables/                       # Generated XC tables (xc_table_u<|U|>.dat); not versioned
 │
 ├── examples/                     # Example input files
+│   ├── input_barrier.txt
 │   ├── input_minimal.txt
 │   ├── input_halffilling.txt
 │   ├── input_harmonic_trap.txt
 │   ├── input_strong_coupling.txt
-│   └── input_twisted_bc.txt
+│   ├── input_twisted_bc.txt
+│   └── bench/l1000_scf.txt       # Phase 5 SCF benchmark input (not an example; see Performance)
 │
-├── benchmark_results/            # Validation data
-│   ├── benchmark_table.md
-│   ├── detailed_report.txt
-│   └── *.png                     # Comparison plots
-│
-├── scripts/                      # Utility scripts
+├── scripts/                      # Utility scripts (run_examples.sh, update-modules.sh)
 ├── fpm.toml                      # FPM build configuration
 ├── ford.md                       # FORD documentation config
 ├── CLAUDE.md                     # AI assistant guidance
@@ -346,8 +352,23 @@ maximum width of `1.5u`, and the resulting `28/20/12` floor was revalidated over
 points (`U = 0.5..2.4`, step `0.025`; three densities and two magnetizations): no sign
 inversion and a worst relative error of 0.0863% (at `U = 0.600`) against the refined
 quadrature, in a release build (`-O3 -march=native`); at `m/n = 1e-5` this value depends on
-the compiler flags (0.2203% in the debug profile). Exact timing
-depends on hardware, OpenMP settings and the requested grid.
+the compiler flags (0.2203% in the debug profile). The regression test
+`test_low_m_quadrature_floor_convergence` (`test/test_lieb_wu_integral.f90`) accepts a relative
+error of 0.5%, about twice the debug-profile worst case.
+
+The accuracy fix did **not** reduce the cost below `U = 1`: the lower floor is offset by the
+extra residual panels. Measured on 2026-10-02 (release, OpenMP, 14 cores, Apple M4 Pro,
+default 75 × 202 grid):
+
+| U   | Generation time |
+|-----|----------------:|
+| 0.5 | 261.8 s         |
+| 1.5 | 68.0 s          |
+| 4.0 | 51.4 s          |
+
+The ~260 s for `U < 1` is accepted as a first-run cost paid once per user per U value (a
+recorded decision; it is not being optimised further). Exact timing depends on hardware,
+OpenMP settings and the requested grid.
 
 ## External Potentials
 
@@ -687,7 +708,7 @@ runs of the same system.
 
 ## Running Tests
 
-The project has 20 explicitly registered suites and 1,455 assertions as of 2026-09-20 (`grep -c "call check(" test/*.f90`). Running `fpm test --profile release` on that date executed 351 Fortuno test cases across the 20 suites with 0 failures. Assertion counts are source inventory, not a claim about coverage; the per-suite `Total:` line that Fortuno prints is that suite's case count, not the project total.
+The project has 20 explicitly registered suites and 1,485 `call check(` assertions as of 2026-10-06 (`cat test/*.f90 | grep -c 'call check('`). Running `fpm test --profile release` on that date executed 355 Fortuno test cases across the 20 suites with 0 failures (sum of the per-suite `Total:` lines: `fpm test --profile release 2>&1 | grep 'Total:' | awk '{s+=$2} END{print s}'`). This paragraph is the only place these numbers are kept; other documents point here. Assertion counts are source inventory, not a claim about coverage; the per-suite `Total:` line that Fortuno prints is that suite's case count, not the project total.
 
 > ⚠️ **Always run the tests with `--profile release`.**
 >
@@ -729,7 +750,7 @@ The suite inventory is the 20 `[[test]]` blocks in `fpm.toml`. Run `fpm test --p
 
 ### Validation Tests
 
-Use `scripts/build_cpp_reference.sh` to build the reference into `build/cpp/`; no `run_all_tests.sh`, `run_cpp_tests.sh`, or `compare_energies.py` exists in this repository.
+No `run_all_tests.sh`, `run_cpp_tests.sh`, or `compare_energies.py` exists in this repository. The C++ sources were never versioned (a local, gitignored `original/` copy), and commit `5107651` removed the build script that compiled them, `app/convert_tables.f90` and the converted reference tables; the historical C++ comparison in [Energy Accuracy](#energy-accuracy) is therefore not reproducible from this repository alone.
 
 ## Documentation
 
@@ -820,13 +841,16 @@ $$
 For the 1D case, the Bethe Ansatz provides exact eigenstates via the Lieb-Wu equations:
 
 $$
-e^{ik_j L} \prod_{\alpha=1}^M \frac{k_j - \Lambda_\alpha + iU/2}{k_j - \Lambda_\alpha - iU/2} = 1
+k_j L = 2\pi I_j - \sum_{\alpha=1}^M \theta(\sin k_j - \Lambda_\alpha)
 $$
 
 $$
-\prod_{j=1}^N \frac{\Lambda_\alpha - k_j + iU/2}{\Lambda_\alpha - k_j - iU/2}
-= \prod_{\beta \neq \alpha} \frac{\Lambda_\alpha - \Lambda_\beta + iU}{\Lambda_\alpha - \Lambda_\beta - iU}
+\sum_{j=1}^N \theta(\Lambda_\alpha - \sin k_j) = 2\pi J_\alpha + \sum_{\beta \neq \alpha} \Theta(\Lambda_\alpha - \Lambda_\beta)
 $$
+
+with $\theta(x) = 2\arctan(x/u)$, $\Theta(x) = 2\arctan(x/2u)$ and $u = U/4$ (the
+convention of `src/bethe_ansatz/bethe_equations.f90`; the phase-shift argument is
+$\sin k_j - \Lambda_\alpha$, not $k_j - \Lambda_\alpha$).
 
 These are solved numerically using Newton-Raphson with analytical Jacobian.
 
@@ -858,7 +882,43 @@ Typical convergence in 50-200 iterations depending on:
 Run `fpm run benchmark_partial_diagonalization --profile release` to compare the
 open-boundary partial DSTEVR path with the dense full-spectrum path at `L = 100`,
 `500` and `1000`. The benchmark also checks the computed eigenvalues. At low filling,
-the partial path avoids computing unoccupied eigenvectors; timings are machine dependent.
+the partial path avoids computing unoccupied eigenvectors. Measured on 2026-10-06, Apple M4
+Pro (14 cores), gfortran 16.2.0, `--profile release --flag "-O3 -march=native"`, best of 2
+runs, OBC, `n_vec = min(L, 55)`. Times are `cpu_time` seconds:
+
+| L    | partial (CPU s) | dense (CPU s) | speedup |
+|------|----------------:|--------------:|--------:|
+| 100  | 0.0015          | 0.0007        | 0.43×   |
+| 500  | 0.0078          | 0.0160        | 2.06×   |
+| 1000 | 0.0147          | 0.0667        | 4.55×   |
+
+The crossover below which the partial path does not pay off (around `L ≲ 200`, millisecond
+timings dominated by noise and by DSTEVR's setup) is an inference between the measured
+`L = 100` (0.43×) and `L = 500` (2.06×) rows, not a measurement; the gain appears at `L = 500`
+and grows with `L`. `max |ΔE| ≤ 2.2e-15` between the two eigenvalue sets in every row.
+Timings are machine dependent. Note that the microbenchmark fixes
+`n_vec = min(L, 55)` (`app/benchmark_partial_diagonalization.f90:25`), i.e. low filling,
+whereas the SCF asks for `n_vec = min(L, N_σ + 5)` (`kohn_sham_cycle.f90:523-524`); for the
+Phase 5 input below (`N↑ = N↓ = 250`) that is 255 eigenpairs per spin, so the speedups in this
+table do not transfer directly to the SCF benchmark.
+
+### SCF benchmark (Phase 5 target)
+
+The Phase 5 target was 100 SCF iterations at `L = 1000`, OBC, in under 5 s. The input is
+versioned as `examples/bench/l1000_scf.txt` (U = 4, `N↑ = N↓ = 250`, uniform potential,
+`α = 0.05` adaptive; the `1e-30` tolerances force exactly 100 iterations, so the run ends with
+`NOT CONVERGED` and exit status 1 by design). It lives in `examples/bench/`, outside the
+`examples/*.txt` glob that `scripts/run_examples.sh` treats as examples, and needs
+`tables/xc_table_u4.00.dat`:
+
+```bash
+fpm run --profile release --flag "-O3 -march=native" lsdaks -- --input examples/bench/l1000_scf.txt
+```
+
+Three runs on 2026-10-06 (same machine and flags as above): 7.42 / 7.47 / 7.95 s wall,
+~7.4 s CPU. The original `< 5 s` target is **not met** on this input. The historical
+5.510 s (2026-09-19) was measured with an input that was never recorded and is not directly
+comparable.
 
 The XC cache is guarded by `test_scf_reuses_output_xc_cache`: a two-iteration SCF uses
 `5L` XC evaluations (initial `V_xc`, then one `V_xc`/`e_xc` output pass per iteration),
@@ -869,11 +929,21 @@ per-evaluation heap allocation from the spline hot path.
 
 ### Energy Accuracy
 
+> **Historical, not reproducible from this repository.** The table below was measured on
+> 2026-09-20 against the original C++ program. Its sources were never versioned: they lived
+> in a local `original/` directory that was never committed (ignored by `.gitignore` since
+> `72fdcb5`, 2026-09-14). Commit `5107651` removed only what was versioned around them — the build script
+> `scripts/build_cpp_reference.sh`, `app/convert_tables.f90` and the converted reference
+> tables in `data/tables/fortran_native/`. A `git checkout 5107651^` is **not** enough to
+> rebuild `build/cpp/lsdaks_cpp`: that script compiles `original/*.cc`, which is absent from
+> every commit, so reproduction requires an external copy of the C++ sources. The
+> `build/cpp/...` paths below refer to that historical, unversioned setup.
+
 Measured on 2026-09-20 using `build/cpp/lsdaks_cpp`, OBC, U=4 and the native U=4 table:
 
 | Potential | C++ E/L | Fortran E/L | abs. difference | status |
 |---|---:|---:|---:|---|
-| uniform, L=90, 45/45, tolerances 1e-10 | -0.565718185 | -0.565718185262 | below the 5e-10 print resolution | reproduced; C++ output kept at `build/cpp/ref_uniform_u4` |
+| uniform, L=90, 45/45, tolerances 1e-10 | -0.565718185 | -0.565718185262 | below the 5e-10 print resolution | reproduced on 2026-09-20; C++ output was kept at `build/cpp/ref_uniform_u4` (untracked, gone with the C++ removal) |
 | harmonic `k=0.02`, L=20, 2/2 | -0.306692128 | -0.306692128394 | below the 5e-10 print resolution | historical; reproduced ad hoc on 2026-09-20 by rebuilding the input, no versioned input or script |
 | double barrier `(3,3,-3,20)`, L=20, 2/2 | -0.971707225 | -0.971707224930 | below the 5e-10 print resolution | historical; reproduced ad hoc on 2026-09-20 by rebuilding the input, no versioned input or script |
 
@@ -884,14 +954,16 @@ the double barrier) are all inside that print noise and must not be read as reso
 agreements at those magnitudes: 5e-10 is the floor of what this comparison can measure.
 They are print resolution, not a measured level of agreement.
 
-All three rows were measured on 2026-09-20 with the documented C++ executable
-(`build/cpp/lsdaks_cpp`) and the potential mapping given in this README, and the harmonic and
-double-barrier numbers agree with the values recorded earlier in the project. What separates
-the rows is packaging, not physics: only the uniform case has its C++ output kept in the tree
-(`build/cpp/ref_uniform_u4`). The last two rows have **no versioned input file and no
-comparison script**, so reproducing them means rebuilding the inputs by hand from the
-parameters in the table — which is exactly how they were checked. They are *historical* in
-that narrow sense: reproducible in principle, just not from the repository alone. The legacy C++
+All three rows were measured on 2026-09-20 with the C++ executable of that date
+(`build/cpp/lsdaks_cpp`, built by the then-existing `scripts/build_cpp_reference.sh`) and the
+potential mapping given in this README, and the harmonic and
+double-barrier numbers agree with the values recorded earlier in the project. What separated
+the rows at the time was packaging, not physics: only the uniform case had its C++ output kept
+locally (`build/cpp/ref_uniform_u4`, never versioned). None of the rows has **a versioned input
+file or a comparison script**, and the C++ sources were never in the repository, so the
+table cannot be reproduced from this repository: it would take an external copy of the C++
+sources, the build script from `5107651^`, and inputs rebuilt by hand from the parameters in
+the table — which is how the rows were checked at the time. The legacy C++
 type-4 impurity is not directly comparable: it
 writes a six-site pattern and may exceed `1..L`; Fortran `impurity_single` means one physical
 site.
@@ -990,4 +1062,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Status**: tested with 20 registered suites / 1,455 source assertions | **License**: MIT 📄
+**Status**: tested with 20 registered suites (counts in [Running Tests](#running-tests)) | **License**: MIT 📄

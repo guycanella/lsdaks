@@ -1,0 +1,660 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>eval_row &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>eval_row
+      <small>Function</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 0.2% of total for procedures.">9 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/spline2d.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/spline2d.f90.html'>spline2d.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/spline2d.html'>spline2d</a></li>
+            <li class="breadcrumb-item active" aria-current="page">eval_row</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/eval_row.html#src">eval_row</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>private  function eval_row(spl, i_x, y) result(f_row)  
+</h2>
+    
+
+    <p>Evaluate the y-direction spline of one row</p>
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-spl~2"></span>
+              type(<a href='../type/spline2d_t.html'>spline2d_t</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>spl</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-i_x"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>i_x</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-y~3"></span>
+              real(kind=dp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>y</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <h3>Return Value
+        <small>
+          <span class="anchor" id="variable-f_row"></span>
+          real(kind=dp)
+        </small>
+      </h3>
+      
+    <br>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Calls</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: proc~~eval_row~~CallsGraph Pages: 1 -->
+<svg id="proceval_rowCallsGraph" width="280pt" height="31pt"
+ viewBox="0.00 0.00 280.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~eval_row~~CallsGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>proc~~eval_row~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 276.31,-26.77 276.31,4 -4,4"/>
+<!-- proc~eval_row -->
+<g id="proc~~eval_row~~CallsGraph_node1" class="node">
+<title>proc~eval_row</title>
+<polygon fill="none" stroke="black" points="54.27,-22.77 0,-22.77 0,0 54.27,0 54.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27.13" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">eval_row</text>
+</g>
+<!-- proc~spline1d_eval -->
+<g id="proc~~eval_row~~CallsGraph_node2" class="node">
+<title>proc~spline1d_eval</title>
+<g id="a_proc~~eval_row~~CallsGraph_node2"><a xlink:href="../proc/spline1d_eval.html" xlink:title="spline1d_eval">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="167.04,-22.77 90.27,-22.77 90.27,0 167.04,0 167.04,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="128.66" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline1d_eval</text>
+</a>
+</g>
+</g>
+<!-- proc~eval_row&#45;&gt;proc~spline1d_eval -->
+<g id="proc~~eval_row~~CallsGraph_edge1" class="edge">
+<title>proc~eval_row&#45;&gt;proc~spline1d_eval</title>
+<path fill="none" stroke="#000000" d="M54.54,-11.39C61.99,-11.39 70.33,-11.39 78.65,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="78.37,-14.89 88.37,-11.39 78.37,-7.89 78.37,-14.89"/>
+</g>
+<!-- proc~find_interval -->
+<g id="proc~~eval_row~~CallsGraph_node3" class="node">
+<title>proc~find_interval</title>
+<g id="a_proc~~eval_row~~CallsGraph_node3"><a xlink:href="../proc/find_interval.html" xlink:title="find_interval">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="272.31,-22.77 203.04,-22.77 203.04,0 272.31,0 272.31,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="237.68" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">find_interval</text>
+</a>
+</g>
+</g>
+<!-- proc~spline1d_eval&#45;&gt;proc~find_interval -->
+<g id="proc~~eval_row~~CallsGraph_edge2" class="edge">
+<title>proc~spline1d_eval&#45;&gt;proc~find_interval</title>
+<path fill="none" stroke="#000000" d="M167.39,-11.39C175.15,-11.39 183.4,-11.39 191.4,-11.39"/>
+<polygon fill="#000000" stroke="#000000" points="191.34,-14.89 201.34,-11.39 191.34,-7.89 191.34,-14.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CallsGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CallsGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Called by</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: proc~~eval_row~~CalledByGraph Pages: 1 -->
+<svg id="proceval_rowCalledByGraph" width="564pt" height="146pt"
+ viewBox="0.00 0.00 564.00 146.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~eval_row~~CalledByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 141.77)">
+<title>proc~~eval_row~~CalledByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-141.77 560.35,-141.77 560.35,4 -4,4"/>
+<!-- proc~eval_row -->
+<g id="proc~~eval_row~~CalledByGraph_node1" class="node">
+<title>proc~eval_row</title>
+<polygon fill="none" stroke="black" points="556.35,-80.77 502.08,-80.77 502.08,-58 556.35,-58 556.35,-80.77"/>
+<text xml:space="preserve" text-anchor="middle" x="529.21" y="-65.04" font-family="Helvetica,sans-Serif" font-size="10.50">eval_row</text>
+</g>
+<!-- proc~spline2d_eval -->
+<g id="proc~~eval_row~~CalledByGraph_node2" class="node">
+<title>proc~spline2d_eval</title>
+<g id="a_proc~~eval_row~~CalledByGraph_node2"><a xlink:href="../proc/spline2d_eval.html" xlink:title="spline2d_eval">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="466.08,-80.77 389.31,-80.77 389.31,-58 466.08,-58 466.08,-80.77"/>
+<text xml:space="preserve" text-anchor="middle" x="427.69" y="-65.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">spline2d_eval</text>
+</a>
+</g>
+</g>
+<!-- proc~spline2d_eval&#45;&gt;proc~eval_row -->
+<g id="proc~~eval_row~~CalledByGraph_edge1" class="edge">
+<title>proc~spline2d_eval&#45;&gt;proc~eval_row</title>
+<path fill="none" stroke="#000000" d="M466.32,-69.39C474.14,-69.39 482.39,-69.39 490.23,-69.39"/>
+<polygon fill="#000000" stroke="#000000" points="490.18,-72.89 500.18,-69.39 490.18,-65.89 490.18,-72.89"/>
+</g>
+<!-- proc~exc_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_node3" class="node">
+<title>proc~exc_recursive</title>
+<g id="a_proc~~eval_row~~CalledByGraph_node3"><a xlink:href="../proc/exc_recursive.html" xlink:title="exc_recursive">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="344.68,-119.77 267.16,-119.77 267.16,-97 344.68,-97 344.68,-119.77"/>
+<text xml:space="preserve" text-anchor="middle" x="305.92" y="-104.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">exc_recursive</text>
+</a>
+</g>
+</g>
+<!-- proc~exc_recursive&#45;&gt;proc~spline2d_eval -->
+<g id="proc~~eval_row~~CalledByGraph_edge2" class="edge">
+<title>proc~exc_recursive&#45;&gt;proc~spline2d_eval</title>
+<path fill="none" stroke="#000000" d="M343.18,-96.58C354.68,-92.84 367.55,-88.64 379.68,-84.69"/>
+<polygon fill="#000000" stroke="#000000" points="380.69,-88.04 389.12,-81.62 378.53,-81.39 380.69,-88.04"/>
+</g>
+<!-- proc~exc_recursive&#45;&gt;proc~exc_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_edge5" class="edge">
+<title>proc~exc_recursive&#45;&gt;proc~exc_recursive</title>
+<path fill="none" stroke="#000000" d="M285.79,-120.15C278.76,-128.93 285.47,-137.77 305.92,-137.77 316.79,-137.77 323.78,-135.27 326.89,-131.62"/>
+<polygon fill="#000000" stroke="#000000" points="330.38,-131.38 326.17,-121.66 323.4,-131.89 330.38,-131.38"/>
+</g>
+<!-- proc~vxc_dn_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_node4" class="node">
+<title>proc~vxc_dn_recursive</title>
+<g id="a_proc~~eval_row~~CalledByGraph_node4"><a xlink:href="../proc/vxc_dn_recursive.html" xlink:title="vxc_dn_recursive">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="222.54,-42.77 127.77,-42.77 127.77,-20 222.54,-20 222.54,-42.77"/>
+<text xml:space="preserve" text-anchor="middle" x="175.15" y="-27.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">vxc_dn_recursive</text>
+</a>
+</g>
+</g>
+<!-- proc~vxc_dn_recursive&#45;&gt;proc~spline2d_eval -->
+<g id="proc~~eval_row~~CalledByGraph_edge3" class="edge">
+<title>proc~vxc_dn_recursive&#45;&gt;proc~spline2d_eval</title>
+<path fill="none" stroke="#000000" d="M223.02,-43.17C234.58,-45.8 246.97,-48.4 258.54,-50.39 298.43,-57.22 344.08,-62.2 377.74,-65.34"/>
+<polygon fill="#000000" stroke="#000000" points="377.34,-68.82 387.61,-66.24 377.97,-61.85 377.34,-68.82"/>
+</g>
+<!-- proc~vxc_dn_recursive&#45;&gt;proc~vxc_dn_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_edge8" class="edge">
+<title>proc~vxc_dn_recursive&#45;&gt;proc~vxc_dn_recursive</title>
+<path fill="none" stroke="#000000" d="M153.78,-43.15C146.32,-51.93 153.44,-60.77 175.15,-60.77 186.69,-60.77 194.11,-58.27 197.41,-54.62"/>
+<polygon fill="#000000" stroke="#000000" points="200.9,-54.36 196.64,-44.66 193.92,-54.9 200.9,-54.36"/>
+</g>
+<!-- proc~vxc_up_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_node5" class="node">
+<title>proc~vxc_up_recursive</title>
+<g id="a_proc~~eval_row~~CalledByGraph_node5"><a xlink:href="../proc/vxc_up_recursive.html" xlink:title="vxc_up_recursive">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="353.31,-23.77 258.54,-23.77 258.54,-1 353.31,-1 353.31,-23.77"/>
+<text xml:space="preserve" text-anchor="middle" x="305.92" y="-8.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">vxc_up_recursive</text>
+</a>
+</g>
+</g>
+<!-- proc~vxc_dn_recursive&#45;&gt;proc~vxc_up_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_edge11" class="edge">
+<title>proc~vxc_dn_recursive&#45;&gt;proc~vxc_up_recursive</title>
+<path fill="none" stroke="#000000" d="M214.44,-19.51C224.68,-17.57 235.97,-15.74 247.01,-14.21"/>
+<polygon fill="#000000" stroke="#000000" points="247.39,-17.69 256.86,-12.94 246.49,-10.75 247.39,-17.69"/>
+</g>
+<!-- proc~vxc_up_recursive&#45;&gt;proc~spline2d_eval -->
+<g id="proc~~eval_row~~CalledByGraph_edge4" class="edge">
+<title>proc~vxc_up_recursive&#45;&gt;proc~spline2d_eval</title>
+<path fill="none" stroke="#000000" d="M331.74,-24.2C349.09,-32.45 372.49,-43.59 391.72,-52.74"/>
+<polygon fill="#000000" stroke="#000000" points="390.01,-55.8 400.54,-56.94 393.02,-49.48 390.01,-55.8"/>
+</g>
+<!-- proc~vxc_up_recursive&#45;&gt;proc~vxc_dn_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_edge9" class="edge">
+<title>proc~vxc_up_recursive&#45;&gt;proc~vxc_dn_recursive</title>
+<path fill="none" stroke="#000000" d="M266.76,-24.24C256.58,-26.17 245.33,-28 234.33,-29.52"/>
+<polygon fill="#000000" stroke="#000000" points="233.97,-26.04 224.51,-30.8 234.88,-32.98 233.97,-26.04"/>
+</g>
+<!-- proc~vxc_up_recursive&#45;&gt;proc~vxc_up_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_edge12" class="edge">
+<title>proc~vxc_up_recursive&#45;&gt;proc~vxc_up_recursive</title>
+<path fill="none" stroke="#000000" d="M285.79,-24.15C278.76,-32.93 285.47,-41.77 305.92,-41.77 316.79,-41.77 323.78,-39.27 326.89,-35.62"/>
+<polygon fill="#000000" stroke="#000000" points="330.38,-35.38 326.17,-25.66 323.4,-35.89 330.38,-35.38"/>
+</g>
+<!-- proc~eval_vxc_branch -->
+<g id="proc~~eval_row~~CalledByGraph_node6" class="node">
+<title>proc~eval_vxc_branch</title>
+<g id="a_proc~~eval_row~~CalledByGraph_node6"><a xlink:href="../proc/eval_vxc_branch.html" xlink:title="eval_vxc_branch">
+<polygon fill="#d9534f" stroke="#d9534f" points="91.77,-22.77 0,-22.77 0,0 91.77,0 91.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="45.88" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">eval_vxc_branch</text>
+</a>
+</g>
+</g>
+<!-- proc~eval_vxc_branch&#45;&gt;proc~vxc_dn_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_edge7" class="edge">
+<title>proc~eval_vxc_branch&#45;&gt;proc~vxc_dn_recursive</title>
+<path fill="none" stroke="#000000" d="M92.11,-18.49C99.88,-19.71 108.05,-21 116.1,-22.26"/>
+<polygon fill="#000000" stroke="#000000" points="115.43,-25.7 125.86,-23.8 116.52,-18.79 115.43,-25.7"/>
+</g>
+<!-- proc~eval_vxc_branch&#45;&gt;proc~vxc_up_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_edge10" class="edge">
+<title>proc~eval_vxc_branch&#45;&gt;proc~vxc_up_recursive</title>
+<path fill="none" stroke="#000000" d="M92.01,-11.23C127.49,-11.15 178.17,-11.12 222.54,-11.39 230.41,-11.43 238.71,-11.51 246.89,-11.59"/>
+<polygon fill="#000000" stroke="#000000" points="246.75,-15.09 256.79,-11.7 246.83,-8.09 246.75,-15.09"/>
+</g>
+<!-- proc~get_exc_positive -->
+<g id="proc~~eval_row~~CalledByGraph_node7" class="node">
+<title>proc~get_exc_positive</title>
+<g id="a_proc~~eval_row~~CalledByGraph_node7"><a xlink:href="../proc/get_exc_positive.html" xlink:title="get_exc_positive">
+<polygon fill="#d9534f" stroke="#d9534f" points="220.66,-119.77 129.64,-119.77 129.64,-97 220.66,-97 220.66,-119.77"/>
+<text xml:space="preserve" text-anchor="middle" x="175.15" y="-104.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">get_exc_positive</text>
+</a>
+</g>
+</g>
+<!-- proc~get_exc_positive&#45;&gt;proc~exc_recursive -->
+<g id="proc~~eval_row~~CalledByGraph_edge6" class="edge">
+<title>proc~get_exc_positive&#45;&gt;proc~exc_recursive</title>
+<path fill="none" stroke="#000000" d="M220.83,-108.39C231.94,-108.39 243.91,-108.39 255.24,-108.39"/>
+<polygon fill="#000000" stroke="#000000" points="255.24,-111.89 265.24,-108.39 255.24,-104.89 255.24,-111.89"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CalledByGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CalledByGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="w">    </span><span class="k">function </span><span class="n">eval_row</span><span class="p">(</span><span class="n">spl</span><span class="p">,</span><span class="w"> </span><span class="n">i_x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">f_row</span><span class="p">)</span>
+<span class="w">        </span><span class="k">type</span><span class="p">(</span><span class="n">spline2d_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">spl</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">i_x</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">y</span>
+<span class="w">        </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">f_row</span>
+
+<span class="w">        </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">ny</span>
+
+<span class="w">        </span><span class="n">ny</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spl</span><span class="p">%</span><span class="n">n_y</span><span class="p">(</span><span class="n">i_x</span><span class="p">)</span>
+<span class="w">        </span><span class="n">f_row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spline1d_eval</span><span class="p">(</span><span class="n">spl</span><span class="p">%</span><span class="n">y</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ny</span><span class="p">,</span><span class="w"> </span><span class="n">i_x</span><span class="p">),</span><span class="w"> </span><span class="n">spl</span><span class="p">%</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ny</span><span class="p">,</span><span class="w"> </span><span class="n">i_x</span><span class="p">),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                              </span><span class="n">spl</span><span class="p">%</span><span class="n">d2f_dy2</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ny</span><span class="p">,</span><span class="w"> </span><span class="n">i_x</span><span class="p">),</span><span class="w"> </span><span class="n">ny</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end function </span><span class="n">eval_row</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

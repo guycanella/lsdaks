@@ -1,0 +1,1826 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Local Spin Density Approximation for the 1D Hubbard Model">
+    <meta name="author" content="Guilherme Canella" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>generate_xc_table_app &ndash; LSDA-Hubbard-Fortran</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LSDA-Hubbard-Fortran </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/programs.html">Programs</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>generate_xc_table_app      <small>Program</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+            <li class="list-inline-item" id="meta-license"><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li>
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title="31.1% of total for programs.">233 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/generate_table.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/generate_table.f90.html'>generate_table.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">generate_xc_table_app</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-u~29">U</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-output_dir~2">output_dir</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-output_file">output_file</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-arg">arg</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-val~4">val</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-params~9">params</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-table~10">table</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-ierr~71">ierr</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-io_stat~8">io_stat</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-nargs">nargs</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-command_stat">command_stat</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-exit_stat">exit_stat</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-n_bad_exc~3">n_bad_exc</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-n_bad_up~3">n_bad_up</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-n_bad_dn~3">n_bad_dn</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-i~29">i</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-j~16">j</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-have_u">have_U</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-force">force</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-exists~3">exists</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-warned~2">warned</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-t_start">t_start</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-t_end">t_end</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-wall">wall</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-c_start">c_start</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-c_end">c_end</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#variable-c_rate">c_rate</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#funcs-0"
+         aria-expanded="false" aria-controls="funcs-0">
+         <h4 class="card-header bg-primary text-white">Functions</h4>
+      </a>
+      <div id="funcs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#proc-shell_quote">shell_quote</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
+      </a>
+      <div id="subs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#proc-ensure_output_directory">ensure_output_directory</a>
+            <a class="list-group-item" href="../program/generate_xc_table_app.html#proc-usage">usage</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../program/generate_xc_table_app.html#src">generate_xc_table_app</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+        <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='http://fortranwiki.org/fortran/show/ieee_arithmetic'>ieee_arithmetic</a></li>
+                  <li class="list-inline-item"><a href='../module/lsda_constants.html'>lsda_constants</a></li>
+                  <li class="list-inline-item"><a href='../module/lsda_errors.html'>lsda_errors</a></li>
+                  <li class="list-inline-item"><a href='../module/table_io.html'>table_io</a></li>
+                  <li class="list-inline-item"><a href='../module/bethe_tables.html'>bethe_tables</a></li>
+                  <li class="list-inline-item"><a href='http://fortranwiki.org/fortran/show/iso_fortran_env'>iso_fortran_env</a></li>
+              </ul>
+            </li>
+            <li class="list-group-item">
+              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: program~~generate_xc_table_app~~UsesGraph Pages: 1 -->
+<svg id="programgenerate_xc_table_appUsesGraph" width="641pt" height="192pt"
+ viewBox="0.00 0.00 641.00 192.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="program~~generate_xc_table_app~~UsesGraph" class="graph" transform="scale(0.882167 0.882167) rotate(0) translate(4 213.9)">
+<title>program~~generate_xc_table_app~~UsesGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-213.9 722.62,-213.9 722.62,4 -4,4"/>
+<!-- program~generate_xc_table_app -->
+<g id="program~~generate_xc_table_app~~UsesGraph_node1" class="node">
+<title>program~generate_xc_table_app</title>
+<polygon fill="none" stroke="black" points="718.62,-116.4 594.6,-116.4 594.6,-93.63 718.62,-93.63 718.62,-116.4"/>
+<text xml:space="preserve" text-anchor="middle" x="656.61" y="-100.67" font-family="Helvetica,sans-Serif" font-size="10.50">generate_xc_table_app</text>
+</g>
+<!-- ieee_arithmetic -->
+<g id="program~~generate_xc_table_app~~UsesGraph_node2" class="node">
+<title>ieee_arithmetic</title>
+<g id="a_program~~generate_xc_table_app~~UsesGraph_node2"><a xlink:href="http://fortranwiki.org/fortran/show/ieee_arithmetic" xlink:title="ieee_arithmetic">
+<polygon fill="#337ab7" stroke="#337ab7" points="324.81,-174.4 240.54,-174.4 240.54,-151.63 324.81,-151.63 324.81,-174.4"/>
+<text xml:space="preserve" text-anchor="middle" x="282.67" y="-158.67" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ieee_arithmetic</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;ieee_arithmetic -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge1" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M404.19,-202.02C374.48,-199.67 342.45,-188.87 318.88,-179.24"/>
+<polygon fill="#000000" stroke="#000000" points="320.33,-176.05 309.76,-175.37 317.6,-182.5 320.33,-176.05"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M640.06,-116.72C601.96,-144.1 500.22,-209.45 406.19,-202.02"/>
+</g>
+<!-- iso_fortran_env -->
+<g id="program~~generate_xc_table_app~~UsesGraph_node3" class="node">
+<title>iso_fortran_env</title>
+<g id="a_program~~generate_xc_table_app~~UsesGraph_node3"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="85.77,-76.4 0,-76.4 0,-53.63 85.77,-53.63 85.77,-76.4"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-60.67" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;iso_fortran_env -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge2" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M404.19,-8.02C331.53,-19.16 313.07,-20.06 240.54,-32.02 206.49,-37.63 198.24,-40.61 164.15,-46.02"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M645.84,-93.28C625.78,-70.33 577.23,-20.68 523.09,-8.02"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M521.09,-8.02C471.37,3.61 456.39,1.36 406.19,-8.02"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M162.15,-46.02C140.91,-48.59 117.64,-52.16 97.41,-55.51"/>
+<polygon fill="#000000" stroke="#000000" points="96.97,-52.04 87.69,-57.15 98.13,-58.94 96.97,-52.04"/>
+</g>
+<!-- module~bethe_tables -->
+<g id="program~~generate_xc_table_app~~UsesGraph_node4" class="node">
+<title>module~bethe_tables</title>
+<g id="a_program~~generate_xc_table_app~~UsesGraph_node4"><a xlink:href="../module/bethe_tables.html" xlink:title="bethe_tables">
+<polygon fill="#337ab7" stroke="#337ab7" points="558.6,-116.4 485.58,-116.4 485.58,-93.63 558.6,-93.63 558.6,-116.4"/>
+<text xml:space="preserve" text-anchor="middle" x="522.09" y="-100.67" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bethe_tables</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;module~bethe_tables -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge3" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;module~bethe_tables</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M594.39,-105.02C586.29,-105.02 578.08,-105.02 570.26,-105.02"/>
+<polygon fill="#000000" stroke="#000000" points="570.27,-101.52 560.27,-105.02 570.27,-108.52 570.27,-101.52"/>
+</g>
+<!-- module~lsda_constants -->
+<g id="program~~generate_xc_table_app~~UsesGraph_node5" class="node">
+<title>module~lsda_constants</title>
+<g id="a_program~~generate_xc_table_app~~UsesGraph_node5"><a xlink:href="../module/lsda_constants.html" xlink:title="lsda_constants">
+<polygon fill="#337ab7" stroke="#337ab7" points="204.54,-96.4 121.77,-96.4 121.77,-73.63 204.54,-73.63 204.54,-96.4"/>
+<text xml:space="preserve" text-anchor="middle" x="163.15" y="-80.67" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_constants</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;module~lsda_constants -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge4" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M404.19,-202.02C350.64,-203.01 334.68,-218.38 283.67,-202.02"/>
+</g>
+<!-- module~lsda_errors -->
+<g id="program~~generate_xc_table_app~~UsesGraph_node6" class="node">
+<title>module~lsda_errors</title>
+<g id="a_program~~generate_xc_table_app~~UsesGraph_node6"><a xlink:href="../module/lsda_errors.html" xlink:title="lsda_errors">
+<polygon fill="#337ab7" stroke="#337ab7" points="315.43,-96.4 249.91,-96.4 249.91,-73.63 315.43,-73.63 315.43,-96.4"/>
+<text xml:space="preserve" text-anchor="middle" x="282.67" y="-80.67" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lsda_errors</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;module~lsda_errors -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge5" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M404.19,-8.02C363.43,-14.27 324.82,-44.83 302.74,-65.52"/>
+<polygon fill="#000000" stroke="#000000" points="300.42,-62.89 295.67,-72.36 305.29,-67.92 300.42,-62.89"/>
+</g>
+<!-- module~table_io -->
+<g id="program~~generate_xc_table_app~~UsesGraph_node7" class="node">
+<title>module~table_io</title>
+<g id="a_program~~generate_xc_table_app~~UsesGraph_node7"><a xlink:href="../module/table_io.html" xlink:title="table_io">
+<polygon fill="#337ab7" stroke="#337ab7" points="432.19,-58.4 378.19,-58.4 378.19,-35.63 432.19,-35.63 432.19,-58.4"/>
+<text xml:space="preserve" text-anchor="middle" x="405.19" y="-42.67" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">table_io</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;module~table_io -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge6" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;module~table_io</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M521.09,-8.02C505.72,-4.42 468.98,-18.4 441.15,-30.61"/>
+<polygon fill="#000000" stroke="#000000" points="440.06,-27.26 432.36,-34.54 442.92,-33.65 440.06,-27.26"/>
+</g>
+<!-- module~bethe_tables&#45;&gt;ieee_arithmetic -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge7" class="edge">
+<title>module~bethe_tables&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M502.81,-116.84C480.81,-130.48 442.3,-152.51 406.19,-164.02"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M404.19,-164.02C382.65,-170.89 357.82,-171.78 336.31,-170.51"/>
+<polygon fill="#000000" stroke="#000000" points="336.82,-167.04 326.58,-169.76 336.29,-174.02 336.82,-167.04"/>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~lsda_constants -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge9" class="edge">
+<title>module~bethe_tables&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-202.02C262.5,-195.87 256.32,-195.53 240.54,-183.02 213.24,-161.36 189.97,-128 176.52,-106.34"/>
+<polygon fill="#000000" stroke="#000000" points="179.68,-104.8 171.52,-98.05 173.69,-108.42 179.68,-104.8"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M404.19,-164.02C350.69,-181.08 337.15,-219.17 283.67,-202.02"/>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~lsda_errors -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge10" class="edge">
+<title>module~bethe_tables&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M485.29,-102C442.87,-98.43 372.23,-92.48 326.82,-88.65"/>
+<polygon fill="#000000" stroke="#000000" points="327.34,-85.18 317.08,-87.83 326.76,-92.16 327.34,-85.18"/>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~table_io -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge11" class="edge">
+<title>module~bethe_tables&#45;&gt;module~table_io</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M497.56,-93.14C480.91,-84.73 458.34,-73.34 439.79,-63.98"/>
+<polygon fill="#000000" stroke="#000000" points="441.55,-60.94 431.04,-59.56 438.39,-67.19 441.55,-60.94"/>
+</g>
+<!-- module~lieb_wu_integral -->
+<g id="program~~generate_xc_table_app~~UsesGraph_node8" class="node">
+<title>module~lieb_wu_integral</title>
+<g id="a_program~~generate_xc_table_app~~UsesGraph_node8"><a xlink:href="../module/lieb_wu_integral.html" xlink:title="lieb_wu_integral">
+<polygon fill="#337ab7" stroke="#337ab7" points="449.58,-136.4 360.81,-136.4 360.81,-113.63 449.58,-113.63 449.58,-136.4"/>
+<text xml:space="preserve" text-anchor="middle" x="405.19" y="-120.67" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lieb_wu_integral</text>
+</a>
+</g>
+</g>
+<!-- module~bethe_tables&#45;&gt;module~lieb_wu_integral -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge8" class="edge">
+<title>module~bethe_tables&#45;&gt;module~lieb_wu_integral</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M485.37,-111.24C477.67,-112.58 469.36,-114.02 461.12,-115.46"/>
+<polygon fill="#000000" stroke="#000000" points="460.73,-111.97 451.48,-117.13 461.93,-118.87 460.73,-111.97"/>
+</g>
+<!-- module~lsda_constants&#45;&gt;iso_fortran_env -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge12" class="edge">
+<title>module~lsda_constants&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M121.45,-78.13C113.64,-76.81 105.35,-75.41 97.21,-74.04"/>
+<polygon fill="#000000" stroke="#000000" points="97.8,-70.59 87.36,-72.37 96.64,-77.49 97.8,-70.59"/>
+</g>
+<!-- module~lsda_errors&#45;&gt;module~lsda_constants -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge13" class="edge">
+<title>module~lsda_errors&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M249.56,-85.02C239.16,-85.02 227.35,-85.02 215.9,-85.02"/>
+<polygon fill="#000000" stroke="#000000" points="216.15,-81.52 206.15,-85.02 216.15,-88.52 216.15,-81.52"/>
+</g>
+<!-- module~table_io&#45;&gt;ieee_arithmetic -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge14" class="edge">
+<title>module~table_io&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M392.2,-58.56C371.64,-78.35 329.45,-118.96 304.16,-143.3"/>
+<polygon fill="#000000" stroke="#000000" points="301.85,-140.67 297.07,-150.12 306.7,-145.71 301.85,-140.67"/>
+</g>
+<!-- module~table_io&#45;&gt;iso_fortran_env -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge15" class="edge">
+<title>module~table_io&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M377.82,-45.51C353.37,-44.42 316.01,-43.53 283.67,-46.02"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-46.02C229.6,-50.02 215.74,-37.84 164.15,-46.02"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_constants -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge16" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.67,-46.02C252.62,-48.25 221.39,-59.05 198.43,-68.72"/>
+<polygon fill="#000000" stroke="#000000" points="197.34,-65.38 189.58,-72.59 200.14,-71.8 197.34,-65.38"/>
+</g>
+<!-- module~table_io&#45;&gt;module~lsda_errors -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge17" class="edge">
+<title>module~table_io&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M377.75,-55.36C362.74,-60.09 343.6,-66.12 326.5,-71.51"/>
+<polygon fill="#000000" stroke="#000000" points="325.56,-68.14 317.07,-74.49 327.66,-74.82 325.56,-68.14"/>
+</g>
+<!-- module~lieb_wu_integral&#45;&gt;ieee_arithmetic -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge18" class="edge">
+<title>module~lieb_wu_integral&#45;&gt;ieee_arithmetic</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M366.72,-136.83C355.73,-140.3 343.54,-144.14 331.97,-147.79"/>
+<polygon fill="#000000" stroke="#000000" points="331.05,-144.41 322.57,-150.75 333.16,-151.08 331.05,-144.41"/>
+</g>
+<!-- module~lieb_wu_integral&#45;&gt;module~lsda_constants -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge19" class="edge">
+<title>module~lieb_wu_integral&#45;&gt;module~lsda_constants</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M360.53,-121.29C327.42,-118.08 280.88,-112.73 240.54,-105.02 232.49,-103.48 224.03,-101.57 215.79,-99.54"/>
+<polygon fill="#000000" stroke="#000000" points="216.78,-96.18 206.22,-97.1 215.05,-102.96 216.78,-96.18"/>
+</g>
+<!-- module~lieb_wu_integral&#45;&gt;module~lsda_errors -->
+<g id="program~~generate_xc_table_app~~UsesGraph_edge20" class="edge">
+<title>module~lieb_wu_integral&#45;&gt;module~lsda_errors</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M368.69,-113.23C355.43,-108.83 340.23,-103.79 326.39,-99.2"/>
+<polygon fill="#000000" stroke="#000000" points="327.68,-95.93 317.08,-96.1 325.47,-102.58 327.68,-95.93"/>
+</g>
+</g>
+</svg>
+</div>                <script>
+                  var panprogramgenerate_xc_table_appUsesGraph = svgPanZoom('#programgenerate_xc_table_appUsesGraph',
+                    {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true,}
+                  );
+                </script>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#UsesGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="UsesGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="485pt" height="31pt"
+ viewBox="0.00 0.00 485.00 31.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 481.13,-26.77 481.13,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-22.77 0,-22.77 0,0 54,0 54,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="137.76,-22.77 72.24,-22.77 72.24,0 137.76,0 137.76,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="218.63,-22.77 155.37,-22.77 155.37,0 218.63,0 218.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="291,-22.77 237,-22.77 237,0 291,0 291,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="264" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="363,-22.77 309,-22.77 309,0 363,0 363,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="336" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="477.13,-22.77 380.87,-22.77 380.87,0 477.13,0 477.13,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="429" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a submodule to the (sub)module which it is
+descended from. Dashed arrows point from a module or program unit to 
+modules which it uses.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+    <p>Command line front end of the XC table generator.</p>
+    <br>
+    <div class="card">
+      <div class="card-header">
+  <h3 class="card-title">Calls</h3>
+      </div>
+      <div class="card-body">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: program~~generate_xc_table_app~~CallsGraph Pages: 1 -->
+<svg id="programgenerate_xc_table_appCallsGraph" width="584pt" height="277pt"
+ viewBox="0.00 0.00 584.00 277.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="program~~generate_xc_table_app~~CallsGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 272.77)">
+<title>program~~generate_xc_table_app~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-272.77 579.58,-272.77 579.58,4 -4,4"/>
+<!-- program~generate_xc_table_app -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node1" class="node">
+<title>program~generate_xc_table_app</title>
+<polygon fill="none" stroke="black" points="124.02,-145.77 0,-145.77 0,-123 124.02,-123 124.02,-145.77"/>
+<text xml:space="preserve" text-anchor="middle" x="62.01" y="-130.03" font-family="Helvetica,sans-Serif" font-size="10.50">generate_xc_table_app</text>
+</g>
+<!-- proc~count_nonfinite_entries -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node2" class="node">
+<title>proc~count_nonfinite_entries</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node2"><a xlink:href="../proc/count_nonfinite_entries.html" xlink:title="count_nonfinite_entries">
+<polygon fill="#d9534f" stroke="#d9534f" points="457.93,-268.77 335.41,-268.77 335.41,-246 457.93,-246 457.93,-268.77"/>
+<text xml:space="preserve" text-anchor="middle" x="396.67" y="-253.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">count_nonfinite_entries</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;proc~count_nonfinite_entries -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge1" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;proc~count_nonfinite_entries</title>
+<path fill="none" stroke="#000000" d="M77.59,-146.05C95.85,-160.13 128.56,-183.61 160.02,-197.38 190.13,-210.57 270.8,-229.91 329.38,-243.04"/>
+<polygon fill="#000000" stroke="#000000" points="328.41,-246.41 338.93,-245.17 329.93,-239.58 328.41,-246.41"/>
+</g>
+<!-- proc~ensure_output_directory -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node3" class="node">
+<title>proc~ensure_output_directory</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node3"><a xlink:href="../proc/ensure_output_directory.html" xlink:title="ensure_output_directory">
+<polygon fill="#d9534f" stroke="#d9534f" points="287.79,-188.77 160.02,-188.77 160.02,-166 287.79,-166 287.79,-188.77"/>
+<text xml:space="preserve" text-anchor="middle" x="223.9" y="-173.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">ensure_output_directory</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;proc~ensure_output_directory -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge2" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;proc~ensure_output_directory</title>
+<path fill="none" stroke="#000000" d="M107.13,-146.25C125.91,-151.3 148.03,-157.25 167.87,-162.58"/>
+<polygon fill="#000000" stroke="#000000" points="166.91,-165.95 177.47,-165.17 168.72,-159.19 166.91,-165.95"/>
+</g>
+<!-- proc~generate_xc_table -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node4" class="node">
+<title>proc~generate_xc_table</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node4"><a xlink:href="../proc/generate_xc_table.html" xlink:title="generate_xc_table">
+<polygon fill="#d9534f" stroke="#d9534f" points="273.91,-145.77 173.89,-145.77 173.89,-123 273.91,-123 273.91,-145.77"/>
+<text xml:space="preserve" text-anchor="middle" x="223.9" y="-130.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">generate_xc_table</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;proc~generate_xc_table -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge3" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;proc~generate_xc_table</title>
+<path fill="none" stroke="#000000" d="M124.37,-134.38C136.85,-134.38 149.96,-134.38 162.4,-134.38"/>
+<polygon fill="#000000" stroke="#000000" points="162.09,-137.89 172.09,-134.39 162.09,-130.89 162.09,-137.89"/>
+</g>
+<!-- proc~usage -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node5" class="node">
+<title>proc~usage</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node5"><a xlink:href="../proc/usage.html" xlink:title="usage">
+<polygon fill="#d9534f" stroke="#d9534f" points="250.9,-104.77 196.9,-104.77 196.9,-82 250.9,-82 250.9,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="223.9" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">usage</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;proc~usage -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge4" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;proc~usage</title>
+<path fill="none" stroke="#000000" d="M109.26,-122.53C133.56,-116.29 162.95,-108.76 185.75,-102.91"/>
+<polygon fill="#000000" stroke="#000000" points="186.4,-106.36 195.22,-100.48 184.66,-99.58 186.4,-106.36"/>
+</g>
+<!-- proc~warn_if_u_unvalidated -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node6" class="node">
+<title>proc~warn_if_u_unvalidated</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node6"><a xlink:href="../proc/warn_if_u_unvalidated.html" xlink:title="warn_if_u_unvalidated">
+<polygon fill="#d9534f" stroke="#d9534f" points="283.29,-63.77 164.52,-63.77 164.52,-41 283.29,-41 283.29,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="223.9" y="-48.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">warn_if_u_unvalidated</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;proc~warn_if_u_unvalidated -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge5" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;proc~warn_if_u_unvalidated</title>
+<path fill="none" stroke="#000000" d="M79.14,-122.54C97.85,-109.22 129.99,-87.59 160.02,-73.39 163.95,-71.53 168.08,-69.76 172.28,-68.1"/>
+<polygon fill="#000000" stroke="#000000" points="173.19,-71.5 181.34,-64.72 170.74,-64.94 173.19,-71.5"/>
+</g>
+<!-- proc~write_fortran_table -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node7" class="node">
+<title>proc~write_fortran_table</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node7"><a xlink:href="../proc/write_fortran_table.html" xlink:title="write_fortran_table">
+<polygon fill="#d9534f" stroke="#d9534f" points="274.29,-267.77 173.52,-267.77 173.52,-245 274.29,-245 274.29,-267.77"/>
+<text xml:space="preserve" text-anchor="middle" x="223.9" y="-252.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">write_fortran_table</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;proc~write_fortran_table -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge6" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;proc~write_fortran_table</title>
+<path fill="none" stroke="#000000" d="M71.99,-146.07C87.83,-166 122.61,-206.78 160.02,-231.38 164.8,-234.53 170.05,-237.39 175.4,-239.95"/>
+<polygon fill="#000000" stroke="#000000" points="173.79,-243.06 184.35,-243.9 176.62,-236.66 173.79,-243.06"/>
+</g>
+<!-- proc~xc_table_filename -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node8" class="node">
+<title>proc~xc_table_filename</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node8"><a xlink:href="../proc/xc_table_filename.html" xlink:title="xc_table_filename">
+<polygon fill="#d9534f" stroke="#d9534f" points="272.79,-22.77 175.02,-22.77 175.02,0 272.79,0 272.79,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="223.9" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">xc_table_filename</text>
+</a>
+</g>
+</g>
+<!-- program~generate_xc_table_app&#45;&gt;proc~xc_table_filename -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge7" class="edge">
+<title>program~generate_xc_table_app&#45;&gt;proc~xc_table_filename</title>
+<path fill="none" stroke="#000000" d="M71.22,-122.51C86.38,-101.42 120.84,-57.3 160.02,-32.39 162.57,-30.76 165.26,-29.25 168.04,-27.85"/>
+<polygon fill="#000000" stroke="#000000" points="169.28,-31.12 176.97,-23.83 166.41,-24.74 169.28,-31.12"/>
+</g>
+<!-- proc~shell_quote -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node13" class="node">
+<title>proc~shell_quote</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node13"><a xlink:href="../proc/shell_quote.html" xlink:title="shell_quote">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="429.81,-227.77 363.54,-227.77 363.54,-205 429.81,-205 429.81,-227.77"/>
+<text xml:space="preserve" text-anchor="middle" x="396.67" y="-212.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">shell_quote</text>
+</a>
+</g>
+</g>
+<!-- proc~ensure_output_directory&#45;&gt;proc~shell_quote -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge8" class="edge">
+<title>proc~ensure_output_directory&#45;&gt;proc~shell_quote</title>
+<path fill="none" stroke="#000000" d="M276.61,-189.19C300.71,-194.7 329.07,-201.17 352.07,-206.43"/>
+<polygon fill="#000000" stroke="#000000" points="351.22,-209.82 361.75,-208.64 352.78,-203 351.22,-209.82"/>
+</g>
+<!-- proc~compute_e_xc -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node9" class="node">
+<title>proc~compute_e_xc</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node9"><a xlink:href="../proc/compute_e_xc.html" xlink:title="compute_E_xc">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="437.68,-104.77 355.66,-104.77 355.66,-82 437.68,-82 437.68,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="396.67" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_E_xc</text>
+</a>
+</g>
+</g>
+<!-- proc~generate_xc_table&#45;&gt;proc~compute_e_xc -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge9" class="edge">
+<title>proc~generate_xc_table&#45;&gt;proc~compute_e_xc</title>
+<path fill="none" stroke="#000000" d="M274.3,-122.53C296.29,-117.25 322.19,-111.03 344.4,-105.7"/>
+<polygon fill="#000000" stroke="#000000" points="344.92,-109.17 353.83,-103.43 343.29,-102.36 344.92,-109.17"/>
+</g>
+<!-- proc~compute_v_xc_numerical -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node10" class="node">
+<title>proc~compute_v_xc_numerical</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node10"><a xlink:href="../proc/compute_v_xc_numerical.html" xlink:title="compute_V_xc_numerical">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="463.93,-145.77 329.41,-145.77 329.41,-123 463.93,-123 463.93,-145.77"/>
+<text xml:space="preserve" text-anchor="middle" x="396.67" y="-130.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compute_V_xc_numerical</text>
+</a>
+</g>
+</g>
+<!-- proc~generate_xc_table&#45;&gt;proc~compute_v_xc_numerical -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge10" class="edge">
+<title>proc~generate_xc_table&#45;&gt;proc~compute_v_xc_numerical</title>
+<path fill="none" stroke="#000000" d="M274.3,-134.38C287.88,-134.38 302.95,-134.38 317.71,-134.38"/>
+<polygon fill="#000000" stroke="#000000" points="317.41,-137.89 327.41,-134.39 317.41,-130.89 317.41,-137.89"/>
+</g>
+<!-- proc~density_grid -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node11" class="node">
+<title>proc~density_grid</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node11"><a xlink:href="../proc/density_grid.html" xlink:title="density_grid">
+<polygon fill="#d9534f" stroke="#d9534f" points="431.31,-63.77 362.04,-63.77 362.04,-41 431.31,-41 431.31,-63.77"/>
+<text xml:space="preserve" text-anchor="middle" x="396.67" y="-48.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">density_grid</text>
+</a>
+</g>
+</g>
+<!-- proc~generate_xc_table&#45;&gt;proc~density_grid -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge11" class="edge">
+<title>proc~generate_xc_table&#45;&gt;proc~density_grid</title>
+<path fill="none" stroke="#000000" d="M269.88,-122.56C276.14,-120.02 282.3,-116.98 287.79,-113.39 307.79,-100.27 303.54,-86.11 323.79,-73.39 332.02,-68.21 341.57,-64.27 350.97,-61.28"/>
+<polygon fill="#000000" stroke="#000000" points="351.73,-64.71 360.39,-58.61 349.82,-57.97 351.73,-64.71"/>
+</g>
+<!-- proc~magnetization_grid -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node12" class="node">
+<title>proc~magnetization_grid</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node12"><a xlink:href="../proc/magnetization_grid.html" xlink:title="magnetization_grid">
+<polygon fill="#d9534f" stroke="#d9534f" points="447.81,-186.77 345.54,-186.77 345.54,-164 447.81,-164 447.81,-186.77"/>
+<text xml:space="preserve" text-anchor="middle" x="396.67" y="-171.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">magnetization_grid</text>
+</a>
+</g>
+</g>
+<!-- proc~generate_xc_table&#45;&gt;proc~magnetization_grid -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge12" class="edge">
+<title>proc~generate_xc_table&#45;&gt;proc~magnetization_grid</title>
+<path fill="none" stroke="#000000" d="M274.3,-146.24C293.33,-150.81 315.27,-156.08 335.23,-160.87"/>
+<polygon fill="#000000" stroke="#000000" points="334.38,-164.27 344.92,-163.2 336.01,-157.46 334.38,-164.27"/>
+</g>
+<!-- proc~u_exceeds_validated_range -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node14" class="node">
+<title>proc~u_exceeds_validated_range</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node14"><a xlink:href="../proc/u_exceeds_validated_range.html" xlink:title="u_exceeds_validated_range">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="469.56,-22.77 323.79,-22.77 323.79,0 469.56,0 469.56,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="396.67" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">u_exceeds_validated_range</text>
+</a>
+</g>
+</g>
+<!-- proc~warn_if_u_unvalidated&#45;&gt;proc~u_exceeds_validated_range -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge13" class="edge">
+<title>proc~warn_if_u_unvalidated&#45;&gt;proc~u_exceeds_validated_range</title>
+<path fill="none" stroke="#000000" d="M274.3,-40.53C293.33,-35.96 315.27,-30.69 335.23,-25.9"/>
+<polygon fill="#000000" stroke="#000000" points="336.01,-29.31 344.92,-23.57 334.38,-22.5 336.01,-29.31"/>
+</g>
+<!-- proc~write_fortran_table&#45;&gt;proc~count_nonfinite_entries -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge14" class="edge">
+<title>proc~write_fortran_table&#45;&gt;proc~count_nonfinite_entries</title>
+<path fill="none" stroke="#000000" d="M274.76,-256.68C290.12,-256.77 307.34,-256.87 323.87,-256.96"/>
+<polygon fill="#000000" stroke="#000000" points="323.63,-260.46 333.65,-257.02 323.67,-253.46 323.63,-260.46"/>
+</g>
+<!-- proc~lieb_wu_exc -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node15" class="node">
+<title>proc~lieb_wu_exc</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node15"><a xlink:href="../proc/lieb_wu_exc.html" xlink:title="lieb_wu_exc">
+<polygon fill="#d9534f" stroke="#d9534f" points="575.58,-145.77 505.56,-145.77 505.56,-123 575.58,-123 575.58,-145.77"/>
+<text xml:space="preserve" text-anchor="middle" x="540.57" y="-130.03" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lieb_wu_exc</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_e_xc&#45;&gt;proc~lieb_wu_exc -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge15" class="edge">
+<title>proc~compute_e_xc&#45;&gt;proc~lieb_wu_exc</title>
+<path fill="none" stroke="#000000" d="M437.96,-105.02C455.6,-110.12 476.37,-116.12 494.52,-121.37"/>
+<polygon fill="#000000" stroke="#000000" points="493.4,-124.69 503.98,-124.1 495.35,-117.96 493.4,-124.69"/>
+</g>
+<!-- proc~shiba_map -->
+<g id="program~~generate_xc_table_app~~CallsGraph_node16" class="node">
+<title>proc~shiba_map</title>
+<g id="a_program~~generate_xc_table_app~~CallsGraph_node16"><a xlink:href="../proc/shiba_map.html" xlink:title="shiba_map">
+<polygon fill="#d9534f" stroke="#d9534f" points="572.58,-104.77 508.56,-104.77 508.56,-82 572.58,-82 572.58,-104.77"/>
+<text xml:space="preserve" text-anchor="middle" x="540.57" y="-89.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">shiba_map</text>
+</a>
+</g>
+</g>
+<!-- proc~compute_e_xc&#45;&gt;proc~shiba_map -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge16" class="edge">
+<title>proc~compute_e_xc&#45;&gt;proc~shiba_map</title>
+<path fill="none" stroke="#000000" d="M437.96,-93.39C456.33,-93.39 478.09,-93.39 496.75,-93.39"/>
+<polygon fill="#000000" stroke="#000000" points="496.7,-96.89 506.7,-93.39 496.7,-89.89 496.7,-96.89"/>
+</g>
+<!-- proc~compute_v_xc_numerical&#45;&gt;proc~lieb_wu_exc -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge17" class="edge">
+<title>proc~compute_v_xc_numerical&#45;&gt;proc~lieb_wu_exc</title>
+<path fill="none" stroke="#000000" d="M464.05,-134.38C474.21,-134.38 484.48,-134.38 494.05,-134.38"/>
+<polygon fill="#000000" stroke="#000000" points="493.8,-137.89 503.8,-134.39 493.8,-130.89 493.8,-137.89"/>
+</g>
+<!-- proc~compute_v_xc_numerical&#45;&gt;proc~shiba_map -->
+<g id="program~~generate_xc_table_app~~CallsGraph_edge18" class="edge">
+<title>proc~compute_v_xc_numerical&#45;&gt;proc~shiba_map</title>
+<path fill="none" stroke="#000000" d="M438.72,-122.53C457.02,-117.24 478.57,-111.01 497.04,-105.67"/>
+<polygon fill="#000000" stroke="#000000" points="498,-109.04 506.63,-102.9 496.05,-102.32 498,-109.04"/>
+</g>
+</g>
+</svg>
+</div>          <div>
+            <a type="button" class="graph-help" data-bs-toggle="modal" href="#CallsGraph-help-text">Help</a>
+          </div>
+          <div class="modal fade" id="CallsGraph-help-text" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+<p>Nodes of different colours represent the following: </p>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="28pt"
+ viewBox="0.00 0.00 641.00 28.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.923937 0.923937) rotate(0) translate(4 26.77)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-26.77 689.77,-26.77 689.77,4 -4,4"/>
+<!-- Subroutine -->
+<g id="node1" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="63.27,-22.77 0,-22.77 0,0 63.27,0 63.27,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="31.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node2" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="135.63,-22.77 81.64,-22.77 81.64,0 135.63,0 135.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="108.64" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node3" class="node">
+<title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="207.63,-22.77 153.63,-22.77 153.63,0 207.63,0 207.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="180.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Type Bound Procedure -->
+<g id="node4" class="node">
+<title>Type Bound Procedure</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="347.14,-22.77 226.12,-22.77 226.12,0 347.14,0 347.14,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="286.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type Bound Procedure</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node5" class="node">
+<title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="499.89,-22.77 365.38,-22.77 365.38,0 499.89,0 499.89,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="432.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node6" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="571.63,-22.77 517.63,-22.77 517.63,0 571.63,0 571.63,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="544.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node7" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="685.77,-22.77 589.5,-22.77 589.5,0 685.77,0 685.77,-22.77"/>
+<text xml:space="preserve" text-anchor="middle" x="637.63" y="-7.04" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.
+</p>
+ </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<br>
+
+    <section>
+    <h2>Variables</h2>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-u~29"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>U</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-output_dir~2"></span>
+              character(len=256)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>output_dir</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-output_file"></span>
+              character(len=256)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>output_file</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-arg"></span>
+              character(len=256)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>arg</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-val~4"></span>
+              character(len=256)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>val</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-params~9"></span>
+              type(<a href='../type/grid_params_t.html'>grid_params_t</a>)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>params</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-table~10"></span>
+              type(<a href='../type/xc_table_t.html'>xc_table_t</a>)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>table</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ierr~71"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ierr</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-io_stat~8"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>io_stat</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-nargs"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>nargs</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-command_stat"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>command_stat</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-exit_stat"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>exit_stat</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_bad_exc~3"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_bad_exc</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_bad_up~3"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_bad_up</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-n_bad_dn~3"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>n_bad_dn</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-i~29"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>i</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-j~16"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>j</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-have_u"></span>
+              logical
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>have_U</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-force"></span>
+              logical
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>force</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-exists~3"></span>
+              logical
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>exists</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-warned~2"></span>
+              logical
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>warned</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-t_start"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>t_start</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-t_end"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>t_end</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-wall"></span>
+              real(kind=dp)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>wall</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_start"></span>
+              integer(kind=8)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_start</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_end"></span>
+              integer(kind=8)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_end</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_rate"></span>
+              integer(kind=8)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_rate</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    </section>
+    <br>
+    
+    
+    
+
+    
+ 
+    <section>
+    <h2>Functions</h2>
+      <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-shell_quote"></span> <h3> function <a href='../proc/shell_quote.html'>shell_quote</a>(value) result(quoted)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Quote a string as one POSIX-shell argument.</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-value"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>value</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>character(len=:), allocatable</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+    </section>
+    <br>
+
+
+    <section>
+    <h2>Subroutines</h2>
+      <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-ensure_output_directory"></span> <h3> subroutine <a href='../proc/ensure_output_directory.html'>ensure_output_directory</a>(dir, cmdstat, exitstat)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create an output directory and any missing parents.</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-dir~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>dir</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-cmdstat"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>cmdstat</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-exitstat"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>exitstat</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+      <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-usage"></span> <h3> subroutine <a href='../proc/usage.html'>usage</a>()  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
+    <em>None</em>
+
+    </div>
+  </div>
+
+    </section>    
+    
+
+    <section>
+    <h2 id="src">Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="k">program </span><span class="n">generate_xc_table_app</span>
+<span class="w">    </span><span class="k">use </span><span class="n">bethe_tables</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">generate_xc_table</span><span class="p">,</span><span class="w"> </span><span class="n">grid_params_t</span><span class="p">,</span><span class="w"> </span><span class="n">U_TABLE_MIN</span><span class="p">,</span><span class="w"> </span><span class="n">warn_if_u_unvalidated</span>
+<span class="w">    </span><span class="k">use </span><span class="n">lsda_errors</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">,</span><span class="w"> </span><span class="n">ERROR_INVALID_INPUT</span>
+<span class="w">    </span><span class="k">use </span><span class="n">table_io</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">xc_table_t</span><span class="p">,</span><span class="w"> </span><span class="n">write_fortran_table</span><span class="p">,</span><span class="w"> </span><span class="n">count_nonfinite_entries</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                        </span><span class="n">xc_table_filename</span>
+<span class="w">    </span><span class="k">use </span><span class="n">lsda_constants</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">dp</span>
+<span class="w">    </span><span class="k">use</span><span class="p">,</span><span class="w"> </span><span class="k">intrinsic</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">ieee_arithmetic</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">ieee_is_finite</span>
+<span class="w">    </span><span class="k">use</span><span class="p">,</span><span class="w"> </span><span class="k">intrinsic</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">iso_fortran_env</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="p">:</span><span class="w"> </span><span class="n">output_unit</span>
+<span class="w">    </span><span class="k">implicit none</span>
+
+<span class="k">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">U</span>
+<span class="w">    </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">output_dir</span><span class="p">,</span><span class="w"> </span><span class="n">output_file</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p">,</span><span class="w"> </span><span class="n">val</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">grid_params_t</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">params</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">xc_table_t</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">ierr</span><span class="p">,</span><span class="w"> </span><span class="n">io_stat</span><span class="p">,</span><span class="w"> </span><span class="n">nargs</span><span class="p">,</span><span class="w"> </span><span class="n">command_stat</span><span class="p">,</span><span class="w"> </span><span class="n">exit_stat</span>
+<span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">n_bad_exc</span><span class="p">,</span><span class="w"> </span><span class="n">n_bad_up</span><span class="p">,</span><span class="w"> </span><span class="n">n_bad_dn</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span>
+<span class="w">    </span><span class="kt">logical</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">have_U</span><span class="p">,</span><span class="w"> </span><span class="n">force</span><span class="p">,</span><span class="w"> </span><span class="n">exists</span><span class="p">,</span><span class="w"> </span><span class="n">warned</span>
+<span class="w">    </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">t_start</span><span class="p">,</span><span class="w"> </span><span class="n">t_end</span><span class="p">,</span><span class="w"> </span><span class="n">wall</span>
+<span class="w">    </span><span class="kt">integer</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">c_start</span><span class="p">,</span><span class="w"> </span><span class="n">c_end</span><span class="p">,</span><span class="w"> </span><span class="n">c_rate</span>
+
+<span class="w">    </span><span class="n">nargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">command_argument_count</span><span class="p">()</span>
+<span class="w">    </span><span class="n">output_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tables&#39;</span>
+<span class="w">    </span><span class="n">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid_params_t</span><span class="p">()</span>
+<span class="w">    </span><span class="n">have_U</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">false</span><span class="p">.</span>
+<span class="w">    </span><span class="n">force</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">false</span><span class="p">.</span>
+<span class="w">    </span><span class="n">U</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_dp</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">nargs</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        call </span><span class="n">usage</span><span class="p">()</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="k">    </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">do while</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">nargs</span><span class="p">)</span>
+<span class="w">        </span><span class="k">call </span><span class="nb">get_command_argument</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;--force&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            </span><span class="n">force</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">true</span><span class="p">.</span>
+<span class="w">            </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">cycle</span>
+<span class="k">        end if</span>
+
+<span class="k">        if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">nargs</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            print</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: missing value for option &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="w">            </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">        </span><span class="k">end if</span>
+<span class="k">        call </span><span class="nb">get_command_argument</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">)</span>
+
+<span class="w">        </span><span class="n">io_stat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">select case</span><span class="w"> </span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--U&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">U</span>
+<span class="w">            </span><span class="n">have_U</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">.</span><span class="n">true</span><span class="p">.</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--output&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="n">output_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--n-points&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_points</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--m-points&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_points</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--m-frac-min&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_frac_min</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--m-grade&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_grade</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--n-grade-low&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_grade_low</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--n-grade-high&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_grade_high</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--n-min&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_min</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--n-k&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_k</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--n-lambda&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_lambda</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--n-omega&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_omega</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--tol&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">tol</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;--delta-n&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">read</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">iostat</span><span class="o">=</span><span class="n">io_stat</span><span class="p">)</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">delta_n</span>
+<span class="w">        </span><span class="k">case </span><span class="n">default</span>
+<span class="w">            </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: unknown option &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="w">            </span><span class="k">call </span><span class="n">usage</span><span class="p">()</span>
+<span class="w">            </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">        </span><span class="k">end select</span>
+
+<span class="k">        if</span><span class="w"> </span><span class="p">(</span><span class="n">io_stat</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            print</span><span class="w"> </span><span class="s1">&#39;(A,A,A,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: invalid value &#39;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">val</span><span class="p">),</span><span class="w"> </span><span class="s2">&quot;&#39; for &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="w">            </span><span class="n">ierr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ERROR_INVALID_INPUT</span>
+<span class="w">            </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">        </span><span class="k">end if</span>
+
+<span class="k">        </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">    </span><span class="k">end do</span>
+
+<span class="k">    if</span><span class="w"> </span><span class="p">(.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">have_U</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: --U is required&quot;</span>
+<span class="w">        </span><span class="k">call </span><span class="n">usage</span><span class="p">()</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="k">    if</span><span class="w"> </span><span class="p">(.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">U</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_points</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_points</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_lambda</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_omega</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">tol</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">tol</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0_dp</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">delta_n</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">delta_n</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0_dp</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: U must be finite; grid sizes, quadrature orders and tolerances must be positive&quot;</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="k">    if</span><span class="w"> </span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">m_grade</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0_dp</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_grade</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">1.0_dp</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_frac_min</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0_dp</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_frac_min</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">1.0_dp</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_grade_low</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">1.0_dp</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_grade_high</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">1.0_dp</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">m_frac_min</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">m_grade</span><span class="p">)</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">n_grade_low</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">n_grade_high</span><span class="p">)</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">n_min</span><span class="p">)</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">n_max</span><span class="p">)</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_min</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0_dp</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_min</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_max</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="p">(</span><span class="n">params</span><span class="p">%</span><span class="n">n_points</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">.</span><span class="nb">and</span><span class="p">.</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_min</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_max</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: --m-grade and --m-frac-min must be in (0, 1]; &quot;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                     </span><span class="s2">&quot;--n-grade-low and --n-grade-high must be &gt;= 1; &quot;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                     </span><span class="s2">&quot;--n-min must satisfy 0 &lt; n_min &lt;= n_max (strict for multi-point grids)&quot;</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="w">    </span><span class="c">! The Lieb-Wu kernels have width U/4 in sin(k), so as U -&gt; 0 they turn into</span>
+<span class="w">    </span><span class="c">! delta functions that the fixed-order k quadrature cannot resolve: the</span>
+<span class="w">    </span><span class="c">! solver itself refuses below U_QUAD_MIN = 0.5.  A *table* needs more than</span>
+<span class="w">    </span><span class="c">! a point evaluation to be trustworthy - its smallest m nodes carry the</span>
+<span class="w">    </span><span class="c">! m -&gt; 0 exchange splitting - so the Lambda quadrature order rises as U</span>
+<span class="w">    </span><span class="c">! falls.  That rule is self-converged in the Fortran test suite down to</span>
+<span class="w">    </span><span class="c">! |U| = U_TABLE_MIN = 0.5.  Without this check the refusal would reach the</span>
+<span class="w">    </span><span class="c">! user as a generic ERROR_INVALID_INPUT from the generator.</span>
+<span class="w">    </span><span class="c">!</span>
+<span class="w">    </span><span class="c">! U = 0 is NOT carved out: `generate_xc_table` refuses it like any other</span>
+<span class="w">    </span><span class="c">! interaction below the floor.  A U = 0 table would be identically zero and</span>
+<span class="w">    </span><span class="c">! nothing consumes one - the SCF skips XC entirely there - so the honest</span>
+<span class="w">    </span><span class="c">! answer is to refuse instead of writing a file of zeros.  The point</span>
+<span class="w">    </span><span class="c">! evaluations `compute_E_xc` / `compute_V_xc_numerical` do still accept</span>
+<span class="w">    </span><span class="c">! U = 0 and return 0; only table generation refuses.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">U</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">U_TABLE_MIN</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="s1">&#39;(A,F8.4,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: |U| = &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">abs</span><span class="p">(</span><span class="n">U</span><span class="p">),</span><span class="w"> </span><span class="s2">&quot; is below the supported floor of the&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,F6.2,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       table generator, U_TABLE_MIN = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">U_TABLE_MIN</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       The spin kernels have width U/4 and become delta functions as&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       U -&gt; 0; below U = 0.5 the fixed-order quadrature cannot resolve&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       the smallest-m exchange splitting reliably.&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       Use |U| &gt;= 0.5.  U = 0 is refused here as well: e_xc vanishes&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       identically, so the table would be a file of zeros.&quot;</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="k">    call </span><span class="n">warn_if_u_unvalidated</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">output_unit</span><span class="p">,</span><span class="w"> </span><span class="n">warned</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c">! A freshly cloned repository (or a user-selected nested directory) need</span>
+<span class="w">    </span><span class="c">! not contain the output path yet. Create it before probing the destination</span>
+<span class="w">    </span><span class="c">! so a successful, potentially long generation cannot fail only at write.</span>
+<span class="w">    </span><span class="k">call </span><span class="n">ensure_output_directory</span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">output_dir</span><span class="p">),</span><span class="w"> </span><span class="n">command_stat</span><span class="p">,</span><span class="w"> </span><span class="n">exit_stat</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">command_stat</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">.</span><span class="nb">or</span><span class="p">.</span><span class="w"> </span><span class="n">exit_stat</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: failed to create output directory: &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="w">    </span><span class="c">! Refuse to clobber an existing table: the default output directory is the</span>
+<span class="w">    </span><span class="c">! one the SCF reads and the file name follows from U alone, so a plain</span>
+<span class="w">    </span><span class="c">! `--U 4` would otherwise replace an existing generated table.</span>
+<span class="w">    </span><span class="k">call </span><span class="n">xc_table_filename</span><span class="p">(</span><span class="nb">trim</span><span class="p">(</span><span class="n">output_dir</span><span class="p">),</span><span class="w"> </span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">output_file</span><span class="p">)</span>
+<span class="w">    </span><span class="k">inquire</span><span class="p">(</span><span class="k">file</span><span class="o">=</span><span class="nb">trim</span><span class="p">(</span><span class="n">output_file</span><span class="p">),</span><span class="w"> </span><span class="n">exist</span><span class="o">=</span><span class="n">exists</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">exists</span><span class="w"> </span><span class="p">.</span><span class="nb">and</span><span class="p">.</span><span class="w"> </span><span class="p">.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="n">force</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: refusing to overwrite existing file &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       Use --output to select a directory other than the default tables/&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       Write elsewhere with --output &lt;dir&gt;, or pass --force if you&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       really mean to replace the existing generated table.&quot;</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="k">    print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;==========================================&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  XC Table Generator&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;==========================================&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,F0.2)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  U value:     &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">U</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  Output dir:  &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Grid parameters:&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,F0.4,A,F0.4)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  n range:  &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_min</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; to &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_max</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,I0,A,I0,A,I0,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  Grid:     &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_points</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; x &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                </span><span class="n">params</span><span class="p">%</span><span class="n">m_points</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; = &quot;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                </span><span class="n">params</span><span class="p">%</span><span class="n">n_points</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_points</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; points&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,F6.3,A,F6.3,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  n grading: low end &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_grade_low</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                               </span><span class="s2">&quot;, high end &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">n_grade_high</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; (1 = uniform)&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,F6.3,A,ES9.2)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  m grading: &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_grade</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                              </span><span class="s2">&quot; (1 = uniform), smallest m/n = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">m_frac_min</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Numerics (thermodynamic-limit Lieb-Wu integral equations):&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,I0,A,I0,A,I0)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  Quadrature: n_k = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_k</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">        </span><span class="s2">&quot;, n_lambda = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_lambda</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;, n_omega = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">n_omega</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,ES9.2)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  Inversion tolerance: &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">quad</span><span class="p">%</span><span class="n">tol</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,ES9.2)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  V_xc finite-difference step: &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">%</span><span class="n">delta_n</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Starting table generation...&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+
+<span class="w">    </span><span class="k">call </span><span class="nb">cpu_time</span><span class="p">(</span><span class="n">t_start</span><span class="p">)</span>
+<span class="w">    </span><span class="k">call </span><span class="nb">system_clock</span><span class="p">(</span><span class="n">c_start</span><span class="p">,</span><span class="w"> </span><span class="n">c_rate</span><span class="p">)</span>
+<span class="w">    </span><span class="k">call </span><span class="n">generate_xc_table</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+<span class="w">    </span><span class="k">call </span><span class="nb">system_clock</span><span class="p">(</span><span class="n">c_end</span><span class="p">)</span>
+<span class="w">    </span><span class="k">call </span><span class="nb">cpu_time</span><span class="p">(</span><span class="n">t_end</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: Table generation failed!&quot;</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="w">    </span><span class="c">! Wall time, not CPU time: the grid loop is an OpenMP parallel do, so</span>
+<span class="w">    </span><span class="c">! cpu_time sums over all threads and says nothing about how long the user</span>
+<span class="w">    </span><span class="c">! actually waited.</span>
+<span class="w">    </span><span class="n">wall</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">real</span><span class="p">(</span><span class="n">c_end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">c_start</span><span class="p">,</span><span class="w"> </span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="kt">real</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">c_rate</span><span class="p">,</span><span class="w"> </span><span class="mi">1_8</span><span class="p">),</span><span class="w"> </span><span class="n">dp</span><span class="p">)</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,F8.2,A,F8.2,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Elapsed: &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">wall</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; s wall, &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">t_end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t_start</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; s CPU&quot;</span>
+
+<span class="w">    </span><span class="c">! write_fortran_table also refuses non-finite tables; the check is done</span>
+<span class="w">    </span><span class="c">! here first so the failing grid points can be listed for the user.</span>
+<span class="w">    </span><span class="k">call </span><span class="n">count_nonfinite_entries</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">n_bad_exc</span><span class="p">,</span><span class="w"> </span><span class="n">n_bad_up</span><span class="p">,</span><span class="w"> </span><span class="n">n_bad_dn</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n_bad_exc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n_bad_up</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n_bad_dn</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: Generated table contains non-finite entries (NaN or Inf); nothing was written.&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,I0,A,I0,A,I0)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       non-finite count: exc = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n_bad_exc</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">            </span><span class="s2">&quot;, Vxc_up = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n_bad_up</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;, Vxc_down = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n_bad_dn</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;       Failing grid points (n, m):&quot;</span>
+<span class="w">        </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">table</span><span class="p">%</span><span class="n">n_points_n</span>
+<span class="w">            </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">table</span><span class="p">%</span><span class="n">n_points_m</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(.</span><span class="nb">not</span><span class="p">.</span><span class="w"> </span><span class="p">(</span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">table</span><span class="p">%</span><span class="n">exc</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="p">.</span><span class="nb">and</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">table</span><span class="p">%</span><span class="n">vxc_up</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                    </span><span class="p">.</span><span class="nb">and</span><span class="p">.</span><span class="w"> </span><span class="n">ieee_is_finite</span><span class="p">(</span><span class="n">table</span><span class="p">%</span><span class="n">vxc_down</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">))))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                    print</span><span class="w"> </span><span class="s1">&#39;(A,F8.4,A,F8.4)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;         n = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">table</span><span class="p">%</span><span class="n">n_grid</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                        </span><span class="s2">&quot;   m = &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">table</span><span class="p">%</span><span class="n">m_grid</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">)</span>
+<span class="w">                </span><span class="k">end if</span>
+<span class="k">            end do</span>
+<span class="k">        end do</span>
+<span class="k">        stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="k">    print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Saving table to disk...&quot;</span>
+
+<span class="w">    </span><span class="k">call </span><span class="n">write_fortran_table</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ierr</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ERROR_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ERROR: Failed to write table file!&quot;</span>
+<span class="w">        </span><span class="k">stop </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">end if</span>
+
+<span class="k">    print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;==========================================&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Table written (all entries finite).&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;==========================================&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A,A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Table saved to: &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">trim</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+
+<span class="k">contains</span>
+
+<span class="w">    </span><span class="c">!&gt; Create an output directory and any missing parents.</span>
+<span class="w">    </span><span class="c">!!</span>
+<span class="w">    </span><span class="c">!! `execute_command_line` delegates only this filesystem operation to the</span>
+<span class="w">    </span><span class="c">!! platform command processor. The path is POSIX-shell quoted, including</span>
+<span class="w">    </span><span class="c">!! embedded single quotes, because `--output` is user input.</span>
+<span class="w">    </span><span class="k">subroutine </span><span class="n">ensure_output_directory</span><span class="p">(</span><span class="n">dir</span><span class="p">,</span><span class="w"> </span><span class="n">cmdstat</span><span class="p">,</span><span class="w"> </span><span class="n">exitstat</span><span class="p">)</span>
+<span class="w">        </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">dir</span>
+<span class="w">        </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">cmdstat</span><span class="p">,</span><span class="w"> </span><span class="n">exitstat</span>
+
+<span class="w">        </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">cmdmsg</span>
+<span class="w">        </span><span class="kt">logical</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">exists</span>
+
+<span class="w">        </span><span class="k">inquire</span><span class="p">(</span><span class="k">file</span><span class="o">=</span><span class="n">dir</span><span class="p">,</span><span class="w"> </span><span class="n">exist</span><span class="o">=</span><span class="n">exists</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">exists</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">            </span><span class="n">cmdstat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">            </span><span class="n">exitstat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">            </span><span class="k">return</span>
+<span class="k">        end if</span>
+
+<span class="k">        </span><span class="n">cmdmsg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span>
+<span class="w">        </span><span class="k">call </span><span class="nb">execute_command_line</span><span class="p">(</span><span class="s1">&#39;mkdir -p -- &#39;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">shell_quote</span><span class="p">(</span><span class="n">dir</span><span class="p">),</span><span class="w"> </span><span class="n">wait</span><span class="o">=</span><span class="p">.</span><span class="n">true</span><span class="p">.,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                  </span><span class="n">exitstat</span><span class="o">=</span><span class="n">exitstat</span><span class="p">,</span><span class="w"> </span><span class="n">cmdstat</span><span class="o">=</span><span class="n">cmdstat</span><span class="p">,</span><span class="w"> </span><span class="n">cmdmsg</span><span class="o">=</span><span class="n">cmdmsg</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end subroutine </span><span class="n">ensure_output_directory</span>
+
+<span class="w">    </span><span class="c">!&gt; Quote a string as one POSIX-shell argument.</span>
+<span class="w">    </span><span class="k">function </span><span class="n">shell_quote</span><span class="p">(</span><span class="k">value</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">quoted</span><span class="p">)</span>
+<span class="w">        </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">value</span>
+<span class="k">        </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">quoted</span>
+
+<span class="w">        </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">i</span>
+<span class="w">        </span><span class="kt">character</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">single_quote</span>
+
+<span class="w">        </span><span class="n">single_quote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">achar</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>
+<span class="w">        </span><span class="n">quoted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">single_quote</span>
+<span class="w">        </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">len_trim</span><span class="p">(</span><span class="k">value</span><span class="p">)</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">value</span><span class="p">(</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">single_quote</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">                </span><span class="n">quoted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">quoted</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">single_quote</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s1">&#39;&quot;&#39;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">single_quote</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="s1">&#39;&quot;&#39;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">single_quote</span>
+<span class="w">            </span><span class="k">else</span>
+<span class="k">                </span><span class="n">quoted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">quoted</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="k">value</span><span class="p">(</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="p">)</span>
+<span class="w">            </span><span class="k">end if</span>
+<span class="k">        end do</span>
+<span class="k">        </span><span class="n">quoted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">quoted</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">single_quote</span>
+<span class="w">    </span><span class="k">end function </span><span class="n">shell_quote</span>
+
+<span class="w">    </span><span class="k">subroutine </span><span class="n">usage</span><span class="p">()</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Usage: generate_xc_table --U &lt;value&gt; [options]&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Options:&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --U &lt;value&gt;        Hubbard interaction (required, may be negative)&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --output &lt;dir&gt;     Output directory&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --n-points &lt;int&gt;   Density grid points&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --m-points &lt;int&gt;   Magnetization grid points per density&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --m-grade &lt;real&gt;   m axis grading exponent in (0, 1]; 1 = uniform&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --m-frac-min &lt;real&gt;  Smallest non-zero m/n of the m axis&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --n-grade-low &lt;real&gt;   n axis grading at n_min; &gt;= 1, 1 = uniform&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --n-grade-high &lt;real&gt;  n axis grading at n_max; &gt;= 1, 1 = uniform&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --n-min &lt;real&gt;     Lowest density of the grid&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --n-k &lt;int&gt;        Gauss-Legendre nodes on [0, Q]&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --n-lambda &lt;int&gt;   Gauss-Legendre nodes per Lambda panel&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --n-omega &lt;int&gt;    Gauss-Legendre nodes per omega panel&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --tol &lt;real&gt;       Density residual tolerance of the (Q, B) inversion&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --delta-n &lt;real&gt;   Finite-difference step of V_xc&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;  --force            Overwrite an existing table file&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="s1">&#39;(A)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Example: fpm run generate_xc_table --profile release --flag -fopenmp&quot;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                     </span><span class="s2">&quot; -- --U 5.5&quot;</span>
+<span class="w">    </span><span class="k">end subroutine </span><span class="n">usage</span>
+
+<span class="k">end program </span><span class="n">generate_xc_table_app</span>
+</pre></div>
+
+    </section>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LSDA-Hubbard-Fortran
+ was developed by Guilherme Canella<br>              &copy; 2026 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>
