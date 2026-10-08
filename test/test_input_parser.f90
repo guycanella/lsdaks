@@ -56,6 +56,7 @@ contains
             test("namelist_no_closing_slash", test_namelist_no_closing_slash), &
             test("namelist_dollar_group_form", test_namelist_dollar_group_form), &
             test("namelist_imp_positions_overflow", test_namelist_imp_positions_overflow), &
+            test("namelist_output_prefix_overflow", test_namelist_output_prefix_overflow), &
             test("namelist_group_gate_matches_reader", &
                  test_namelist_group_gate_matches_reader) &
         ])
@@ -1581,6 +1582,67 @@ contains
         open(newunit=io_unit, file=fname, status='old')
         close(io_unit, status='delete')
     end subroutine test_namelist_imp_positions_overflow
+
+
+    !> An output prefix too long for its field must be rejected
+    !!
+    !! `output_prefix` is a `character(len=100)` and gfortran truncates a longer
+    !! namelist value in silence, so an absolute path would write the output
+    !! files under a wrong name or directory. Without the guard a 101-character
+    !! prefix returns ERROR_SUCCESS with the first 100 characters kept.
+    !! There is no CLI flag for the prefix, so only the namelist path exists.
+    subroutine test_namelist_output_prefix_overflow()
+        use fortuno_serial, only: check => serial_check
+        use input_parser
+        use lsda_errors, only: ERROR_INVALID_INPUT, ERROR_SUCCESS
+
+        character(len=*), parameter :: fname = 'test_namelist_prefix_overflow.txt'
+        type(input_params_t) :: inputs
+        character(len=:), allocatable :: prefix
+        integer :: io_unit, ierr
+
+        ! Exactly the field length: accepted and preserved.
+        prefix = '/tmp/' // repeat('a', len(inputs%output_prefix) - 5)
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&output"
+        write(io_unit, '(A)') "  output_prefix = '" // prefix // "'"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+        call check(ierr == ERROR_SUCCESS, "A prefix of exactly the field length must be accepted")
+        call check(inputs%output_prefix == prefix, "A prefix that fits must be read verbatim")
+
+        ! One character more: rejected.
+        prefix = prefix // 'b'
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&output"
+        write(io_unit, '(A)') "  output_prefix = '" // prefix // "'"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "A prefix longer than the field must be rejected, not silently truncated")
+
+        ! Longer than the read buffer: rejected too.
+        prefix = repeat('c', 2000)
+        open(newunit=io_unit, file=fname, status='replace', action='write')
+        write(io_unit, '(A)') "&output"
+        write(io_unit, '(A)') "  output_prefix = '" // prefix // "'"
+        write(io_unit, '(A)') "/"
+        close(io_unit)
+
+        inputs = input_params_t()
+        call read_namelist_file(fname, inputs, ierr)
+        call check(ierr == ERROR_INVALID_INPUT, &
+                   "A prefix longer than the read buffer must be rejected")
+
+        open(newunit=io_unit, file=fname, status='old')
+        close(io_unit, status='delete')
+    end subroutine test_namelist_output_prefix_overflow
 
 
     !> The presence gate must never disagree with what `read(nml=)` really does

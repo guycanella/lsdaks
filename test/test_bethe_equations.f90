@@ -19,6 +19,7 @@ contains
             test("dTheta_capital_dx_numerical", test_dTheta_dx_numerical), &
             test("dtheta_dU_numerical", test_dtheta_dU_numerical), &
             test("dTheta_capital_dU_numerical", test_dTheta_capital_dU_numerical), &
+            test("Theta_capital_negative_U", test_Theta_capital_negative_U), &
             test("quantum_numbers_odd", test_quantum_numbers_odd), &
             test("quantum_numbers_even", test_quantum_numbers_even), &
             test("residual_dimensions", test_residual_dimensions), &
@@ -166,6 +167,69 @@ contains
         
         call check(abs(analytical - numerical) < 1.0e-8_dp, &
                 "dTheta_dU should match numerical derivative")
+    end subroutine
+
+    !> Θ(x, U) = 2·arctan(2x/U) must be odd and continuous in x for U < 0 too
+    !!
+    !! Regression for the old `2*atan2(2x, U)`: for U < 0 it equals
+    !! 2·arctan(2x/U) ± 2π, so Θ(0⁺) ≈ +2π and Θ(0⁻) ≈ -2π (a 4π jump at x = 0).
+    !! The old form was still odd in x; what catches it is the continuity check
+    !! at x = 0 and the finite-difference derivative at x = 0. For U > 0 the two
+    !! forms agree, which is checked against the old expression. Also checks
+    !! Θ(x, -U) = -Θ(x, U), one absolute value, and continuity in U across the
+    !! |U| < U_SMALL branch for both θ and Θ (the branch used to return
+    !! +π·sign(x) for U → 0⁻ as well, a 2π jump at U = -U_SMALL).
+    subroutine test_Theta_capital_negative_U()
+        use fortuno_serial, only: check => serial_check
+        use bethe_equations, only: theta, Theta_capital, dTheta_capital_dx
+        use lsda_constants, only: dp
+        real(dp), parameter :: xs(4) = [0.1_dp, 0.3_dp, 1.5_dp, 7.0_dp]
+        real(dp), parameter :: Us(2) = [-4.0_dp, 4.0_dp]
+        real(dp), parameter :: eps = 1.0e-8_dp, h = 1.0e-5_dp
+        real(dp) :: U, x, numerical
+        integer :: iu, ix
+
+        do iu = 1, size(Us)
+            U = Us(iu)
+            do ix = 1, size(xs)
+                x = xs(ix)
+                call check(abs(Theta_capital(-x, U) + Theta_capital(x, U)) < 1.0e-14_dp, &
+                           "Theta_capital must be odd in x")
+            end do
+
+            call check(abs(Theta_capital(eps, U) - Theta_capital(-eps, U)) < 1.0e-6_dp, &
+                       "Theta_capital must be continuous at x = 0")
+
+            x = 0.3_dp
+            numerical = (Theta_capital(x + h, U) - Theta_capital(x - h, U)) / (2.0_dp * h)
+            call check(abs(numerical - dTheta_capital_dx(x, U)) < 1.0e-6_dp, &
+                       "dTheta_capital_dx must match finite difference at x = 0.3")
+            x = 0.0_dp
+            numerical = (Theta_capital(x + h, U) - Theta_capital(x - h, U)) / (2.0_dp * h)
+            call check(abs(numerical - dTheta_capital_dx(x, U)) < 1.0e-6_dp, &
+                       "dTheta_capital_dx must match finite difference at x = 0")
+        end do
+
+        ! U > 0: unchanged with respect to the former atan2 form.
+        U = 4.0_dp
+        do ix = 1, size(xs)
+            x = xs(ix)
+            call check(abs(Theta_capital(x, U) - 2.0_dp * atan2(2.0_dp * x, U)) < 1.0e-15_dp, &
+                       "Theta_capital(U > 0) must equal 2*atan2(2x, U)")
+            call check(abs(Theta_capital(-x, U) - 2.0_dp * atan2(-2.0_dp * x, U)) < 1.0e-15_dp, &
+                       "Theta_capital(U > 0) must equal 2*atan2(2x, U)")
+            call check(abs(Theta_capital(x, -U) + Theta_capital(x, U)) < 1.0e-15_dp, &
+                       "Theta_capital(x, -U) must equal -Theta_capital(x, U)")
+        end do
+
+        call check(abs(Theta_capital(0.5_dp, 4.0_dp) - 2.0_dp * atan(0.25_dp)) < 1.0e-15_dp, &
+                   "Theta_capital(0.5, 4) must equal 2*atan(0.25)")
+
+        ! Continuity in U through the |U| < U_SMALL branch (U_SMALL = 1e-9).
+        call check(abs(Theta_capital(0.5_dp, -2.0e-9_dp) - Theta_capital(0.5_dp, -0.5e-9_dp)) &
+                   < 1.0e-6_dp, "Theta_capital must be continuous in U across U = -U_SMALL")
+        call check(abs(theta(0.5_dp, -2.0e-9_dp) - theta(0.5_dp, -0.5e-9_dp)) < 1.0e-6_dp, &
+                   "theta must be continuous in U across U = -U_SMALL")
     end subroutine
 
     subroutine test_quantum_numbers_odd()

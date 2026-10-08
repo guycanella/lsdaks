@@ -357,7 +357,13 @@ contains
         logical :: verbose, store_history, use_adaptive_mixing
 
         ! Output namelist variables
-        character(len=100) :: output_prefix
+        !> Read buffer for the output prefix, longer than the destination
+        !! field `input_params_t%output_prefix` for the same reason as
+        !! `imp_positions_str`: gfortran truncates an oversized namelist value
+        !! in silence, and a cut prefix (typically an absolute path) sends the
+        !! output files to the wrong name or directory. The guard after the
+        !! &output read rejects anything that does not fit the field.
+        character(len=1024) :: output_prefix
         logical :: save_density, save_eigenvalues, save_wavefunction
 
         namelist /system/ L, Nup, Ndown, U, bc, phase, table_dir
@@ -525,6 +531,24 @@ contains
             read(records, nml=output, iostat=io_stat, iomsg=io_msg)
             call check_namelist_status('output', filename, io_stat, io_msg, ierr)
             if (ierr /= ERROR_SUCCESS) return
+            ! Same two guards as imp_positions_str: buffer overflow, then field.
+            if (len_trim(output_prefix) >= len(output_prefix)) then
+                print *, "ERROR reading &output in " // trim(filename) // ":"
+                print '(A,I0,A)', "  output_prefix is longer than the ", &
+                                  len(output_prefix), "-character read buffer and was truncated."
+                ierr = ERROR_INVALID_INPUT
+                return
+            end if
+
+            if (len_trim(output_prefix) > len(inputs%output_prefix)) then
+                print *, "ERROR reading &output in " // trim(filename) // ":"
+                print '(A,I0,A,I0,A)', "  output_prefix has ", len_trim(output_prefix), &
+                                       " characters but the limit is ", len(inputs%output_prefix), "."
+                print *, "  The prefix would be truncated in silence and the output files"
+                print *, "  would be written under a wrong name or directory. Shorten it."
+                ierr = ERROR_INVALID_INPUT
+                return
+            end if
         else
             call print_missing_group_note('output', filename)
         end if
@@ -575,7 +599,9 @@ contains
         inputs%use_adaptive_mixing = use_adaptive_mixing
         inputs%xc_smoothing_width = xc_smoothing_width
         
-        inputs%output_prefix = output_prefix
+        ! Substring = whole field; the guard after the &output read already
+        ! rejected anything longer (same idiom as imp_positions_str).
+        inputs%output_prefix = output_prefix(1:len(inputs%output_prefix))
         inputs%save_density = save_density
         inputs%save_eigenvalues = save_eigenvalues
         inputs%save_wavefunction = save_wavefunction

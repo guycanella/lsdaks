@@ -9,6 +9,10 @@
 !!          Known open issue: the parity of the quantum numbers and the
 !!          degenerate initial guess for the spin rapidities are wrong for
 !!          part of the parameter range.
+!!          For U < 0 the attractive ground state is built from k-Λ strings
+!!          (complex k); real rapidities with Fermi-sea quantum numbers give at
+!!          best an excited state. Use the Shiba transformation instead, as
+!!          `bethe_tables` does for U < 0.
 module bethe_equations
     use lsda_constants, only: dp, PI, TWOPI, U_SMALL
     implicit none
@@ -33,13 +37,13 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of θ(x, U)
     !!
-    !! @note For U → 0, θ → π·sign(x)
+    !! @note For U → 0±, θ → ±π·sign(x)
     function theta(x, U) result(res)
         real(dp), intent(in) :: x, U
         real(dp) :: res
 
         if (abs(U) < U_SMALL) then
-            res = PI * sign(1.0_dp, x)
+            res = PI * sign(1.0_dp, x) * sign(1.0_dp, U)
         else
             res = 2.0_dp * atan( (4.0_dp * x) / U )
         end if
@@ -53,15 +57,16 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of Θ(x, U)
     !!
-    !! @note For U → 0, Θ → π·sign(x)
+    !! @note For U → 0±, Θ → ±π·sign(x)
     function Theta_capital(x, U) result(res)
         real(dp), intent(in) :: x, U
         real(dp) :: res
 
         if (abs(U) < U_SMALL) then
-            res = PI * sign(1.0_dp, x)
+            res = PI * sign(1.0_dp, x) * sign(1.0_dp, U)
         else
-            res = 2.0_dp * atan2(2.0_dp * x, U)
+            ! atan, not atan2: for U < 0 atan2 adds ±2π and jumps 4π at x = 0.
+            res = 2.0_dp * atan( (2.0_dp * x) / U )
         end if
     end function Theta_capital
 
@@ -261,7 +266,7 @@ contains
             return
         end if
         
-        ! General case: U > 0
+        ! General case: U /= 0 (real rapidities; for U < 0 see module @warning)
         ! Charge equations: F^k
         do j = 1, N
             summ = 0.0_dp
@@ -360,7 +365,7 @@ contains
             return
         end if
         
-        ! General case: U > 0
+        ! General case: U /= 0 (real rapidities; for U < 0 see module @warning)
         !! Block A: dF^k_j/dk_i
         do j = 1, N
             do i = 1, N
@@ -457,7 +462,7 @@ contains
             return
         end if
         
-        ! General case: U > 0
+        ! General case: U /= 0 (real rapidities; for U < 0 see module @warning)
         ! Charge equations: dF^k/dU
         do j = 1, N
             summ = 0.0_dp
