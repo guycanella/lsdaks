@@ -37,12 +37,16 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of θ(x, U)
     !!
-    !! @note For U → 0±, θ → ±π·sign(x)
+    !! @note For U → 0±, θ → ±π·sign(x) pointwise (x ≠ 0), but θ(0, U) = 0 for
+    !!       every U ≠ 0, so the finite-U form is used for all U ≠ 0, however
+    !!       small. Only U = 0 exactly takes the limit value π·sign(x)·sign(U)
+    !!       (+π·sign(x) for U = +0).
     function theta(x, U) result(res)
         real(dp), intent(in) :: x, U
         real(dp) :: res
 
-        if (abs(U) < U_SMALL) then
+        ! abs(U) <= 0 is U == 0 (either sign) without -Wcompare-reals; NaN falls through.
+        if (abs(U) <= 0.0_dp) then
             res = PI * sign(1.0_dp, x) * sign(1.0_dp, U)
         else
             res = 2.0_dp * atan( (4.0_dp * x) / U )
@@ -57,12 +61,16 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of Θ(x, U)
     !!
-    !! @note For U → 0±, Θ → ±π·sign(x)
+    !! @note For U → 0±, Θ → ±π·sign(x) pointwise (x ≠ 0), but Θ(0, U) = 0 for
+    !!       every U ≠ 0, so the finite-U form is used for all U ≠ 0, however
+    !!       small. Only U = 0 exactly takes the limit value π·sign(x)·sign(U)
+    !!       (+π·sign(x) for U = +0).
     function Theta_capital(x, U) result(res)
         real(dp), intent(in) :: x, U
         real(dp) :: res
 
-        if (abs(U) < U_SMALL) then
+        ! abs(U) <= 0 is U == 0 (either sign) without -Wcompare-reals; NaN falls through.
+        if (abs(U) <= 0.0_dp) then
             res = PI * sign(1.0_dp, x) * sign(1.0_dp, U)
         else
             ! atan, not atan2: for U < 0 atan2 adds ±2π and jumps 4π at x = 0.
@@ -78,14 +86,18 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of dθ/dx
     !!
-    !! @note For U → 0, dθ/dx → 0 (except at x=0 where it is singular)
+    !! @note For U → 0±, dθ/dx → 0 for x ≠ 0 (at x = 0 it is 8/U, singular).
+    !!       The finite-U form is used for all U ≠ 0; only U = 0 exactly
+    !!       returns 0.
     function dtheta_dx(x, U) result(res)
         real(dp), intent(in) :: x, U
         real(dp) :: res, denom
 
         denom = U**2 + 16.0_dp * x**2
 
-        if (abs(U) < U_SMALL) then
+        ! Note: for |U| below ~1e-154, U**2 underflows and the x = 0 value is Inf;
+        ! far below any physical use.
+        if (abs(U) <= 0.0_dp) then
             res = 0.0_dp
         else
             res = (8.0_dp * U) / denom
@@ -100,14 +112,18 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of dΘ/dx
     !!
-    !! @note For U → 0, dΘ/dx → 0 (except at x=0 where it is singular)
+    !! @note For U → 0±, dΘ/dx → 0 for x ≠ 0 (at x = 0 it is 4/U, singular).
+    !!       The finite-U form is used for all U ≠ 0; only U = 0 exactly
+    !!       returns 0.
     function dTheta_capital_dx(x, U) result(res)
         real(dp), intent(in) :: x, U
         real(dp) :: res, denom
 
         denom = U**2 + 4.0_dp * x**2
 
-        if (abs(U) < U_SMALL) then
+        ! Note: for |U| below ~1e-154, U**2 underflows and the x = 0 value is Inf;
+        ! far below any physical use.
+        if (abs(U) <= 0.0_dp) then
             res = 0.0_dp
         else
             res = (4.0_dp * U) / denom
@@ -125,7 +141,9 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of ∂θ/∂U
     !!
-    !! @note For U → 0, ∂θ/∂U → 0 (θ becomes constant: π·sign(x))
+    !! @note For U → 0±, ∂θ/∂U → 0 for x ≠ 0 (θ tends to the constant
+    !!       ±π·sign(x)). The finite-U form is used for all U ≠ 0; only U = 0
+    !!       exactly returns 0.
     !! @note This is NOT the same as dθ/dx (different partial derivative)
     !!
     !! @see dtheta_dx, theta
@@ -133,7 +151,7 @@ contains
         real(dp), intent(in) :: x, U
         real(dp) :: res, denom
 
-        if (abs(U) < U_SMALL) then
+        if (abs(U) <= 0.0_dp) then
             res = 0.0_dp
         else
             denom = U**2 + 16.0_dp * x**2
@@ -152,7 +170,9 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of ∂Θ/∂U
     !!
-    !! @note For U → 0, ∂Θ/∂U → 0 (Θ becomes constant: π·sign(x))
+    !! @note For U → 0±, ∂Θ/∂U → 0 for x ≠ 0 (Θ tends to the constant
+    !!       ±π·sign(x)). The finite-U form is used for all U ≠ 0; only U = 0
+    !!       exactly returns 0.
     !! @note This is NOT the same as dΘ/dx (different partial derivative)
     !!
     !! @see dTheta_capital_dx, Theta_capital
@@ -160,7 +180,7 @@ contains
         real(dp), intent(in) :: x, U
         real(dp) :: res, denom
 
-        if (abs(U) < U_SMALL) then
+        if (abs(U) <= 0.0_dp) then
             res = 0.0_dp
         else
             denom = U**2 + 4.0_dp * x**2

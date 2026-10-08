@@ -20,6 +20,7 @@ contains
             test("dtheta_dU_numerical", test_dtheta_dU_numerical), &
             test("dTheta_capital_dU_numerical", test_dTheta_capital_dU_numerical), &
             test("Theta_capital_negative_U", test_Theta_capital_negative_U), &
+            test("scattering_small_U", test_scattering_small_U), &
             test("quantum_numbers_odd", test_quantum_numbers_odd), &
             test("quantum_numbers_even", test_quantum_numbers_even), &
             test("residual_dimensions", test_residual_dimensions), &
@@ -230,6 +231,53 @@ contains
                    < 1.0e-6_dp, "Theta_capital must be continuous in U across U = -U_SMALL")
         call check(abs(theta(0.5_dp, -2.0e-9_dp) - theta(0.5_dp, -0.5e-9_dp)) < 1.0e-6_dp, &
                    "theta must be continuous in U across U = -U_SMALL")
+    end subroutine
+
+    !> θ and Θ for 0 < |U| < U_SMALL must use the finite-U arctangent form
+    !!
+    !! Regression: the former |U| < U_SMALL branch returned π·sign(x)·sign(U),
+    !! so θ(0, -0.5e-9) = Θ(0, -0.5e-9) = -π and both jumped by 2π across x = 0.
+    !! Checks f(0, U) = 0, continuity and oddness in x, agreement with
+    !! 2·arctan(c·x/U), and that U = 0 exactly still gives +π·sign(x).
+    subroutine test_scattering_small_U()
+        use fortuno_serial, only: check => serial_check
+        use bethe_equations, only: theta, Theta_capital
+        use lsda_constants, only: dp, PI
+        real(dp), parameter :: Us(2) = [-0.5e-9_dp, 0.5e-9_dp]
+        real(dp), parameter :: xs(3) = [1.0e-11_dp, 3.0e-10_dp, 0.5_dp]
+        real(dp), parameter :: eps = 1.0e-20_dp
+        real(dp) :: U, x
+        integer :: iu, ix
+
+        do iu = 1, size(Us)
+            U = Us(iu)
+            call check(abs(theta(0.0_dp, U)) < 1.0e-300_dp, "theta(0, U) must be 0 for 0 < |U| < U_SMALL")
+            call check(abs(Theta_capital(0.0_dp, U)) < 1.0e-300_dp, &
+                       "Theta_capital(0, U) must be 0 for 0 < |U| < U_SMALL")
+            ! 4*eps/|U| = 8e-11 rad: the jump across x = 0 must be of that order, not 2*pi.
+            call check(abs(theta(eps, U) - theta(-eps, U)) < 1.0e-9_dp * PI, &
+                       "theta must be continuous at x = 0 for 0 < |U| < U_SMALL")
+            call check(abs(Theta_capital(eps, U) - Theta_capital(-eps, U)) < 1.0e-9_dp * PI, &
+                       "Theta_capital must be continuous at x = 0 for 0 < |U| < U_SMALL")
+            do ix = 1, size(xs)
+                x = xs(ix)
+                call check(abs(theta(-x, U) + theta(x, U)) < 1.0e-15_dp, &
+                           "theta must be odd in x for 0 < |U| < U_SMALL")
+                call check(abs(Theta_capital(-x, U) + Theta_capital(x, U)) < 1.0e-15_dp, &
+                           "Theta_capital must be odd in x for 0 < |U| < U_SMALL")
+                call check(abs(theta(x, U) - 2.0_dp * atan(4.0_dp * x / U)) < 1.0e-15_dp, &
+                           "theta must equal 2*atan(4x/U) for 0 < |U| < U_SMALL")
+                call check(abs(Theta_capital(x, U) - 2.0_dp * atan(2.0_dp * x / U)) < 1.0e-15_dp, &
+                           "Theta_capital must equal 2*atan(2x/U) for 0 < |U| < U_SMALL")
+            end do
+        end do
+
+        ! U = 0 exactly keeps the U -> 0+ limit, +pi*sign(x).
+        call check(abs(theta(0.5_dp, 0.0_dp) - PI) < 1.0e-15_dp, "theta(0.5, 0) must be +pi")
+        call check(abs(theta(-0.5_dp, 0.0_dp) + PI) < 1.0e-15_dp, "theta(-0.5, 0) must be -pi")
+        call check(abs(Theta_capital(0.5_dp, 0.0_dp) - PI) < 1.0e-15_dp, "Theta_capital(0.5, 0) must be +pi")
+        call check(abs(Theta_capital(-0.5_dp, 0.0_dp) + PI) < 1.0e-15_dp, &
+                   "Theta_capital(-0.5, 0) must be -pi")
     end subroutine
 
     subroutine test_quantum_numbers_odd()
