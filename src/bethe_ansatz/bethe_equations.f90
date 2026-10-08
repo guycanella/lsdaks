@@ -141,9 +141,9 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of ∂θ/∂U
     !!
-    !! @note For U → 0±, ∂θ/∂U → 0 for x ≠ 0 (θ tends to the constant
-    !!       ±π·sign(x)). The finite-U form is used for all U ≠ 0; only U = 0
-    !!       exactly returns 0.
+    !! @note For U → 0±, ∂θ/∂U → -1/(2x) for x ≠ 0 (at x = 0 it is 0 for
+    !!       every U ≠ 0). The finite-U form is used for all U ≠ 0; U = 0
+    !!       exactly returns 0 by definition, not as the limit.
     !! @note This is NOT the same as dθ/dx (different partial derivative)
     !!
     !! @see dtheta_dx, theta
@@ -170,9 +170,9 @@ contains
     !! @param[in] U   Hubbard interaction
     !! @return        Value of ∂Θ/∂U
     !!
-    !! @note For U → 0±, ∂Θ/∂U → 0 for x ≠ 0 (Θ tends to the constant
-    !!       ±π·sign(x)). The finite-U form is used for all U ≠ 0; only U = 0
-    !!       exactly returns 0.
+    !! @note For U → 0±, ∂Θ/∂U → -1/x for x ≠ 0 (at x = 0 it is 0 for
+    !!       every U ≠ 0). The finite-U form is used for all U ≠ 0; U = 0
+    !!       exactly returns 0 by definition, not as the limit.
     !! @note This is NOT the same as dΘ/dx (different partial derivative)
     !!
     !! @see dTheta_capital_dx, Theta_capital

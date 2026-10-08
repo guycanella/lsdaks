@@ -241,12 +241,13 @@ contains
     !! 2·arctan(c·x/U), and that U = 0 exactly still gives +π·sign(x).
     subroutine test_scattering_small_U()
         use fortuno_serial, only: check => serial_check
-        use bethe_equations, only: theta, Theta_capital
+        use bethe_equations, only: theta, Theta_capital, dtheta_dx, dTheta_capital_dx, &
+                                   dtheta_dU, dTheta_capital_dU
         use lsda_constants, only: dp, PI
         real(dp), parameter :: Us(2) = [-0.5e-9_dp, 0.5e-9_dp]
         real(dp), parameter :: xs(3) = [1.0e-11_dp, 3.0e-10_dp, 0.5_dp]
         real(dp), parameter :: eps = 1.0e-20_dp
-        real(dp) :: U, x
+        real(dp) :: U, x, d1, d4
         integer :: iu, ix
 
         do iu = 1, size(Us)
@@ -270,6 +271,24 @@ contains
                 call check(abs(Theta_capital(x, U) - 2.0_dp * atan(2.0_dp * x / U)) < 1.0e-15_dp, &
                            "Theta_capital must equal 2*atan(2x/U) for 0 < |U| < U_SMALL")
             end do
+
+            ! Derivatives at x ~ U, where all four are O(1/U) and nonzero.
+            x = 3.0e-10_dp
+            d1 = U**2 + 16.0_dp * x**2
+            d4 = U**2 + 4.0_dp * x**2
+            call check(abs(dtheta_dx(x, U) / (8.0_dp * U / d1) - 1.0_dp) < 1.0e-14_dp, &
+                       "dtheta_dx must equal 8U/(U^2+16x^2) for 0 < |U| < U_SMALL")
+            call check(abs(dTheta_capital_dx(x, U) / (4.0_dp * U / d4) - 1.0_dp) < 1.0e-14_dp, &
+                       "dTheta_capital_dx must equal 4U/(U^2+4x^2) for 0 < |U| < U_SMALL")
+            call check(abs(dtheta_dU(x, U) / (-8.0_dp * x / d1) - 1.0_dp) < 1.0e-14_dp, &
+                       "dtheta_dU must equal -8x/(U^2+16x^2) for 0 < |U| < U_SMALL")
+            call check(abs(dTheta_capital_dU(x, U) / (-4.0_dp * x / d4) - 1.0_dp) < 1.0e-14_dp, &
+                       "dTheta_capital_dU must equal -4x/(U^2+4x^2) for 0 < |U| < U_SMALL")
+            ! U -> 0 limits of the U derivatives at fixed x: -1/(2x) and -1/x.
+            call check(abs(dtheta_dU(0.5_dp, U) + 1.0_dp) < 1.0e-15_dp, &
+                       "dtheta_dU(0.5, U) must tend to -1/(2x) = -1")
+            call check(abs(dTheta_capital_dU(0.5_dp, U) + 2.0_dp) < 1.0e-15_dp, &
+                       "dTheta_capital_dU(0.5, U) must tend to -1/x = -2")
         end do
 
         ! U = 0 exactly keeps the U -> 0+ limit, +pi*sign(x).
